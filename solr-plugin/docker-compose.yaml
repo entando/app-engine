@@ -1,0 +1,8 @@
+version: '2.1'
+
+services:
+  solr:
+    container_name: solr_test
+    image: "solr:latest"
+    ports:
+      - "8984:8983"

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+    <code>jpsolr</code>
+    <description>Solr Connector</description>
+    <artifact>
+        <artifactId>${project.artifactId}</artifactId>
+        <groupId>${project.groupId}</groupId>
+        <version>${project.version}</version>
+    </artifact>
+</component>
