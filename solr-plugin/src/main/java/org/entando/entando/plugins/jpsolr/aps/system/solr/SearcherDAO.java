@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * Copyright 2020-Present Entando Inc. (http://www.entando.com) All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -18,8 +18,8 @@ import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
@@ -29,7 +29,13 @@ import java.io.*;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.MapSolrParams;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -43,6 +49,8 @@ public class SearcherDAO implements ISearcherDAO {
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearcherDAO.class);
 
     private String solrAddress;
+
+    private String solrCore;
 
     private ITreeNodeManager treeNodeManager;
     private ILangManager langManager;
@@ -58,24 +66,7 @@ public class SearcherDAO implements ISearcherDAO {
     public void init(File dir) throws EntException {
         // nothing to do
     }
-    /*
-    private IndexSearcher getSearcher() throws IOException {
-        FSDirectory directory = new SimpleFSDirectory(indexDir.toPath());
-        IndexReader reader = DirectoryReader.open(directory);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        return searcher;
-    }
-
-    private void releaseResources(IndexSearcher searcher) throws EntException {
-        try {
-            if (searcher != null) {
-                searcher.getIndexReader().close();
-            }
-        } catch (IOException e) {
-            throw new EntException("Error closing searcher", e);
-        }
-    }
-    */
+    
     @Override
     public List<String> searchContentsId(SearchEngineFilter[] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
@@ -91,11 +82,9 @@ public class SearcherDAO implements ISearcherDAO {
     protected FacetedContentsResult searchContents(SearchEngineFilter[] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups, boolean faceted) throws EntException {
         FacetedContentsResult result = new FacetedContentsResult();
-        /*
         List<String> contentsId = new ArrayList<>();
-        IndexSearcher searcher = null;
+        SolrClient client = this.getSolrClient();
         try {
-            searcher = this.getSearcher();
             Query query = null;
             if ((null == filters || filters.length == 0)
                     && (null == categories || categories.length == 0)
@@ -104,49 +93,44 @@ public class SearcherDAO implements ISearcherDAO {
             } else {
                 query = this.createQuery(filters, categories, allowedGroups);
             }
-            SortField[] sortFields = new SortField[0];
+            SolrQuery solrQuery = new SolrQuery(query.toString());
+            solrQuery.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME);
+            if (faceted) {
+                solrQuery.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME);
+            }
+            solrQuery.setRows(10000);
             if (null != filters) {
                 for (int i = 0; i < filters.length; i++) {
                     SearchEngineFilter filter = filters[i];
                     if (null != filter.getOrder()) {
-                        String fieldKey = this.getFilterKey(filter) + IIndexerDAO.SORTERED_FIELD_SUFFIX;
+                        String fieldKey = this.getFilterKey(filter);
                         boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
-                        SortField sortField = null;
-                        if (filter instanceof NumericSearchEngineFilter) {
-                            sortField = new SortedNumericSortField(fieldKey, SortField.Type.LONG, revert);
-                        } else {
-                            sortField = new SortField(fieldKey, SortField.Type.STRING, revert);
-                        }
-                        sortFields = ArrayUtils.add(sortFields, sortField);
+                        solrQuery.addSort(fieldKey, (revert) ? ORDER.desc: ORDER.asc);
                     }
                 }
             }
-            TopDocs topDocs = (sortFields.length > 0) ? 
-                    searcher.search(query, 1000, new Sort(sortFields)) : 
-                    searcher.search(query, 1000);
-            ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+            QueryResponse response = client.query(this.getSolrCore(), solrQuery);
+            SolrDocumentList documents = response.getResults();
             Map<String, Integer> occurrences = new HashMap<>();
-            if (scoreDocs.length > 0) {
-                for (int index = 0; index < scoreDocs.length; index++) {
-                    Document doc = searcher.doc(scoreDocs[index].doc);
-                    contentsId.add(doc.get(IIndexerDAO.CONTENT_ID_FIELD_NAME));
-                    if (faceted) {
-                        Set<String> codes = new HashSet<>();
-                        String[] categoryPaths = doc.getValues(IIndexerDAO.CONTENT_CATEGORY_FIELD_NAME);
-                        for (int i = 0; i < categoryPaths.length; i++) {
-                            String categoryPath = categoryPaths[i];
-                            String[] paths = categoryPath.split(IIndexerDAO.CONTENT_CATEGORY_SEPARATOR);
-                            codes.addAll(Arrays.asList(paths));
+            for(SolrDocument doc : documents) {
+                String id = ((List)doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)).get(0).toString();
+                contentsId.add(id);
+                if (faceted) {
+                    Set<String> codes = new HashSet<>();
+                    List<Object> categoryPaths = (List<Object>) doc.get(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME);
+                    for (int i = 0; i < categoryPaths.size(); i++) {
+                        String categoryPath = categoryPaths.get(i).toString();
+                        String[] paths = categoryPath.split(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR);
+                        codes.addAll(Arrays.asList(paths));
+                    }
+                    Iterator<String> iter = codes.iterator();
+                    while (iter.hasNext()) {
+                        String code = iter.next();
+                        Integer value = occurrences.get(code);
+                        if (null == value) {
+                            value = 0;
                         }
-                        Iterator<String> iter = codes.iterator();
-                        while (iter.hasNext()) {
-                            String code = iter.next();
-                            Integer value = occurrences.get(code);
-                            if (null == value) {
-                                value = 0;
-                            }
-                            occurrences.put(code, (value + 1));
-                        }
+                        occurrences.put(code, (value + 1));
                     }
                 }
             }
@@ -158,12 +142,17 @@ public class SearcherDAO implements ISearcherDAO {
             logger.error("Error extracting documents", t);
             throw new EntException("Error extracting documents", t);
         } finally {
-            this.releaseResources(searcher);
+            if (null != client) {
+                try {
+                    client.close();
+                } catch (IOException ex) {
+                    throw new EntException("Error closing client", ex);
+                }
+            }
         }
-        */
         return result;
     }
-
+    
     protected Query createQuery(SearchEngineFilter[] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) {
         BooleanQuery.Builder mainQuery = new BooleanQuery.Builder();
@@ -187,7 +176,7 @@ public class SearcherDAO implements ISearcherDAO {
             Iterator<String> iterGroups = allowedGroups.iterator();
             while (iterGroups.hasNext()) {
                 String group = iterGroups.next();
-                TermQuery groupQuery = new TermQuery(new Term(IIndexerDAO.CONTENT_GROUP_FIELD_NAME, group));
+                TermQuery groupQuery = new TermQuery(new Term(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, group));
                 groupsQuery.add(groupQuery, BooleanClause.Occur.SHOULD);
             }
             mainQuery.add(groupsQuery.build(), BooleanClause.Occur.MUST);
@@ -203,8 +192,8 @@ public class SearcherDAO implements ISearcherDAO {
                         String singleCategory = allowedValues.get(j);
                         ITreeNode treeNode = this.getTreeNodeManager().getNode(singleCategory);
                         if (null != treeNode) {
-                            String path = treeNode.getPath(IIndexerDAO.CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager());
-                            TermQuery categoryQuery = new TermQuery(new Term(IIndexerDAO.CONTENT_CATEGORY_FIELD_NAME, path));
+                            String path = treeNode.getPath(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager());
+                            TermQuery categoryQuery = new TermQuery(new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, path));
                             singleCategoriesQuery.add(categoryQuery, BooleanClause.Occur.SHOULD);
                         }
                     }
@@ -212,8 +201,8 @@ public class SearcherDAO implements ISearcherDAO {
                 } else if (null != categoryFilter.getValue()) {
                     ITreeNode treeNode = this.getTreeNodeManager().getNode(categoryFilter.getValue().toString());
                     if (null != treeNode) {
-                        String path = treeNode.getPath(IIndexerDAO.CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager());
-                        TermQuery categoryQuery = new TermQuery(new Term(IIndexerDAO.CONTENT_CATEGORY_FIELD_NAME, path));
+                        String path = treeNode.getPath(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager());
+                        TermQuery categoryQuery = new TermQuery(new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, path));
                         categoriesQuery.add(categoryQuery, BooleanClause.Occur.MUST);
                     }
                 }
@@ -347,8 +336,8 @@ public class SearcherDAO implements ISearcherDAO {
             return key;
         }
         if (!filter.isAttributeFilter()
-                && !(key.startsWith(IIndexerDAO.FIELD_PREFIX))) {
-            key = IIndexerDAO.FIELD_PREFIX + key;
+                && !(key.startsWith(SolrFields.SOLR_FIELD_PREFIX))) {
+            key = SolrFields.SOLR_FIELD_PREFIX + key;
         } else if (filter.isAttributeFilter()) {
             String insertedLangCode = filter.getLangCode();
             String langCode = (StringUtils.isBlank(insertedLangCode)) ? this.getLangManager().getDefaultLang().getCode() : insertedLangCode;
@@ -356,7 +345,7 @@ public class SearcherDAO implements ISearcherDAO {
         }
         return key;
     }
-
+    
     @Override
     public void close() {
         // nothing to do
@@ -367,6 +356,13 @@ public class SearcherDAO implements ISearcherDAO {
     }
     protected void setSolrAddress(String solrAddress) {
         this.solrAddress = solrAddress;
+    }
+
+    protected String getSolrCore() {
+        return solrCore;
+    }
+    protected void setSolrCore(String solrCore) {
+        this.solrCore = solrCore;
     }
 
     public ITreeNodeManager getTreeNodeManager() {

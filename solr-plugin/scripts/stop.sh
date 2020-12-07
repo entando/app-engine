@@ -1,2 +1,2 @@
 #!/bin/sh
-docker-compose stop && docker-compose rm -f
+docker container stop solr_test_entando && docker container rm solr_test_entando

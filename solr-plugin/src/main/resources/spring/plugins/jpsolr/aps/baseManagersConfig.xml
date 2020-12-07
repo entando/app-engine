@@ -10,8 +10,8 @@
 			http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd 
 			http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
     
-    <bean id="jacmsSearchEngineManager" class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineManager" 
-          parent="abstractService" >
+    <bean id="jacmsSearchEngineManager" class="com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager" 
+          parent="abstractService" primary="true" >
         <property name="factory">
             <bean class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineDAOFactory" init-method="init">
                 <!--

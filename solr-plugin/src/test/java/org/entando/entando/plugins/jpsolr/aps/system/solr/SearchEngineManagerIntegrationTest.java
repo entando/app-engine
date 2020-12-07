@@ -82,7 +82,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
     protected ConfigTestUtils getConfigUtils() {
         return new CustomConfigTestUtils();
     }
-    
+    /*
     public void testSearchAllContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -100,15 +100,17 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             throw t;
         }
     }
-    
+    */
     public void testSearchContentsId_1() throws Throwable {
+        Content content_1 = this.createContent_1();
+        Content content_2 = this.createContent_2();
         try {
-            Content content_1 = this.createContent_1();
-            this.searchEngineManager.deleteIndexedEntity(content_1.getId());
+            
+            //this.searchEngineManager.deleteIndexedEntity(content_1.getId());
             this.searchEngineManager.addEntityToIndex(content_1);
 
-            Content content_2 = this.createContent_2();
-            this.searchEngineManager.deleteIndexedEntity(content_2.getId());
+            
+            //
             this.searchEngineManager.addEntityToIndex(content_2);
 
             List<String> contentsId = this.searchEngineManager.searchEntityId("it", "San meravigliosa", null);
@@ -122,9 +124,12 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             assertFalse(contentsId.contains(content_1.getId()));
         } catch (Throwable t) {
             throw t;
+        } finally {
+            this.searchEngineManager.deleteIndexedEntity(content_1.getId());
+            this.searchEngineManager.deleteIndexedEntity(content_2.getId());
         }
     }
-    
+    /*
     public void testSearchContentsId_2() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -787,7 +792,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         this.searchEngineManager.deleteIndexedEntity(content_3.getId());
         this.searchEngineManager.addEntityToIndex(content_3);
     }
-
+*/
     private Content createContent_1() {
         Content content = new Content();
         content.setId("101");
@@ -847,7 +852,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         content.addCategory(category);
         return content;
     }
-    
+    /*
     public void testSearchContentByResource() throws Exception {
         Content contentForTest = this.contentManager.loadContent("ALL4", true);
         try {
@@ -876,7 +881,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             }
         }
     }
-    
+    */
     private void init() throws Exception {
         try {
             this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);

@@ -93,18 +93,17 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <environmentVariables>
-                        <SOLR_ADDRESS>http://localhost:6380</SOLR_ADDRESS>
+                        <SOLR_ADDRESS>http://localhost:8984/solr</SOLR_ADDRESS>
                     </environmentVariables>
                 </configuration>
             </plugin>
-            
             <plugin>
                 <artifactId>exec-maven-plugin</artifactId>
                 <groupId>org.codehaus.mojo</groupId>
                 <executions>
                     <execution>
                         <id>Start solr docker container</id>
-                        <phase>pre-integration-test</phase>
+                        <phase>process-test-resources</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -114,7 +113,7 @@
                     </execution>
                     <execution>
                         <id>Stop solr docker container</id>
-                        <phase>post-integration-test</phase>
+                        <phase>test</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -124,7 +123,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
         </plugins>
     </build>
     
@@ -245,7 +243,11 @@
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>javax.persistence</artifactId>
+            <version>2.2.1</version>
+        </dependency>
     </dependencies>
 
 </project>

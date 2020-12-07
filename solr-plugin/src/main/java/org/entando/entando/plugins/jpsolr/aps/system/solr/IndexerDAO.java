@@ -25,18 +25,9 @@ import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.lang.*;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.*;
-import org.apache.lucene.index.*;
-import org.apache.lucene.store.*;
 
 import java.io.*;
-import java.math.BigDecimal;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.lucene.util.BytesRef;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -52,6 +43,8 @@ public class IndexerDAO implements IIndexerDAO {
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(IndexerDAO.class);
     
     private String solrAddress;
+
+    private String solrCore;
 
     private ILangManager langManager;
 
@@ -75,8 +68,8 @@ public class IndexerDAO implements IIndexerDAO {
         try {
             client = this.getSolrClient();
             SolrInputDocument document = this.createDocument(entity);
-            UpdateResponse updateResponse = client.add(document);
-            client.commit();
+            UpdateResponse updateResponse = client.add(this.getSolrCore(), document);
+            client.commit(this.getSolrCore());
         } catch (Throwable t) {
             _logger.error("Errore saving entity {}", entity.getId(), t);
             throw new EntException("Error saving entity", t);
@@ -93,28 +86,29 @@ public class IndexerDAO implements IIndexerDAO {
 
     protected SolrInputDocument createDocument(IApsEntity entity) throws EntException {
         SolrInputDocument document = new SolrInputDocument();
-        document.addField(CONTENT_ID_FIELD_NAME, entity.getId());
-        document.addField(CONTENT_TYPE_FIELD_NAME,entity.getTypeCode());
-        document.addField(CONTENT_GROUP_FIELD_NAME, entity.getMainGroup());
+        document.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME, entity.getId());
+        document.addField(SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME,entity.getTypeCode());
+        document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, entity.getMainGroup());
+        
         Iterator<String> iterGroups = entity.getGroups().iterator();
         while (iterGroups.hasNext()) {
             String groupName = (String) iterGroups.next();
-            document.addField(CONTENT_GROUP_FIELD_NAME, groupName);
+            document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, groupName);
         }
         
         if (entity instanceof Content) {
             if (null != entity.getDescription()) {
-                document.addField(CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
+                document.addField(SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
             }
-            document.addField(CONTENT_TYPE_CODE_FIELD_NAME, entity.getTypeCode());
-            document.addField(CONTENT_MAIN_GROUP_FIELD_NAME, entity.getMainGroup());
+            document.addField(SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, entity.getTypeCode());
+            document.addField(SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, entity.getMainGroup());
             Date creation = ((Content) entity).getCreated();
             Date lastModify = (null != ((Content) entity).getLastModified()) ? ((Content) entity).getLastModified() : creation;
             if (null != creation) {
-                document.addField(CONTENT_CREATION_FIELD_NAME, creation);
+                document.addField(SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, creation);
             }
             if (null != lastModify) {
-                document.addField(CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
+                document.addField(SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
             }
         }
         Iterator<AttributeInterface> iterAttribute = entity.getAttributeList().iterator();
@@ -187,25 +181,32 @@ public class IndexerDAO implements IIndexerDAO {
         if (null == categoryToIndex || categoryToIndex.isRoot()) {
             return;
         }
-        document.addField(CONTENT_CATEGORY_FIELD_NAME,
-                categoryToIndex.getPath(CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager()));
+        document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME,
+                categoryToIndex.getPath(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager()));
         ITreeNode parentCategory = this.getTreeNodeManager().getNode(categoryToIndex.getParentCode());
         this.indexCategory(document, parentCategory);
     }
 
     @Override
     public synchronized void delete(String name, String value) throws EntException {
-        
-        /*
+        SolrClient client = null;
         try {
-            IndexWriter writer = new IndexWriter(this.dir, this.getIndexWriterConfig());
-            writer.deleteDocuments(new Term(name, value));
-            writer.close();
-        } catch (IOException e) {
-            _logger.error("Error deleting document", e);
-            throw new EntException("Error deleting document", e);
+            client = this.getSolrClient();
+            System.out.println("--------->>>>>>>>> " + this.getSolrCore());
+            UpdateResponse updateResponse = client.deleteById(this.getSolrCore(), name + ":" + value);
+            client.commit(this.getSolrCore());
+        } catch (Throwable t) {
+            _logger.error("Error deleting document {} : {}", name, value, t);
+            throw new EntException("Error deleting entity", t);
+        } finally {
+            if (null != client) {
+                try {
+                    client.close();
+                } catch (IOException ex) {
+                    throw new EntException("Error closing client", ex);
+                }
+            }
         }
-        */
     }
 
     @Override
@@ -218,6 +219,13 @@ public class IndexerDAO implements IIndexerDAO {
     }
     protected void setSolrAddress(String solrAddress) {
         this.solrAddress = solrAddress;
+    }
+
+    protected String getSolrCore() {
+        return solrCore;
+    }
+    protected void setSolrCore(String solrCore) {
+        this.solrCore = solrCore;
     }
     
     protected ILangManager getLangManager() {
