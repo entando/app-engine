@@ -35,7 +35,6 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.params.MapSolrParams;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -112,25 +111,27 @@ public class SearcherDAO implements ISearcherDAO {
             QueryResponse response = client.query(this.getSolrCore(), solrQuery);
             SolrDocumentList documents = response.getResults();
             Map<String, Integer> occurrences = new HashMap<>();
-            for(SolrDocument doc : documents) {
-                String id = ((List)doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)).get(0).toString();
+            for (SolrDocument doc : documents) {
+                String id = doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME).toString();
                 contentsId.add(id);
                 if (faceted) {
-                    Set<String> codes = new HashSet<>();
                     List<Object> categoryPaths = (List<Object>) doc.get(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME);
-                    for (int i = 0; i < categoryPaths.size(); i++) {
-                        String categoryPath = categoryPaths.get(i).toString();
-                        String[] paths = categoryPath.split(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR);
-                        codes.addAll(Arrays.asList(paths));
-                    }
-                    Iterator<String> iter = codes.iterator();
-                    while (iter.hasNext()) {
-                        String code = iter.next();
-                        Integer value = occurrences.get(code);
-                        if (null == value) {
-                            value = 0;
+                    if (null != categoryPaths) {
+                        Set<String> codes = new HashSet<>();
+                        for (int i = 0; i < categoryPaths.size(); i++) {
+                            String categoryPath = categoryPaths.get(i).toString();
+                            String[] paths = categoryPath.split(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR);
+                            codes.addAll(Arrays.asList(paths));
                         }
-                        occurrences.put(code, (value + 1));
+                        Iterator<String> iter = codes.iterator();
+                        while (iter.hasNext()) {
+                            String code = iter.next();
+                            Integer value = occurrences.get(code);
+                            if (null == value) {
+                                value = 0;
+                            }
+                            occurrences.put(code, (value + 1));
+                        }
                     }
                 }
             }
@@ -331,7 +332,7 @@ public class SearcherDAO implements ISearcherDAO {
     }
 
     protected String getFilterKey(SearchEngineFilter filter) {
-        String key = filter.getKey();
+        String key = filter.getKey().replaceAll(":", "_");
         if (filter.isFullTextSearch()) {
             return key;
         }

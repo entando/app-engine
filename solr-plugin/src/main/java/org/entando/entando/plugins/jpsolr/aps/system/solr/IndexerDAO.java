@@ -27,6 +27,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.util.*;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -71,7 +72,8 @@ public class IndexerDAO implements IIndexerDAO {
             UpdateResponse updateResponse = client.add(this.getSolrCore(), document);
             client.commit(this.getSolrCore());
         } catch (Throwable t) {
-            _logger.error("Errore saving entity {}", entity.getId(), t);
+            t.printStackTrace();
+            _logger.error("Error saving entity {}", entity.getId(), t);
             throw new EntException("Error saving entity", t);
         } finally {
             if (null != client) {
@@ -142,7 +144,10 @@ public class IndexerDAO implements IIndexerDAO {
             if (attribute instanceof DateAttribute) {
                 valueToIndex = ((DateAttribute) attribute).getDate();
             } else if (attribute instanceof NumberAttribute) {
-                valueToIndex = ((NumberAttribute) attribute).getValue();
+                valueToIndex = ((NumberAttribute)attribute).getValue();
+                if (null != valueToIndex) {
+                    valueToIndex = ((BigDecimal) valueToIndex).intValue();
+                }
             } else {
                 valueToIndex = ((IndexableAttributeInterface) attribute).getIndexeableFieldValue();
             }
@@ -174,6 +179,7 @@ public class IndexerDAO implements IIndexerDAO {
     }
     
     private void indexValue(SolrInputDocument document, String fieldName, Object valueToIndex) {
+        fieldName = fieldName.replaceAll(":", "_");
         document.addField(fieldName, valueToIndex);
     }
 
@@ -192,8 +198,9 @@ public class IndexerDAO implements IIndexerDAO {
         SolrClient client = null;
         try {
             client = this.getSolrClient();
-            System.out.println("--------->>>>>>>>> " + this.getSolrCore());
-            UpdateResponse updateResponse = client.deleteById(this.getSolrCore(), name + ":" + value);
+            UpdateResponse updateResponse = (name.equals(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)) ? 
+                    client.deleteById(this.getSolrCore(), value) : 
+                    client.deleteByQuery(this.getSolrCore(), name + ":" + value);
             client.commit(this.getSolrCore());
         } catch (Throwable t) {
             _logger.error("Error deleting document {} : {}", name, value, t);

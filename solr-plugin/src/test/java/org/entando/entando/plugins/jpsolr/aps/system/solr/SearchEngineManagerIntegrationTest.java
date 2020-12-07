@@ -40,6 +40,8 @@ import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,7 +84,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
     protected ConfigTestUtils getConfigUtils() {
         return new CustomConfigTestUtils();
     }
-    /*
+    
     public void testSearchAllContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -100,19 +102,13 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             throw t;
         }
     }
-    */
+    
     public void testSearchContentsId_1() throws Throwable {
         Content content_1 = this.createContent_1();
         Content content_2 = this.createContent_2();
         try {
-            
-            //this.searchEngineManager.deleteIndexedEntity(content_1.getId());
             this.searchEngineManager.addEntityToIndex(content_1);
-
-            
-            //
             this.searchEngineManager.addEntityToIndex(content_2);
-
             List<String> contentsId = this.searchEngineManager.searchEntityId("it", "San meravigliosa", null);
             assertNotNull(contentsId);
             assertTrue(contentsId.contains(content_1.getId()));
@@ -129,7 +125,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             this.searchEngineManager.deleteIndexedEntity(content_2.getId());
         }
     }
-    /*
+    
     public void testSearchContentsId_2() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -159,7 +155,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             throw t;
         }
     }
-
+    
     public void testSearchContentsId_3() throws Throwable {
         try {
             Content content_1 = this.createContent_1();
@@ -184,7 +180,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             throw t;
         }
     }
-
+    
     public void testSearchContentsId_4() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -792,10 +788,10 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         this.searchEngineManager.deleteIndexedEntity(content_3.getId());
         this.searchEngineManager.addEntityToIndex(content_3);
     }
-*/
+    
     private Content createContent_1() {
         Content content = new Content();
-        content.setId("101");
+        content.setId("XXX101");
         content.setDescription("Description content 1");
         content.setMainGroup(Group.FREE_GROUP_NAME);
         content.addGroup("secondaryGroup");
@@ -816,7 +812,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
 
     private Content createContent_2() {
         Content content = new Content();
-        content.setId("102");
+        content.setId("YYY102");
         content.setDescription("Description content 2");
         content.setMainGroup(Group.FREE_GROUP_NAME);
         content.addGroup("thirdGroup");
@@ -837,7 +833,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
 
     private Content createContent_3() {
         Content content = new Content();
-        content.setId("103");
+        content.setId("ZZZ103");
         content.setDescription("Description content 3");
         content.setMainGroup(Group.FREE_GROUP_NAME);
         content.setTypeCode("ART");
@@ -852,7 +848,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         content.addCategory(category);
         return content;
     }
-    /*
+    
     public void testSearchContentByResource() throws Exception {
         Content contentForTest = this.contentManager.loadContent("ALL4", true);
         try {
@@ -881,7 +877,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             }
         }
     }
-    */
+    
     private void init() throws Exception {
         try {
             this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
