@@ -27,8 +27,8 @@ public class AllTests {
         System.out.println("Test for Solr connector");
         
         //
-        //suite.addTestSuite(AdvContentSearchTest.class);
-        //suite.addTestSuite(FacetSearchEngineManagerIntegrationTest.class);
+        suite.addTestSuite(AdvContentSearchTest.class);
+        suite.addTestSuite(FacetSearchEngineManagerIntegrationTest.class);
         suite.addTestSuite(SearchEngineManagerIntegrationTest.class);
 
         return suite;

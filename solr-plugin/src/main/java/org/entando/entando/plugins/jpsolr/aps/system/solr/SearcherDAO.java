@@ -18,6 +18,7 @@ import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
 import org.apache.lucene.document.*;
@@ -259,9 +260,10 @@ public class SearcherDAO implements ISearcherDAO {
             fieldQuery = new BooleanQuery.Builder();
             Query query = null;
             if (filter.getStart() instanceof Date || filter.getEnd() instanceof Date) {
-                Long lowerValue = (null != filter.getStart()) ? ((Date) filter.getStart()).getTime() : Long.MIN_VALUE;
-                Long upperValue = (null != filter.getEnd()) ? ((Date) filter.getEnd()).getTime() : Long.MAX_VALUE;
-                query = LongPoint.newRangeQuery(key, lowerValue, upperValue);
+                String format = SolrFields.SOLR_SEARCH_DATE_FORMAT;
+                String start = (null != filter.getStart()) ? DateConverter.getFormattedDate((Date) filter.getStart(), format) : SolrFields.SOLR_DATE_MIN;
+                String end = (null != filter.getEnd()) ? DateConverter.getFormattedDate((Date) filter.getEnd(), format) : SolrFields.SOLR_DATE_MAX;
+                query = TermRangeQuery.newStringRange(key, start, end, false, false);
             } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
                 Long lowerValue = (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
                 Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
@@ -301,7 +303,7 @@ public class SearcherDAO implements ISearcherDAO {
                     return phraseQuery.build();
                 }
             } else if (value instanceof Date) {
-                String toString = DateTools.timeToString(((Date) value).getTime(), DateTools.Resolution.MINUTE);
+                String toString = DateConverter.getFormattedDate((Date) value, SolrFields.SOLR_SEARCH_DATE_FORMAT);
                 TermQuery term = new TermQuery(new Term(key, toString));
                 fieldQuery.add(term, BooleanClause.Occur.MUST);
             } else if (value instanceof Number) {

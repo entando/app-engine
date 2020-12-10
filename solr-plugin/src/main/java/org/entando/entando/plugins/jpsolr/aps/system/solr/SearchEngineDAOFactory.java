@@ -33,7 +33,7 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearchEngineDAOFactory.class);
     
-    @Value("${SOLR_ADDRESS:http://localhost:8983}")
+    @Value("${SOLR_ADDRESS:http://localhost:8983/solr}")
     private String solrAddress;
     
     @Value("${SOLR_CORE:entando}")

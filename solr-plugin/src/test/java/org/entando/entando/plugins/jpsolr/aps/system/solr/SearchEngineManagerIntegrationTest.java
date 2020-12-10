@@ -22,6 +22,7 @@ import java.util.Set;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter.Order;
 import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
+import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeRole;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
@@ -31,6 +32,8 @@ import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.group.Group;
+import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
@@ -42,11 +45,22 @@ import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEng
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager;
+import com.google.common.collect.HashBiMap;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import junit.framework.Assert;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.client.solrj.response.schema.SchemaResponse;
+import org.apache.solr.common.params.MapSolrParams;
+import org.apache.solr.common.params.SolrParams;
+import org.bouncycastle.jcajce.provider.digest.GOST3411.HashMac;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;
@@ -62,6 +76,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
 
     private final String ROLE_FOR_TEST = "jacmstest:date";
 
+    private ILangManager langManager = null;
     private IContentManager contentManager = null;
     private IResourceManager resourceManager = null;
     private ICmsSearchEngineManager searchEngineManager = null;
@@ -157,16 +172,14 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
     }
     
     public void testSearchContentsId_3() throws Throwable {
+        Content content_1 = this.createContent_1();
+        Content content_2 = this.createContent_2();
         try {
-            Content content_1 = this.createContent_1();
             content_1.setMainGroup(Group.ADMINS_GROUP_NAME);
             this.searchEngineManager.deleteIndexedEntity(content_1.getId());
             this.searchEngineManager.addEntityToIndex(content_1);
-
-            Content content_2 = this.createContent_2();
             this.searchEngineManager.deleteIndexedEntity(content_2.getId());
             this.searchEngineManager.addEntityToIndex(content_2);
-
             List<String> allowedGroup = new ArrayList<>();
             allowedGroup.add(Group.FREE_GROUP_NAME);
             List<String> contentsId = this.searchEngineManager.searchEntityId("it", "San meravigliosa", allowedGroup);
@@ -178,6 +191,9 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             assertTrue(contentsId.contains(content_1.getId()));
         } catch (Throwable t) {
             throw t;
+        } finally {
+            this.searchEngineManager.deleteIndexedEntity(content_1.getId());
+            this.searchEngineManager.deleteIndexedEntity(content_2.getId());
         }
     }
     
@@ -281,16 +297,16 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
     }
     
     public void testSearchContentsId_7() throws Throwable {
+        Content content_1 = this.createContent_1();
+        Content content_2 = this.createContent_2();
+        Content content_3 = this.createContent_3();
         try {
-            Content content_1 = this.createContent_1();
             this.searchEngineManager.deleteIndexedEntity(content_1.getId());
             this.searchEngineManager.addEntityToIndex(content_1);
 
-            Content content_2 = this.createContent_2();
             this.searchEngineManager.deleteIndexedEntity(content_2.getId());
             this.searchEngineManager.addEntityToIndex(content_2);
 
-            Content content_3 = this.createContent_3();
             this.searchEngineManager.deleteIndexedEntity(content_3.getId());
             this.searchEngineManager.addEntityToIndex(content_3);
 
@@ -344,12 +360,22 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             assertTrue(contentsId.contains(content_3.getId()));
         } catch (Throwable t) {
             throw t;
+        } finally {
+            this.searchEngineManager.deleteIndexedEntity(content_1.getId());
+            this.searchEngineManager.deleteIndexedEntity(content_2.getId());
+            this.searchEngineManager.deleteIndexedEntity(content_3.getId());
+            this.waitForSearchEngine();
         }
     }
     
     public void testSearchContentsId_7_like() throws Throwable {
+        Content content_1 = this.createContent_1();
+        this.searchEngineManager.addEntityToIndex(content_1);
+        Content content_2 = this.createContent_2();
+        this.searchEngineManager.addEntityToIndex(content_2);
+        Content content_3 = this.createContent_3();
+        this.searchEngineManager.addEntityToIndex(content_3);
         try {
-            this.createContentsForTest();
             //San Pietroburgo è una città meravigliosa W3C-WAI
             //Il turismo ha incrementato più del 20 per cento nel 2011-2013, quando la Croazia ha aderito all'Unione europea. Consegienda di questo aumento è una serie di modernizzazione di alloggi di recente costruzione, tra cui circa tre dozzine di ostelli.
             //La vita è una cosa meravigliosa
@@ -364,7 +390,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             SearchEngineFilter[] filters1 = {filter1};
             List<String> contentsId = sem.searchEntityId(filters1, null, allowedGroup);
             assertEquals(1, contentsId.size());
-            assertTrue(contentsId.contains("101"));
+            assertTrue(contentsId.contains(content_1.getId()));
 
             SearchEngineFilter filter2 = new SearchEngineFilter("Articolo", true, "San ravigl", SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD);
             filter2.setLangCode("it");
@@ -372,23 +398,23 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             SearchEngineFilter[] filters2 = {filter2};
             contentsId = sem.searchEntityId(filters2, null, allowedGroup);
             assertEquals(2, contentsId.size());
-            assertTrue(contentsId.contains("101"));
-            assertTrue(contentsId.contains("103"));
+            assertTrue(contentsId.contains(content_1.getId()));
+            assertTrue(contentsId.contains(content_3.getId()));
             
             SearchEngineFilter filter3 = new SearchEngineFilter("Articolo", true, "meravig*");
             filter3.setLangCode("it");
             SearchEngineFilter[] filters3 = {filter3};
             contentsId = sem.searchEntityId(filters3, null, allowedGroup);
             assertEquals(2, contentsId.size());
-            assertTrue(contentsId.contains("101"));
-            assertTrue(contentsId.contains("103"));
+            assertTrue(contentsId.contains(content_1.getId()));
+            assertTrue(contentsId.contains(content_3.getId()));
             
             SearchEngineFilter filter4 = new SearchEngineFilter("en", "Accompany*");
             filter4.setFullTextSearch(true);
             SearchEngineFilter[] filters4 = {filter4};
             contentsId = sem.searchEntityId(filters4, null, allowedGroup);
             assertEquals(1, contentsId.size());
-            assertTrue(contentsId.contains("102"));
+            assertTrue(contentsId.contains(content_2.getId()));
             
             SearchEngineFilter filter5 = new SearchEngineFilter("en", "Accompany");
             filter5.setFullTextSearch(true);
@@ -397,6 +423,11 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             assertTrue(contentsId.isEmpty());
         } catch (Throwable t) {
             throw t;
+        } finally {
+            this.searchEngineManager.deleteIndexedEntity(content_1.getId());
+            this.searchEngineManager.deleteIndexedEntity(content_2.getId());
+            this.searchEngineManager.deleteIndexedEntity(content_3.getId());
+            this.waitForSearchEngine();
         }
     }
     
@@ -461,7 +492,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             throw t;
         }
     }
-    
+    /*
     public void testSearchContentsId_9() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
         List<String> allowedGroup = new ArrayList<>();
@@ -477,6 +508,81 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             artType.addAttribute(newTextAttribute);
             ((IEntityTypesConfigurer) this.contentManager).updateEntityPrototype(artType);
             
+            SolrClient solrClient = new HttpSolrClient.Builder("http://localhost:8984/solr/entando/schema")
+                .withConnectionTimeout(10000)
+                .withSocketTimeout(60000)
+                .build();
+            
+            Content prototype = this.contentManager.createContentType("ART");
+            Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
+            List<SchemaRequest.Update> updateList = new ArrayList<>();
+            while (iterAttribute.hasNext()) {
+                AttributeInterface attribute = iterAttribute.next();
+                if (!attribute.isTextAttribute()) {
+                    continue;
+                }
+                List<Lang> langs = langManager.getLangs();
+                for (int i = 0; i < langs.size(); i++) {
+                    Lang currentLang = (Lang) langs.get(i);
+                    String fieldName = currentLang.getCode().toLowerCase() + "_" + attribute.getName();
+                    fieldName = fieldName.replaceAll(":", "_");
+                    
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("type", "text_general_rev");
+                    map.put("name", fieldName);
+                    map.put("stored", true);
+    map.put("indexed", true);
+    map.put("multiValued", false);
+    map.put("required", false);
+                    //SchemaRequest.AddField addFieldRequest = new SchemaRequest.AddField(map, new MapSolrParams(new HashMap<>()));
+                    //updateList.add(addFieldRequest);
+                    
+                    SchemaRequest.AddField schemaRequest = new SchemaRequest.AddField(map);
+      SchemaResponse.UpdateResponse response =  schemaRequest.process(solrClient);
+                    
+                    //SchemaRequest.Field originalField = new SchemaRequest.Field(fieldName);
+                    //Map<String, Object> updatedFieldAttributes = originalField.process(solrClient).getField();
+                    //updatedFieldAttributes.put("type", "text_general_rev");
+                    //SchemaRequest.ReplaceField replaceFieldRequest = new SchemaRequest.ReplaceField(updatedFieldAttributes);
+                    //updateList.add(replaceFieldRequest);
+                    if (null != attribute.getRoles()) {
+
+                        for (int j = 0; j < attribute.getRoles().length; j++) {
+                            String roleFieldName = currentLang.getCode().toLowerCase() + "_" + attribute.getRoles()[j];
+                            roleFieldName = roleFieldName.replaceAll(":", "_");
+
+                            Map<String, Object> mapRole = new HashMap<>();
+                            mapRole.put("type", "text_general_rev");
+                            mapRole.put("name", roleFieldName);
+                    mapRole.put("stored", true);
+    mapRole.put("indexed", true);
+    mapRole.put("multiValued", false);
+    mapRole.put("required", false);
+                            //SchemaRequest.AddField addFieldRequestRole = new SchemaRequest.AddField(mapRole, new MapSolrParams(new HashMap<>()));
+                            //updateList.add(addFieldRequestRole);
+                            SchemaRequest.AddField schemaRequestRole = new SchemaRequest.AddField(mapRole);
+      SchemaResponse.UpdateResponse responseRole =  schemaRequestRole.process(solrClient); 
+                        //SchemaRequest.Field originalFieldRole = new SchemaRequest.Field(roleFieldName);
+                        //Map<String, Object> updatedFieldAttributesRole = originalFieldRole.process(solrClient).getField();
+                        //updatedFieldAttributesRole.put("type", "text_general_rev");
+                        //SchemaRequest.ReplaceField replaceFieldRequestRole = new SchemaRequest.ReplaceField(updatedFieldAttributesRole);
+                        //updateList.add(replaceFieldRequestRole);
+                             
+                        }
+
+                    }
+                    
+                }
+            }
+            
+            //SchemaRequest.MultiUpdate multiUpdateRequest = new SchemaRequest.MultiUpdate(updateList);
+            //SchemaResponse.UpdateResponse multipleUpdatesResponse = multiUpdateRequest.process(solrClient);
+            
+            System.out.println("---------------------------");
+            //System.out.println(multipleUpdatesResponse);
+            System.out.println("---------------------------");
+            
+            
             char[] characters = "abcdefghijklmnopqrstuvwxyz".toCharArray();
             for (int i = 0; i < characters.length; i++) {
                 String c = String.valueOf(characters[i]);
@@ -488,10 +594,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
                 this.contentManager.insertOnLineContent(content);
                 ids.add(content.getId());
             }
-            synchronized (this) {
-                this.wait(3000);
-            }
-            super.waitNotifyingThread();
+            this.waitForSearchEngine();
             
             SearchEngineFilter filterByType = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "ART");
             SearchEngineFilter filter = new SearchEngineFilter("Test", true);
@@ -526,9 +629,10 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
                 this.contentManager.removeOnLineContent(newContent);
                 this.contentManager.deleteContent(newContent);
             }
+            this.waitForSearchEngine();
         }
     }
-    
+    */
     private void executeTestByStringRange(List<String> allowedGroup,
             String start, String end, List<String> total, int startIndex, int expectedSize) throws Exception {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
@@ -574,10 +678,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
                 this.contentManager.insertOnLineContent(content);
                 ids.add(content.getId());
             }
-            synchronized (this) {
-                this.wait(3000);
-            }
-            super.waitNotifyingThread();
+            this.waitForSearchEngine();
             
             SearchEngineFilter filterByType = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "ART");
             NumericSearchEngineFilter filter = new NumericSearchEngineFilter("TestNum", true);
@@ -618,6 +719,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
                 this.contentManager.removeOnLineContent(newContent);
                 this.contentManager.deleteContent(newContent);
             }
+            this.waitForSearchEngine();
         }
     }
     
@@ -688,10 +790,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             cal.add(Calendar.YEAR, 1);
             dateAttribute.setDate(cal.getTime());
             this.contentManager.insertOnLineContent(newContent);
-            synchronized (this) {
-                this.wait(1000);
-            }
-            super.waitNotifyingThread();
+            this.waitForSearchEngine();
             newId = newContent.getId();
             filterByRole.setOrder(Order.DESC);
             List<String> contentsId_3 = sem.searchEntityId(filters1, null, allowedGroup);
@@ -725,6 +824,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
                 this.contentManager.removeOnLineContent(newContent);
                 this.contentManager.deleteContent(newContent);
             }
+            this.waitForSearchEngine();
         }
     }
     
@@ -775,18 +875,6 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         for (int i = 0; i < array.length; i++) {
             assertTrue(contentsId.contains(array[i]));
         }
-    }
-    
-    private void createContentsForTest() throws EntException {
-        Content content_1 = this.createContent_1();
-        this.searchEngineManager.deleteIndexedEntity(content_1.getId());
-        this.searchEngineManager.addEntityToIndex(content_1);
-        Content content_2 = this.createContent_2();
-        this.searchEngineManager.deleteIndexedEntity(content_2.getId());
-        this.searchEngineManager.addEntityToIndex(content_2);
-        Content content_3 = this.createContent_3();
-        this.searchEngineManager.deleteIndexedEntity(content_3.getId());
-        this.searchEngineManager.addEntityToIndex(content_3);
     }
     
     private Content createContent_1() {
@@ -848,7 +936,7 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         content.addCategory(category);
         return content;
     }
-    
+    /*
     public void testSearchContentByResource() throws Exception {
         Content contentForTest = this.contentManager.loadContent("ALL4", true);
         try {
@@ -875,11 +963,13 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
                 this.contentManager.removeOnLineContent(contentToDelete);
                 this.contentManager.deleteContent(contentToDelete);
             }
+            this.waitForSearchEngine();
         }
     }
-    
+    */
     private void init() throws Exception {
         try {
+            this.langManager = (ILangManager) this.getService(SystemConstants.LANGUAGE_MANAGER);
             this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
             this.resourceManager = (IResourceManager) this.getService(JacmsSystemConstants.RESOURCE_MANAGER);
             this.searchEngineManager = (ICmsSearchEngineManager) this.getService(JacmsSystemConstants.SEARCH_ENGINE_MANAGER);
@@ -917,6 +1007,13 @@ public class SearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         } catch (Exception e) {
             throw e;
         }
+    }
+    
+    private void waitForSearchEngine() throws InterruptedException {
+        synchronized (this) {
+            this.wait(1000);
+        }
+        super.waitNotifyingThread();
     }
     
 }

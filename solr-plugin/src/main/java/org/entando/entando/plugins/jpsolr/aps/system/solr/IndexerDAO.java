@@ -72,7 +72,6 @@ public class IndexerDAO implements IIndexerDAO {
             UpdateResponse updateResponse = client.add(this.getSolrCore(), document);
             client.commit(this.getSolrCore());
         } catch (Throwable t) {
-            t.printStackTrace();
             _logger.error("Error saving entity {}", entity.getId(), t);
             throw new EntException("Error saving entity", t);
         } finally {
@@ -91,13 +90,11 @@ public class IndexerDAO implements IIndexerDAO {
         document.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME, entity.getId());
         document.addField(SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME,entity.getTypeCode());
         document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, entity.getMainGroup());
-        
         Iterator<String> iterGroups = entity.getGroups().iterator();
         while (iterGroups.hasNext()) {
             String groupName = (String) iterGroups.next();
             document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, groupName);
         }
-        
         if (entity instanceof Content) {
             if (null != entity.getDescription()) {
                 document.addField(SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
