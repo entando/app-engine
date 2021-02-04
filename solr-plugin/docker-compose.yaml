@@ -6,3 +6,6 @@ services:
     image: "solr:latest"
     ports:
       - "8984:8983"
+    command:
+      - solr-precreate
+      - entando

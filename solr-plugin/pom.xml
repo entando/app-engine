@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-core-parent</artifactId>
-        <version>6.2.15</version>
+        <version>6.3.0</version>
     </parent>
     <artifactId>entando-plugin-jpsolr</artifactId>
     <groupId>org.entando.entando.plugins</groupId>
@@ -94,34 +94,9 @@
                 <configuration>
                     <environmentVariables>
                         <SOLR_ADDRESS>http://localhost:8984/solr</SOLR_ADDRESS>
+                        <SOLR_CORE>entando</SOLR_CORE>
                     </environmentVariables>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>exec-maven-plugin</artifactId>
-                <groupId>org.codehaus.mojo</groupId>
-                <executions>
-                    <execution>
-                        <id>Start solr docker container</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${basedir}/scripts/start.sh</executable>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>Stop solr docker container</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${basedir}/scripts/stop.sh</executable>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
@@ -131,7 +106,7 @@
             <dependency>
                 <groupId>org.entando</groupId>
                 <artifactId>entando-core-bom</artifactId>
-                <version>6.2.155</version>
+                <version>6.2.213</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -212,16 +187,20 @@
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

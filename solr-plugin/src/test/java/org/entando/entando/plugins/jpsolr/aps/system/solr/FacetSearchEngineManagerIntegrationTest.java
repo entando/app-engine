@@ -13,7 +13,13 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import com.agiletec.aps.system.SystemConstants;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
 import com.agiletec.aps.system.services.category.Category;
@@ -30,29 +36,45 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.plugins.jpsolr.SolrBaseTestCase;
+import org.entando.entando.plugins.jpsolr.SolrTestUtils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author eu
  */
-public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
+public class FacetSearchEngineManagerIntegrationTest {
 
     private IContentManager contentManager = null;
     private ICmsSearchEngineManager searchEngineManager = null;
     private ICategoryManager categoryManager;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeAll
+    public static void startUp() throws Exception {
+        SolrTestUtils.startContainer();
+        BaseTestCase.setUp();
+    }
+    
+    @AfterAll
+    public static void tearDown() throws Exception {
+        BaseTestCase.tearDown();
+        SolrTestUtils.stopContainer();
+    }
+    
+    @BeforeEach
+    protected void init() throws Exception {
         try {
-            this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
-            this.searchEngineManager = (ICmsSearchEngineManager) this.getService(JacmsSystemConstants.SEARCH_ENGINE_MANAGER);
-            this.categoryManager = (ICategoryManager) this.getService(SystemConstants.CATEGORY_MANAGER);
+            this.contentManager = BaseTestCase.getApplicationContext().getBean(IContentManager.class);
+            this.searchEngineManager = BaseTestCase.getApplicationContext().getBean(ICmsSearchEngineManager.class);
+            this.categoryManager = BaseTestCase.getApplicationContext().getBean(ICategoryManager.class);
         } catch (Exception e) {
             throw e;
         }
     }
-
+    
+    @Test
     public void testSearchAllContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -79,6 +101,7 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         }
     }
     
+    @Test
     public void testSearchOrderedContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -123,6 +146,7 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         }
     }
     
+    @Test
     public void testSearchContents() throws Throwable {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
@@ -152,8 +176,8 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         newContent.setId(null);
         try {
             this.contentManager.insertOnLineContent(newContent);
-            super.waitNotifyingThread();
-            super.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
+            SolrTestUtils.waitNotifyingThread();
+            SolrTestUtils.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
             FacetedContentsResult result3 = this.searchEngineManager.searchFacetedEntities(filters, this.extractCategoryFilters(categories_1), allowedGroup);
             contents = result3.getContentsId();
             String[] order_c = {newContent.getId(), "ART120", "EVN25", "ART111"};
@@ -162,8 +186,8 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
 
             newContent.addCategory(this.categoryManager.getCategory("general_cat1"));
             this.contentManager.insertOnLineContent(newContent);
-            super.waitNotifyingThread();
-            super.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
+            SolrTestUtils.waitNotifyingThread();
+            SolrTestUtils.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
             FacetedContentsResult result4 = this.searchEngineManager.searchFacetedEntities(filters, this.extractCategoryFilters(categories_2), allowedGroup);
             contents = result4.getContentsId();
             String[] order_d = {newContent.getId(), "EVN25", "ART111"};
@@ -193,6 +217,7 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         }
     }
     
+    @Test
     public void testSearchContentsByRole_1() throws Throwable {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
@@ -220,6 +245,7 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
         }
     }
 
+    @Test
     public void testSearchContentsByRole_2() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
@@ -230,8 +256,8 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             title.setText("AAA Titolo in italiano", "it");
             title.setText("ZZZ English Title", "en");
             this.contentManager.insertOnLineContent(newContent);
-            super.waitNotifyingThread();
-            super.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
+            SolrTestUtils.waitNotifyingThread();
+            SolrTestUtils.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
             List<String> allowedGroup = new ArrayList<>();
             allowedGroup.add(Group.ADMINS_GROUP_NAME);
             SearchEngineFilter[] categoriesFilters = {};
@@ -271,7 +297,6 @@ public class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
             this.contentManager.deleteContent(newContent);
             assertNull(this.contentManager.loadContent(newContent.getId(), false));
         }
-
     }
     
 }
