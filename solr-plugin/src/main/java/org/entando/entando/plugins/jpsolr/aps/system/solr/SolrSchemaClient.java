@@ -32,7 +32,6 @@ public class SolrSchemaClient {
         RestTemplate restTemplate = new RestTemplate();
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String url = baseUrl + core + "/schema/fields";
-        //System.out.println("-------->>>>>>> " + url);
         String response = restTemplate.getForObject(url, String.class);
         JSONObject obj = new JSONObject(response);
         JSONArray jsonFields = obj.getJSONArray("fields");
@@ -44,21 +43,21 @@ public class SolrSchemaClient {
         return params;
     }
 
-    public static boolean addField(String solrUrl, String core, Map<String, String> properties) {
+    public static boolean addField(String solrUrl, String core, Map<String, Object> properties) {
         return executePost(solrUrl, core, properties, "add-field");
     }
 
-    public static boolean replaceField(String solrUrl, String core, Map<String, String> properties) {
+    public static boolean replaceField(String solrUrl, String core, Map<String, Object> properties) {
         return executePost(solrUrl, core, properties, "replace-field");
     }
 
     public static boolean deleteField(String solrUrl, String core, String fieldKey) {
-        Map<String, String> properties = new HashMap<>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put("name", fieldKey);
         return executePost(solrUrl, core, properties, "delete-field");
     }
 
-    private static boolean executePost(String solrUrl, String core, Map<String, String> properties, String actionName) {
+    private static boolean executePost(String solrUrl, String core, Map<String, Object> properties, String actionName) {
         JSONObject request = new JSONObject().put(actionName, properties);
         RestTemplate restTemplate = new RestTemplate();
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";

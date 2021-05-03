@@ -19,6 +19,8 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearchEngineDAOFactory;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
+import java.util.List;
+import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -29,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @author E.Santoboni
  */
-public class SearchEngineDAOFactory implements ISearchEngineDAOFactory {
+public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSearchEngineDAOFactory {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearchEngineDAOFactory.class);
     
@@ -46,6 +48,26 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory {
     @Override
     public void init() throws Exception {
         // nothing to do
+    }
+
+    @Override
+    public List<Map<String, Object>> getFields() {
+        return SolrSchemaClient.getFields(this.solrAddress, this.solrCore);
+    }
+
+    @Override
+    public boolean addField(Map<String, Object> properties) {
+        return SolrSchemaClient.addField(this.solrAddress, this.solrCore, properties);
+    }
+
+    @Override
+    public boolean replaceField(Map<String, Object> properties) {
+        return SolrSchemaClient.replaceField(this.solrAddress, this.solrCore, properties);
+    }
+
+    @Override
+    public boolean deleteField(String fieldKey) {
+        return SolrSchemaClient.deleteField(this.solrAddress, this.solrCore, fieldKey);
     }
 
     @Override
