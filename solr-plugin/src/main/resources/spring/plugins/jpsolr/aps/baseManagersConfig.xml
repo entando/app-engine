@@ -14,21 +14,8 @@
           parent="abstractService" primary="true" >
         <property name="factory">
             <bean class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineDAOFactory" init-method="init">
-                <!--
-                <property name="indexDiskRootFolder">
-                    <value>${indexDiskRootFolder}</value>
-                </property>
-                -->
                 <property name="configManager" ref="BaseConfigManager"/>
                 <property name="langManager" ref="LangManager" />
-                <!--
-                <property name="indexerClassName">
-                    <value>org.entando.entando.plugins.jpsolr.aps.system.solr.IndexerDAO</value>
-                </property>
-                <property name="searcherClassName">
-                    <value>org.entando.entando.plugins.jpsolr.aps.system.solr.SearcherDAO</value>
-                </property>
-                -->
                 <property name="categoryManager" ref="CategoryManager" />
             </bean>
         </property>
