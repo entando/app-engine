@@ -1,0 +1,900 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2019 Entando Inc..
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package org.entando.entando.plugins.jpsolr.web.content;
+
+import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
+import com.agiletec.aps.system.services.group.Group;
+import com.agiletec.aps.system.services.role.Permission;
+import com.agiletec.aps.system.services.user.UserDetails;
+import com.agiletec.aps.util.DateConverter;
+import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
+import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
+import org.entando.entando.web.utils.OAuth2TestUtils;
+
+import static org.hamcrest.CoreMatchers.is;
+
+import org.hamcrest.Matchers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
+import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+/**
+ * @author E.Santoboni
+ */
+public class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
+    
+    @Autowired
+    private IContentManager contentManager;
+
+    @Autowired
+    private ICmsSearchEngineManager searchEngineManager;
+
+    private ObjectMapper mapper = new ObjectMapper();
+    
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+        try {
+            ((ISolrSearchEngineManager) this.searchEngineManager).refreshCmsFields();
+            Thread thread = this.searchEngineManager.startReloadContentsReferences();
+            thread.join();
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+    
+    @Test
+    public void testGetContents() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        System.out.println(bodyResult);
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(11, payloadSize);
+        
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        System.out.println(facetedBodyResult);
+        int facetedPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(payloadSize, facetedPayloadSize);
+        int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
+        Assertions.assertEquals(4, occurrencesPayloadSize);
+    }
+    
+    @Test
+    public void testGetContentsByGuestUser() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN"));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        System.out.println(bodyResult);
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(9, payloadSize);
+        
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN"));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        System.out.println(facetedBodyResult);
+        int facetedPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(payloadSize, facetedPayloadSize);
+        int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
+        Assertions.assertEquals(4, occurrencesPayloadSize);
+    }
+    
+    @Test
+    public void testGetReturnsList() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8));
+        result.andExpect(status().isOk());
+        result.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8));
+        result.andExpect(jsonPath("$.metaData.pageSize").value("100"));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("status", IContentService.STATUS_ONLINE)
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8));
+        String bodyResult2 = result.andReturn().getResponse().getContentAsString();
+        int payloadSize2 = JsonPath.read(bodyResult2, "$.payload.size()");
+        Assertions.assertEquals(payloadSize2, payloadSize);
+    }
+
+    @Test
+    public void testLoadPublicEvents_1() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("filters[0].order", FieldSearchFilter.DESC_ORDER)
+                        .param("filters[1].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].value", "EVN")
+                        .param("pageSize", "20")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        List<String> expectedFreeContentsId = Arrays.asList("EVN194", "EVN193",
+                "EVN24", "EVN23", "EVN25", "EVN20", "EVN21", "EVN192", "EVN191");
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expectedFreeContentsId.size(), payloadSize);
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+
+        user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization("coach", "tempRole", Permission.BACKOFFICE).build();
+        accessToken = mockOAuthInterceptor(user);
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("pageSize", "20")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        List<String> newExpectedFreeContentsId = new ArrayList<>(expectedFreeContentsId);
+        newExpectedFreeContentsId.add("EVN103");
+        newExpectedFreeContentsId.add("EVN41");
+        Assertions.assertEquals(newExpectedFreeContentsId.size(), payloadSize);
+        for (int i = 0; i < payloadSize; i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(newExpectedFreeContentsId.contains(extractedId));
+        }
+    }
+    
+    @Test
+    public void testLoadPublicEvents_2() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].entityAttr", "DataInizio")
+                        .param("filters[0].operator", "gt")
+                        .param("filters[0].type", "date")
+                        .param("filters[0].value", "1997-06-10 01:00:00")
+                        .param("filters[1].entityAttr", "DataInizio")
+                        .param("filters[1].operator", "lt")
+                        .param("filters[1].type", "date")
+                        .param("filters[1].value", "2020-09-19 01:00:00")
+                        .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        String[] expected = {"EVN193", "EVN24", "EVN23", "EVN41", "EVN25",
+            "EVN20", "EVN21", "EVN103", "EVN192"};
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expected.length, payloadSize);
+        for (int i = 0; i < expected.length; i++) {
+            String expectedId = expected[i];
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId, extractedId);
+        }
+    }
+    
+    @Test
+    public void testLoadPublicEvents_3() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization("coach", "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("filters[0].order", FieldSearchFilter.DESC_ORDER)
+                        .param("filters[1].entityAttr", "DataInizio")
+                        .param("filters[1].operator", "gt")
+                        .param("filters[1].type", "date")
+                        .param("filters[1].value", "1997-06-10 01:00:00")
+                        .param("filters[2].entityAttr", "DataInizio")
+                        .param("filters[2].operator", "lt")
+                        .param("filters[2].type", "date")
+                        .param("filters[2].value", "2020-09-19 01:00:00")
+                        .param("filters[3].entityAttr", "Titolo")
+                        .param("filters[3].value", "Titolo")
+                        .param("filters[3].operator", "eq")
+                        .param("lang", "it")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        String[] expected = {"EVN103","EVN193","EVN192"};
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expected.length, payloadSize);
+        for (int i = 0; i < expected.length; i++) {
+            String expectedId = expected[i];
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId, extractedId);
+        }
+    }
+    
+    @Test
+    public void testLoadPublicEvents_4() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("filters[1].entityAttr", "Titolo")
+                        .param("filters[1].value", "ostr")
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
+                        .param("lang", "it")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult1 = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(bodyResult1, "$.payload.size()");
+        Assertions.assertEquals(0, payloadSize);
+        
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("filters[1].entityAttr", "Titolo")
+                        .param("filters[1].value", "Mostr*")
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
+                        .param("lang", "it")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult2 = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        String[] expected2 = {"EVN20","EVN21"};
+        int payloadSize2 = JsonPath.read(bodyResult2, "$.payload.size()");
+        Assertions.assertEquals(expected2.length, payloadSize2);
+        for (int i = 0; i < expected2.length; i++) {
+            String expectedId2 = expected2[i];
+            String extractedId2 = JsonPath.read(bodyResult2, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId2, extractedId2);
+        }
+        
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("filters[1].entityAttr", "Titolo")
+                        .param("filters[1].value", "ostr")
+                        .param("filters[1].operator", "like")
+                        .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
+                        .param("lang", "it")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult3 = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        int payloadSize3 = JsonPath.read(bodyResult3, "$.payload.size()");
+        Assertions.assertEquals(expected2.length, payloadSize3);
+        for (int i = 0; i < expected2.length; i++) {
+            String expectedId3 = expected2[i];
+            String extractedId3 = JsonPath.read(bodyResult3, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId3, extractedId3);
+        }
+    }
+    
+    @Test
+    public void testLoadOrderedPublicEvents_1() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("filters[1].attribute", IContentManager.CONTENT_DESCR_FILTER_KEY)
+                        .param("filters[1].order", FieldSearchFilter.ASC_ORDER)
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        String[] expectedFreeContentsId = {"EVN24", "EVN23",
+            "EVN191", "EVN192", "EVN193", "EVN194", "EVN20", "EVN21", "EVN25"};
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expectedFreeContentsId.length, payloadSize);
+        for (int i = 0; i < expectedFreeContentsId.length; i++) {
+            String expectedId = expectedFreeContentsId[i];
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId, extractedId);
+        }
+    }
+    
+    @Test
+    public void testLoadOrderedPublicEvents_2() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("filters[1].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("filters[1].order", FieldSearchFilter.DESC_ORDER));
+        result.andExpect(status().isOk());
+        String[] expectedFreeOrderedContentsId_1 = {"EVN191", "EVN192",
+            "EVN193", "EVN194", "EVN20", "EVN23", "EVN24", "EVN25", "EVN21"};
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeOrderedContentsId_1.length)));
+        for (int i = 0; i < expectedFreeOrderedContentsId_1.length; i++) {
+            String expectedId = expectedFreeOrderedContentsId_1[expectedFreeOrderedContentsId_1.length - i - 1];
+            result.andExpect(jsonPath("$.payload[" + i + "]", is(expectedId)));
+        }
+        
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("langCode", "it")
+                        .param("text", "Titolo Evento 4")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN")
+                        .param("filters[1].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("filters[1].order", FieldSearchFilter.ASC_ORDER));
+        result.andExpect(status().isOk());
+        String[] expectedFreeOrderedContentsId_2 = {"EVN191", "EVN192", "EVN193", "EVN194", "EVN24"};
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeOrderedContentsId_2.length)));
+        for (int i = 0; i < expectedFreeOrderedContentsId_2.length; i++) {
+            String expectedId = expectedFreeOrderedContentsId_2[i];
+            result.andExpect(jsonPath("$.payload[" + i + "]", is(expectedId)));
+        }
+    }
+    
+    @Test
+    public void testLoadOrderedPublicEvents_3() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].entityAttr", "DataInizio")
+                        .param("filters[0].order", "DESC")
+                        .param("filters[1].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].value", "EVN")
+                        .param("pageSize", "5")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        String[] expectedFreeOrderedContentsId_1 = {"EVN194", "EVN193", "EVN24",
+            "EVN23", "EVN25"};
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expectedFreeOrderedContentsId_1.length, payloadSize);
+        for (int i = 0; i < expectedFreeOrderedContentsId_1.length; i++) {
+            String expectedId = expectedFreeOrderedContentsId_1[i];
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId, extractedId);
+        }
+
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].entityAttr", "DataInizio")
+                        .param("filters[0].order", FieldSearchFilter.ASC_ORDER)
+                        .param("filters[1].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].value", "EVN")
+                        .param("pageSize", "6")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        String[] expectedFreeOrderedContentsId_2 = {"EVN191", "EVN192", "EVN21", "EVN20", "EVN25", "EVN23"};
+        int payloadSize_2 = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expectedFreeOrderedContentsId_2.length, payloadSize_2);
+        for (int i = 0; i < expectedFreeOrderedContentsId_2.length; i++) {
+            String expectedId = expectedFreeOrderedContentsId_2[i];
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedId, extractedId);
+        }
+    }
+    
+    @Test
+    public void testLoadOrderedPublicEvents_4() throws Throwable {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        Content masterContent = this.contentManager.loadContent("EVN193", true);
+        masterContent.setId(null);
+        masterContent.setDescription("Cloned content for test");
+        DateAttribute dateAttribute = (DateAttribute) masterContent.getAttribute("DataInizio");
+        dateAttribute.setDate(DateConverter.parseDate("17/06/2019", "dd/MM/yyyy"));
+        try {
+            this.contentManager.saveContent(masterContent);
+            this.contentManager.insertOnLineContent(masterContent);
+            
+            super.waitNotifyingThread();
+            super.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
+            
+            ResultActions result = mockMvc
+                    .perform(get("/plugins/advcontentsearch/contents")
+                            .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                            .param("filters[0].operator", "eq")
+                            .param("filters[0].value", "EVN")
+                            .param("filters[1].entityAttr", "DataInizio")
+                            .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
+                            .sessionAttr("user", user)
+                            .header("Authorization", "Bearer " + accessToken));
+            String bodyResult = result.andReturn().getResponse().getContentAsString();
+            
+            result.andExpect(status().isOk());
+            String[] expectedFreeOrderedContentsId = {"EVN194", masterContent.getId(),
+                "EVN193", "EVN24", "EVN23", "EVN25", "EVN20", "EVN21", "EVN192", "EVN191"};
+            int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+            Assertions.assertEquals(expectedFreeOrderedContentsId.length, payloadSize);
+            for (int i = 0; i < expectedFreeOrderedContentsId.length; i++) {
+                String expectedId = expectedFreeOrderedContentsId[i];
+                String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+                Assertions.assertEquals(expectedId, extractedId);
+            }
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            if (null != masterContent.getId() && !"EVN193".equals(masterContent.getId())) {
+                this.contentManager.removeOnLineContent(masterContent);
+                this.contentManager.deleteContent(masterContent);
+            }
+        }
+    }
+    
+    @Test
+    public void testLoadPublicFreeARTContents() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "ART"));
+        result.andExpect(status().isOk());
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        List<String> expectedFreeContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121");
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeContentsId.size())));
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+        
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "ART"));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(expectedFreeContentsId.size(), payloadSize);
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(facetedBodyResult, "$.payload.contentsId[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+        int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
+        Assertions.assertEquals(1, occurrencesPayloadSize);
+    }
+    
+    @Test
+    public void testLoadPublicARTContents() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "ART")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk());
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112");
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedContentsId.size())));
+        for (int i = 0; i < expectedContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedContentsId.contains(extractedId));
+        }
+        
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "ART")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        
+        int payloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(expectedContentsId.size(), payloadSize);
+        for (int i = 0; i < expectedContentsId.size(); i++) {
+            String extractedId = JsonPath.read(facetedBodyResult, "$.payload.contentsId[" + i + "]");
+            Assertions.assertTrue(expectedContentsId.contains(extractedId));
+        }
+        int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
+        Assertions.assertEquals(5, occurrencesPayloadSize);
+    }
+    
+    @Test
+    public void testLoadPublic_ART_EVN_Contents() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "EVN")
+                        .param("filters[0].allowedValues[1]", "ART")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk());
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+                "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedContentsId.size())));
+        for (int i = 0; i < expectedContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedContentsId.contains(extractedId));
+        }
+        
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(expectedContentsId.size(), payloadSize);
+        for (int i = 0; i < expectedContentsId.size(); i++) {
+            String extractedId = JsonPath.read(facetedBodyResult, "$.payload.contentsId[" + i + "]");
+            Assertions.assertTrue(expectedContentsId.contains(extractedId));
+        }
+    }
+    
+    @Test
+    public void testLoadPublicContentsForCategory_1() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("csvCategories[0]", "evento")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        List<String> expectedFreeContentsId = Arrays.asList("EVN192", "EVN193");
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expectedFreeContentsId.size(), payloadSize);
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("csvCategories[0]", "evento")
+                        .param("filters[0].entityAttr", "DataInizio")
+                        .param("filters[0].operator", "lt")
+                        .param("filters[0].type", "date")
+                        .param("filters[0].value", "2005-02-13 01:00:00")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        int newPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(1, newPayloadSize);
+        String extractedId = JsonPath.read(bodyResult, "$.payload[0]");
+        Assertions.assertEquals("EVN192", extractedId);
+    }
+    
+    @Test
+    public void testLoadPublicEventsForCategory_2() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("csvCategories[0]", "general_cat3")
+                        .param("csvCategories[1]", "general_cat2")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(1, payloadSize);
+        String singleId = JsonPath.read(bodyResult, "$.payload[0]");
+        Assertions.assertEquals("ART120", singleId);
+
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("csvCategories[0]", "general_cat3,general_cat2")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        List<String> expectedFreeContentsId = Arrays.asList("ART111", "ART120", "ART122", "EVN25");
+        int newPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expectedFreeContentsId.size(), newPayloadSize);
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+    }
+    
+    @Test
+    public void testLoadPublicFreeContentsByRole() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                        .param("filters[0].value", "Mostra")
+                        .param("filters[0].operator", "eq"));
+        result.andExpect(status().isOk());
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        List<String> expectedFreeContentsId = Arrays.asList("EVN20", "EVN21");
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeContentsId.size())));
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+        
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                        .param("filters[0].value", "Mostra"));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(expectedFreeContentsId.size(), payloadSize);
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(facetedBodyResult, "$.payload.contentsId[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+        }
+    }
+    
+    @Test
+    public void testLoadPublicFreeOrderedContentsByRole() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                        .param("filters[0].order", FieldSearchFilter.ASC_ORDER)
+                        .param("filters[1].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].allowedValues[0]", "ART")
+                        .param("filters[1].allowedValues[1]", "EVN")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk());
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        List<String> expectedFreeContentsId = Arrays.asList("ART122", "ART121", "ART120", "ART111", 
+                "ART102", /*"ART180",*/ "ART112", "ART104", "ART1", /*"ART187",*/ "EVN193", "EVN194", 
+                "EVN191", "EVN25", "EVN21", "EVN41", "EVN24", "EVN23", "EVN103", "EVN192", "EVN20");
+        // NOTA : "ART180" e "ART187" non hanno titolo
+        
+        List<String> orderedContents = new ArrayList<>();
+        result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeContentsId.size())));
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
+            orderedContents.add(extractedId);
+        }
+        
+        result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                        .param("filters[0].order", FieldSearchFilter.DESC_ORDER)
+                        .param("filters[1].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[1].operator", "eq")
+                        .param("filters[1].allowedValues[0]", "ART")
+                        .param("filters[1].allowedValues[1]", "EVN")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        bodyResult = result.andReturn().getResponse().getContentAsString();
+        for (int i = 0; i < expectedFreeContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
+            Assertions.assertEquals(extractedId, orderedContents.get(expectedFreeContentsId.size() - i - 1));
+        }
+    }
+    
+    @Test
+    public void testLoadPublic_ART_EVN_Contents_orderedByRole() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        
+        ResultActions result_1 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "EVN")
+                        .param("filters[0].allowedValues[1]", "ART")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        result_1.andExpect(status().isOk());
+        String bodyResult_1 = result_1.andReturn().getResponse().getContentAsString();
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+                "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
+        int firstPayloadSize = JsonPath.read(bodyResult_1, "$.payload.size()");
+        Assertions.assertEquals(expectedContentsId.size(), firstPayloadSize);
+        for (int i = 0; i < expectedContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult_1, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedContentsId.contains(extractedId));
+        }
+        
+        ResultActions result_2 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
+        List<String> expectedContentsId_2 = Arrays.asList("ART1", "ART121", 
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+                "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
+        result_2.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(bodyResult_2, "$.payload.size()");
+        Assertions.assertEquals(expectedContentsId_2.size(), payloadSize);
+        for (int i = 0; i < expectedContentsId_2.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult_2, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedContentsId_2.contains(extractedId));
+        }
+        
+        ResultActions result_3 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .param("filters[1].order", "DESC")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
+        String[] expectedContentsId_3 = {"EVN194", "ART122", "ART121", "ART120", 
+                "ART112", "ART111", "ART102", "ART104", "EVN103", "EVN193", "EVN192", "EVN191", "EVN25", 
+                "EVN41", "EVN20", "EVN21", "ART1", "EVN23", "EVN24"};
+        result_3.andExpect(status().isOk());
+        int payloadSize_3 = JsonPath.read(bodyResult_3, "$.payload.size()");
+        Assertions.assertEquals(expectedContentsId_3.length, payloadSize_3);
+        for (int i = 0; i < expectedContentsId_3.length; i++) {
+            String extractedId = JsonPath.read(bodyResult_3, "$.payload[" + i + "]");
+            Assertions.assertEquals(extractedId, expectedContentsId_3[i]);
+        }
+        
+        ResultActions result_4 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .param("filters[1].order", "ASC")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
+        for (int i = 0; i < expectedContentsId_3.length; i++) {
+            String extractedId = JsonPath.read(bodyResult_4, "$.payload[" + i + "]");
+            Assertions.assertEquals(extractedId, expectedContentsId_3[expectedContentsId_3.length - i - 1]);
+        }
+        
+        ResultActions result_5_en = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("lang", "en")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .param("filters[1].order", "ASC")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_5_en = result_5_en.andReturn().getResponse().getContentAsString();
+        String[] expectedContentsId_5_en = {"EVN41", "EVN24", "EVN103", "EVN23", "EVN21", 
+            "ART1", "EVN194", "EVN192", "EVN191", "EVN193", "ART120", "ART121", 
+            "ART104", "ART102", "ART111", "ART112", "ART122", "EVN25", "EVN20"};
+        for (int i = 0; i < expectedContentsId_5_en.length; i++) {
+            String extractedId = JsonPath.read(bodyResult_5_en, "$.payload[" + i + "]");
+            Content content = this.contentManager.loadContent(extractedId, true);
+            ITextAttribute textAttribute = (ITextAttribute) content.getAttributeByRole("jacms:title");
+            String title = textAttribute.getTextForLang("en");
+            if (null == title) {
+                title = textAttribute.getTextForLang("it");
+            }
+            Assertions.assertEquals(extractedId, expectedContentsId_5_en[i]);
+        }
+    }
+    
+}

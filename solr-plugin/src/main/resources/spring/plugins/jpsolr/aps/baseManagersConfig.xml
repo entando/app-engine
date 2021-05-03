@@ -22,4 +22,11 @@
         <property name="contentManager" ref="jacmsContentManager" />
     </bean>
     
+    <bean id="jpsolrAdvContentFacetManager" class="org.entando.entando.plugins.jpsolr.aps.system.content.AdvContentFacetManager">
+        <property name="categoryManager" ref="CategoryManager" />
+        <property name="authorizationManager" ref="AuthorizationManager" />
+        <property name="langManager" ref="LangManager" />
+        <property name="searchEngineManager" ref="jacmsSearchEngineManager" />
+    </bean>
+    
 </beans>

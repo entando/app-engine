@@ -68,7 +68,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
                 this.checkField(checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
                 this.checkField(checkedFields, SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME, "text_general");
                 this.checkField(checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, "text_general", true);
-                this.checkField(checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_general");
+                this.checkField(checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_gen_sort");
                 this.checkField(checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, "text_general");
                 this.checkField(checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, "text_general", true);
             }

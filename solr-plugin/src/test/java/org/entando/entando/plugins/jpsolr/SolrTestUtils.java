@@ -19,8 +19,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 /**
- * Classe test del servizio gestore cache.
- *
  * @author E.Santoboni
  */
 public class SolrTestUtils {
