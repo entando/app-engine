@@ -112,6 +112,8 @@ public class SearchEngineManagerIntegrationTest {
             dateAttrEnv.setRoles(new String[]{ROLE_FOR_TEST});
             ((IEntityTypesConfigurer) contentManager).updateEntityPrototype(evnType);
         }
+        ISolrSearchEngineManager solrSearchEngineManager = applicationContext.getBean(ISolrSearchEngineManager.class);
+        solrSearchEngineManager.refreshCmsFields();
     }
 
     @AfterAll
@@ -487,7 +489,7 @@ public class SearchEngineManagerIntegrationTest {
             this.waitForSearchEngine();
         }
     }
-    /*
+    
     @Test
     public void testSearchContentsId_8() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
@@ -550,9 +552,9 @@ public class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-    */
-    /*
-    public void testSearchContentsId_9() throws Throwable {
+    
+    @Test
+    void testSearchContentsId_9() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
         List<String> allowedGroup = new ArrayList<>();
         allowedGroup.add(Group.ADMINS_GROUP_NAME);
@@ -566,82 +568,9 @@ public class SearchEngineManagerIntegrationTest {
             newTextAttribute.setIndexingType(IndexableAttributeInterface.INDEXING_TYPE_TEXT);
             artType.addAttribute(newTextAttribute);
             ((IEntityTypesConfigurer) this.contentManager).updateEntityPrototype(artType);
-            
-            SolrClient solrClient = new HttpSolrClient.Builder("http://localhost:8984/solr/entando/schema")
-                .withConnectionTimeout(10000)
-                .withSocketTimeout(60000)
-                .build();
-            
-            Content prototype = this.contentManager.createContentType("ART");
-            Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
-            List<SchemaRequest.Update> updateList = new ArrayList<>();
-            while (iterAttribute.hasNext()) {
-                AttributeInterface attribute = iterAttribute.next();
-                if (!attribute.isTextAttribute()) {
-                    continue;
-                }
-                List<Lang> langs = langManager.getLangs();
-                for (int i = 0; i < langs.size(); i++) {
-                    Lang currentLang = (Lang) langs.get(i);
-                    String fieldName = currentLang.getCode().toLowerCase() + "_" + attribute.getName();
-                    fieldName = fieldName.replaceAll(":", "_");
-                    
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("type", "text_general_rev");
-                    map.put("name", fieldName);
-                    map.put("stored", true);
-    map.put("indexed", true);
-    map.put("multiValued", false);
-    map.put("required", false);
-                    //SchemaRequest.AddField addFieldRequest = new SchemaRequest.AddField(map, new MapSolrParams(new HashMap<>()));
-                    //updateList.add(addFieldRequest);
-                    
-                    SchemaRequest.AddField schemaRequest = new SchemaRequest.AddField(map);
-      SchemaResponse.UpdateResponse response =  schemaRequest.process(solrClient);
-                    
-                    //SchemaRequest.Field originalField = new SchemaRequest.Field(fieldName);
-                    //Map<String, Object> updatedFieldAttributes = originalField.process(solrClient).getField();
-                    //updatedFieldAttributes.put("type", "text_general_rev");
-                    //SchemaRequest.ReplaceField replaceFieldRequest = new SchemaRequest.ReplaceField(updatedFieldAttributes);
-                    //updateList.add(replaceFieldRequest);
-                    if (null != attribute.getRoles()) {
-
-                        for (int j = 0; j < attribute.getRoles().length; j++) {
-                            String roleFieldName = currentLang.getCode().toLowerCase() + "_" + attribute.getRoles()[j];
-                            roleFieldName = roleFieldName.replaceAll(":", "_");
-
-                            Map<String, Object> mapRole = new HashMap<>();
-                            mapRole.put("type", "text_general_rev");
-                            mapRole.put("name", roleFieldName);
-                    mapRole.put("stored", true);
-    mapRole.put("indexed", true);
-    mapRole.put("multiValued", false);
-    mapRole.put("required", false);
-                            //SchemaRequest.AddField addFieldRequestRole = new SchemaRequest.AddField(mapRole, new MapSolrParams(new HashMap<>()));
-                            //updateList.add(addFieldRequestRole);
-                            SchemaRequest.AddField schemaRequestRole = new SchemaRequest.AddField(mapRole);
-      SchemaResponse.UpdateResponse responseRole =  schemaRequestRole.process(solrClient); 
-                        //SchemaRequest.Field originalFieldRole = new SchemaRequest.Field(roleFieldName);
-                        //Map<String, Object> updatedFieldAttributesRole = originalFieldRole.process(solrClient).getField();
-                        //updatedFieldAttributesRole.put("type", "text_general_rev");
-                        //SchemaRequest.ReplaceField replaceFieldRequestRole = new SchemaRequest.ReplaceField(updatedFieldAttributesRole);
-                        //updateList.add(replaceFieldRequestRole);
-                             
-                        }
-
-                    }
-                    
-                }
+            synchronized (this) {
+                this.wait(1000);
             }
-            
-            //SchemaRequest.MultiUpdate multiUpdateRequest = new SchemaRequest.MultiUpdate(updateList);
-            //SchemaResponse.UpdateResponse multipleUpdatesResponse = multiUpdateRequest.process(solrClient);
-            
-            System.out.println("---------------------------");
-            //System.out.println(multipleUpdatesResponse);
-            System.out.println("---------------------------");
-            
-            
             char[] characters = "abcdefghijklmnopqrstuvwxyz".toCharArray();
             for (int i = 0; i < characters.length; i++) {
                 String c = String.valueOf(characters[i]);
@@ -653,8 +582,9 @@ public class SearchEngineManagerIntegrationTest {
                 this.contentManager.insertOnLineContent(content);
                 ids.add(content.getId());
             }
-            this.waitForSearchEngine();
-            
+            synchronized (this) {
+                this.wait(3000);
+            }
             SearchEngineFilter filterByType = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "ART");
             SearchEngineFilter filter = new SearchEngineFilter("Test", true);
             filter.setLangCode("it");
@@ -688,10 +618,9 @@ public class SearchEngineManagerIntegrationTest {
                 this.contentManager.removeOnLineContent(newContent);
                 this.contentManager.deleteContent(newContent);
             }
-            this.waitForSearchEngine();
         }
     }
-     */
+    
     private void executeTestByStringRange(List<String> allowedGroup,
             String start, String end, List<String> total, int startIndex, int expectedSize) throws Exception {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;

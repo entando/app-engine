@@ -5,7 +5,6 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-
 import com.agiletec.aps.system.common.IManager;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingEvent;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingObserver;

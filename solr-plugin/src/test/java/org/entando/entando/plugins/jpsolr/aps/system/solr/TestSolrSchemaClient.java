@@ -48,13 +48,13 @@ public class TestSolrSchemaClient {
         List<Map<String, Object>> fields = SolrSchemaClient.getFields(address, core);
         Assertions.assertNotNull(fields);
         try {
-            Map<String, Object> addedFiled = fields.stream().filter(f -> f.containsKey(fieldName)).findFirst().orElse(null);
+            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNull(addedFiled);
 
-            Map<String, String> propertis = new HashMap<>();
-            propertis.put("name", fieldName);
-            propertis.put("type", "text_general");
-            boolean result = SolrSchemaClient.addField(address, core, propertis);
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("name", fieldName);
+            properties.put("type", "text_general");
+            boolean result = SolrSchemaClient.addField(address, core, properties);
             Assertions.assertTrue(result);
 
             fields = SolrSchemaClient.getFields(address, core);
@@ -63,8 +63,8 @@ public class TestSolrSchemaClient {
             Assertions.assertNotNull(addedFiled);
             Assertions.assertEquals("text_general", addedFiled.get("type"));
 
-            propertis.put("type", "plong");
-            result = SolrSchemaClient.replaceField(address, core, propertis);
+            properties.put("type", "plong");
+            result = SolrSchemaClient.replaceField(address, core, properties);
             Assertions.assertTrue(result);
 
             fields = SolrSchemaClient.getFields(address, core);
