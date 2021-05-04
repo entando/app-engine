@@ -43,10 +43,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
+import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +66,17 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
     private ICmsSearchEngineManager searchEngineManager;
 
     private ObjectMapper mapper = new ObjectMapper();
+    
+    @BeforeAll
+    public static void setup() throws Exception {
+        SolrTestUtils.startContainer();
+        AbstractControllerIntegrationTest.setup();
+    }
+    
+    @AfterAll
+    public static void tearDown() throws Exception {
+        SolrTestUtils.stopContainer();
+    }
     
     @Override
     @BeforeEach
@@ -744,7 +759,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         List<String> expectedFreeContentsId = Arrays.asList("ART122", "ART121", "ART120", "ART111", 
-                "ART102", /*"ART180",*/ "ART112", "ART104", "ART1", /*"ART187",*/ "EVN193", "EVN194", 
+                "ART102", "ART112", "ART104", "ART1", "EVN193", "EVN194", 
                 "EVN191", "EVN25", "EVN21", "EVN41", "EVN24", "EVN23", "EVN103", "EVN192", "EVN20");
         // NOTA : "ART180" e "ART187" non hanno titolo
         
@@ -885,6 +900,217 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             }
             Assertions.assertEquals(extractedId, expectedContentsId_5_en[i]);
         }
+    }
+    
+    @Test
+    public void testSearchByOption() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        
+        ResultActions result_1 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("text", "ciliegia").param("lang", "it")
+                        .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("filters[0].order", FieldSearchFilter.ASC_ORDER)
+                        .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+        result_1.andExpect(status().isOk());
+        String bodyResult_1 = result_1.andReturn().getResponse().getContentAsString();
+        List<String> expectedContentsId = Arrays.asList("EVN41");
+        int firstPayloadSize = JsonPath.read(bodyResult_1, "$.payload.size()");
+        Assertions.assertEquals(expectedContentsId.size(), firstPayloadSize);
+        for (int i = 0; i < expectedContentsId.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult_1, "$.payload[" + i + "]");
+            Assertions.assertEquals(expectedContentsId.get(i), extractedId);
+        }
+        String content1Id = null;
+        String content2Id = null;
+        try {
+            Content content1 = this.contentManager.loadContent("EVN41", true);
+            content1.setId(null);
+            content1.setDescription("Mostra della ciliegia");
+            ITextAttribute title1 = (ITextAttribute) content1.getAttribute("Titolo");
+            title1.setText("La mostra della ciliegia", "it");
+            title1.setText("The cherry festival", "en");
+            ITextAttribute textBody1 = (ITextAttribute) content1.getAttribute("CorpoTesto");
+            textBody1.setText("Rinomata la mostra della ciliegia che si tiene ogni anno in un paese florido", "it");
+            textBody1.setText("The cherry festival held every year in a thriving country is renowned", "en");
+            this.contentManager.insertOnLineContent(content1);
+            content1Id = content1.getId();
+            
+            Content content2 = this.contentManager.loadContent("EVN41", true);
+            content2.setId(null);
+            content2.setDescription("Sagra della ciliegia");
+            ITextAttribute title2 = (ITextAttribute) content2.getAttribute("Titolo");
+            title2.setText("La forma della ciliegia", "it");
+            title2.setText("The shape of the cherry", "en");
+            ITextAttribute textBody2 = (ITextAttribute) content2.getAttribute("CorpoTesto");
+            textBody2.setText("La ciliegia, normalmente sferica, di 0,7-2 centimetri di diametro, può assumere anche la forma a cuore o di sfera leggermente allungata", "it");
+            textBody2.setText("The cherry, normally spherical, 0.7-2 centimeters in diameter, can also take the shape of a heart or a slightly elongated sphere", "en");
+            this.contentManager.insertOnLineContent(content2);
+            content2Id = content2.getId();
+            waitNotifyingThread();
+            // "exact", "all", "one", "any"
+            
+            List<String> orders = Arrays.asList(FieldSearchFilter.ASC_ORDER, FieldSearchFilter.DESC_ORDER);
+            for (int k = 0; k < orders.size(); k++) {
+                String order = orders.get(k);
+                ResultActions result_2 = mockMvc
+                        .perform(get("/plugins/advcontentsearch/contents")
+                                .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "one")
+                                .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                                .param("filters[0].order", order)
+                                .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+                result_2.andExpect(status().isOk());
+                String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
+                List<String> expectedContentsId2 = Arrays.asList("EVN20", "EVN41", "EVN21", content1Id, content2Id);
+                int payloadSize2 = JsonPath.read(bodyResult_2, "$.payload.size()");
+                Assertions.assertEquals(expectedContentsId2.size(), payloadSize2);
+                for (int i = 0; i < expectedContentsId2.size(); i++) {
+                    String extractedId = JsonPath.read(bodyResult_2, "$.payload[" + i + "]");
+                    if (order.equals(FieldSearchFilter.ASC_ORDER)) {
+                        Assertions.assertEquals(expectedContentsId2.get(i), extractedId);
+                    } else {
+                        Assertions.assertEquals(expectedContentsId2.get(payloadSize2 - i - 1), extractedId);
+                    }
+                }
+            }
+            
+            ResultActions result_3 = mockMvc
+                    .perform(get("/plugins/advcontentsearch/contents")
+                            .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "all")
+                            .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+            result_3.andExpect(status().isOk());
+            String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
+            int payloadSize3 = JsonPath.read(bodyResult_3, "$.payload.size()");
+            Assertions.assertEquals(1, payloadSize3);
+            String extractedId = JsonPath.read(bodyResult_3, "$.payload[0]");
+            Assertions.assertEquals(content1Id, extractedId);
+            
+            ResultActions result_4 = mockMvc
+                    .perform(get("/plugins/advcontentsearch/contents")
+                            .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "exact")
+                            .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+            result_4.andExpect(status().isOk());
+            String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
+            int payloadSize4 = JsonPath.read(bodyResult_4, "$.payload.size()");
+            Assertions.assertEquals(0, payloadSize4);
+            
+            ResultActions result_5 = mockMvc
+                    .perform(get("/plugins/advcontentsearch/contents")
+                            .param("text", "mostra della ciliegia").param("lang", "it").param("searchOption", "exact")
+                            .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+            result_5.andExpect(status().isOk());
+            String bodyResult_5 = result_5.andReturn().getResponse().getContentAsString();
+            int payloadSize5 = JsonPath.read(bodyResult_5, "$.payload.size()");
+            Assertions.assertEquals(1, payloadSize5);
+            String extractedId_5 = JsonPath.read(bodyResult_5, "$.payload[0]");
+            Assertions.assertEquals(content1Id, extractedId_5);
+                    
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            Content content1 = this.contentManager.loadContent(content1Id, false);
+            if (null != content1) {
+                this.contentManager.removeOnLineContent(content1);
+                this.contentManager.deleteContent(content1Id);
+            }
+            Content content2 = this.contentManager.loadContent(content2Id, false);
+            if (null != content2) {
+                this.contentManager.removeOnLineContent(content2);
+                this.contentManager.deleteContent(content2Id);
+            }
+            
+        }
+        
+        
+        /*
+        ResultActions result_2 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
+        List<String> expectedContentsId_2 = Arrays.asList("ART1", "ART121", 
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+                "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
+        result_2.andExpect(status().isOk());
+        int payloadSize = JsonPath.read(bodyResult_2, "$.payload.size()");
+        Assertions.assertEquals(expectedContentsId_2.size(), payloadSize);
+        for (int i = 0; i < expectedContentsId_2.size(); i++) {
+            String extractedId = JsonPath.read(bodyResult_2, "$.payload[" + i + "]");
+            Assertions.assertTrue(expectedContentsId_2.contains(extractedId));
+        }
+        
+        ResultActions result_3 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .param("filters[1].order", "DESC")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
+        String[] expectedContentsId_3 = {"EVN194", "ART122", "ART121", "ART120", 
+                "ART112", "ART111", "ART102", "ART104", "EVN103", "EVN193", "EVN192", "EVN191", "EVN25", 
+                "EVN41", "EVN20", "EVN21", "ART1", "EVN23", "EVN24"};
+        result_3.andExpect(status().isOk());
+        int payloadSize_3 = JsonPath.read(bodyResult_3, "$.payload.size()");
+        Assertions.assertEquals(expectedContentsId_3.length, payloadSize_3);
+        for (int i = 0; i < expectedContentsId_3.length; i++) {
+            String extractedId = JsonPath.read(bodyResult_3, "$.payload[" + i + "]");
+            Assertions.assertEquals(extractedId, expectedContentsId_3[i]);
+        }
+        
+        ResultActions result_4 = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .param("filters[1].order", "ASC")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
+        for (int i = 0; i < expectedContentsId_3.length; i++) {
+            String extractedId = JsonPath.read(bodyResult_4, "$.payload[" + i + "]");
+            Assertions.assertEquals(extractedId, expectedContentsId_3[expectedContentsId_3.length - i - 1]);
+        }
+        
+        ResultActions result_5_en = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("lang", "en")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].allowedValues[0]", "ART")
+                        .param("filters[0].allowedValues[1]", "EVN")
+                        .param("filters[1].entityAttr", "jacms:title")
+                        .param("filters[1].order", "ASC")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult_5_en = result_5_en.andReturn().getResponse().getContentAsString();
+        String[] expectedContentsId_5_en = {"EVN41", "EVN24", "EVN103", "EVN23", "EVN21", 
+            "ART1", "EVN194", "EVN192", "EVN191", "EVN193", "ART120", "ART121", 
+            "ART104", "ART102", "ART111", "ART112", "ART122", "EVN25", "EVN20"};
+        for (int i = 0; i < expectedContentsId_5_en.length; i++) {
+            String extractedId = JsonPath.read(bodyResult_5_en, "$.payload[" + i + "]");
+            Content content = this.contentManager.loadContent(extractedId, true);
+            ITextAttribute textAttribute = (ITextAttribute) content.getAttributeByRole("jacms:title");
+            String title = textAttribute.getTextForLang("en");
+            if (null == title) {
+                title = textAttribute.getTextForLang("it");
+            }
+            Assertions.assertEquals(extractedId, expectedContentsId_5_en[i]);
+        }
+        */
     }
     
 }

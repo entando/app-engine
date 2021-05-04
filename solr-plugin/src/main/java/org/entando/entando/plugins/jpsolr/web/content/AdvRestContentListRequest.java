@@ -34,13 +34,13 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
 
     private String[] csvCategories;
     private String text;
+    private String searchOption;
     
     private boolean guestUser;
 
     public String getLang() {
         return lang;
     }
-
     public void setLang(String lang) {
         this.lang = lang;
     }
@@ -48,7 +48,6 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public String[] getCsvCategories() {
         return csvCategories;
     }
-
     public void setCsvCategories(String[] csvCategories) {
         this.csvCategories = csvCategories;
     }
@@ -56,15 +55,20 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public String getText() {
         return text;
     }
-
     public void setText(String text) {
         this.text = text;
     }
 
+    public String getSearchOption() {
+        return searchOption;
+    }
+    public void setSearchOption(String searchOption) {
+        this.searchOption = searchOption;
+    }
+    
     public boolean isGuestUser() {
         return guestUser;
     }
-
     public void setGuestUser(boolean guestUser) {
         this.guestUser = guestUser;
     }
@@ -97,8 +101,8 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
                     searchFilter = SearchEngineFilter.createRangeFilter(key, isAttribute, null, objectValue);
                 } else {
                     searchFilter = new SearchEngineFilter(key, isAttribute, objectValue);
-                    if (null != objectValue && 
-                            !StringUtils.isBlank(objectValue.toString()) 
+                    if (null != objectValue
+                            && !StringUtils.isBlank(objectValue.toString())
                             && FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
                         searchFilter.setLikeOption(true);
                     }
@@ -111,7 +115,17 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
             }
         }
         if (!StringUtils.isBlank(this.getText())) {
-            SearchEngineFilter searchFilter = new SearchEngineFilter(langCode, this.getText(), SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD);
+            SearchEngineFilter.TextSearchOption textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
+            if (null != this.getSearchOption()) {
+                if (this.getSearchOption().equalsIgnoreCase("exact")) {
+                    textSearchOption = SearchEngineFilter.TextSearchOption.EXACT;
+                } else if (this.getSearchOption().equalsIgnoreCase("all")) {
+                    textSearchOption = SearchEngineFilter.TextSearchOption.ALL_WORDS;
+                } else if (this.getSearchOption().equalsIgnoreCase("one") || this.getSearchOption().equalsIgnoreCase("any")) {
+                    textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
+                }
+            }
+            SearchEngineFilter searchFilter = new SearchEngineFilter(langCode, this.getText(), textSearchOption);
             searchFilter.setFullTextSearch(true);
             searchFilters = ArrayUtils.add(searchFilters, searchFilter);
         }

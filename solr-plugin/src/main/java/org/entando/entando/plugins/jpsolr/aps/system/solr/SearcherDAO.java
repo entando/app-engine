@@ -240,7 +240,8 @@ public class SearcherDAO implements ISearcherDAO {
                         if (option.equals(SearchEngineFilter.TextSearchOption.ALL_WORDS)) {
                             bc = BooleanClause.Occur.MUST;
                         } else if (option.equals(SearchEngineFilter.TextSearchOption.ANY_WORD)) {
-                            bc = BooleanClause.Occur.MUST_NOT;
+                            logger.debug("'ANY_WORD' option deprecated - used 'AT_LEAST_ONE_WORD'");
+                            //bc = BooleanClause.Occur.MUST_NOT;
                         }
                         for (int i = 0; i < values.length; i++) {
                             Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption());
@@ -289,7 +290,8 @@ public class SearcherDAO implements ISearcherDAO {
                     if (option.equals(SearchEngineFilter.TextSearchOption.ALL_WORDS)) {
                         bc = BooleanClause.Occur.MUST;
                     } else if (option.equals(SearchEngineFilter.TextSearchOption.ANY_WORD)) {
-                        bc = BooleanClause.Occur.MUST_NOT;
+                        logger.debug("'ANY_WORD' option deprecated - used 'AT_LEAST_ONE_WORD'");
+                        //bc = BooleanClause.Occur.MUST_NOT;
                     }
                     for (int i = 0; i < values.length; i++) {
                         Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption());
