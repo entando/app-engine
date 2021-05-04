@@ -70,7 +70,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     @Override
     public boolean refreshCmsFields() {
         List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
-        List<String> checkedFields = new ArrayList<>();
+        Map<String, Map<String, Object>> checkedFields = new HashMap<>();
         for (int i = 0; i < entityTypes.size(); i++) {
             if (i == 0) {
                 this.checkField(checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
@@ -86,7 +86,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         return true;
     }
     
-    protected void refreshEntityType(List<String> checkedFields, String entityTypeCode) {
+    protected void refreshEntityType(Map<String, Map<String, Object>> checkedFields, String entityTypeCode) {
         Content prototype = this.getContentManager().createContentType(entityTypeCode);
         Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
         while (iterAttribute.hasNext()) {
@@ -103,7 +103,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         }
     }
 
-    private void checkAttribute(List<String> checkedFields, AttributeInterface attribute, Lang lang) {
+    private void checkAttribute(Map<String, Map<String, Object>> checkedFields, AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
         if (attribute instanceof IndexableAttributeInterface
                 || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute) && attribute.isSearchable())) {
@@ -131,17 +131,24 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         }
     }
     
-    private void checkField(List<String> checkedFields, String fieldName, String type) {
+    private void checkField(Map<String, Map<String, Object>> checkedFields, String fieldName, String type) {
         this.checkField(checkedFields, fieldName, type, false);
     }
     
-    private void checkField(List<String> checkedFields, String fieldName, String type, boolean multiValue) {
-        if (null != checkedFields && checkedFields.contains(fieldName)) {
-            logger.warn("** field '" + fieldName + "' already checked **");
-            return;
-        }
+    private void checkField(Map<String, Map<String, Object>> checkedFields, String fieldName, String type, boolean multiValue) {
         List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
         Map<String, Object> currentField = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+        
+        if (null != currentField) {
+            if (currentField.get("type").equals(type) 
+                    && currentField.get("multiValued").equals(multiValue)) {
+                return;
+            } else {
+                logger.warn("Field '" + fieldName + "' already exists but with different configuration!"
+                        + " - type '" + currentField.get("type") + "' to '" + type + "'"
+                        + " - multiValued '" + currentField.get("multiValued") + "' to '" + multiValue + "'");
+            }
+        } 
         Map<String, Object> newField = new HashMap<>();
         newField.put("name", fieldName);
         newField.put("type", type);
@@ -152,7 +159,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             ((ISolrSearchEngineDAOFactory) this.getFactory()).replaceField(newField);
         }
         if (null != checkedFields) {
-            checkedFields.add(fieldName);
+            checkedFields.put(fieldName, newField);
         }
     }
     
@@ -171,7 +178,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         super.updateFromEntityTypesChanging(event);
         if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName())) {
             String typeCode = event.getNewEntityType().getTypeCode();
-            this.refreshEntityType(new ArrayList<>(), typeCode);
+            this.refreshEntityType(new HashMap<String, Map<String, Object>>(), typeCode);
         }
     }
 
