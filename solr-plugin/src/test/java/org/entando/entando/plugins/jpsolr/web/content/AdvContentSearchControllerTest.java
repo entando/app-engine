@@ -43,7 +43,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
@@ -1020,97 +1019,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                 this.contentManager.removeOnLineContent(content2);
                 this.contentManager.deleteContent(content2Id);
             }
-            
         }
-        
-        
-        /*
-        ResultActions result_2 = mockMvc
-                .perform(get("/plugins/advcontentsearch/contents")
-                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
-                        .param("filters[0].operator", "eq")
-                        .param("filters[0].allowedValues[0]", "ART")
-                        .param("filters[0].allowedValues[1]", "EVN")
-                        .param("filters[1].entityAttr", "jacms:title")
-                        .sessionAttr("user", user)
-                        .header("Authorization", "Bearer " + accessToken));
-        String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
-        List<String> expectedContentsId_2 = Arrays.asList("ART1", "ART121", 
-                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
-                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
-                "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
-        result_2.andExpect(status().isOk());
-        int payloadSize = JsonPath.read(bodyResult_2, "$.payload.size()");
-        Assertions.assertEquals(expectedContentsId_2.size(), payloadSize);
-        for (int i = 0; i < expectedContentsId_2.size(); i++) {
-            String extractedId = JsonPath.read(bodyResult_2, "$.payload[" + i + "]");
-            Assertions.assertTrue(expectedContentsId_2.contains(extractedId));
-        }
-        
-        ResultActions result_3 = mockMvc
-                .perform(get("/plugins/advcontentsearch/contents")
-                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
-                        .param("filters[0].operator", "eq")
-                        .param("filters[0].allowedValues[0]", "ART")
-                        .param("filters[0].allowedValues[1]", "EVN")
-                        .param("filters[1].entityAttr", "jacms:title")
-                        .param("filters[1].order", "DESC")
-                        .sessionAttr("user", user)
-                        .header("Authorization", "Bearer " + accessToken));
-        String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
-        String[] expectedContentsId_3 = {"EVN194", "ART122", "ART121", "ART120", 
-                "ART112", "ART111", "ART102", "ART104", "EVN103", "EVN193", "EVN192", "EVN191", "EVN25", 
-                "EVN41", "EVN20", "EVN21", "ART1", "EVN23", "EVN24"};
-        result_3.andExpect(status().isOk());
-        int payloadSize_3 = JsonPath.read(bodyResult_3, "$.payload.size()");
-        Assertions.assertEquals(expectedContentsId_3.length, payloadSize_3);
-        for (int i = 0; i < expectedContentsId_3.length; i++) {
-            String extractedId = JsonPath.read(bodyResult_3, "$.payload[" + i + "]");
-            Assertions.assertEquals(extractedId, expectedContentsId_3[i]);
-        }
-        
-        ResultActions result_4 = mockMvc
-                .perform(get("/plugins/advcontentsearch/contents")
-                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
-                        .param("filters[0].operator", "eq")
-                        .param("filters[0].allowedValues[0]", "ART")
-                        .param("filters[0].allowedValues[1]", "EVN")
-                        .param("filters[1].entityAttr", "jacms:title")
-                        .param("filters[1].order", "ASC")
-                        .sessionAttr("user", user)
-                        .header("Authorization", "Bearer " + accessToken));
-        String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
-        for (int i = 0; i < expectedContentsId_3.length; i++) {
-            String extractedId = JsonPath.read(bodyResult_4, "$.payload[" + i + "]");
-            Assertions.assertEquals(extractedId, expectedContentsId_3[expectedContentsId_3.length - i - 1]);
-        }
-        
-        ResultActions result_5_en = mockMvc
-                .perform(get("/plugins/advcontentsearch/contents")
-                        .param("lang", "en")
-                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
-                        .param("filters[0].operator", "eq")
-                        .param("filters[0].allowedValues[0]", "ART")
-                        .param("filters[0].allowedValues[1]", "EVN")
-                        .param("filters[1].entityAttr", "jacms:title")
-                        .param("filters[1].order", "ASC")
-                        .sessionAttr("user", user)
-                        .header("Authorization", "Bearer " + accessToken));
-        String bodyResult_5_en = result_5_en.andReturn().getResponse().getContentAsString();
-        String[] expectedContentsId_5_en = {"EVN41", "EVN24", "EVN103", "EVN23", "EVN21", 
-            "ART1", "EVN194", "EVN192", "EVN191", "EVN193", "ART120", "ART121", 
-            "ART104", "ART102", "ART111", "ART112", "ART122", "EVN25", "EVN20"};
-        for (int i = 0; i < expectedContentsId_5_en.length; i++) {
-            String extractedId = JsonPath.read(bodyResult_5_en, "$.payload[" + i + "]");
-            Content content = this.contentManager.loadContent(extractedId, true);
-            ITextAttribute textAttribute = (ITextAttribute) content.getAttributeByRole("jacms:title");
-            String title = textAttribute.getTextForLang("en");
-            if (null == title) {
-                title = textAttribute.getTextForLang("it");
-            }
-            Assertions.assertEquals(extractedId, expectedContentsId_5_en[i]);
-        }
-        */
     }
     
 }

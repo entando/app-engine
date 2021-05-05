@@ -20,10 +20,12 @@ import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
+import com.agiletec.aps.system.common.util.EntityAttributeIterator;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.lang.*;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ResourceAttributeInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 
 import java.io.*;
@@ -110,9 +112,9 @@ public class IndexerDAO implements IIndexerDAO {
                 document.addField(SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
             }
         }
-        Iterator<AttributeInterface> iterAttribute = entity.getAttributeList().iterator();
-        while (iterAttribute.hasNext()) {
-            AttributeInterface currentAttribute = iterAttribute.next();
+        EntityAttributeIterator attributesIter = new EntityAttributeIterator(entity);
+        while (attributesIter.hasNext()) {
+            AttributeInterface currentAttribute = (AttributeInterface) attributesIter.next();
             Object value = currentAttribute.getValue();
             if (null == value) {
                 continue;
@@ -153,15 +155,22 @@ public class IndexerDAO implements IIndexerDAO {
             }
             if (attribute instanceof IndexableAttributeInterface) {
                 // full text search
+                String fieldName = lang.getCode();
+                if (attribute instanceof ResourceAttributeInterface) {
+                    fieldName += SolrFields.ATTACHMENT_FIELD_SUFFIX;
+                }
                 String indexingType = attribute.getIndexingType();
                 if (null != indexingType
                         && IndexableAttributeInterface.INDEXING_TYPE_UNSTORED.equalsIgnoreCase(indexingType)) {
-                    document.addField(lang.getCode(), valueToIndex);
+                    document.addField(fieldName, valueToIndex);
                 }
                 if (null != indexingType
                         && IndexableAttributeInterface.INDEXING_TYPE_TEXT.equalsIgnoreCase(indexingType)) {
-                    document.addField(lang.getCode(), valueToIndex);
+                    document.addField(fieldName, valueToIndex);
                 }
+            }
+            if (attribute instanceof ResourceAttributeInterface) {
+                return;
             }
             String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
             this.indexValue(document, fieldName, valueToIndex);

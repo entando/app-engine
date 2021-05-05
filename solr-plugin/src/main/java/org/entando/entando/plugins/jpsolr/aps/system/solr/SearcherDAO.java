@@ -36,12 +36,11 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
- * Data Access Object dedita alle operazioni di ricerca ad uso del motore di ricerca interno.
- *
  * @author E.Santoboni
  */
 public class SearcherDAO implements ISearcherDAO {
@@ -83,6 +82,9 @@ public class SearcherDAO implements ISearcherDAO {
             SearchEngineFilter[] categories, Collection<String> allowedGroups, boolean faceted) throws EntException {
         FacetedContentsResult result = new FacetedContentsResult();
         List<String> contentsId = new ArrayList<>();
+        Map<String, Integer> occurrences = new HashMap<>();
+        result.setOccurrences(occurrences);
+        result.setContentsId(contentsId);
         SolrClient client = this.getSolrClient();
         try {
             Query query = null;
@@ -111,7 +113,6 @@ public class SearcherDAO implements ISearcherDAO {
             }
             QueryResponse response = client.query(this.getSolrCore(), solrQuery);
             SolrDocumentList documents = response.getResults();
-            Map<String, Integer> occurrences = new HashMap<>();
             for (SolrDocument doc : documents) {
                 String id = doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME).toString();
                 contentsId.add(id);
@@ -136,10 +137,8 @@ public class SearcherDAO implements ISearcherDAO {
                     }
                 }
             }
-            result.setOccurrences(occurrences);
-            result.setContentsId(contentsId);
-        } catch (IndexNotFoundException inf) {
-            logger.error("no index was found in the Directory", inf);
+        } catch (SolrException inf) {
+            logger.error("Solr exception", inf);
         } catch (Throwable t) {
             logger.error("Error extracting documents", t);
             throw new EntException("Error extracting documents", t);
@@ -214,9 +213,10 @@ public class SearcherDAO implements ISearcherDAO {
         return mainQuery.build();
     }
 
-    private Query createQuery(SearchEngineFilter filter) {
+    protected Query createQuery(SearchEngineFilter filter) {
         BooleanQuery.Builder fieldQuery = null;
         String key = this.getFilterKey(filter);
+        String attachmentKey = key + SolrFields.ATTACHMENT_FIELD_SUFFIX;
         Object value = filter.getValue();
         List<?> allowedValues = filter.getAllowedValues();
         if (null != allowedValues && !allowedValues.isEmpty()) {
@@ -295,14 +295,32 @@ public class SearcherDAO implements ISearcherDAO {
                     }
                     for (int i = 0; i < values.length; i++) {
                         Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption());
-                        fieldQuery.add(queryTerm, bc);
+						if ((filter instanceof SolrSearchEngineFilter) && ((SolrSearchEngineFilter)filter).isIncludeAttachments()) {
+							BooleanQuery.Builder compositeQuery = new BooleanQuery.Builder ();
+							compositeQuery.add(queryTerm, BooleanClause.Occur.SHOULD);
+							TermQuery termAttachment = new TermQuery(new Term(attachmentKey, values[i].toLowerCase()));
+							compositeQuery.add(termAttachment, BooleanClause.Occur.SHOULD);
+							fieldQuery.add(compositeQuery.build(), bc);
+						} else {
+							fieldQuery.add(queryTerm, bc);
+						}
                     }
                 } else {
                     PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
                     for (int i = 0; i < values.length; i++) {
                         phraseQuery.add(new Term(key, values[i].toLowerCase()), i);
                     }
-                    return phraseQuery.build();
+					if ((filter instanceof SolrSearchEngineFilter) && ((SolrSearchEngineFilter)filter).isIncludeAttachments()) {
+						fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
+						PhraseQuery.Builder phraseQuery2 = new PhraseQuery.Builder();
+						for (int i = 0; i < values.length; i++) {
+							//NOTE: search lower case....
+							phraseQuery2.add(new Term(attachmentKey, values[i].toLowerCase()));
+						}
+						fieldQuery.add(phraseQuery2.build(), BooleanClause.Occur.SHOULD);
+					} else {
+						return phraseQuery.build();
+					}
                 }
             } else if (value instanceof Date) {
                 String toString = DateConverter.getFormattedDate((Date) value, SolrFields.SOLR_SEARCH_DATE_FORMAT);

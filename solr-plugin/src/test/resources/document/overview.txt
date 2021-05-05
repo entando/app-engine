@@ -1,0 +1,4 @@
+Entando is a platform that integrates trusted open source technologies and extends their functionality to give you a cohesive and streamlined developer experience with easy-to-use patterns.
+
+From deploying on Kubernetes to creating modular backend and frontend architectures using your current technologies, Entando helps you at every layer of the stack. Entando empowers you to build modern, cloud-native apps, offering you tools that simplify the development process while also giving you the freedom to fully customize your solutions.
+

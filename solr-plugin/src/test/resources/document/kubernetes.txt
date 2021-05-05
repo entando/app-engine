@@ -1,0 +1,4 @@
+Why Kubernetes?
+Instead of you doing the work to ensure your apps and services stay up and running, Kubernetes does the work for you. For each app or service, you can set resource limits, the number of pods you want backing each service, upgrade strategy, and auto-scaling. Kubernetes actively manages your cluster to match your defined resource utilization and ensures your site doesn't go down.
+How Google Runs Containers in Production; Each week, Google deploys over 2 billion containers in production to run all of its services like Gmail, YouTube, and Search. Kubernetes is Google's open source solution to automate the management of containers at scale.
+Over 50% of Fortune 500 companies use Kubernetes with product offerings from Amazon Elastic Kubernetes Service (EKS), Google Cloud Platform (GKE), IBM (Red Hat) OpenShift, Microsoft Azure (AKS), and VMWare Pivotal (PKS).

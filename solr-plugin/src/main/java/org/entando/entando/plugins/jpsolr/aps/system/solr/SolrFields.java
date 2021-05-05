@@ -38,5 +38,7 @@ public class SolrFields {
     public static final String SOLR_CONTENT_CREATION_FIELD_NAME = "entity_created";
     public static final String SOLR_CONTENT_TYPE_CODE_FIELD_NAME = "entity_typeCode";
     public static final String SOLR_CONTENT_MAIN_GROUP_FIELD_NAME = "entity_maingroup";
+    
+    public static final String ATTACHMENT_FIELD_SUFFIX = "_attachment";
 
 }

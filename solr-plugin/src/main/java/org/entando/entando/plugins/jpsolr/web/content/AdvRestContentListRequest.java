@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineFilter;
 import org.entando.entando.web.common.model.Filter;
 import org.entando.entando.web.common.model.FilterOperator;
 import org.entando.entando.web.common.model.FilterType;
@@ -35,7 +36,8 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     private String[] csvCategories;
     private String text;
     private String searchOption;
-    
+    private boolean includeAttachments;
+
     private boolean guestUser;
 
     public String getLang() {
@@ -64,6 +66,13 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     }
     public void setSearchOption(String searchOption) {
         this.searchOption = searchOption;
+    }
+
+    public boolean isIncludeAttachments() {
+        return includeAttachments;
+    }
+    public void setIncludeAttachments(boolean includeAttachments) {
+        this.includeAttachments = includeAttachments;
     }
     
     public boolean isGuestUser() {
@@ -125,8 +134,9 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
                     textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
                 }
             }
-            SearchEngineFilter searchFilter = new SearchEngineFilter(langCode, this.getText(), textSearchOption);
+            SolrSearchEngineFilter searchFilter = new SolrSearchEngineFilter(langCode, this.getText(), textSearchOption);
             searchFilter.setFullTextSearch(true);
+            searchFilter.setIncludeAttachments(this.isIncludeAttachments());
             searchFilters = ArrayUtils.add(searchFilters, searchFilter);
         }
         return searchFilters;

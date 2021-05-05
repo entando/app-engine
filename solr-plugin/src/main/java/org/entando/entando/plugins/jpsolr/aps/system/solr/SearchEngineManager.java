@@ -26,7 +26,6 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,6 +68,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     */
     @Override
     public boolean refreshCmsFields() {
+        this.checkLangFields();
         List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
         Map<String, Map<String, Object>> checkedFields = new HashMap<>();
         for (int i = 0; i < entityTypes.size(); i++) {
@@ -176,9 +176,19 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     @Override
     public void updateFromEntityTypesChanging(EntityTypesChangingEvent event) {
         super.updateFromEntityTypesChanging(event);
-        if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName())) {
+        this.checkLangFields();
+        if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName()) 
+                && event.getOperationCode() != EntityTypesChangingEvent.REMOVE_OPERATION_CODE) {
             String typeCode = event.getNewEntityType().getTypeCode();
             this.refreshEntityType(new HashMap<String, Map<String, Object>>(), typeCode);
+        }
+    }
+    
+    private void checkLangFields() {
+        List<Lang> langs = this.getLangManager().getLangs();
+        for (int j = 0; j < langs.size(); j++) {
+            Lang currentLang = langs.get(j);
+            this.checkField(null, currentLang.getCode(), "text_general", true);
         }
     }
 
