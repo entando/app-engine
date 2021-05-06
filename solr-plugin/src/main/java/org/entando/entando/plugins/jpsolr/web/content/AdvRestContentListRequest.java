@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.entando.entando.web.common.model.Filter;
 import org.entando.entando.web.common.model.FilterOperator;
 import org.entando.entando.web.common.model.FilterType;

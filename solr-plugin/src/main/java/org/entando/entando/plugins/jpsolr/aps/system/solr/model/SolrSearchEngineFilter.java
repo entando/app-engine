@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.entando.plugins.jpsolr.aps.system.solr;
+package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
 import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;

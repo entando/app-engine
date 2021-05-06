@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import com.agiletec.aps.system.common.entity.model.*;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;

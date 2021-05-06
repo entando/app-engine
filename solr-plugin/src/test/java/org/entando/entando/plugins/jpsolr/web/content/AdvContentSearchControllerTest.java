@@ -23,7 +23,6 @@ import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,8 +62,6 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
 
     @Autowired
     private ICmsSearchEngineManager searchEngineManager;
-
-    private ObjectMapper mapper = new ObjectMapper();
     
     @BeforeAll
     public static void setup() throws Exception {

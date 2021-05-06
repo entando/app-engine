@@ -14,6 +14,9 @@
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
+import java.util.List;
+import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 
 /**
  * @author E.Santoboni
@@ -28,6 +31,8 @@ public interface ISolrSearchEngineManager extends ICmsSearchEngineManager {
     
     public boolean deleteField(String fieldName);
     */
-    public boolean refreshCmsFields();
+    public boolean refreshCmsFields() throws EntException;
+    
+    public List<ContentTypeSettings> getContentTypesSettings() throws EntException;
     
 }

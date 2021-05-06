@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import org.entando.entando.ent.exception.EntException;

@@ -29,8 +29,6 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.At
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.BaseResourceDataBean;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import java.io.File;
 import java.util.ArrayList;
@@ -55,18 +53,12 @@ import org.springframework.test.web.servlet.ResultActions;
 public class SearchByResourceControllerTest extends AbstractControllerIntegrationTest {
 
     private static List<String> fileNames = Arrays.asList("architecture", "kubernetes", "overview");
-
-
+    
     @Autowired
     private IContentManager contentManager;
 
     @Autowired
     private IResourceManager resourceManager;
-
-    @Autowired
-    private ICmsSearchEngineManager searchEngineManager;
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll
     public static void setup() throws Exception {

@@ -66,19 +66,23 @@ public class SolrSchemaClient {
     }
 
     private static boolean executePost(String solrUrl, String core, Map<String, Object> properties, String actionName) {
-        JSONObject request = new JSONObject().put(actionName, properties);
-        RestTemplate restTemplate = new RestTemplate();
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String url = baseUrl + core + "/schema";
-        String response = restTemplate.postForObject(url, request.toString(), String.class);
-        JSONObject obj = new JSONObject(response);
-        int resultType = obj.getJSONObject("responseHeader").getInt("status");
-        if (resultType != 0) {
-            logger.error("invalid response --> " + response);
+        try {
+            JSONObject request = new JSONObject().put(actionName, properties);
+            RestTemplate restTemplate = new RestTemplate();
+            String response = restTemplate.postForObject(url, request.toString(), String.class);
+            JSONObject obj = new JSONObject(response);
+            int resultType = obj.getJSONObject("responseHeader").getInt("status");
+            if (resultType != 0) {
+                logger.error("invalid response --> " + response);
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error("Error calling Post {} - properties {}", url, properties, e);
             return false;
         }
         return true;
     }
-
-
+    
 }
