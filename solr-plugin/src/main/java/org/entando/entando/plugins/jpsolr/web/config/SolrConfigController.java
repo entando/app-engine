@@ -14,10 +14,14 @@
 package org.entando.entando.plugins.jpsolr.web.config;
 
 import com.agiletec.aps.system.services.role.Permission;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
+import java.util.Map;
+import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 import org.entando.entando.web.common.annotation.RestAccessControl;
+import org.entando.entando.web.common.model.SimpleRestResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +38,8 @@ import org.springframework.web.bind.annotation.*;
 public class SolrConfigController {
 
     private static final Logger logger = LoggerFactory.getLogger(SolrConfigController.class);
+    
+    public static final String CONTENT_TYPE_CODE = "contentTypeCode";
 
     @Autowired
     private ISolrSearchEngineManager solrSearchEngineManager;
@@ -45,12 +51,32 @@ public class SolrConfigController {
         this.solrSearchEngineManager = solrSearchEngineManager;
     }
 
-    @RestAccessControl(permission = { Permission.SUPERUSER })
+    @RestAccessControl(permission = {Permission.SUPERUSER})
     @GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ContentTypeSettings>> getConfig() throws Exception {
+    public ResponseEntity<List<ContentTypeSettings>> getConfig() {
         logger.debug("getting solr config");
-        List<ContentTypeSettings> settings = this.getSolrSearchEngineManager().getContentTypesSettings();
-        return new ResponseEntity<>(settings, HttpStatus.OK);
+        try {
+            List<ContentTypeSettings> settings = this.getSolrSearchEngineManager().getContentTypesSettings();
+            return new ResponseEntity<>(settings, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new RestServerError("Error extracting configuration", e);
+        }
+    }
+
+    @RestAccessControl(permission = Permission.SUPERUSER)
+    @PostMapping("/config/{contentTypeCode}")
+    public ResponseEntity<SimpleRestResponse<Map>> reloadReferences(@PathVariable String contentTypeCode) {
+        logger.debug("REST request - reload content type references {}", contentTypeCode);
+        try {
+            this.getSolrSearchEngineManager().refreshContentType(contentTypeCode);
+            Map<String, String> result = ImmutableMap.of(
+                    "status", "success",
+                    CONTENT_TYPE_CODE, contentTypeCode
+            );
+            return ResponseEntity.ok(new SimpleRestResponse<>(result));
+        } catch (Exception e) {
+            throw new RestServerError("Error refreshing type " + contentTypeCode, e);
+        }
     }
 
 }
