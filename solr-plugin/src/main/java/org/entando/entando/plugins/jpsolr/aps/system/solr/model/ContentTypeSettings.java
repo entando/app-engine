@@ -83,6 +83,11 @@ public class ContentTypeSettings implements Serializable {
         }
     }
     
+    public boolean isValid() {
+        Optional<AttributeSettings> optional = this.getAttributeSettings().stream().filter(s -> !s.isValid()).findFirst();
+        return !optional.isPresent();
+    }
+    
     public static class AttributeSettings implements Serializable {
         
         private String code;
@@ -126,7 +131,7 @@ public class ContentTypeSettings implements Serializable {
         public boolean isValid() {
             if (null == this.getExpectedConfig()) {
                 return true;
-            } else if (null == this.getCurrentConfig()) {
+            } else if (null == this.getCurrentConfig() || this.getCurrentConfig().isEmpty()) {
                 return false;
             } else {
                 Optional<Map<String, Object>> optional = this.getCurrentConfig().values().stream().filter(m -> {

@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
@@ -106,7 +105,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     }
     
     @Override
-    public boolean refreshCmsFields() throws EntException {
+    public void refreshCmsFields() throws EntException {
         try {
             List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
             this.checkLangFields(fields);
@@ -114,12 +113,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             Map<String, Map<String, Object>> checkedFields = new HashMap<>();
             for (int i = 0; i < entityTypes.size(); i++) {
                 if (i == 0) {
-                    this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
-                    this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME, "text_general");
-                    this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, "text_general", true);
-                    this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_gen_sort");
-                    this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, "text_general");
-                    this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, "text_general", true);
+                    this.refreshBaseFields(fields, checkedFields);
                 }
                 SmallEntityType entityType = entityTypes.get(i);
                 this.refreshEntityType(fields, checkedFields, entityType.getCode());
@@ -128,12 +122,37 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             logger.error("Error refreshing config", e);
             throw new EntException("Error", e);
         }
-        return true;
+    }
+
+    @Override
+    public void refreshContentType(String typeCode) throws EntException {
+        try {
+            List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            this.checkLangFields(fields);
+            this.refreshBaseFields(fields, null);
+            this.refreshEntityType(fields, null, typeCode);
+        } catch (Exception e) {
+            logger.error("Error refreshing contentType " + typeCode, e);
+            throw new EntException("Error", e);
+        }
+    }
+    
+    private void refreshBaseFields(List<Map<String, Object>> fields, Map<String, Map<String, Object>> checkedFields) {
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME, "text_general");
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, "text_general", true);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_gen_sort");
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, "text_general");
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, "text_general", true);
     }
     
     protected void refreshEntityType(List<Map<String, Object>> currentFields, 
             Map<String, Map<String, Object>> checkedFields, String entityTypeCode) {
         Content prototype = this.getContentManager().createContentType(entityTypeCode);
+        if (null == prototype) {
+            logger.warn("Type '" + entityTypeCode + "' does not exists");
+            return;
+        }
         Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
         while (iterAttribute.hasNext()) {
             AttributeInterface currentAttribute = iterAttribute.next();
@@ -183,8 +202,8 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             Map<String, Map<String, Object>> checkedFields, String fieldName, String type, boolean multiValue) {
         Map<String, Object> currentField = currentFields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
         if (null != currentField) {
-            if (currentField.get("type").equals(type) 
-                    && currentField.get("multiValued").equals(multiValue)) {
+            if (currentField.get("type").equals(type)
+                    && ((null == currentField.get("multiValued") && multiValue) || (null != currentField.get("multiValued") && currentField.get("multiValued").equals(multiValue)))) {
                 return;
             } else {
                 logger.warn("Field '" + fieldName + "' already exists but with different configuration!"

@@ -31,7 +31,9 @@ public interface ISolrSearchEngineManager extends ICmsSearchEngineManager {
     
     public boolean deleteField(String fieldName);
     */
-    public boolean refreshCmsFields() throws EntException;
+    public void refreshCmsFields() throws EntException;
+    
+    public void refreshContentType(String typeCode) throws EntException;
     
     public List<ContentTypeSettings> getContentTypesSettings() throws EntException;
     
