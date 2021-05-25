@@ -13,7 +13,6 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.content;
 
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.group.Group;
@@ -31,6 +30,7 @@ import org.entando.entando.aps.system.exception.RestServerError;
 
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.web.content.AdvRestContentListRequest;
 import org.entando.entando.web.common.model.PagedMetadata;
 
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author E.Santoboni
  */
-public class AdvContentFacetManager /*extends ContentFacetManager*/ implements IAdvContentFacetManager {
+public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     private static final Logger logger = LoggerFactory.getLogger(AdvContentFacetManager.class);
     
@@ -51,7 +51,7 @@ public class AdvContentFacetManager /*extends ContentFacetManager*/ implements I
 
     @Override
     public FacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
-            List<String> facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws ApsSystemException {
+            List<String> facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException {
         try {
             SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
             SearchEngineFilter[] categoryFilters = null;
@@ -64,31 +64,32 @@ public class AdvContentFacetManager /*extends ContentFacetManager*/ implements I
             return this.getSearchEngineManager().searchFacetedEntities(filters, categoryFilters, groupCodes);
         } catch (Exception t) {
             logger.error("Error loading facet result", t);
-            throw new ApsSystemException("Error loading facet result", t);
+            throw new EntException("Error loading facet result", t);
         }
     }
 
     @Override
     public FacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
-            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws ApsSystemException {
+            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException {
         try {
             SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
             return this.getSearchEngineManager().searchFacetedEntities(filters, facetNodeCodes, groupCodes);
         } catch (Exception t) {
             logger.error("Error loading facet result", t);
-            throw new ApsSystemException("Error loading facet result", t);
+            throw new EntException("Error loading facet result", t);
         }
     }
 
     @Override
-    public List<String> loadContentsId(SearchEngineFilter[] baseFilters, SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws ApsSystemException {
+    public List<String> loadContentsId(SearchEngineFilter[] baseFilters, 
+            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException {
         List<String> items = null;
         try {
             SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
             items = this.getSearchEngineManager().loadContentsId(filters, facetNodeCodes, groupCodes);
         } catch (Exception t) {
             logger.error("Error loading contents id", t);
-            throw new ApsSystemException("Error loading contents id", t);
+            throw new EntException("Error loading contents id", t);
         }
         return items;
     }

@@ -21,22 +21,23 @@ import java.util.List;
 
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.web.content.AdvRestContentListRequest;
 import org.entando.entando.web.common.model.PagedMetadata;
 
 /**
  * @author E.Santoboni
  */
-public interface IAdvContentFacetManager /*extends IContentFacetManager*/ {
+public interface IAdvContentFacetManager {
 
     public FacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
-            List<String> facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws ApsSystemException;
+            List<String> facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException;
 
     public FacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
-            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws ApsSystemException;
+            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException;
 
     public List<String> loadContentsId(SearchEngineFilter[] baseFilters,
-            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws ApsSystemException;
+            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException;
     
     public FacetedContentsResult getFacetedContents(AdvRestContentListRequest requestList, UserDetails extractCurrentUser);
     

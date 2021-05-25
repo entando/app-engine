@@ -6,5 +6,7 @@
 <struts>
     
     <include file="org/entando/entando/plugins/jpsolr/apsadmin/config/solr.xml" />
+    
+    <include file="org/entando/entando/plugins/jpsolr/apsadmin/portal/specialwidget/specialWidget.xml" />
 
 </struts>

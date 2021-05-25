@@ -48,27 +48,6 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     
     @Autowired
     private ILangManager langManager;
-    /*
-    @Override
-    public List<Map<String, Object>> getFields() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean addField(Map<String, Object> properties) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean updateField(Map<String, Object> properties) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean deleteField(String fieldName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    */
 
     @Override
     public List<ContentTypeSettings> getContentTypesSettings() throws EntException {

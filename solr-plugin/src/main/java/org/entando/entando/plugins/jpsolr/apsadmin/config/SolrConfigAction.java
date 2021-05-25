@@ -74,7 +74,7 @@ public class SolrConfigAction extends BaseAction {
     protected ISolrSearchEngineManager getSolrSearchEngineManager() {
         return solrSearchEngineManager;
     }
-    @Autowired
+
     public void setSolrSearchEngineManager(ISolrSearchEngineManager solrSearchEngineManager) {
         this.solrSearchEngineManager = solrSearchEngineManager;
     }
