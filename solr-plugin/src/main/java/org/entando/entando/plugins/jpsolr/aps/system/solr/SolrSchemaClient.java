@@ -78,19 +78,9 @@ public class SolrSchemaClient {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             JSONObject request = new JSONObject().put(actionName, properties);
-            HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
-
-
-
+            HttpEntity<String> entity = new HttpEntity<>(request.toString(), headers);
             RestTemplate restTemplate = new RestTemplate();
-
-            ResponseEntity<String> responseEntity = restTemplate.exchange(
-                    url, HttpMethod.POST, entity,
-                    String.class);
-
-
-
-            //response = restTemplate.postForObject(url, request.toString(), String.class);
+            ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
             JSONObject obj = new JSONObject(responseEntity.getBody());
             int resultType = obj.getJSONObject("responseHeader").getInt("status");
             if (resultType != 0) {

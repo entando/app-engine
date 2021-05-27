@@ -22,7 +22,6 @@ import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
-import com.agiletec.aps.system.common.util.EntityAttributeIterator;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.lang.*;
@@ -89,14 +88,14 @@ public class IndexerDAO implements IIndexerDAO {
         }
     }
 
-    protected SolrInputDocument createDocument(IApsEntity entity) throws EntException {
+    protected SolrInputDocument createDocument(IApsEntity entity) {
         SolrInputDocument document = new SolrInputDocument();
         document.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME, entity.getId());
         document.addField(SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME,entity.getTypeCode());
         document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, entity.getMainGroup());
         Iterator<String> iterGroups = entity.getGroups().iterator();
         while (iterGroups.hasNext()) {
-            String groupName = (String) iterGroups.next();
+            String groupName = iterGroups.next();
             document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, groupName);
         }
         if (entity instanceof Content) {
@@ -123,7 +122,7 @@ public class IndexerDAO implements IIndexerDAO {
             }
             List<Lang> langs = this.getLangManager().getLangs();
             for (int i = 0; i < langs.size(); i++) {
-                Lang currentLang = (Lang) langs.get(i);
+                Lang currentLang = langs.get(i);
                 this.indexAttribute(document, currentAttribute, currentLang);
             }
         }

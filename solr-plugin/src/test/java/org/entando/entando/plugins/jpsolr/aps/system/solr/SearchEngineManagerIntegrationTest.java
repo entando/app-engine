@@ -72,7 +72,7 @@ import org.springframework.mock.web.MockServletContext;
  *
  * @author E.Santoboni
  */
-public class SearchEngineManagerIntegrationTest {
+class SearchEngineManagerIntegrationTest {
 
     private static final String ROLE_FOR_TEST = "jacmstest:date";
 
@@ -156,7 +156,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchAllContents() throws Throwable {
+    void testSearchAllContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -175,7 +175,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_1() throws Throwable {
+    void testSearchContentsId_1() throws Throwable {
         Content content_1 = this.createContent_1();
         Content content_2 = this.createContent_2();
         try {
@@ -199,7 +199,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_2() throws Throwable {
+    void testSearchContentsId_2() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -230,7 +230,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_3() throws Throwable {
+    void testSearchContentsId_3() throws Throwable {
         Content content_1 = this.createContent_1();
         Content content_2 = this.createContent_2();
         try {
@@ -257,7 +257,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_4() throws Throwable {
+    void testSearchContentsId_4() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -283,7 +283,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_5() throws Throwable {
+    void testSearchContentsId_5() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -312,7 +312,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_5_allowdValues() throws Throwable {
+    void testSearchContentsId_5_allowdValues() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -340,7 +340,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_6() throws Throwable {
+    void testSearchContentsId_6() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -360,7 +360,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_7() throws Throwable {
+    void testSearchContentsId_7() throws Throwable {
         Content content_1 = this.createContent_1();
         Content content_2 = this.createContent_2();
         Content content_3 = this.createContent_3();
@@ -433,7 +433,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_7_like() throws Throwable {
+    void testSearchContentsId_7_like() throws Throwable {
         Content content_1 = this.createContent_1();
         this.searchEngineManager.addEntityToIndex(content_1);
         Content content_2 = this.createContent_2();
@@ -497,7 +497,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_8() throws Throwable {
+    void testSearchContentsId_8() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
         List<String> allowedGroup = new ArrayList<>();
         allowedGroup.add(Group.ADMINS_GROUP_NAME);
@@ -650,7 +650,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_10() throws Throwable {
+    void testSearchContentsId_10() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
         List<String> allowedGroup = new ArrayList<>();
         allowedGroup.add(Group.ADMINS_GROUP_NAME);
@@ -741,7 +741,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchContentsId_11() throws Throwable {
+    void testSearchContentsId_11() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
         List<String> allowedGroup = new ArrayList<>();
         allowedGroup.add(Group.ADMINS_GROUP_NAME);
@@ -825,7 +825,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testFacetedAllContents() throws Throwable {
+    void testFacetedAllContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -846,7 +846,7 @@ public class SearchEngineManagerIntegrationTest {
     }
 
     @Test
-    public void testSearchFacetedContents_1() throws Throwable {
+    void testSearchFacetedContents_1() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -936,7 +936,7 @@ public class SearchEngineManagerIntegrationTest {
     }
     
     @Test
-    public void testSearchContentByResource() throws Exception {
+    void testSearchContentByResource() throws Exception {
         Content contentForTest = this.contentManager.loadContent("ALL4", true);
         try {
             contentForTest.setId(null);
