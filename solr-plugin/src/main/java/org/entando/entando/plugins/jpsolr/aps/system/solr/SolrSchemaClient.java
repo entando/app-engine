@@ -22,6 +22,11 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -68,18 +73,32 @@ public class SolrSchemaClient {
     private static boolean executePost(String solrUrl, String core, Map<String, Object> properties, String actionName) {
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String url = baseUrl + core + "/schema";
+        String response = null;
         try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
             JSONObject request = new JSONObject().put(actionName, properties);
+            HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
+
+
+
             RestTemplate restTemplate = new RestTemplate();
-            String response = restTemplate.postForObject(url, request.toString(), String.class);
-            JSONObject obj = new JSONObject(response);
+
+            ResponseEntity<String> responseEntity = restTemplate.exchange(
+                    url, HttpMethod.POST, entity,
+                    String.class);
+
+
+
+            //response = restTemplate.postForObject(url, request.toString(), String.class);
+            JSONObject obj = new JSONObject(responseEntity.getBody());
             int resultType = obj.getJSONObject("responseHeader").getInt("status");
             if (resultType != 0) {
                 logger.error("invalid response --> " + response);
                 return false;
             }
         } catch (Exception e) {
-            logger.error("Error calling Post {} - properties {}", url, properties, e);
+            logger.error("Error calling Post {} - properties {} - response {}", url, properties, response, e);
             return false;
         }
         return true;

@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import com.agiletec.aps.system.common.entity.model.attribute.AbstractComplexAttribute;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import com.agiletec.aps.system.common.entity.model.*;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
@@ -113,9 +114,9 @@ public class IndexerDAO implements IIndexerDAO {
                 document.addField(SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
             }
         }
-        EntityAttributeIterator attributesIter = new EntityAttributeIterator(entity);
-        while (attributesIter.hasNext()) {
-            AttributeInterface currentAttribute = (AttributeInterface) attributesIter.next();
+        List<AttributeInterface> attributes = entity.getAttributeList();
+        for (int j = 0; j < attributes.size(); j++) {
+            AttributeInterface currentAttribute = attributes.get(j);
             Object value = currentAttribute.getValue();
             if (null == value) {
                 continue;
@@ -138,6 +139,10 @@ public class IndexerDAO implements IIndexerDAO {
 
     protected void indexAttribute(SolrInputDocument document, AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
+        if (!attribute.isSimple()) {
+            this.indexComplexAttribute(document, (AbstractComplexAttribute) attribute, lang);
+            return;
+        }
         if (attribute instanceof IndexableAttributeInterface
                 || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute) && attribute.isSearchable())) {
             Object valueToIndex = null;
@@ -155,20 +160,7 @@ public class IndexerDAO implements IIndexerDAO {
                 return;
             }
             if (attribute instanceof IndexableAttributeInterface) {
-                // full text search
-                String fieldName = lang.getCode();
-                if (attribute instanceof ResourceAttributeInterface) {
-                    fieldName += SolrFields.ATTACHMENT_FIELD_SUFFIX;
-                }
-                String indexingType = attribute.getIndexingType();
-                if (null != indexingType
-                        && IndexableAttributeInterface.INDEXING_TYPE_UNSTORED.equalsIgnoreCase(indexingType)) {
-                    document.addField(fieldName, valueToIndex);
-                }
-                if (null != indexingType
-                        && IndexableAttributeInterface.INDEXING_TYPE_TEXT.equalsIgnoreCase(indexingType)) {
-                    document.addField(fieldName, valueToIndex);
-                }
+                this.addFieldForFullTextSearch(document, attribute, lang, valueToIndex);
             }
             if (attribute instanceof ResourceAttributeInterface) {
                 return;
@@ -182,6 +174,33 @@ public class IndexerDAO implements IIndexerDAO {
                 String roleFieldName = lang.getCode().toLowerCase() + "_" + attribute.getRoles()[i];
                 this.indexValue(document, roleFieldName, valueToIndex);
             }
+        }
+    }
+
+    private void indexComplexAttribute(SolrInputDocument document, AbstractComplexAttribute complexAttribute, Lang lang) {
+        List<AttributeInterface> elements = complexAttribute.getAttributes();
+        for (int i = 0; i < elements.size(); i++) {
+            AttributeInterface attribute = elements.get(i);
+            attribute.setRenderingLang(lang.getCode());
+            if (!attribute.isSimple()) {
+                this.indexComplexAttribute(document, (AbstractComplexAttribute) attribute, lang);
+            } else if (attribute instanceof ResourceAttributeInterface) {
+                String valueToIndex = ((IndexableAttributeInterface) attribute).getIndexeableFieldValue();
+                this.addFieldForFullTextSearch(document, attribute, lang, valueToIndex);
+            }
+        }
+    }
+
+    protected void addFieldForFullTextSearch(SolrInputDocument document, AttributeInterface attribute, Lang lang, Object valueToIndex) {
+        // full text search
+        String fieldName = lang.getCode();
+        if (attribute instanceof ResourceAttributeInterface) {
+            fieldName += SolrFields.ATTACHMENT_FIELD_SUFFIX;
+        }
+        String indexingType = attribute.getIndexingType();
+        if (null != indexingType
+                && (IndexableAttributeInterface.INDEXING_TYPE_UNSTORED.equalsIgnoreCase(indexingType) || IndexableAttributeInterface.INDEXING_TYPE_TEXT.equalsIgnoreCase(indexingType))) {
+            document.addField(fieldName, valueToIndex);
         }
     }
     

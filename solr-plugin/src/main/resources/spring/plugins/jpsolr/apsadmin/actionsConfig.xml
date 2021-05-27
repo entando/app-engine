@@ -15,5 +15,17 @@
           class="org.entando.entando.plugins.jpsolr.apsadmin.config.SolrConfigAction" parent="abstractBaseAction" >
         <property name="solrSearchEngineManager" ref="jacmsSearchEngineManager" />
     </bean>
+
+    <bean id="jpsolrFacetNavResultWidgetAction" scope="prototype"
+            class="org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.FacetNavResultWidgetAction" parent="simpleWidgetAction" >
+        <property name="contentManager" ref="jacmsContentManager" />
+    </bean>
+
+    <bean id="jpsolrFacetNavTreeWidgetAction" scope="prototype"
+            class="org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.FacetNavTreeWidgetAction" parent="simpleWidgetAction" >
+        <property name="contentManager" ref="jacmsContentManager" />
+        <property name="treeNodeManager" ref="CategoryManager" />
+        <property name="treeHelper" ref="categoryActionHelper" />
+    </bean>
     
 </beans>

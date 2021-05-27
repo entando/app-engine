@@ -49,7 +49,8 @@ import org.springframework.web.filter.CorsFilter;
     "classpath*:spring/apsadmin/**/**.xml",
     "classpath*:spring/plugins/**/aps/**/**.xml",
     "classpath*:spring/plugins/**/apsadmin/**/**.xml",
-    "classpath*:spring/plugins/jpsolr/aps/baseManagersConfig.xml", //extension of default class
+        "classpath*:spring/plugins/jpsolr/aps/**.xml", //extension of default class
+        "classpath*:spring/plugins/jpsolr/apsadmin/**.xml", //extension of default class
     "classpath*:spring/web/**.xml",})
 @WebAppConfiguration(value = "")
 public class AbstractControllerIntegrationTest {
