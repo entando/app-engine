@@ -56,6 +56,7 @@ import org.entando.entando.aps.system.services.searchengine.FacetedContentsResul
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -154,7 +155,7 @@ class SearchEngineManagerIntegrationTest {
     protected void dispose() throws Exception {
         SolrTestUtils.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
     }
-
+    
     @Test
     void testSearchAllContents() throws Throwable {
         try {
@@ -951,6 +952,13 @@ class SearchEngineManagerIntegrationTest {
             List<String> allowedGroup = new ArrayList<>();
             allowedGroup.add(Group.FREE_GROUP_NAME);
             List<String> contentsId = this.searchEngineManager.searchEntityId("it", "accelerated development", allowedGroup);
+            assertNotNull(contentsId);
+            assertEquals(0, contentsId.size());
+            
+            SolrSearchEngineFilter filter = new SolrSearchEngineFilter("it", false, "accelerated development", TextSearchOption.AT_LEAST_ONE_WORD);
+            filter.setIncludeAttachments(true);
+            filter.setFullTextSearch(true);
+            contentsId = this.searchEngineManager.loadContentsId(new SearchEngineFilter[]{filter}, null, allowedGroup);
             assertNotNull(contentsId);
             assertEquals(1, contentsId.size());
             assertTrue(contentsId.contains(contentForTest.getId()));
