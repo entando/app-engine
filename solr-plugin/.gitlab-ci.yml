@@ -1,0 +1,98 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
+variables:
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository 
+    -DaltDeploymentRepository=nexus-release::default::http://172.17.3.20:8081/repository/maven-releases/
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+    -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DskipTests
+    -DinstallAtEnd=true -DdeployAtEnd=true"
+cache:
+  key: "${CI_COMMIT_BRANCH}"
+  paths:
+  - ".m2/repository"
+stages:
+- build
+- test
+- deploy
+#code-quality:
+#  stage: test
+#  image: docker:stable
+#  allow_failure: true
+#  services:
+#  - docker:stable-dind
+#  variables:
+#    DOCKER_DRIVER: overlay2
+#  script:
+#  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY_IMAGE"
+#  - docker run --env SOURCE_CODE="$PWD" --volume "$PWD":/code --volume /var/run/docker.sock:/var/run/docker.sock
+#    "registry.gitlab.com/gitlab-org/security-products/codequality" /code
+#  artifacts:
+#    reports:
+#      codequality: gl-code-quality-report.json
+#  only:
+#  - branches
+#  except:
+#    variables:
+#    - "$CODE_QUALITY_DISABLED"
+#  tags:
+#  - shell
+maven-build:
+  image: maven:3.6.3-openjdk-11
+  stage: build
+  before_script:
+    - cp -f /tmp/settings.xml $HOME/.m2/settings.xml
+  script:
+  - mvn $MAVEN_CLI_OPTS deploy
+  after_script:
+    - rm -f $HOME/.m2/settings.xml
+  artifacts:
+    untracked: false
+    expire_in: 60 days
+    paths:
+    - target/*.war
+    - target/*.jar
+  only:
+  - develop
+  tags:
+  - docker
+snyk-scan:
+  stage: test
+  image: docker:stable
+  allow_failure: true
+  services:
+  - docker:stable-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    SNYK_TOKEN: $SNYK_TOKEN
+  script:
+  - docker run --env SNYK_TOKEN="$SNYK_TOKEN" --env MONITOR=true --volume "$PWD":/project --volume /var/run/docker.sock:/var/run/docker.sock --volume "$CI_PROJECT_DIR"/.m2:/home/node/.m2 snyk/snyk-cli:maven-3.6.3_java11 test --json
+  artifacts:
+    when: always
+    paths:
+      - snyk_report.html
+  only:
+  - branches
+  tags:
+  - shell
+#sast:
+#  stage: test
+#  tags:
+#    - docker
+#include:
+#- template: Security/SAST.gitlab-ci.yml
+#pages:
+#  stage: deploy
+#  dependencies:
+#    - snyk-scan
+#  script:
+#    - echo 'Publishing report'
+#  artifacts:
+#    paths:
+#      - public
+#    expire_in: 30 days
+#  only:
+#    - develop
