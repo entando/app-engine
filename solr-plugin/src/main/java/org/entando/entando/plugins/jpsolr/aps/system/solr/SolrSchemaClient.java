@@ -57,22 +57,32 @@ public class SolrSchemaClient {
     }
 
     public static boolean addField(String solrUrl, String core, Map<String, Object> properties) {
-        return executePost(solrUrl, core, properties, "add-field");
+        return executePost(solrUrl, core, "add-field", properties);
     }
 
     public static boolean replaceField(String solrUrl, String core, Map<String, Object> properties) {
-        return executePost(solrUrl, core, properties, "replace-field");
+        return executePost(solrUrl, core, "replace-field", properties);
     }
 
     public static boolean deleteField(String solrUrl, String core, String fieldKey) {
         Map<String, Object> properties = new HashMap<>();
         properties.put("name", fieldKey);
-        return executePost(solrUrl, core, properties, "delete-field");
+        return executePost(solrUrl, core, "delete-field", properties);
     }
 
-    private static boolean executePost(String solrUrl, String core, Map<String, Object> properties, String actionName) {
+    public static boolean deleteAllDocuments(String solrUrl, String core) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("query", "*:*");
+        return executePost(solrUrl, core, "/update", "delete", properties);
+    }
+    
+    private static boolean executePost(String solrUrl, String core, String actionName, Map<String, Object> properties) {
+        return executePost(solrUrl, core, "/schema", actionName, properties);
+    }
+
+    private static boolean executePost(String solrUrl, String core, String subPath, String actionName, Map<String, Object> properties) {
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
-        String url = baseUrl + core + "/schema";
+        String url = baseUrl + core + subPath;
         String response = null;
         try {
             HttpHeaders headers = new HttpHeaders();

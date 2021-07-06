@@ -25,9 +25,11 @@ import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -232,6 +234,12 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             Lang currentLang = langs.get(j);
             this.checkField(fields, null, currentLang.getCode(), "text_general", true);
         }
+    }
+    
+    @Override
+    public Thread startReloadContentsReferences() throws EntException {
+        ((ISolrSearchEngineDAOFactory) this.getFactory()).deleteAllDocuments();
+        return super.startReloadContentsReferences();
     }
 
     protected ILangManager getLangManager() {

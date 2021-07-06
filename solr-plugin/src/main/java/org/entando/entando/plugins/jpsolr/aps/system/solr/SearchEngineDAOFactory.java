@@ -71,6 +71,11 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     }
 
     @Override
+    public boolean deleteAllDocuments() {
+        return SolrSchemaClient.deleteAllDocuments(this.solrAddress, this.solrCore);
+    }
+    
+    @Override
     public boolean checkCurrentSubfolder() throws EntException {
         // nothing to do
         return true;

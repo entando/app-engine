@@ -29,4 +29,6 @@ public interface ISolrSearchEngineDAOFactory {
 
     public boolean deleteField(String fieldKey);
     
+    public boolean deleteAllDocuments();
+    
 }
