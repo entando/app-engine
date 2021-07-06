@@ -4,7 +4,7 @@ INSERT INTO widgetcatalog (code, titles, parameters, plugincode, parenttypecode,
 <property key="it">Risultati Ricerca Faccette</property>
 </properties>', '<config>
 	<parameter name="contentTypesFilter">Content Type (optional)</parameter>
-	<action name="facetNavResultConfig"/>
+	<action name="solrFacetNavResultConfig"/>
 </config>', 'jpsolr', NULL, NULL, 1);
 
 INSERT INTO widgetcatalog (code, titles, parameters, plugincode, parenttypecode, defaultconfig, locked) VALUES ('jpsolr_facetTree', '<?xml version="1.0" encoding="UTF-8"?>
@@ -14,7 +14,7 @@ INSERT INTO widgetcatalog (code, titles, parameters, plugincode, parenttypecode,
 </properties>', '<config>
 	<parameter name="facetRootNodes">Facet Category Root</parameter>
 	<parameter name="contentTypesFilter">Content Type (optional)</parameter>
-	<action name="facetNavTreeConfig"/>
+	<action name="solrFacetNavTreeConfig"/>
 </config>', 'jpsolr', NULL, NULL, 1);
 
 
@@ -35,17 +35,19 @@ INSERT INTO localstrings (keycode, langcode, stringvalue) VALUES ('jpsolr_TITLE_
 INSERT INTO guifragment (code, widgettypecode, plugincode, gui, defaultgui, locked) VALUES ('jpsolr_inc_facetNavTree', NULL, 'jpsolr', NULL, '<#assign wpfp=JspTaglibs["/jpsolr-core"]>
 <#assign wp=JspTaglibs["/aps-core"]>
 <ul>
-	<#list currFacetRoot.children as facetNode>
-		<@wpfp.hasToViewFacetNode facetNodeCode="${facetNode.code}" requiredFacetsParamName="requiredFacets">
-			<#if (occurrences[facetNode.code]??)>
+        <@wp.categories var="childrensVar" root="${currFacetRootCode}" />
+        <#if childrensVar??>
+	<#list childrensVar as facetNode>
+		<@wpfp.hasToViewFacetNode facetNodeCode="${facetNode.key}" requiredFacetsParamName="requiredFacets">
+			<#if (occurrences[facetNode.key]??)>
 				<li>
-				<a href="<@wp.url><@wpfp.urlPar name="selectedNode" >${facetNode.code}</@wpfp.urlPar>
+				<a href="<@wpfp.url escapeAmp=false><@wpfp.urlPar name="selectedNode" >${facetNode.key}</@wpfp.urlPar>
 					<#list requiredFacets as requiredFacet>
 					<@wpfp.urlPar name="facetNode_${requiredFacet_index + 1}" >${requiredFacet}</@wpfp.urlPar>
 					</#list>
-					</@wp.url>"><@wpfp.facetNodeTitle escapeXml=true facetNodeCode="${facetNode.code}" /></a>&#32;<abbr class="jpsolr_tree_occurences" title="<@wp.i18n key="jpsolr_OCCURRENCES_FOR" />&#32;<@wpfp.facetNodeTitle escapeXml=true facetNodeCode="${facetNode.code}" />:&#32;${occurrences[facetNode.code]}">${occurrences[facetNode.code]}</abbr>
-				<@wpfp.hasToOpenFacetNode facetNodeCode="${facetNode.code}" requiredFacetsParamName="requiredFacets" occurrencesParamName="occurrences" >
-					<@wp.freemarkerTemplateParameter var="currFacetRoot" valueName="facetNode" removeOnEndTag=true >
+					</@wpfp.url>"><@wpfp.facetNodeTitle escapeXml=true facetNodeCode="${facetNode.key}" /></a>&#32;<abbr class="jpsolr_tree_occurences" title="<@wp.i18n key="jpsolr_OCCURRENCES_FOR" />&#32;<@wpfp.facetNodeTitle escapeXml=true facetNodeCode="${facetNode.key}" />:&#32;${occurrences[facetNode.key]}">${occurrences[facetNode.key]}</abbr>
+				<@wpfp.hasToOpenFacetNode facetNodeCode="${facetNode.key}" requiredFacetsParamName="requiredFacets" occurrencesParamName="occurrences" >
+					<@wp.freemarkerTemplateParameter var="currFacetRootCode" valueName="${facetNode.key}" removeOnEndTag=true >
 					<@wp.fragment code="jpsolr_inc_facetNavTree" escapeXml=false />
 					</@wp.freemarkerTemplateParameter>
 				</@wpfp.hasToOpenFacetNode>
@@ -53,6 +55,7 @@ INSERT INTO guifragment (code, widgettypecode, plugincode, gui, defaultgui, lock
 			</#if>
 		</@wpfp.hasToViewFacetNode>
 	</#list>
+        </#if>
 </ul>', 1);
 INSERT INTO guifragment (code, widgettypecode, plugincode, gui, defaultgui, locked) VALUES ('jpsolr_facetTree', 'jpsolr_facetTree', 'jpsolr', NULL, '<#assign wpfp=JspTaglibs["/jpsolr-core"]>
 <#assign wp=JspTaglibs["/aps-core"]>
@@ -65,16 +68,16 @@ INSERT INTO guifragment (code, widgettypecode, plugincode, gui, defaultgui, lock
 		<h3><@wpfp.facetNodeTitle facetNodeCode="${facetRoot.code}" /></h3>
 		<#if (occurrences[facetRoot.code]??) && (occurrences[facetRoot.code]?has_content)>
 			<ul>
-				<#list facetRoot.children as facetNode>
-					<#if (occurrences[facetNode.code]??)>
+				<#list facetRoot.childrenCodes as facetNodeCode>
+					<#if (occurrences[facetNodeCode]??)>
 						<li>
-							<a href="<@wp.url><@wp.parameter name="selectedNode" >${facetNode.code}</@wp.parameter>
+							<a href="<@wpfp.url escapeAmp=false><@wp.parameter name="selectedNode" >${facetNodeCode}</@wp.parameter>
 								<#list requiredFacets as requiredFacet>
 								<@wpfp.urlPar name="facetNode_${requiredFacet_index + 1}" >${requiredFacet}</@wpfp.urlPar>
 								</#list>
-								</@wp.url>"><@wpfp.facetNodeTitle facetNodeCode="${facetNode.code}" /></a>&#32;<abbr class="jpsolr_tree_occurences" title="<@wp.i18n key="jpsolr_OCCURRENCES_FOR" />&#32;<@wpfp.facetNodeTitle facetNodeCode="${facetNode.code}" />:&#32;${occurrences[facetNode.code]}">${occurrences[facetNode.code]}</abbr>
-							<@wpfp.hasToOpenFacetNode facetNodeCode="${facetNode.code}" requiredFacetsParamName="requiredFacets" occurrencesParamName="occurrences" >
-								<@wp.freemarkerTemplateParameter var="currFacetRoot" valueName="facetNode" removeOnEndTag=true >
+								</@wpfp.url>"><@wpfp.facetNodeTitle facetNodeCode="${facetNodeCode}" /></a>&#32;<abbr class="jpsolr_tree_occurences" title="<@wp.i18n key="jpsolr_OCCURRENCES_FOR" />&#32;<@wpfp.facetNodeTitle facetNodeCode="${facetNodeCode}" />:&#32;${occurrences[facetNodeCode]}">${occurrences[facetNodeCode]}</abbr>
+                                                        <@wpfp.hasToOpenFacetNode facetNodeCode="${facetNodeCode}" requiredFacetsParamName="requiredFacets" occurrencesParamName="occurrences" >
+                                                                <@wp.freemarkerTemplateParameter var="currFacetRootCode" valueName="facetNodeCode" removeOnEndTag=true >
 								<@wp.fragment code="jpsolr_inc_facetNavTree" escapeXml=false />
 								</@wp.freemarkerTemplateParameter>
 							</@wpfp.hasToOpenFacetNode>
@@ -114,18 +117,18 @@ INSERT INTO guifragment (code, widgettypecode, plugincode, gui, defaultgui, lock
 						<span class="jpfacetfilter jpsolr_facetRoot"><@wpfp.facetNodeTitle facetNodeCode="${item.facetRoot}" /></span>
                                                 <#assign currentNodeTitle ><@wpfp.facetNodeTitle facetNodeCode="${item.facetRoot}" /></#assign>
 					<#else>
-						<a title="<@wp.i18n key="jpsolr_REMOVE_FILTER" />: <@wpfp.facetNodeTitle facetNodeCode="${breadCrumb}" />" class="jpfacetfilter" href="<@wp.url><@wpfp.urlPar name="selectedNode" >${breadCrumb}</@wpfp.urlPar>
+						<a title="<@wp.i18n key="jpsolr_REMOVE_FILTER" />: <@wpfp.facetNodeTitle facetNodeCode="${breadCrumb}" />" class="jpfacetfilter" href="<@wpfp.url escapeAmp=false><@wpfp.urlPar name="selectedNode" >${breadCrumb}</@wpfp.urlPar>
 						   <#list requiredFacets as requiredFacet>
 						   <@wpfp.urlPar name="facetNode_${requiredFacet_index + 1}" >${requiredFacet}</@wpfp.urlPar>
 						   </#list>
-						   </@wp.url>"><@wpfp.facetNodeTitle facetNodeCode="${breadCrumb}" />
+						   </@wpfp.url>"><@wpfp.facetNodeTitle facetNodeCode="${breadCrumb}" />
 						</a>
                                                 <#assign currentNodeTitle ><@wpfp.facetNodeTitle facetNodeCode="${breadCrumb}" /></#assign>
 					</#if>
 					<#if (item.breadCrumbs?size != (breadCrumb_index + 1))>&#32;/&#32;</#if>
 				</#if>
 			</#list>
-			<span class="noscreen">|</span>&#32;<a class="jpsolrfilterremove" title="<@wp.i18n key="jpsolr_REMOVE_FILTER" />:&#32;${currentNodeTitle}" href="<@wp.url><#list requiredFacets as requiredFacet><@wpfp.urlPar name="facetNode_${requiredFacet_index + 1}" >${requiredFacet}</@wpfp.urlPar></#list><#list item.breadCrumbs as breadCrumb2><@wpfp.urlPar name="facetNodeToRemove_${breadCrumb2_index + 1}" >${breadCrumb2}</@wpfp.urlPar></#list></@wp.url>">
+			<span class="noscreen">|</span>&#32;<a class="jpsolrfilterremove" title="<@wp.i18n key="jpsolr_REMOVE_FILTER" />:&#32;${currentNodeTitle}" href="<@wpfp.url escapeAmp=false><#list requiredFacets as requiredFacet><@wpfp.urlPar name="facetNode_${requiredFacet_index + 1}" >${requiredFacet}</@wpfp.urlPar></#list><#list item.breadCrumbs as breadCrumb2><@wpfp.urlPar name="facetNodeToRemove_${breadCrumb2_index + 1}" >${breadCrumb2}</@wpfp.urlPar></#list></@wpfp.url>">
 			<img src="<@wp.resourceURL />plugins/jpsolr/static/img/edit-delete.png" alt="<@wp.i18n key="jpsolr_REMOVE_FILTER" />" /></a>
 		</li>
 		</#list>

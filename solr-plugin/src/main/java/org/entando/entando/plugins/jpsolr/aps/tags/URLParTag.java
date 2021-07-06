@@ -21,11 +21,10 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.tags;
 
+import com.agiletec.aps.tags.util.IParameterParentTag;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.Tag;
-
-import com.agiletec.aps.tags.URLTag;
 
 /**
  * Sub tag of URLTag used for adding parameters to query string.
@@ -38,13 +37,13 @@ public class URLParTag extends com.agiletec.aps.tags.ParameterTag {
 	public int doEndTag() throws JspException {
 		BodyContent body = this.getBodyContent();
 		String value = body.getString();
-		URLTag parentTag = null;
+		IParameterParentTag parentTag = null;
 		try {
 			Tag tag = this;
 			do {
 				tag = tag.getParent();
-			} while (!(tag instanceof URLTag));
-			parentTag = (URLTag) tag;
+			} while (!(tag instanceof IParameterParentTag));
+			parentTag = (IParameterParentTag) tag;
 		} catch (RuntimeException e) {
 			throw new JspException("Error nesting parameter in url tag.", e);
 		}

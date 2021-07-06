@@ -168,6 +168,53 @@
     </tag>
     
     <tag>
+        <description><![CDATA[Generates the complete URL of a portal page.<br/>
+			The URL returned is either returned (and rendered) or placed in the given variable.<br/>
+			To insert parameters in the query string the sub-tag "ParameterTag" is provided.]]></description>
+        <name>url</name>
+        <tag-class>org.entando.entando.plugins.jpsolr.aps.tags.URLTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description><![CDATA[Code of the destination page. The default is the current page.]]></description>
+            <name>page</name>
+            <required>no</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description><![CDATA[Code of the language to use in the destination page.]]></description>
+            <name>lang</name>
+            <required>no</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description><![CDATA[Name of the page-scoped variable where to place the URL.]]></description>
+            <name>var</name>
+            <required>no</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description><![CDATA[Repeats in the URL all the parameters of the actual request.]]></description>
+            <name>paramRepeat</name>
+            <required>no</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description><![CDATA[Escape '&' in query string. Default value true]]></description>
+            <name>escapeAmp</name>
+            <required>no</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description><![CDATA[Sets the list of parameter names (comma separated) to exclude from repeating. 
+				By default, this attribute excludes only the password parameter of the login form. 
+				Used only when paramRepeat="true".]]></description>
+            <name>excludeParameters</name>
+            <required>no</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
         <description>Sub tag di url: parametro di query string per l'URL.</description>
         <name>urlPar</name>
         <tag-class>org.entando.entando.plugins.jpsolr.aps.tags.URLParTag</tag-class>
