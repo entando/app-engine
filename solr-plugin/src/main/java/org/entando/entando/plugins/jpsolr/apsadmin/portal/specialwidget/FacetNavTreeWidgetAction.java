@@ -140,23 +140,22 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
 	}
 
 	public String getFacetCode() {
-		return _facetCode;
+		return facetCode;
 	}
 	public void setFacetCode(String facetCode) {
-		this._facetCode = facetCode;
+		this.facetCode = facetCode;
 	}
 
 	public List<String> getFacetRootCodes() {
 		String facetsParam = this.getFacetRootNodes();
-		List<String> facetCodes = FacetNavWidgetHelper.splitValues(facetsParam, ",");
-		return facetCodes;
+		return FacetNavWidgetHelper.splitValues(facetsParam, ",");
 	}
 
 	public String getFacetRootNodes() {
-		return _facetRootNodes;
+		return facetRootNodes;
 	}
 	public void setFacetRootNodes(String facetRootNodes) {
-		this._facetRootNodes = facetRootNodes;
+		this.facetRootNodes = facetRootNodes;
 	}
 	
 	@Override
@@ -213,50 +212,50 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
 	}
 	
 	public String getTargetNode() {
-		return _targetNode;
+		return targetNode;
 	}
 	public void setTargetNode(String targetNode) {
-		this._targetNode = targetNode;
+		this.targetNode = targetNode;
 	}
 	
 	public Set<String> getTreeNodesToOpen() {
-		return _treeNodesToOpen;
+		return treeNodesToOpen;
 	}
 	public void setTreeNodesToOpen(Set<String> treeNodesToOpen) {
-		this._treeNodesToOpen = treeNodesToOpen;
+		this.treeNodesToOpen = treeNodesToOpen;
 	}
 	
 	public String getTreeNodeActionMarkerCode() {
-		return _treeNodeActionMarkerCode;
+		return treeNodeActionMarkerCode;
 	}
 	public void setTreeNodeActionMarkerCode(String treeNodeActionMarkerCode) {
-		this._treeNodeActionMarkerCode = treeNodeActionMarkerCode;
+		this.treeNodeActionMarkerCode = treeNodeActionMarkerCode;
 	}
 	
 	protected ITreeNodeManager getTreeNodeManager() {
-		return _treeNodeManager;
+		return treeNodeManager;
 	}
 	public void setTreeNodeManager(ITreeNodeManager treeNodeManager) {
-		this._treeNodeManager = treeNodeManager;
+		this.treeNodeManager = treeNodeManager;
 	}
 	
 	protected ITreeNodeBaseActionHelper getTreeHelper() {
-		return _treeHelper;
+		return treeHelper;
 	}
 	public void setTreeHelper(ITreeNodeBaseActionHelper treeHelper) {
-		this._treeHelper = treeHelper;
+		this.treeHelper = treeHelper;
 	}
 	
-	private String _facetCode;
-	private String _facetRootNodes;
+	private String facetCode;
+	private String facetRootNodes;
 	
-	private String _targetNode;
-	private Set<String> _treeNodesToOpen = new HashSet<>();
+	private String targetNode;
+	private Set<String> treeNodesToOpen = new HashSet<>();
 	
-	private String _treeNodeActionMarkerCode;
+	private String treeNodeActionMarkerCode;
 
-	private ITreeNodeManager _treeNodeManager;
+	private transient ITreeNodeManager treeNodeManager;
 	
-	private ITreeNodeBaseActionHelper _treeHelper;
+	private transient ITreeNodeBaseActionHelper treeHelper;
 
 }

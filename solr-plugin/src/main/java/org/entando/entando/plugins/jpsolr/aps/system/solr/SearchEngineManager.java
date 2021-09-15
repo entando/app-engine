@@ -25,11 +25,9 @@ import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
-import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -120,7 +118,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     
     private void refreshBaseFields(List<Map<String, Object>> fields, Map<String, Map<String, Object>> checkedFields) {
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME, "text_general");
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, "text_general");
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, "text_general", true);
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_gen_sort");
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, "text_general");
@@ -235,7 +233,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             this.checkField(fields, null, currentLang.getCode(), "text_general", true);
         }
     }
-    
+
     @Override
     public Thread startReloadContentsReferences() throws EntException {
         ((ISolrSearchEngineDAOFactory) this.getFactory()).deleteAllDocuments();

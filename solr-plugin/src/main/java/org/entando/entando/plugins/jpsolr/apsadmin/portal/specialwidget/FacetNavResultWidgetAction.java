@@ -162,39 +162,38 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
 	}
 
 	public SmallContentType getContentType(String contentTypeCode) {
-		return (SmallContentType) this.getContentManager().getSmallContentTypesMap().get(contentTypeCode);
+		return this.getContentManager().getSmallContentTypesMap().get(contentTypeCode);
 	}
 
 	public String getContentTypeCode() {
-		return _contentTypeCode;
+		return contentTypeCode;
 	}
 	public void setContentTypeCode(String contentTypeCode) {
-		this._contentTypeCode = contentTypeCode;
+		this.contentTypeCode = contentTypeCode;
 	}
 
 	public List<String> getContentTypeCodes() {
 		String contentTypesParam = this.getContentTypesFilter();
-		List<String> contentTypes = FacetNavWidgetHelper.splitValues(contentTypesParam, ",");
-		return contentTypes;
+		return FacetNavWidgetHelper.splitValues(contentTypesParam, ",");
 	}
 
 	public void setContentTypesFilter(String contentTypesFilter) {
-		this._contentTypesFilter = contentTypesFilter;
+		this.contentTypesFilter = contentTypesFilter;
 	}
 	public String getContentTypesFilter() {
-		return _contentTypesFilter;
+		return contentTypesFilter;
 	}
 	
 	protected IContentManager getContentManager() {
-		return _contentManager;
+		return contentManager;
 	}
 	public void setContentManager(IContentManager contentManager) {
-		this._contentManager = contentManager;
+		this.contentManager = contentManager;
 	}
 
-	private String _contentTypeCode;
-	private String _contentTypesFilter;
+	private String contentTypeCode;
+	private String contentTypesFilter;
 
-	private IContentManager _contentManager;
+	private IContentManager contentManager;
 
 }

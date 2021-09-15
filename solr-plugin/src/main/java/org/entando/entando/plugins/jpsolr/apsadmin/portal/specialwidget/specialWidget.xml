@@ -81,6 +81,11 @@
             <interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">managePages</param></interceptor-ref>
         </action>
         
+        <action name="joinCategory*" class="jpsolrFacetNavTreeWidgetAction" method="joinFacet">
+            <result type="tiles">admin.Page.Widget.jpsolrFacetNavTree.config</result>
+            <interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">managePages</param></interceptor-ref>
+        </action>
+        
         <action name="removeFacet*" class="jpsolrFacetNavTreeWidgetAction" method="removeFacet">
             <result type="tiles">admin.Page.Widget.jpsolrFacetNavTree.config</result>
             <interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">managePages</param></interceptor-ref>

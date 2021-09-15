@@ -91,7 +91,8 @@ public class IndexerDAO implements IIndexerDAO {
     protected SolrInputDocument createDocument(IApsEntity entity) {
         SolrInputDocument document = new SolrInputDocument();
         document.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME, entity.getId());
-        document.addField(SolrFields.SOLR_CONTENT_TYPE_FIELD_NAME,entity.getTypeCode());
+        document.addField(SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, entity.getTypeCode());
+        document.addField(SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, entity.getMainGroup());
         document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, entity.getMainGroup());
         Iterator<String> iterGroups = entity.getGroups().iterator();
         while (iterGroups.hasNext()) {
@@ -102,8 +103,6 @@ public class IndexerDAO implements IIndexerDAO {
             if (null != entity.getDescription()) {
                 document.addField(SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
             }
-            document.addField(SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, entity.getTypeCode());
-            document.addField(SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, entity.getMainGroup());
             Date creation = ((Content) entity).getCreated();
             Date lastModify = (null != ((Content) entity).getLastModified()) ? ((Content) entity).getLastModified() : creation;
             if (null != creation) {
@@ -126,7 +125,7 @@ public class IndexerDAO implements IIndexerDAO {
                 this.indexAttribute(document, currentAttribute, currentLang);
             }
         }
-        List<Category> categories = entity.getCategories();
+        List<Category> categories = ((Content) entity).getCategories();
         if (null != categories && !categories.isEmpty()) {
             for (int i = 0; i < categories.size(); i++) {
                 ITreeNode category = categories.get(i);
