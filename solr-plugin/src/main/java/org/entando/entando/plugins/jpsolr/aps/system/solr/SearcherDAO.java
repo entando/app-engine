@@ -102,6 +102,7 @@ public class SearcherDAO implements ISearcherDAO {
             if (faceted) {
                 solrQuery.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME);
             }
+            solrQuery.addField("score");
             solrQuery.setRows(10000);
             if (null != filters) {
                 for (int i = 0; i < filters.length; i++) {
@@ -118,6 +119,9 @@ public class SearcherDAO implements ISearcherDAO {
             for (SolrDocument doc : documents) {
                 String id = doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME).toString();
                 contentsId.add(id);
+                
+                String score = doc.get("score").toString();
+                System.out.println(id + " - " + score);
                 if (faceted) {
                     List<Object> categoryPaths = (List<Object>) doc.get(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME);
                     if (null != categoryPaths) {
@@ -189,7 +193,7 @@ public class SearcherDAO implements ISearcherDAO {
             for (int i = 0; i < categories.length; i++) {
                 SearchEngineFilter categoryFilter = categories[i];
                 List<String> allowedValues = categoryFilter.getAllowedValues();
-                if (null != allowedValues && allowedValues.size() > 0) {
+                if (null != allowedValues && !allowedValues.isEmpty()) {
                     BooleanQuery.Builder singleCategoriesQuery = new BooleanQuery.Builder();
                     for (int j = 0; j < allowedValues.size(); j++) {
                         String singleCategory = allowedValues.get(j);
@@ -221,6 +225,8 @@ public class SearcherDAO implements ISearcherDAO {
         String attachmentKey = key + SolrFields.ATTACHMENT_FIELD_SUFFIX;
         Object value = filter.getValue();
         List<?> allowedValues = filter.getAllowedValues();
+        String relevance = (filter instanceof SolrSearchEngineFilter && null != ((SolrSearchEngineFilter)filter).getRelevancy()) ? 
+                "^"+((SolrSearchEngineFilter)filter).getRelevancy() : "";
         if (null != allowedValues && !allowedValues.isEmpty()) {
             fieldQuery = new BooleanQuery.Builder();
             SearchEngineFilter.TextSearchOption option = filter.getTextSearchOption();
@@ -231,7 +237,7 @@ public class SearcherDAO implements ISearcherDAO {
             for (int j = 0; j < allowedValues.size(); j++) {
                 String singleValue = allowedValues.get(j).toString();
                 if (filter instanceof NumericSearchEngineFilter) {
-                    TermQuery term = new TermQuery(new Term(key, singleValue));
+                    TermQuery term = new TermQuery(new Term(key, singleValue + relevance));
                     fieldQuery.add(term, BooleanClause.Occur.SHOULD);
                 } else {
                     //NOTE: search for lower case....
@@ -246,14 +252,14 @@ public class SearcherDAO implements ISearcherDAO {
                             //bc = BooleanClause.Occur.MUST_NOT;
                         }
                         for (int i = 0; i < values.length; i++) {
-                            Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption());
+                            Query queryTerm = this.getTermQueryForTextSearch(key, values[i] + relevance, filter.isLikeOption());
                             singleOptionFieldQuery.add(queryTerm, bc);
                         }
                         fieldQuery.add(singleOptionFieldQuery.build(), BooleanClause.Occur.SHOULD);
                     } else {
                         PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
                         for (int i = 0; i < values.length; i++) {
-                            phraseQuery.add(new Term(key, values[i].toLowerCase()), i);
+                            phraseQuery.add(new Term(key, values[i].toLowerCase() + relevance), i);
                         }
                         fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
                     }
@@ -266,7 +272,7 @@ public class SearcherDAO implements ISearcherDAO {
                 String format = SolrFields.SOLR_SEARCH_DATE_FORMAT;
                 String start = (null != filter.getStart()) ? DateConverter.getFormattedDate((Date) filter.getStart(), format) : SolrFields.SOLR_DATE_MIN;
                 String end = (null != filter.getEnd()) ? DateConverter.getFormattedDate((Date) filter.getEnd(), format) : SolrFields.SOLR_DATE_MAX;
-                query = TermRangeQuery.newStringRange(key, start, end, false, false);
+                query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, false, false);
             } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
                 Long lowerValue = (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
                 Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
@@ -274,7 +280,7 @@ public class SearcherDAO implements ISearcherDAO {
             } else {
                 String start = (null != filter.getStart()) ? filter.getStart().toString().toLowerCase() : "A";
                 String end = (null != filter.getEnd()) ? filter.getEnd().toString().toLowerCase() + "z" : null;
-                query = TermRangeQuery.newStringRange(key, start, end, true, true);
+                query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
             }
             fieldQuery.add(query, BooleanClause.Occur.MUST);
         } else if (null != value) {
@@ -296,11 +302,11 @@ public class SearcherDAO implements ISearcherDAO {
                         //bc = BooleanClause.Occur.MUST_NOT;
                     }
                     for (int i = 0; i < values.length; i++) {
-                        Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption());
+                        Query queryTerm = this.getTermQueryForTextSearch(key, values[i] + relevance, filter.isLikeOption());
 						if ((filter instanceof SolrSearchEngineFilter) && ((SolrSearchEngineFilter)filter).isIncludeAttachments()) {
 							BooleanQuery.Builder compositeQuery = new BooleanQuery.Builder ();
 							compositeQuery.add(queryTerm, BooleanClause.Occur.SHOULD);
-							TermQuery termAttachment = new TermQuery(new Term(attachmentKey, values[i].toLowerCase()));
+							TermQuery termAttachment = new TermQuery(new Term(attachmentKey, values[i].toLowerCase() + relevance));
 							compositeQuery.add(termAttachment, BooleanClause.Occur.SHOULD);
 							fieldQuery.add(compositeQuery.build(), bc);
 						} else {
@@ -310,14 +316,14 @@ public class SearcherDAO implements ISearcherDAO {
                 } else {
                     PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
                     for (int i = 0; i < values.length; i++) {
-                        phraseQuery.add(new Term(key, values[i].toLowerCase()), i);
+                        phraseQuery.add(new Term(key, values[i].toLowerCase() + relevance), i);
                     }
 					if ((filter instanceof SolrSearchEngineFilter) && ((SolrSearchEngineFilter)filter).isIncludeAttachments()) {
 						fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
 						PhraseQuery.Builder phraseQuery2 = new PhraseQuery.Builder();
 						for (int i = 0; i < values.length; i++) {
 							//NOTE: search lower case....
-							phraseQuery2.add(new Term(attachmentKey, values[i].toLowerCase()));
+							phraseQuery2.add(new Term(attachmentKey, values[i].toLowerCase() + relevance));
 						}
 						fieldQuery.add(phraseQuery2.build(), BooleanClause.Occur.SHOULD);
 					} else {
@@ -326,15 +332,15 @@ public class SearcherDAO implements ISearcherDAO {
                 }
             } else if (value instanceof Date) {
                 String toString = DateConverter.getFormattedDate((Date) value, SolrFields.SOLR_SEARCH_DATE_FORMAT);
-                TermQuery term = new TermQuery(new Term(key, toString));
+                TermQuery term = new TermQuery(new Term(key, toString + relevance));
                 fieldQuery.add(term, BooleanClause.Occur.MUST);
             } else if (value instanceof Number) {
-                TermQuery term = new TermQuery(new Term(key, value.toString()));
+                TermQuery term = new TermQuery(new Term(key, value.toString() + relevance));
                 fieldQuery.add(term, BooleanClause.Occur.MUST);
             }
         } else {
             fieldQuery = new BooleanQuery.Builder();
-            Term term = new Term(key, "*");
+            Term term = new Term(key, "*" + relevance);
             Query queryTerm = new WildcardQuery(term);
             fieldQuery.add(queryTerm, BooleanClause.Occur.MUST);
         }

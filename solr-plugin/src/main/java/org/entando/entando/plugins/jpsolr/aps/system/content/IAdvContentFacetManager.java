@@ -22,7 +22,7 @@ import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jpsolr.web.content.AdvRestContentListRequest;
+import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.entando.entando.web.common.model.PagedMetadata;
 
 /**

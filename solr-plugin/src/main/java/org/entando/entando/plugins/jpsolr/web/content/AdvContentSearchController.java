@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpsolr.web.content;
 
+import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;

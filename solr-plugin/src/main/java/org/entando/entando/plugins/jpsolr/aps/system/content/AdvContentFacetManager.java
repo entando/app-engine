@@ -31,7 +31,8 @@ import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jpsolr.web.content.AdvRestContentListRequest;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.entando.entando.web.common.model.PagedMetadata;
 
 import org.slf4j.Logger;
@@ -113,8 +114,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
         FacetedContentsResult facetedResult = null;
         try {
             String langCode = (StringUtils.isBlank(requestList.getLang())) ? this.getLangManager().getDefaultLang().getCode() : requestList.getLang();
-            SearchEngineFilter[] searchFilters = requestList.extractFilters(langCode);
-            SearchEngineFilter[] categorySearchFilters = requestList.extractCategoryFilters();
+            SolrSearchEngineFilter[] searchFilters = requestList.extractFilters(langCode);
+            SolrSearchEngineFilter[] categorySearchFilters = requestList.extractCategoryFilters();
             List<String> userGroupCodes = this.getAllowedGroups(user);
             facetedResult = this.getSearchEngineManager().searchFacetedEntities(searchFilters, categorySearchFilters, userGroupCodes);
         } catch (Exception t) {

@@ -15,13 +15,18 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
 import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
  * @author E.Santoboni
  */
 public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter<T> {
     
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SolrSearchEngineFilter.class);
+    
     private boolean includeAttachments;
+    private Integer relevancy;
 
     public SolrSearchEngineFilter(String key, T value) {
         super(key, value);
@@ -51,11 +56,32 @@ public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter
         super(key, attributeFilter, value, textSearchOption);
     }
 
+    @Override
+    public void setEnd(T end) {
+        super.setEnd(end);
+    }
+
+    @Override
+    public void setStart(T start) {
+        super.setStart(start);
+    }
+
     public boolean isIncludeAttachments() {
         return includeAttachments;
     }
     public void setIncludeAttachments(boolean includeAttachments) {
         this.includeAttachments = includeAttachments;
+    }
+
+    public Integer getRelevancy() {
+        return relevancy;
+    }
+    public void setRelevancy(Integer relevancy) {
+        if (null == relevancy || relevancy.intValue() < 1) {
+            logger.error("Invalid relavancy : {}", relevancy);
+            return;
+        }
+        this.relevancy = relevancy;
     }
     
 }
