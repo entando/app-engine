@@ -13,26 +13,18 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
 import java.util.Collection;
-import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 
 /**
  * @author E.Santoboni
  */
-public interface ISolrSearchEngineManager extends ICmsSearchEngineManager {
+public interface ISolrSearcherDAO extends ISearcherDAO {
     
-    public void refreshCmsFields() throws EntException;
-    
-    public void refreshContentType(String typeCode) throws EntException;
-    
-    public List<ContentTypeSettings> getContentTypesSettings() throws EntException;
-    
-    public FacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters, 
+    public FacetedContentsResult searchFacetedContents(SearchEngineFilter[][] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException;
     
 }

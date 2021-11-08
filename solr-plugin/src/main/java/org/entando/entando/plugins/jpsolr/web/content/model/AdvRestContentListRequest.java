@@ -39,6 +39,8 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     private boolean includeAttachments;
 
     private boolean guestUser;
+    
+    private SolrFilter[][] doubleFilters;
 
     public String getLang() {
         return lang;
@@ -95,37 +97,31 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         return categoryFilters;
     }
     
+    public SolrSearchEngineFilter[][] extractDoubleFilters(String langCode) {
+        SolrSearchEngineFilter[][] doubleSearchFilters = new SolrSearchEngineFilter[][]{};
+        SolrFilter[][] df = this.getDoubleFilters();
+        if (null != df) {
+            for (int i = 0; i < df.length; i++) {
+                SolrFilter[] internalFilters = df[i];
+                SolrSearchEngineFilter[] internalSearchFilters = new SolrSearchEngineFilter[]{};
+                for (int j = 0; j < internalFilters.length; j++) {
+                    SolrFilter internalFilter = internalFilters[j];
+                    SolrSearchEngineFilter searchFilter = this.buildSearchFilter(internalFilter, langCode);
+                    internalSearchFilters = ArrayUtils.add(internalSearchFilters, searchFilter);
+                }
+                doubleSearchFilters = ArrayUtils.add(doubleSearchFilters, internalSearchFilters);
+            }
+        }
+        return doubleSearchFilters;
+    }
+    
     public SolrSearchEngineFilter[] extractFilters(String langCode) {
         SolrSearchEngineFilter[] searchFilters = new SolrSearchEngineFilter[]{};
         SolrFilter[] filters = this.getFilters();
         if (null != filters) {
             for (int i = 0; i < filters.length; i++) {
                 SolrFilter filter = filters[i];
-                SolrSearchEngineFilter searchFilter = null;
-                boolean isAttribute = !StringUtils.isEmpty(filter.getEntityAttr());
-                String key = isAttribute ? filter.getEntityAttr() : filter.getAttribute();
-                Object objectValue = this.extractFilterValue(filter);
-                if (FilterOperator.GREATER.getValue().equalsIgnoreCase(filter.getOperator())) {
-                    searchFilter = new SolrSearchEngineFilter(key, isAttribute);
-                    searchFilter.setStart(objectValue);
-                } else if (FilterOperator.LOWER.getValue().equalsIgnoreCase(filter.getOperator())) {
-                    searchFilter = new SolrSearchEngineFilter(key, isAttribute);
-                    searchFilter.setEnd(objectValue);
-                } else {
-                    searchFilter = new SolrSearchEngineFilter(key, isAttribute, objectValue);
-                    if (null != objectValue
-                            && !StringUtils.isBlank(objectValue.toString())
-                            && FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
-                        searchFilter.setLikeOption(true);
-                    }
-                }
-                searchFilter.setOrder(filter.getOrder());
-                if (isAttribute) {
-                    searchFilter.setLangCode(langCode);
-                }
-                if (null != filter.getRelevancy()) {
-                    searchFilter.setRelevancy(filter.getRelevancy());
-                }
+                SolrSearchEngineFilter searchFilter = this.buildSearchFilter(filter, langCode);
                 searchFilters = ArrayUtils.add(searchFilters, searchFilter);
             }
         }
@@ -146,6 +142,35 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
             searchFilters = ArrayUtils.add(searchFilters, searchFilter);
         }
         return searchFilters;
+    }
+    
+    private SolrSearchEngineFilter buildSearchFilter(SolrFilter filter, String langCode) {
+        SolrSearchEngineFilter searchFilter = null;
+        boolean isAttribute = !StringUtils.isEmpty(filter.getEntityAttr());
+        String key = isAttribute ? filter.getEntityAttr() : filter.getAttribute();
+        Object objectValue = this.extractFilterValue(filter);
+        if (FilterOperator.GREATER.getValue().equalsIgnoreCase(filter.getOperator())) {
+            searchFilter = new SolrSearchEngineFilter(key, isAttribute);
+            searchFilter.setStart(objectValue);
+        } else if (FilterOperator.LOWER.getValue().equalsIgnoreCase(filter.getOperator())) {
+            searchFilter = new SolrSearchEngineFilter(key, isAttribute);
+            searchFilter.setEnd(objectValue);
+        } else {
+            searchFilter = new SolrSearchEngineFilter(key, isAttribute, objectValue);
+            if (null != objectValue
+                    && !StringUtils.isBlank(objectValue.toString())
+                    && FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
+                searchFilter.setLikeOption(true);
+            }
+        }
+        searchFilter.setOrder(filter.getOrder());
+        if (isAttribute) {
+            searchFilter.setLangCode(langCode);
+        }
+        if (null != filter.getRelevancy()) {
+            searchFilter.setRelevancy(filter.getRelevancy());
+        }
+        return searchFilter;
     }
     
     protected Object extractFilterValue(Filter filter) {
@@ -195,6 +220,13 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     @Override
     public Filter[] getFilter() {
         return this.getFilters();
+    }
+
+    public SolrFilter[][] getDoubleFilters() {
+        return doubleFilters;
+    }
+    public void setDoubleFilters(SolrFilter[][] doubleFilters) {
+        this.doubleFilters = doubleFilters;
     }
     
 }
