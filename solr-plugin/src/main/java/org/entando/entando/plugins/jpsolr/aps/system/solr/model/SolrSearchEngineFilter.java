@@ -27,6 +27,14 @@ public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter
     
     private boolean includeAttachments;
     private Integer relevancy;
+    private boolean paginationFilter = false;
+    
+    public SolrSearchEngineFilter(Integer limit, Integer offset) {
+        super("*", false);
+        super.setLimit(limit);
+        super.setOffset(offset);
+        this.paginationFilter = true;
+    }
 
     public SolrSearchEngineFilter(String key, T value) {
         super(key, value);
@@ -82,6 +90,10 @@ public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter
             return;
         }
         this.relevancy = relevancy;
+    }
+    
+    public boolean isPaginationFilter() {
+        return paginationFilter;
     }
     
 }

@@ -125,14 +125,29 @@ public class IndexerDAO implements IIndexerDAO {
                 this.indexAttribute(document, currentAttribute, currentLang);
             }
         }
+        this.indexCategories(entity, document);
+        return document;
+    }
+    
+    protected void indexCategories(IApsEntity entity, SolrInputDocument document) {
         List<Category> categories = ((Content) entity).getCategories();
         if (null != categories && !categories.isEmpty()) {
+            Set<String> codes = new HashSet<>();
             for (int i = 0; i < categories.size(); i++) {
                 ITreeNode category = categories.get(i);
-                this.indexCategory(document, category);
+                this.extractCategoryCodes(category, codes);
             }
+            codes.stream().forEach(c -> document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, c));
         }
-        return document;
+    }
+    
+    protected void extractCategoryCodes(ITreeNode category, Set<String> codes) {
+        if (null == category || category.isRoot()) {
+            return;
+        }
+        codes.add(category.getCode());
+        ITreeNode parentCategory = this.getTreeNodeManager().getNode(category.getParentCode());
+        this.extractCategoryCodes(parentCategory, codes);
     }
 
     protected void indexAttribute(SolrInputDocument document, AttributeInterface attribute, Lang lang) {
@@ -206,17 +221,7 @@ public class IndexerDAO implements IIndexerDAO {
         fieldName = fieldName.replaceAll(":", "_");
         document.addField(fieldName, valueToIndex);
     }
-
-    protected void indexCategory(SolrInputDocument document, ITreeNode categoryToIndex) {
-        if (null == categoryToIndex || categoryToIndex.isRoot()) {
-            return;
-        }
-        document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME,
-                categoryToIndex.getPath(SolrFields.SOLR_CONTENT_CATEGORY_SEPARATOR, false, this.getTreeNodeManager()));
-        ITreeNode parentCategory = this.getTreeNodeManager().getNode(categoryToIndex.getParentCode());
-        this.indexCategory(document, parentCategory);
-    }
-
+    
     @Override
     public synchronized void delete(String name, String value) throws EntException {
         SolrClient client = null;

@@ -11,20 +11,26 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.entando.plugins.jpsolr.aps.system.solr;
+package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
-import java.util.Collection;
-import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
+import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 
 /**
  * @author E.Santoboni
  */
-public interface ISolrSearcherDAO extends ISearcherDAO {
+public class SolrFacetedContentsResult extends FacetedContentsResult {
     
-    public SolrFacetedContentsResult searchFacetedContents(SearchEngineFilter[][] filters,
-            SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException;
+    private Integer totalSize;
+
+    public SolrFacetedContentsResult() {
+        super();
+    }
+    
+    public Integer getTotalSize() {
+        return totalSize;
+    }
+    public void setTotalSize(Integer totalSize) {
+        this.totalSize = totalSize;
+    }
     
 }

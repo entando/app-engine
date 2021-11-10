@@ -30,7 +30,6 @@ public class SolrFields {
     public static final String SOLR_CONTENT_ID_FIELD_NAME = "id";
     public static final String SOLR_CONTENT_GROUP_FIELD_NAME = "entity_group";
     public static final String SOLR_CONTENT_CATEGORY_FIELD_NAME = "entity_category";
-    public static final String SOLR_CONTENT_CATEGORY_SEPARATOR = "_S_";
     public static final String SOLR_CONTENT_DESCRIPTION_FIELD_NAME = "entity_descr";
     public static final String SOLR_CONTENT_LAST_MODIFY_FIELD_NAME = "entity_modified";
     public static final String SOLR_CONTENT_CREATION_FIELD_NAME = "entity_created";

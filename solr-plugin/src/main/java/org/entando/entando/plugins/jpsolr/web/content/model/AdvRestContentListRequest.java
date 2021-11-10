@@ -141,7 +141,19 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
             searchFilter.setIncludeAttachments(this.isIncludeAttachments());
             searchFilters = ArrayUtils.add(searchFilters, searchFilter);
         }
+        if (null != this.getPageSize() && this.getPageSize() > 0) {
+            SolrSearchEngineFilter pageFilter = new SolrSearchEngineFilter(this.getPageSize(), this.getOffset());
+            searchFilters = ArrayUtils.add(searchFilters, pageFilter);
+        }
         return searchFilters;
+    }
+    
+    private Integer getOffset() {
+        int page = this.getPage() - 1;
+        if (null == this.getPage() || this.getPage() == 0) {
+            return 0;
+        }
+        return this.getPageSize() * page;
     }
     
     private SolrSearchEngineFilter buildSearchFilter(SolrFilter filter, String langCode) {

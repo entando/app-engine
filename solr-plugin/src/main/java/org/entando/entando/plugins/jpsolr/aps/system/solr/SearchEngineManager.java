@@ -33,12 +33,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -244,7 +244,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     }
     
     @Override
-    public FacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters, 
+    public SolrFacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters, 
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
         return ((ISolrSearcherDAO) this.getSearcherDao()).searchFacetedContents(filters, categories, allowedGroups);
     }
