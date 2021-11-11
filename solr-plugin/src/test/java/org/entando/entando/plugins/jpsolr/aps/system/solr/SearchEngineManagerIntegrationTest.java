@@ -173,7 +173,7 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-
+    
     @Test
     void testSearchContentsId_1() throws Throwable {
         Content content_1 = this.createContent_1();
@@ -262,7 +262,7 @@ class SearchEngineManagerIntegrationTest {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
             SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
-            SearchEngineFilter filterByType = new SearchEngineFilter(IIndexerDAO.CONTENT_TYPE_FIELD_NAME, "ART");
+            SearchEngineFilter filterByType = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, "ART");
             SearchEngineFilter[] filters = {filterByType};
             List<String> allowedGroup = new ArrayList<>();
             allowedGroup.add(Group.FREE_GROUP_NAME);
@@ -281,7 +281,7 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-
+    
     @Test
     void testSearchContentsId_5() throws Throwable {
         try {
@@ -310,7 +310,7 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-
+    
     @Test
     void testSearchContentsId_5_allowdValues() throws Throwable {
         try {
@@ -338,7 +338,7 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-
+    
     @Test
     void testSearchContentsId_6() throws Throwable {
         try {
@@ -558,7 +558,7 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-
+    
     @Test
     void testSearchContentsId_9() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
@@ -648,7 +648,7 @@ class SearchEngineManagerIntegrationTest {
             assertEquals(contentsId_1.get(i), contentsId_2_en.get(contentsId_2_en.size() - i - 1));
         }
     }
-
+    
     @Test
     void testSearchContentsId_10() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
@@ -739,7 +739,7 @@ class SearchEngineManagerIntegrationTest {
             assertEquals(contentsId_1.get(i), contentsId_2_en.get(contentsId_2_en.size() - i - 1));
         }
     }
-
+    
     @Test
     void testSearchContentsId_11() throws Throwable {
         SearchEngineManager sem = (SearchEngineManager) this.searchEngineManager;
@@ -844,7 +844,7 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-
+    
     @Test
     void testSearchFacetedContents_1() throws Throwable {
         try {
@@ -867,14 +867,14 @@ class SearchEngineManagerIntegrationTest {
             throw t;
         }
     }
-    
+
     private void verify(List<String> contentsId, String[] array) {
         assertEquals(array.length, contentsId.size());
         for (int i = 0; i < array.length; i++) {
             assertTrue(contentsId.contains(array[i]));
         }
     }
-
+    
     private Content createContent_1() {
         Content content = new Content();
         content.setId("XXX101");

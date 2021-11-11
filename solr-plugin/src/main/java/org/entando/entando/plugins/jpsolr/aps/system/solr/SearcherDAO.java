@@ -341,7 +341,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
             } else {
                 String start = (null != filter.getStart()) ? filter.getStart().toString().toLowerCase() : "A";
                 String end = (null != filter.getEnd()) ? filter.getEnd().toString().toLowerCase() + "z" : null;
-                query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
+                query = TermRangeQuery.newStringRange(key, start + relevance, (null != end) ? (end + relevance) : null, true, true);
             }
             fieldQuery.add(query, BooleanClause.Occur.MUST);
         } else if (null != value) {
