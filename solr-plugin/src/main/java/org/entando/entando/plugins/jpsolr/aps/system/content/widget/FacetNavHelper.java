@@ -47,22 +47,26 @@ import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 
 /**
  * @author E.Santoboni
  */
 public class FacetNavHelper implements IFacetNavHelper {
     
+    private static final int LIMIT = 10000;
+    
 	private ITreeNodeManager treeNodeManager;
     
     private IAdvContentFacetManager advContentFacetManager;
-
+    
     @Override
     public FacetedContentsResult getResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
         List<String> contentTypesFilter = this.getContentTypesFilter(reqCtx);
 		List<String> userGroupCodes = new ArrayList<>(this.getAllowedGroups(reqCtx));
         SearchEngineFilter typeFilter = SearchEngineFilter.createAllowedValuesFilter(SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, false, contentTypesFilter, TextSearchOption.EXACT);
-        SearchEngineFilter[] filters = new SearchEngineFilter[]{typeFilter};
+        SolrSearchEngineFilter filterPagination = new SolrSearchEngineFilter(LIMIT, 0);
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{typeFilter, filterPagination};
         return this.getAdvContentFacetManager().getFacetResult(filters, selectedFacetNodes, null, userGroupCodes);
     }
 	

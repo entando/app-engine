@@ -54,7 +54,7 @@ public class FacetNavTreeTag extends AbstractFacetNavTag {
 			List<String> requiredFacets = this.getRequiredFacets();
             IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
 			FacetedContentsResult result = facetNavHelper.getResult(requiredFacets, reqCtx);
-			reqCtx.addExtraParam(LIST_RESULT_REQUEST_PARAM, result.getContentsId());
+			reqCtx.addExtraParam(SOLR_RESULT_REQUEST_PARAM, result);
             Map<String, Integer> occurrences = result.getOccurrences();
 			List<ITreeNode> facetsForTree = this.getFacetRootNodes(reqCtx);
 			this.pageContext.setAttribute(this.getFacetsTreeParamName(), facetsForTree);

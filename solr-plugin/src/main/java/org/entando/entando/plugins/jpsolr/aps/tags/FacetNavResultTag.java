@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 
@@ -55,15 +56,15 @@ public class FacetNavResultTag extends AbstractFacetNavTag {
             } else {
                 requiredFacets = (List<String>) request.getAttribute(this.getRequiredFacetsParamName());
                 if (requiredFacets == null) {
-                    requiredFacets = new ArrayList<String>();
+                    requiredFacets = new ArrayList<>();
                 }
             }
             IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
-            List<String> result = (List<String>) reqCtx.getExtraParam(LIST_RESULT_REQUEST_PARAM);
+            FacetedContentsResult result = (FacetedContentsResult) reqCtx.getExtraParam(SOLR_RESULT_REQUEST_PARAM);
             if (null == result) {
-                result = facetNavHelper.getSearchResult(requiredFacets, reqCtx);
+                result = facetNavHelper.getResult(requiredFacets, reqCtx);
             }
-            this.pageContext.setAttribute(this.getResultParamName(), result);
+            this.pageContext.setAttribute(this.getResultParamName(), result.getContentsId());
             if (null != this.getBreadCrumbsParamName()) {
                 this.pageContext.setAttribute(this.getBreadCrumbsParamName(), super.getBreadCrumbs(requiredFacets, reqCtx));
             }
@@ -73,7 +74,6 @@ public class FacetNavResultTag extends AbstractFacetNavTag {
         }
         return super.doStartTag();
     }
-	
 	
 	public String getResultParamName() {
 		return _resultParamName;

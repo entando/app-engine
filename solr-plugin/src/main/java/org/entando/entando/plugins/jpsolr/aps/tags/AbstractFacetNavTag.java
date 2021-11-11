@@ -53,7 +53,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected static final String LIST_RESULT_REQUEST_PARAM = "jpsolr_contentsIdResult";
+    protected static final String SOLR_RESULT_REQUEST_PARAM = "jpsolr_searchResult";
 
 	/**
 	 * Returns required facets
