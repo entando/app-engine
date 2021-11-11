@@ -91,6 +91,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         try {
             List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
             this.checkLangFields(fields);
+            this.refreshBaseFields(fields, null);
             List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
             Map<String, Map<String, Object>> checkedFields = new HashMap<>();
             for (int i = 0; i < entityTypes.size(); i++) {
@@ -222,6 +223,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         super.updateFromEntityTypesChanging(event);
         List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
         this.checkLangFields(fields);
+        this.refreshBaseFields(fields, null);
         if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName()) 
                 && event.getOperationCode() != EntityTypesChangingEvent.REMOVE_OPERATION_CODE) {
             String typeCode = event.getNewEntityType().getTypeCode();
