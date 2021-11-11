@@ -119,21 +119,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
         }
         return facetedResult;
     }
-
-    @Override
-    public PagedMetadata<String> getContents(AdvRestContentListRequest requestList, UserDetails user) {
-        try {
-            SolrFacetedContentsResult facetedResult = this.getFacetedContents(requestList, user);
-            List<String> result = facetedResult.getContentsId();
-            PagedMetadata<String> pagedMetadata = new PagedMetadata<>(requestList, facetedResult.getTotalSize());
-            pagedMetadata.setBody(result);
-            return pagedMetadata;
-        } catch (Exception t) {
-            logger.error("error in search contents", t);
-            throw new RestServerError("error in search contents", t);
-        }
-    }
-
+    
     protected List<String> getAllowedGroups(UserDetails currentUser) {
         List<String> groupCodes = new ArrayList<>();
         if (null != currentUser) {

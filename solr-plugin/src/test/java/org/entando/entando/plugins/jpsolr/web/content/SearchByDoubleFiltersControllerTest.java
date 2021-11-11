@@ -32,22 +32,17 @@ import org.entando.entando.web.utils.OAuth2TestUtils;
 
 import static org.hamcrest.CoreMatchers.is;
 
-import org.hamcrest.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.MonoListAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.TextAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
-import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.AttachAttribute;
 import java.util.Calendar;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,26 +59,26 @@ import org.junit.jupiter.api.Test;
  * @author E.Santoboni
  */
 public class SearchByDoubleFiltersControllerTest extends AbstractControllerIntegrationTest {
-    
+
     private static final String TEXT_FOR_TEST = "Entando is the leading modular application platform for building enterprise applications on Kubernetes";
-    
+
     @Autowired
     private IContentManager contentManager;
 
     @Autowired
     private ICmsSearchEngineManager searchEngineManager;
-    
+
     @BeforeAll
     public static void setup() throws Exception {
         SolrTestUtils.startContainer();
         AbstractControllerIntegrationTest.setup();
     }
-    
+
     @AfterAll
     public static void tearDown() throws Exception {
         SolrTestUtils.stopContainer();
     }
-    
+
     @Override
     @BeforeEach
     public void setUp() throws Exception {
@@ -96,7 +91,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             throw e;
         }
     }
-    
+
     @Test
     public void testGetFacetedContentsByTypes() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
@@ -115,12 +110,12 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
         facetedResult.andExpect(status().isOk());
         int payloadSize = JsonPath.read(bodyResult, "$.payload.contentsId.size()");
         Assertions.assertEquals(0, payloadSize);
-        
-        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
-                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
-                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121",
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112",
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20",
                 "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
-        
+
         facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -137,7 +132,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             String extractedId = JsonPath.read(facetedBodyResult, "$.payload.contentsId[" + i + "]");
             Assertions.assertTrue(expectedContentsId.contains(extractedId));
         }
-        
+
         facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("doubleFilters[0][0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -157,7 +152,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             Assertions.assertTrue(expectedContentsId.contains(extractedId));
         }
     }
-    
+
     @Test
     public void testGetFacetedContentsByTitle() throws Exception {
         List<String> ids = null;
@@ -185,7 +180,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                 String expectedId = ids.get(ids.size() - i - 1);
                 facetedResult.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(expectedId)));
             }
-            
+
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
                             .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
@@ -210,7 +205,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                 facetedResult.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(expectedId)));
             }
             facetedResult.andExpect(jsonPath("$.payload.contentsId[" + ids.size() + "]", is("EVN21")));
-            
+
             List<String> purged = ids.stream().filter(id -> !id.startsWith("ART")).collect(Collectors.toList());
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
@@ -237,17 +232,54 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                             .sessionAttr("user", user)
                             .header("Authorization", "Bearer " + accessToken));
             
-            bodyResult = facetedResult.andReturn().getResponse().getContentAsString();
             facetedResult.andExpect(status().isOk());
-            // ["EVN215","ALL213","EVN212","ALL210","EVN209","ALL207","EVN206","ALL204","EVN203","ALL201","EVN21"]
-            payloadSize = JsonPath.read(bodyResult, "$.payload.contentsId.size()");
-            Assertions.assertEquals(purged.size() + 1, payloadSize);
+            facetedResult.andExpect(jsonPath("$.payload.contentsId.size()", is(purged.size() + 1)));
+            facetedResult.andExpect(jsonPath("$.payload.totalSize", is(purged.size() + 1)));
             for (int i = 0; i < purged.size(); i++) {
                 String expectedId = purged.get(purged.size() - i - 1);
                 facetedResult.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(expectedId)));
             }
             facetedResult.andExpect(jsonPath("$.payload.contentsId[" + purged.size() + "]", is("EVN21")));
+
+            facetedResult = mockMvc
+                    .perform(get("/plugins/advcontentsearch/facetedcontents")
+                            .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                            .param("filters[0].order", FieldSearchFilter.DESC_ORDER)
+                            
+                            .param("doubleFilters[0][0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                            .param("doubleFilters[0][0].operator", "like")
+                            .param("doubleFilters[0][0].value", "enterprise")
+                            .param("doubleFilters[0][1].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                            .param("doubleFilters[0][1].operator", "like")
+                            .param("doubleFilters[0][1].value", "Entando")
+                            .param("doubleFilters[0][2].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
+                            .param("doubleFilters[0][2].operator", "like")
+                            .param("doubleFilters[0][2].value", "Fragole")
+                            
+                            .param("doubleFilters[1][0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                            .param("doubleFilters[1][0].operator", "eq")
+                            .param("doubleFilters[1][0].value", "EVN")
+                            .param("doubleFilters[1][1].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                            .param("doubleFilters[1][1].operator", "eq")
+                            .param("doubleFilters[1][1].value", "ALL")
+                            
+                            .param("page", "2")
+                            .param("pageSize", "3")
+                            
+                            .sessionAttr("user", user)
+                            .header("Authorization", "Bearer " + accessToken));
             
+            facetedResult.andExpect(status().isOk());
+            facetedResult.andExpect(jsonPath("$.payload.contentsId.size()", is(3)));
+            facetedResult.andExpect(jsonPath("$.payload.totalSize", is(purged.size() + 1)));
+            for (int i = 0; i < 3; i++) {
+                String expectedId = purged.get(purged.size() - i - 4);
+                facetedResult.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(expectedId)));
+            }
+            facetedResult.andExpect(jsonPath("$.metaData.page", is(2)));
+            facetedResult.andExpect(jsonPath("$.metaData.pageSize", is(3)));
+            facetedResult.andExpect(jsonPath("$.metaData.lastPage", is(4)));
+            facetedResult.andExpect(jsonPath("$.metaData.totalItems", is(purged.size() + 1)));
         } catch (Exception e) {
             throw e;
         } finally {
@@ -263,7 +295,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             }
         }
     }
-    
+
     private List<String> addContentsForTestByTitle(String title) throws Exception {
         List<String> ids = new ArrayList<>();
         String[] types = {"ALL", "ART", "EVN"};
@@ -288,7 +320,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
         }
         return ids;
     }
-    
+
     @Test
     public void testGetFacetedContentsByRelevance() throws Exception {
         List<String> ids = null;
@@ -309,7 +341,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                 String expectedId = ids.get(ids.size() - i - 1);
                 result.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(expectedId)));
             }
-            
+
             List<String> expectedByTitle = Arrays.asList(new String[]{ids.get(0), ids.get(3), ids.get(6), ids.get(9), ids.get(12)});
             List<String> expectedBySubitle = Arrays.asList(new String[]{ids.get(1), ids.get(4), ids.get(7), ids.get(10), ids.get(13)});
             List<String> expectedByTextBody = Arrays.asList(new String[]{ids.get(2), ids.get(5), ids.get(8), ids.get(11), ids.get(14)});
@@ -321,7 +353,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                             .sessionAttr("user", user)
                             .header("Authorization", "Bearer " + accessToken));
             this.checkResult(facetedResult, expectedByTitle);
-            
+
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
                             .param("doubleFilters[0][0].entityAttr", "subtitle")
@@ -330,7 +362,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                             .sessionAttr("user", user)
                             .header("Authorization", "Bearer " + accessToken));
             this.checkResult(facetedResult, expectedBySubitle);
-            
+
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
                             .param("doubleFilters[0][0].entityAttr", "title")
@@ -343,19 +375,17 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                             .header("Authorization", "Bearer " + accessToken));
             List<String> expected_custom = Stream.concat(expectedByTitle.stream(), expectedByTextBody.stream()).distinct().collect(Collectors.toList());
             this.checkResult(facetedResult, expected_custom);
-            
+
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
                             .param("doubleFilters[0][0].entityAttr", "title")
                             .param("doubleFilters[0][0].operator", "like")
                             .param("doubleFilters[0][0].value", "Entando")
                             .param("doubleFilters[0][0].relevancy", "3")
-                            
                             .param("doubleFilters[0][1].entityAttr", "subtitle")
                             .param("doubleFilters[0][1].operator", "like")
                             .param("doubleFilters[0][1].value", "Entando")
                             .param("doubleFilters[0][1].relevancy", "2")
-                            
                             .param("doubleFilters[0][2].entityAttr", "textbody")
                             .param("doubleFilters[0][2].operator", "like")
                             .param("doubleFilters[0][2].value", "Entando")
@@ -376,27 +406,24 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                     Assertions.assertTrue(expectedBySubitle.contains(id));
                 }
             }
-            
+
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
                             .param("doubleFilters[0][0].entityAttr", "title")
                             .param("doubleFilters[0][0].operator", "like")
                             .param("doubleFilters[0][0].value", "Entando")
                             .param("doubleFilters[0][0].relevancy", "3")
-                            
                             .param("doubleFilters[0][1].entityAttr", "subtitle")
                             .param("doubleFilters[0][1].operator", "like")
                             .param("doubleFilters[0][1].value", "Entando")
                             .param("doubleFilters[0][1].relevancy", "2")
-                            
                             .param("doubleFilters[0][2].entityAttr", "textbody")
                             .param("doubleFilters[0][2].operator", "like")
                             .param("doubleFilters[0][2].value", "Entando")
                             //.param("doubleFilters[0][2].relevancy", "1") //implicit
-                            
+
                             .param("doubleFilters[1][0].entityAttr", "date")
                             .param("doubleFilters[1][0].order", "DESC")
-                            
                             .sessionAttr("user", user)
                             .header("Authorization", "Bearer " + accessToken));
             bodyResult = facetedResult.andReturn().getResponse().getContentAsString();
@@ -408,9 +435,9 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                 if (i < 5) {
                     Assertions.assertEquals(expectedByTitle.get(i), id);
                 } else if (i > 9) {
-                    Assertions.assertEquals(expectedByTextBody.get(i-10), id);
+                    Assertions.assertEquals(expectedByTextBody.get(i - 10), id);
                 } else {
-                    Assertions.assertEquals(expectedBySubitle.get(i-5), id);
+                    Assertions.assertEquals(expectedBySubitle.get(i - 5), id);
                 }
             }
         } catch (Exception e) {
@@ -430,7 +457,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             this.waitNotifyingThread();
         }
     }
-    
+
     private void checkResult(ResultActions facetedResult, List<String> expected) throws Exception {
         String bodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
@@ -441,7 +468,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             Assertions.assertTrue(expected.contains(id));
         }
     }
-    
+
     private List<String> addContentsForTestByRelevance(String typeCode) throws Exception {
         List<String> ids = new ArrayList<>();
         Content testType = new Content();
@@ -462,7 +489,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
         testType.addAttribute(dateAttribute);
         ((IEntityTypesConfigurer) contentManager).addEntityPrototype(testType);
         super.waitNotifyingThread();
-        
+
         Calendar dateToSet = Calendar.getInstance();
         for (int i = 0; i < 15; i++) {
             Content content = this.contentManager.createContentType(typeCode);
@@ -493,5 +520,5 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
         }
         return ids;
     }
-    
+
 }

@@ -18,9 +18,12 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import java.util.Arrays;
+import java.util.List;
 import javax.servlet.http.HttpSession;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
+import org.entando.entando.plugins.jpsolr.web.content.model.SolrFacetedPagedMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,21 +101,26 @@ public class AdvContentSearchController {
         logger.debug("getting contents with request {}", requestList);
         UserDetails currentUser = this.extractCurrentUser();
         this.getPaginationValidator().validateRestListRequest(requestList, String.class);
-        PagedMetadata<String> result = this.getAdvContentFacetManager().getContents(requestList, currentUser);
+        SolrFacetedContentsResult facetedResult = this.getAdvContentFacetManager().getFacetedContents(requestList, currentUser);
+        List<String> result = facetedResult.getContentsId();
+        PagedMetadata<String> pagedMetadata = new PagedMetadata<>(requestList, facetedResult.getTotalSize());
+        pagedMetadata.setBody(result);
         boolean isGuest = (null == currentUser || currentUser.getUsername().equalsIgnoreCase(SystemConstants.GUEST_USER_NAME));
-        result.getAdditionalParams().put("guestUser", String.valueOf(isGuest));
-        return new ResponseEntity<>(new PagedRestResponse<>(result), HttpStatus.OK);
+        pagedMetadata.getAdditionalParams().put("guestUser", String.valueOf(isGuest));
+        return new ResponseEntity<>(new PagedRestResponse<>(pagedMetadata), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/facetedcontents", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestResponse<FacetedContentsResult, AdvRestContentListRequest>> getFacetedContents(AdvRestContentListRequest requestList) {
+    public ResponseEntity<RestResponse<FacetedContentsResult, SolrFacetedPagedMetadata>> getFacetedContents(AdvRestContentListRequest requestList) {
         logger.debug("getting contents with request {}", requestList);
         this.getPaginationValidator().validateRestListRequest(requestList, String.class);
         UserDetails currentUser = this.extractCurrentUser();
-        FacetedContentsResult result = this.getAdvContentFacetManager().getFacetedContents(requestList, currentUser);
+        SolrFacetedContentsResult result = this.getAdvContentFacetManager().getFacetedContents(requestList, currentUser);
         boolean isGuest = (null == currentUser || currentUser.getUsername().equalsIgnoreCase(SystemConstants.GUEST_USER_NAME));
         requestList.setGuestUser(isGuest);
-        return new ResponseEntity<>(new RestResponse<>(result, requestList), HttpStatus.OK);
+        SolrFacetedPagedMetadata pagedMetadata = new SolrFacetedPagedMetadata(requestList, result.getTotalSize());
+        pagedMetadata.setBody(result);
+        return new ResponseEntity<>(new RestResponse<>(result, pagedMetadata), HttpStatus.OK);
     }
 
     protected UserDetails extractCurrentUser() {

@@ -23,7 +23,6 @@ import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
-import org.entando.entando.web.common.model.PagedMetadata;
 
 /**
  * @author E.Santoboni
@@ -37,7 +36,5 @@ public interface IAdvContentFacetManager {
             SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException;
 
     public SolrFacetedContentsResult getFacetedContents(AdvRestContentListRequest requestList, UserDetails extractCurrentUser);
-    
-    public PagedMetadata<String> getContents(AdvRestContentListRequest requestList, UserDetails extractCurrentUser);
     
 }
