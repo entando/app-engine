@@ -16,6 +16,8 @@ package org.entando.entando.plugins.jpsolr.web.content.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 
@@ -43,6 +45,8 @@ public class SolrFacetedPagedMetadata {
     private SolrFilter[][] doubleFilters = new SolrFilter[0][0];
     
     private SolrFilter[] filters = new SolrFilter[0];
+    
+    private Map<String, String> additionalParams = new HashMap<>();
 
     @JsonIgnore
     private int actualSize;
@@ -200,7 +204,7 @@ public class SolrFacetedPagedMetadata {
     public void setActualSize(int actualSize) {
         this.actualSize = actualSize;
     }
-/*
+
     public Map<String, String> getAdditionalParams() {
         return additionalParams;
     }
@@ -212,7 +216,7 @@ public class SolrFacetedPagedMetadata {
     public void addAdditionalParams(String key, String value) {
         this.additionalParams.put(key, value);
     }
-
+/*
     @Override
     public int hashCode() {
         int result = Objects.hash(page, pageSize, lastPage, totalItems, sort, direction, actualSize, body);
@@ -230,7 +234,7 @@ public class SolrFacetedPagedMetadata {
                 .append("sort", sort)
                 .append("direction", direction)
                 .append("filters", filters)
-                //.append("additionalParams", additionalParams)
+                .append("additionalParams", additionalParams)
                 .append("actualSize", actualSize)
                 .append("body", body)
                 .toString();

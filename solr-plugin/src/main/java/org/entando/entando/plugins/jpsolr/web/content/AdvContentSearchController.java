@@ -120,6 +120,7 @@ public class AdvContentSearchController {
         requestList.setGuestUser(isGuest);
         SolrFacetedPagedMetadata pagedMetadata = new SolrFacetedPagedMetadata(requestList, result.getTotalSize());
         pagedMetadata.setBody(result);
+        pagedMetadata.getAdditionalParams().put("guestUser", String.valueOf(isGuest));
         return new ResponseEntity<>(new RestResponse<>(result, pagedMetadata), HttpStatus.OK);
     }
 

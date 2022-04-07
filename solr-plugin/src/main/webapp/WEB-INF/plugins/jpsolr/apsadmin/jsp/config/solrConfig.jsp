@@ -16,17 +16,46 @@
 
 <s:set value="contentTypesSettings" var="contentTypesSettingsVar" />
 
+<s:set value="%{getLastReloadInfo()}" var="lastReloadInfoVar" />
+
+<s:set value="searcherManagerStatus" var="searcherManagerStatusVar" />
+
+<s:if test="#searcherManagerStatusVar == 1">
+    <p class="text-info">
+        <a class="btn btn-primary" href="<s:url action="config" namespace="/do/jpsolr" />" title="<s:text name="note.reload.contentIndexes.refresh" />">
+            <s:text name="label.refresh" />
+        </a>
+        &#32;(<s:text name="note.reload.contentIndexes.status.working" />)
+    </p>
+</s:if>
+
 <s:iterator var="contentTypeSettingsVar" value="#contentTypesSettingsVar">
     
     <h3 class="page-title-container">
     <div>
         <s:property value="#contentTypeSettingsVar.typeCode" />&#32;&ndash;&#32;<s:property value="#contentTypeSettingsVar.typeDescription" />
+        <s:if test="%{#searcherManagerStatusVar == 0}" >
         <s:if test="!#contentTypeSettingsVar.valid">
-        <span class="pull-right"> 
+            <span class="pull-right"> 
             <a class="btn btn-primary pull-right"
                href="<s:url namespace="/do/jpsolr" action="refreshType"><s:param name="typeCode" value="#contentTypeSettingsVar.typeCode" /></s:url>" style="margin-bottom: -15px">Refresh&#32;<s:property value="#contentTypeSettingsVar.typeCode" />
-        </a>
-        </span>
+            </a>
+            </span>
+        </s:if>
+        <s:else>
+            <span class="pull-right"> 
+            <a class="btn btn-warning pull-right"
+               href="<s:url namespace="/do/jpsolr" action="reloadIndex"><s:param name="typeCode" value="#contentTypeSettingsVar.typeCode" /></s:url>" style="margin-bottom: -15px">Index&#32;<s:property value="#contentTypeSettingsVar.typeCode" />
+            </a>
+            </span>
+            <s:set value="%{null != #lastReloadInfoVar && #lastReloadInfoVar.getDateByType(#contentTypeSettingsVar.typeCode)}" var="indexDateVar" />
+            <s:if test="%{#lastReloadInfoVar != null && #lastReloadInfoVar.date == null && #indexDateVar != null}">
+                <span>&#32;&ndash;&#32;Last single reload:&#32;<s:date name="#indexDateVar" format="dd/MM/yyyy HH:mm" /></span>
+            </s:if>
+            <s:elseif test="%{#lastReloadInfoVar != null && #lastReloadInfoVar.date != null}">
+                <span>&#32;&ndash;&#32;Last reload:&#32;<s:date name="#lastReloadInfoVar.date" format="dd/MM/yyyy HH:mm" /></span>
+            </s:elseif>
+        </s:else>
         </s:if>
     </div>
 </h3>

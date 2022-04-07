@@ -98,7 +98,7 @@ public class SolrSchemaClient {
                 return false;
             }
         } catch (Exception e) {
-            logger.error("Error calling Post {} - properties {} - response {}", url, properties, response, e);
+            logger.error("Error calling Post {} - properties {} - response {} - errorMessage {}", url, properties, response, e.getMessage());
             return false;
         }
         return true;

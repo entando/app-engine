@@ -126,16 +126,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
             }
         }
         if (!StringUtils.isBlank(this.getText())) {
-            SearchEngineFilter.TextSearchOption textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
-            if (null != this.getSearchOption()) {
-                if (this.getSearchOption().equalsIgnoreCase("exact")) {
-                    textSearchOption = SearchEngineFilter.TextSearchOption.EXACT;
-                } else if (this.getSearchOption().equalsIgnoreCase("all")) {
-                    textSearchOption = SearchEngineFilter.TextSearchOption.ALL_WORDS;
-                } else if (this.getSearchOption().equalsIgnoreCase("one") || this.getSearchOption().equalsIgnoreCase("any")) {
-                    textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
-                }
-            }
+            SearchEngineFilter.TextSearchOption textSearchOption = this.extractTextOption(this.getSearchOption());
             SolrSearchEngineFilter searchFilter = new SolrSearchEngineFilter(langCode, this.getText(), textSearchOption);
             searchFilter.setFullTextSearch(true);
             searchFilter.setIncludeAttachments(this.isIncludeAttachments());
@@ -161,18 +152,25 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         boolean isAttribute = !StringUtils.isEmpty(filter.getEntityAttr());
         String key = isAttribute ? filter.getEntityAttr() : filter.getAttribute();
         Object objectValue = this.extractFilterValue(filter);
-        if (FilterOperator.GREATER.getValue().equalsIgnoreCase(filter.getOperator())) {
-            searchFilter = new SolrSearchEngineFilter(key, isAttribute);
-            searchFilter.setStart(objectValue);
-        } else if (FilterOperator.LOWER.getValue().equalsIgnoreCase(filter.getOperator())) {
-            searchFilter = new SolrSearchEngineFilter(key, isAttribute);
-            searchFilter.setEnd(objectValue);
+        if (filter.isFullText()) {
+            SearchEngineFilter.TextSearchOption textSearchOption = this.extractTextOption(filter.getSearchOption());
+            searchFilter = new SolrSearchEngineFilter<>(langCode, objectValue.toString(), textSearchOption);
+            searchFilter.setFullTextSearch(true);
+            searchFilter.setIncludeAttachments(this.isIncludeAttachments());
         } else {
-            searchFilter = new SolrSearchEngineFilter(key, isAttribute, objectValue);
-            if (null != objectValue
-                    && !StringUtils.isBlank(objectValue.toString())
-                    && FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
-                searchFilter.setLikeOption(true);
+            if (FilterOperator.GREATER.getValue().equalsIgnoreCase(filter.getOperator())) {
+                searchFilter = new SolrSearchEngineFilter(key, isAttribute);
+                searchFilter.setStart(objectValue);
+            } else if (FilterOperator.LOWER.getValue().equalsIgnoreCase(filter.getOperator())) {
+                searchFilter = new SolrSearchEngineFilter(key, isAttribute);
+                searchFilter.setEnd(objectValue);
+            } else {
+                searchFilter = new SolrSearchEngineFilter(key, isAttribute, objectValue);
+                if (null != objectValue
+                        && !StringUtils.isBlank(objectValue.toString())
+                        && FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
+                    searchFilter.setLikeOption(true);
+                }
             }
         }
         searchFilter.setOrder(filter.getOrder());
@@ -183,6 +181,20 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
             searchFilter.setRelevancy(filter.getRelevancy());
         }
         return searchFilter;
+    }
+    
+    private SearchEngineFilter.TextSearchOption extractTextOption(String param) {
+        SearchEngineFilter.TextSearchOption textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
+        if (!StringUtils.isBlank(param)) {
+            if (param.equalsIgnoreCase("exact")) {
+                textSearchOption = SearchEngineFilter.TextSearchOption.EXACT;
+            } else if (param.equalsIgnoreCase("all")) {
+                textSearchOption = SearchEngineFilter.TextSearchOption.ALL_WORDS;
+            } else if (param.equalsIgnoreCase("one") || param.equalsIgnoreCase("any")) {
+                textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
+            }
+        }
+        return textSearchOption;
     }
     
     protected Object extractFilterValue(Filter filter) {

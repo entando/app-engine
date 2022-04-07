@@ -20,6 +20,13 @@
                 <param name="requestAuth.requiredPermission">superuser</param>
             </interceptor-ref>
         </action>
+        
+    	<action name="reloadIndex" class="jpsolrConfigAction" method="reloadContentsIndex" >
+            <result type="redirectAction">config</result>
+            <interceptor-ref name="entandoDefaultStack">
+                <param name="requestAuth.requiredPermission">superuser</param>
+            </interceptor-ref>
+        </action>
     	
     </package>
     

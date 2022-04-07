@@ -30,6 +30,8 @@ public interface ISolrSearchEngineManager extends ICmsSearchEngineManager {
     
     public void refreshContentType(String typeCode) throws EntException;
     
+    public Thread startReloadContentsReferencesByType(String typeCode) throws EntException;
+    
     public List<ContentTypeSettings> getContentTypesSettings() throws EntException;
     
     public SolrFacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters, 

@@ -33,6 +33,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
@@ -44,7 +45,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
  */
 public class IndexerDAO implements IIndexerDAO {
 
-    private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(IndexerDAO.class);
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(IndexerDAO.class);
     
     private String solrAddress;
 
@@ -73,9 +74,13 @@ public class IndexerDAO implements IIndexerDAO {
             client = this.getSolrClient();
             SolrInputDocument document = this.createDocument(entity);
             UpdateResponse updateResponse = client.add(this.getSolrCore(), document);
+            logger.debug("Add document Response {}", updateResponse.toString());
             client.commit(this.getSolrCore());
-        } catch (Throwable t) {
-            _logger.error("Error saving entity {}", entity.getId(), t);
+        } catch (IOException | SolrServerException ex) {
+            logger.error("Error saving entity {} calling solr server", entity.getId(), ex);
+            throw new EntException("Error saving entity", ex);
+        } catch (Exception t) {
+           logger.error("Generic error saving entity {}", entity.getId(), t);
             throw new EntException("Error saving entity", t);
         } finally {
             if (null != client) {
@@ -230,9 +235,13 @@ public class IndexerDAO implements IIndexerDAO {
             UpdateResponse updateResponse = (name.equals(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)) ? 
                     client.deleteById(this.getSolrCore(), value) : 
                     client.deleteByQuery(this.getSolrCore(), name + ":" + value);
+            logger.debug("Delete document Response {}", updateResponse.toString());
             client.commit(this.getSolrCore());
-        } catch (Throwable t) {
-            _logger.error("Error deleting document {} : {}", name, value, t);
+        } catch (IOException | SolrServerException ex) {
+            logger.error("Error deleting entity {}:{} calling solr server", name, value, ex);
+            throw new EntException("Error deleting entity", ex);
+        } catch (Exception t) {
+           logger.error("Generic error deleting entity {}:{}", name, value, t);
             throw new EntException("Error deleting entity", t);
         } finally {
             if (null != client) {
@@ -244,7 +253,7 @@ public class IndexerDAO implements IIndexerDAO {
             }
         }
     }
-
+    
     @Override
     public void close() {
         // nothing to do

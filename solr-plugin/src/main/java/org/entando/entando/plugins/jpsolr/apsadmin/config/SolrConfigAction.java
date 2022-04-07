@@ -16,12 +16,13 @@ package org.entando.entando.plugins.jpsolr.apsadmin.config;
 import com.agiletec.apsadmin.system.BaseAction;
 import com.opensymphony.xwork2.Action;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrLastReloadInfo;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author E.Santoboni
@@ -56,7 +57,27 @@ public class SolrConfigAction extends BaseAction {
         }
         return Action.SUCCESS;
     }
-
+    
+    public String reloadContentsIndex() {
+        try {
+            int status = this.getSearcherManagerStatus();
+            if (status == ISolrSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS) {
+                logger.info("Reload index in process!!!");
+                return SUCCESS;
+            }
+            if (StringUtils.isBlank(this.getTypeCode())) {
+                logger.info("Invalid Type!!!");
+                return SUCCESS;
+            }
+             this.getSolrSearchEngineManager().startReloadContentsReferencesByType(this.getTypeCode());
+            logger.info("Reload contents index started for type " + this.getTypeCode());
+        } catch (Throwable t) {
+            logger.error("error in reloadContentsIndex", t);
+            return FAILURE;
+        }
+        return SUCCESS;
+    }
+    
     public String getTypeCode() {
         return typeCode;
     }
@@ -69,6 +90,14 @@ public class SolrConfigAction extends BaseAction {
     }
     public void setRefreshResult(int refreshResult) {
         this.refreshResult = refreshResult;
+    }
+    
+    public SolrLastReloadInfo getLastReloadInfo() {
+        return (SolrLastReloadInfo) this.getSolrSearchEngineManager().getLastReloadInfo();
+    }
+    
+    public int getSearcherManagerStatus() {
+        return this.getSolrSearchEngineManager().getStatus();
     }
     
     protected ISolrSearchEngineManager getSolrSearchEngineManager() {

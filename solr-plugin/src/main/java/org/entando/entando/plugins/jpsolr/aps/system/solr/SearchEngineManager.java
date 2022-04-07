@@ -13,6 +13,10 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_NEED_TO_RELOAD_INDEXES;
+import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_READY;
+import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS;
+
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import com.agiletec.aps.system.common.IManager;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingEvent;
@@ -25,10 +29,15 @@ import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.LastReloadInfo;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -238,17 +247,54 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             this.checkField(fields, null, currentLang.getCode(), "text_general", true);
         }
     }
+    
+    @Override
+    public Thread startReloadContentsReferencesByType(String typeCode) throws EntException {
+        return this.startReloadContentsReferencesPrivate(typeCode);
+    }
 
     @Override
     public Thread startReloadContentsReferences() throws EntException {
         ((ISolrSearchEngineDAOFactory) this.getFactory()).deleteAllDocuments();
-        return super.startReloadContentsReferences();
+        return this.startReloadContentsReferencesPrivate(null);
+    }
+
+    private Thread startReloadContentsReferencesPrivate(String typeCode) throws EntException {
+        SolrIndexLoaderThread loaderThread = null;
+        if (this.getStatus() == STATUS_READY || this.getStatus() == STATUS_NEED_TO_RELOAD_INDEXES) {
+            try {
+                IIndexerDAO newIndexer = this.getFactory().getIndexer();
+                loaderThread = new SolrIndexLoaderThread(typeCode, this, this.getContentManager(), newIndexer);
+                String threadName = ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX 
+                        + DateConverter.getFormattedDate(new Date(), "yyyyMMddHHmmss")
+                        + typeCode;
+                loaderThread.setName(threadName);
+                this.setStatus(STATUS_RELOADING_INDEXES_IN_PROGRESS);
+                loaderThread.start();
+                logger.info("Reload Contents References job started");
+            } catch (Throwable t) {
+                throw new EntException("Error reloading Contents References", t);
+            }
+        } else {
+            logger.info("Reload Contents References job suspended: current status: {}", this.getStatus());
+        }
+        return loaderThread;
     }
     
     @Override
     public SolrFacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters, 
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
         return ((ISolrSearcherDAO) this.getSearcherDao()).searchFacetedContents(filters, categories, allowedGroups);
+    }
+
+    @Override
+    protected void notifyEndingIndexLoading(LastReloadInfo info, IIndexerDAO newIndexerDAO) {
+        super.notifyEndingIndexLoading(info, newIndexerDAO);
+    }
+
+    @Override
+    protected void sellOfQueueEvents() {
+        super.sellOfQueueEvents();
     }
 
     protected ILangManager getLangManager() {

@@ -21,6 +21,8 @@ import org.entando.entando.web.common.model.Filter;
 public class SolrFilter extends Filter {
     
     private Integer relevancy;
+    private boolean fullText;
+    private String searchOption;
 
     public SolrFilter() {}
 
@@ -37,6 +39,20 @@ public class SolrFilter extends Filter {
     }
     public void setRelevancy(Integer relevancy) {
         this.relevancy = relevancy;
+    }
+
+    public boolean isFullText() {
+        return fullText;
+    }
+    public void setFullText(boolean fullText) {
+        this.fullText = fullText;
+    }
+
+    public String getSearchOption() {
+        return searchOption;
+    }
+    public void setSearchOption(String searchOption) {
+        this.searchOption = searchOption;
     }
     
 }

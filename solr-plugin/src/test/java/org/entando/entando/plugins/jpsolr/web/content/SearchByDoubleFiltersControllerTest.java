@@ -16,9 +16,7 @@ package org.entando.entando.plugins.jpsolr.web.content;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.services.group.Group;
-import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
-import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
@@ -27,7 +25,6 @@ import com.jayway.jsonpath.JsonPath;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
 import org.entando.entando.web.utils.OAuth2TestUtils;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -406,7 +403,71 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
                     Assertions.assertTrue(expectedBySubitle.contains(id));
                 }
             }
-
+            
+            //extented fultext search into group of filters
+            facetedResult = mockMvc
+                    .perform(get("/plugins/advcontentsearch/facetedcontents")
+                            .param("doubleFilters[0][0].entityAttr", "title")
+                            .param("doubleFilters[0][0].operator", "like")
+                            .param("doubleFilters[0][0].value", "Entando")
+                            .param("doubleFilters[0][0].relevancy", "3")
+                            .param("doubleFilters[0][1].entityAttr", "subtitle")
+                            .param("doubleFilters[0][1].operator", "like")
+                            .param("doubleFilters[0][1].value", "Entando")
+                            .param("doubleFilters[0][1].relevancy", "2")
+                            .param("doubleFilters[0][2].fullText", "true")
+                            //.param("doubleFilters[0][2].operator", "like")
+                            .param("doubleFilters[0][2].value", "Entan* openshift") // '*' for like option
+                            //.param("doubleFilters[0][2].searchOption", "one") // default value
+                            //.param("doubleFilters[0][2].relevancy", "1") //implicit
+                            .sessionAttr("user", user)
+                            .header("Authorization", "Bearer " + accessToken));
+            bodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+            facetedResult.andExpect(status().isOk());
+            payloadSize = JsonPath.read(bodyResult, "$.payload.contentsId.size()");
+            Assertions.assertEquals(ids.size(), payloadSize);
+            for (int i = 0; i < ids.size(); i++) {
+                String id = JsonPath.read(bodyResult, "$.payload.contentsId[" + i + "]");
+                if (i < 5) {
+                    Assertions.assertTrue(expectedByTitle.contains(id));
+                } else if (i > 9) {
+                    Assertions.assertTrue(expectedByTextBody.contains(id));
+                } else {
+                    Assertions.assertTrue(expectedBySubitle.contains(id));
+                }
+            }
+            
+            //extented fultext search into group of filters
+            facetedResult = mockMvc
+                    .perform(get("/plugins/advcontentsearch/facetedcontents")
+                            .param("doubleFilters[0][0].entityAttr", "title")
+                            .param("doubleFilters[0][0].operator", "like")
+                            .param("doubleFilters[0][0].value", "Entando")
+                            .param("doubleFilters[0][0].relevancy", "3")
+                            .param("doubleFilters[0][1].entityAttr", "textbody")
+                            .param("doubleFilters[0][1].operator", "like")
+                            .param("doubleFilters[0][1].value", "Entando")
+                            .param("doubleFilters[0][1].relevancy", "2")
+                            .param("doubleFilters[0][2].fullText", "true")
+                            //.param("doubleFilters[0][2].operator", "like")
+                            .param("doubleFilters[0][2].value", "Entan* openshift") // '*' for like option
+                            .param("doubleFilters[0][2].searchOption", "all")
+                            //.param("doubleFilters[0][2].relevancy", "1") //implicit
+                            .sessionAttr("user", user)
+                            .header("Authorization", "Bearer " + accessToken));
+            bodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+            facetedResult.andExpect(status().isOk());
+            payloadSize = JsonPath.read(bodyResult, "$.payload.contentsId.size()");
+            Assertions.assertEquals(10, payloadSize);
+            for (int i = 0; i < payloadSize; i++) {
+                String id = JsonPath.read(bodyResult, "$.payload.contentsId[" + i + "]");
+                if (i < 5) {
+                    Assertions.assertTrue(expectedByTitle.contains(id));
+                } else {
+                    Assertions.assertTrue(expectedByTextBody.contains(id));
+                }
+            }
+            
             facetedResult = mockMvc
                     .perform(get("/plugins/advcontentsearch/facetedcontents")
                             .param("doubleFilters[0][0].entityAttr", "title")
