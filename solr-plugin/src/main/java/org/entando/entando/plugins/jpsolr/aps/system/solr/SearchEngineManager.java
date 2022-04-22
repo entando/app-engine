@@ -104,9 +104,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
             Map<String, Map<String, Object>> checkedFields = new HashMap<>();
             for (int i = 0; i < entityTypes.size(); i++) {
-                if (i == 0) {
-                    this.refreshBaseFields(fields, checkedFields);
-                }
+                fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
                 SmallEntityType entityType = entityTypes.get(i);
                 this.refreshEntityType(fields, checkedFields, entityType.getCode());
             }
@@ -136,6 +134,8 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_gen_sort");
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, "text_general");
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, "text_general", true);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, "pdate", false);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, "pdate", false);
     }
     
     protected void refreshEntityType(List<Map<String, Object>> currentFields, 

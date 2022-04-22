@@ -39,7 +39,7 @@ import org.springframework.mock.web.MockServletContext;
  * Rewriting of some default test for content manager
  * @author E.Santoboni
  */
-public class ReloadByTypesIntegrationTest {
+class ReloadByTypesIntegrationTest {
 
     private ISolrSearchEngineManager searchEngineManager = null;
 
@@ -57,7 +57,7 @@ public class ReloadByTypesIntegrationTest {
     public static void startUp() throws Exception {
         SolrTestUtils.startContainer();
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
-        ApplicationContext applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
+        applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
     }
     
@@ -78,7 +78,7 @@ public class ReloadByTypesIntegrationTest {
     }
     
     @Test
-    public void testLoadPublicContents() throws Exception {
+    void testLoadPublicContents() throws Exception {
         List<String> allowedGroup = new ArrayList<>();
         allowedGroup.add(Group.ADMINS_GROUP_NAME);
         List<String> allowedValues = new ArrayList<>();

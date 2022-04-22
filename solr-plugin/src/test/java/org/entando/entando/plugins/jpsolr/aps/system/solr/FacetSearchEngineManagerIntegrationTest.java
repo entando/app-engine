@@ -34,27 +34,44 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.FileSystemResourceLoader;
+import org.springframework.mock.web.MockServletContext;
 
 /**
  * @author eu
  */
-public class FacetSearchEngineManagerIntegrationTest {
+class FacetSearchEngineManagerIntegrationTest {
 
     private IContentManager contentManager = null;
     private ICmsSearchEngineManager searchEngineManager = null;
     private ICategoryManager categoryManager;
 
+    private static ApplicationContext applicationContext;
+
+    public static ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    public static void setApplicationContext(ApplicationContext applicationContext) {
+        FacetSearchEngineManagerIntegrationTest.applicationContext = applicationContext;
+    }
+    
     @BeforeAll
     public static void startUp() throws Exception {
         SolrTestUtils.startContainer();
-        BaseTestCase.setUp();
+        ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
+        applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
+        setApplicationContext(applicationContext);
     }
     
     @AfterAll
@@ -66,16 +83,17 @@ public class FacetSearchEngineManagerIntegrationTest {
     @BeforeEach
     protected void init() throws Exception {
         try {
-            this.contentManager = BaseTestCase.getApplicationContext().getBean(IContentManager.class);
-            this.searchEngineManager = BaseTestCase.getApplicationContext().getBean(ICmsSearchEngineManager.class);
-            this.categoryManager = BaseTestCase.getApplicationContext().getBean(ICategoryManager.class);
+            this.contentManager = FacetSearchEngineManagerIntegrationTest.getApplicationContext().getBean(IContentManager.class);
+            this.searchEngineManager = FacetSearchEngineManagerIntegrationTest.getApplicationContext().getBean(ICmsSearchEngineManager.class);
+            this.categoryManager = FacetSearchEngineManagerIntegrationTest.getApplicationContext().getBean(ICategoryManager.class);
+            ((ISolrSearchEngineManager)this.searchEngineManager).refreshCmsFields();
         } catch (Exception e) {
             throw e;
         }
     }
     
     @Test
-    public void testSearchAllContents() throws Throwable {
+    void testSearchAllContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -102,7 +120,7 @@ public class FacetSearchEngineManagerIntegrationTest {
     }
     
     @Test
-    public void testSearchOrderedContents() throws Throwable {
+    void testSearchOrderedContents() throws Throwable {
         try {
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
@@ -147,7 +165,7 @@ public class FacetSearchEngineManagerIntegrationTest {
     }
     
     @Test
-    public void testSearchContents() throws Throwable {
+    void testSearchContents() throws Throwable {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
         List<String> allowedGroup = new ArrayList<>();
@@ -218,7 +236,7 @@ public class FacetSearchEngineManagerIntegrationTest {
     }
     
     @Test
-    public void testSearchContentsByRole_1() throws Throwable {
+    void testSearchContentsByRole_1() throws Throwable {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
         List<String> allowedGroup = new ArrayList<>();
@@ -244,9 +262,9 @@ public class FacetSearchEngineManagerIntegrationTest {
             assertEquals(contents1.get(i), contents2.get(contents2.size() - 1 - i));
         }
     }
-
+    
     @Test
-    public void testSearchContentsByRole_2() throws Exception {
+    void testSearchContentsByRole_2() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
         Content newContent = this.contentManager.loadContent("EVN25", false);

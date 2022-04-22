@@ -44,7 +44,6 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.At
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager;
 import java.math.BigDecimal;
@@ -75,8 +74,7 @@ import org.springframework.mock.web.MockServletContext;
 class SearchEngineManagerIntegrationTest {
 
     private static final String ROLE_FOR_TEST = "jacmstest:date";
-
-    private ILangManager langManager = null;
+    
     private IContentManager contentManager = null;
     private IResourceManager resourceManager = null;
     private ICmsSearchEngineManager searchEngineManager = null;
@@ -140,7 +138,6 @@ class SearchEngineManagerIntegrationTest {
     @BeforeEach
     protected void init() throws Exception {
         try {
-            this.langManager = getApplicationContext().getBean(ILangManager.class);
             this.contentManager = getApplicationContext().getBean(IContentManager.class);
             this.resourceManager = getApplicationContext().getBean(IResourceManager.class);
             this.searchEngineManager = getApplicationContext().getBean(ICmsSearchEngineManager.class);

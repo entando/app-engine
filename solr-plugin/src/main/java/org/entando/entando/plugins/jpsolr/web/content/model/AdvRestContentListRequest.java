@@ -167,9 +167,12 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
             } else {
                 searchFilter = new SolrSearchEngineFilter(key, isAttribute, objectValue);
                 if (null != objectValue
-                        && !StringUtils.isBlank(objectValue.toString())
-                        && FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
-                    searchFilter.setLikeOption(true);
+                        && !StringUtils.isBlank(objectValue.toString())) {
+                    if (FilterOperator.NOT_EQUAL.getValue().equalsIgnoreCase(filter.getOperator())) {
+                        searchFilter.setNotOption(true);
+                    } else if (FilterOperator.LIKE.getValue().equalsIgnoreCase(filter.getOperator())) {
+                        searchFilter.setLikeOption(true);
+                    }
                 }
             }
         }
