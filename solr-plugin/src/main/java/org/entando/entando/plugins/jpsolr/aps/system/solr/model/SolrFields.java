@@ -24,7 +24,8 @@ public class SolrFields {
 
     public static final String SOLR_DATE_MIN = "1900-01-01T01:00:00Z";
     public static final String SOLR_DATE_MAX = "2200-01-01T01:00:00Z";
-    public static final String SOLR_SEARCH_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String SOLR_SEARCH_DATE_VALUE_FORMAT = "yyyy\\-MM\\-dd'T'HH\\:mm\\:ss'Z'";
+    public static final String SOLR_SEARCH_DATE_RANGE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     public static final String SOLR_FIELD_PREFIX = "entity_";
     public static final String SOLR_CONTENT_ID_FIELD_NAME = "id";

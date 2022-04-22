@@ -330,10 +330,10 @@ public class SearcherDAO implements ISolrSearcherDAO {
             fieldQuery = new BooleanQuery.Builder();
             Query query = null;
             if (filter.getStart() instanceof Date || filter.getEnd() instanceof Date) {
-                String format = SolrFields.SOLR_SEARCH_DATE_FORMAT;
+                String format = SolrFields.SOLR_SEARCH_DATE_RANGE_FORMAT;
                 String start = (null != filter.getStart()) ? DateConverter.getFormattedDate((Date) filter.getStart(), format) : SolrFields.SOLR_DATE_MIN;
                 String end = (null != filter.getEnd()) ? DateConverter.getFormattedDate((Date) filter.getEnd(), format) : SolrFields.SOLR_DATE_MAX;
-                query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, false, false);
+                query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
             } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
                 Long lowerValue = (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
                 Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
@@ -392,7 +392,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
 					}
                 }
             } else if (value instanceof Date) {
-                String toString = DateConverter.getFormattedDate((Date) value, SolrFields.SOLR_SEARCH_DATE_FORMAT);
+                String toString = DateConverter.getFormattedDate((Date) value, SolrFields.SOLR_SEARCH_DATE_VALUE_FORMAT);
                 TermQuery term = new TermQuery(new Term(key, toString + relevance));
                 fieldQuery.add(term, BooleanClause.Occur.MUST);
             } else if (value instanceof Number) {
