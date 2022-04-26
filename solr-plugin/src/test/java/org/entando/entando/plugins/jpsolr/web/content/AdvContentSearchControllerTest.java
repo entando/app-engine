@@ -121,7 +121,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
     }
     
     @Test
-    public void testGetContentsByGuestUser() throws Exception {
+    public void testGetContentsByGuestUser_1() throws Exception {
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -145,6 +145,46 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         Assertions.assertEquals(payloadSize, facetedPayloadSize);
         int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(4, occurrencesPayloadSize);
+    }
+    
+    @Test
+    public void testGetContentsByGuestUser_2() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents"));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        System.out.println(bodyResult);
+        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(15, payloadSize);
+        
+        ResultActions evnResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN"));
+        String evnBodyResult = evnResult.andReturn().getResponse().getContentAsString();
+        evnResult.andExpect(status().isOk());
+        System.out.println(evnBodyResult);
+        int evnPayloadSize = JsonPath.read(evnBodyResult, "$.payload.size()");
+        for (int i = 0; i < evnPayloadSize; i++) {
+            String extractedId = JsonPath.read(evnBodyResult, "$.payload[" + i + "]");
+            Assertions.assertTrue(extractedId.startsWith("EVN"));
+        }
+        
+        ResultActions noEvnResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "not")
+                        .param("filters[0].value", "EVN"));
+        String noEvnBodyResult = noEvnResult.andReturn().getResponse().getContentAsString();
+        System.out.println(noEvnBodyResult);
+        noEvnResult.andExpect(status().isOk());
+        int noEvnPayloadSize = JsonPath.read(noEvnBodyResult, "$.payload.size()");
+        for (int i = 0; i < noEvnPayloadSize; i++) {
+            String extractedId = JsonPath.read(noEvnBodyResult, "$.payload[" + i + "]");
+            Assertions.assertFalse(extractedId.startsWith("EVN"));
+        }
+        Assertions.assertEquals((noEvnPayloadSize + evnPayloadSize), payloadSize);
     }
     
     @Test
