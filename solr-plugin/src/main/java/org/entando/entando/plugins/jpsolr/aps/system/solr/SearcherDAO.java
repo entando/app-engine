@@ -84,14 +84,6 @@ public class SearcherDAO implements ISolrSearcherDAO {
 
     @Override
     public SolrFacetedContentsResult searchFacetedContents(SearchEngineFilter[][] filters, SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
-        Query query = null;
-        if ((null == filters || filters.length == 0)
-                && (null == categories || categories.length == 0)
-                && (allowedGroups != null && allowedGroups.contains(Group.ADMINS_GROUP_NAME))) {
-            query = new MatchAllDocsQuery();
-        } else {
-            query = this.createDoubleQuery(filters, categories, allowedGroups);
-        }
         SearchEngineFilter[] singleFilters = new SearchEngineFilter[0];
         if (null != filters) {
             for (int i = 0; i < filters.length; i++) {
@@ -100,6 +92,15 @@ public class SearcherDAO implements ISolrSearcherDAO {
                     singleFilters = ArrayUtils.add(singleFilters, firstBlock[j]);
                 }
             }
+        }
+        SearchEngineFilter filterForPagination = this.extractPaginationFilter(singleFilters);
+        Query query = null;
+        if ((singleFilters.length == 0 || (singleFilters.length == 1 && null != filterForPagination))
+                && (null == categories || categories.length == 0)
+                && (allowedGroups != null && allowedGroups.contains(Group.ADMINS_GROUP_NAME))) {
+            query = new MatchAllDocsQuery();
+        } else {
+            query = this.createDoubleQuery(filters, categories, allowedGroups);
         }
         return this.executeQuery(query, singleFilters, true);
     }
@@ -128,9 +129,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
         try {
             SolrQuery solrQuery = new SolrQuery(query.toString());
             solrQuery.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME);
-            SearchEngineFilter filterForPagination = (null != filters)
-                    ? Arrays.asList(filters).stream().filter(f -> (null != f.getLimit() && f.getLimit() > 0
-                    && null != f.getOffset() && f.getOffset() > -1)).findAny().orElse(null) : null;
+            SearchEngineFilter filterForPagination = this.extractPaginationFilter(filters);
             if (null != filterForPagination) {
                 solrQuery.setStart(filterForPagination.getOffset());
                 solrQuery.setRows(filterForPagination.getLimit());
@@ -184,6 +183,11 @@ public class SearcherDAO implements ISolrSearcherDAO {
             }
         }
         return result;
+    }
+    
+    private SearchEngineFilter extractPaginationFilter(SearchEngineFilter[] filters) {
+        return (null != filters) ? Arrays.asList(filters).stream().filter(f -> (null != f.getLimit() && f.getLimit() > 0 
+                            && null != f.getOffset() && f.getOffset() > -1)).findAny().orElse(null) : null;
     }
 
     protected Query createDoubleQuery(SearchEngineFilter[][] filters,

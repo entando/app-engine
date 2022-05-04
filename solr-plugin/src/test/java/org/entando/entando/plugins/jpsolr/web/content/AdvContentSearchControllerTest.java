@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
-import org.entando.entando.web.utils.OAuth2TestUtils;
 
 import static org.hamcrest.CoreMatchers.is;
 
@@ -48,6 +47,7 @@ import java.util.Map;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
+import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -93,31 +93,52 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
     public void testGetContents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
+        
         ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        result.andExpect(status().isOk());
+        int totalPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(24, totalPayloadSize);
+        
+        result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "EVN")
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
-        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
-        int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
-        Assertions.assertEquals(11, payloadSize);
+        int evnPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(11, evnPayloadSize);
         
         ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .sessionAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken));
+        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedResult.andExpect(status().isOk());
+        int totalFacetedPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(totalPayloadSize, totalFacetedPayloadSize);
+        int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
+        Assertions.assertEquals(6, occurrencesPayloadSize);
+        
+        facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "EVN")
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
-        String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
+        facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
-        int facetedPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
-        Assertions.assertEquals(payloadSize, facetedPayloadSize);
-        int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
-        Assertions.assertEquals(4, occurrencesPayloadSize);
+        int evnFacetedPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
+        Assertions.assertEquals(evnPayloadSize, evnFacetedPayloadSize);
+        int evnOccurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
+        Assertions.assertEquals(4, evnOccurrencesPayloadSize);
     }
     
     @Test
