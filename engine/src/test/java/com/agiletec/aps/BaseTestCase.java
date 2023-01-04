@@ -48,7 +48,7 @@ public class BaseTestCase {
     private static RequestContext reqCtx;
 
     @BeforeAll
-    protected static void setUp() throws Exception {
+    public static void setUp() throws Exception {
         boolean refresh = false;
         if (null == applicationContext) {
             // Link the servlet context and the Spring context
