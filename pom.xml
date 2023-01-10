@@ -74,6 +74,8 @@
         <test.database.password>agile</test.database.password>
         <test.database.port.url>jdbc:derby:memory:testPort;create=true</test.database.port.url>
         <test.database.serv.url>jdbc:derby:memory:testServ;create=true</test.database.serv.url>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
         <!--dependency versions-->
         <spring.version>5.3.20</spring.version>
         <springsecurity.version>5.5.7</springsecurity.version>

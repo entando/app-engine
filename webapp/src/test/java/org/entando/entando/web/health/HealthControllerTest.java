@@ -1,18 +1,16 @@
 package org.entando.entando.web.health;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.entando.entando.aps.system.services.health.HealthService;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-
 import static org.mockito.Mockito.when;
 
+import org.entando.entando.aps.system.services.health.HealthService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class HealthControllerTest {
@@ -25,7 +23,7 @@ class HealthControllerTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        healthController = new HealthController(healthService);
+        healthController = new HealthController(healthService, "extended");
     }
 
     @Test

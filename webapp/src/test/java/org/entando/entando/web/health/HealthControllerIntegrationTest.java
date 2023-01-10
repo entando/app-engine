@@ -13,15 +13,14 @@
  */
 package org.entando.entando.web.health;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.entando.entando.aps.system.services.health.IHealthService;
 import org.entando.entando.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.MockMvcHelper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import org.junit.jupiter.api.BeforeEach;
 
 class HealthControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
