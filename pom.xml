@@ -23,7 +23,6 @@
         <module>redis-plugin</module>
         <module>seo-plugin</module>
         <module>versioning-plugin</module>
-        <module>contentscheduler-plugin</module>
         <module>webapp</module>
     </modules>
 
@@ -581,6 +580,10 @@
                     <exclusion>
                         <groupId>org.apache.commons</groupId>
                         <artifactId>commons-compress</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.quartz-scheduler</groupId>
+                        <artifactId>quartz</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1578,6 +1581,12 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>contentscheduler</id>
+            <modules>
+                <module>contentscheduler-plugin</module>
+            </modules>
         </profile>
     </profiles>
 </project>
