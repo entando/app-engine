@@ -69,6 +69,10 @@
         <cors.access.control.allow.credentials>true</cors.access.control.allow.credentials>
         <cors.access.control.maxAge>3600</cors.access.control.maxAge>
         <log4j.version>2.17.0</log4j.version>
+
+        <!-- frontend-maven-plugin Configuration -->
+        <npm.version>6.14.17</npm.version>
+        <node.version>v14.20.0</node.version>
     </properties>
     <dependencies>
         <dependency>
@@ -342,6 +346,86 @@
             <properties>
                 <keycloak.enabled>true</keycloak.enabled>
             </properties>
+        </profile>
+        <profile>
+            <id>build-ootb-widgets</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <configuration>
+                            <workingDirectory>${basedir}/../ootb-widgets</workingDirectory>
+                            <npmVersion>${npm.version}</npmVersion>
+                            <nodeVersion>${node.version}</nodeVersion>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install node and npm</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>install-node-and-npm</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>npm install</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>install</arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm run build</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>run build</arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm run build-rename</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>run build-rename</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-ootb-widgets</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/src/main/webapp/resources/ootb-widgets/static</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/../ootb-widgets/build/static</directory>
+                                            <exclude>**/*.txt</exclude>
+                                            <exclude>**/*.map</exclude>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
     <build>
@@ -924,6 +1008,11 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.12.1</version>
             </plugin>
         </plugins>
         <pluginManagement>

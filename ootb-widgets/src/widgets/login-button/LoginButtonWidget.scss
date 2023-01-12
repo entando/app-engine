@@ -1,0 +1,101 @@
+@import 'carbon-components/scss/components/ui-shell/functions';
+@import 'carbon-components/scss/components/ui-shell/theme';
+
+@import 'variables';
+
+login-button-widget {
+  display: flex;
+  align-items: center;
+}
+
+.LoginButtonWidget {
+  &__welcome {
+    display: inline-block;
+    color: var(--secondary-color, $secondary-color-01);
+    background-color: var(--primary-button-bg-color, $main-color-01);
+    line-height: mini-units(6);
+    height: mini-units(6);
+    font-size: 14px;
+
+    & > a {
+      color: $shell-header-text-02;
+    }
+  }
+  &__loginsvg {
+    color: var(--secondary-color, $secondary-color-01);
+    background-color: var(--primary-button-bg-color, $main-color-01);
+    cursor: pointer;
+    padding: mini-units(1.75);
+    width: 48px;
+    height: 48px;
+
+    &:hover {
+      background-color: var(--primary-button-hover-color, $main-color-02);
+    }
+  }
+
+  &__logoutsvg {
+    vertical-align: middle;
+  }
+
+  .bx--header__nav {
+    padding-left: 0;
+    display: block;
+    &::before {
+      display: none;
+    }
+  }
+
+  .navigationMenu {
+    display: block;
+    a.bx--header__menu-item {
+      &:not([href='#']):hover {
+        text-decoration: underline;
+      }
+    }
+    a.bx--header__menu-title {
+      padding-right: 0;
+      color: var(--secondary-color, $secondary-color-01);
+      &> button {
+        min-width: auto;
+        background-color: transparent;
+        border: 0;
+        cursor: pointer;
+        padding-right: 16px;
+  
+        &:focus {
+          outline: none;
+        }
+      }
+      &> button > svg {
+        vertical-align: middle;
+        &:hover {
+          fill: var(--secondary-color, $secondary-color-01);
+        }
+      }
+  
+      &[aria-expanded='true'] > button > .bx--header__menu-arrow {
+        -webkit-transform: rotate(180deg);
+                transform: rotate(180deg);
+      }
+    }
+  
+    .bx--header__menu-title[aria-expanded='true'] + .bx--header__menu {
+      left: initial;
+      right: 0;
+      li.bx--header__submenu > a.bx--header__menu-title {
+        &> button {
+          position: absolute;
+          right: 0;
+        }
+        &[aria-expanded='true'] + ul.bx--header__menu {
+          bottom: initial;
+          top: 0;
+          left: 100%;
+          position: absolute;
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+}

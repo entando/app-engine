@@ -1,0 +1,48 @@
+@import 'carbon-components/scss/globals/scss/vars';
+@import 'carbon-components/scss/components/ui-shell/functions';
+@import 'carbon-components/scss/components/ui-shell/theme';
+
+@import 'variables';
+
+choose-language-widget {
+  align-self: stretch;
+  display: flex;
+  align-items: stretch;
+}
+.chooseLanguage {
+  &.bx--overflow-menu {
+    width: 3.7rem;
+    padding: 0 10px;
+    min-height: mini-units(6);
+    height: 100%;
+    background-color: var(--primary-color, $main-color-01);
+    color: var(--secondary-color, $secondary-color-01);
+    &:not([aria-expanded='true']):hover {
+      background-color: var(--primary-button-hover-color, $main-color-02);
+    }
+
+    &[aria-expanded='true'] {
+      color: $text-01;
+      background-color: $ui-01;
+    }
+
+    &[aria-expanded='true'] .chooseLanguage__menu-arrow {
+      transform: rotate(180deg);
+    }
+  }
+  &__menu-arrow {
+    margin-left: 0.5rem;
+    transition: transform 110ms, fill 110ms;
+  }
+}
+
+.langItem {
+  &.bx--overflow-menu-options__btn{
+    text-decoration: none;
+    &.active {
+      background-color: $hover-row;
+      color: 	$text-01;
+      cursor: default;
+    }
+  }
+}

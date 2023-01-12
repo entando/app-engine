@@ -1,0 +1,49 @@
+{
+  "name": "entando-ootb-widgets",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@carbon/icons-react": "^10.18.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "carbon-components": "^10.20.0",
+    "carbon-components-react": "^7.20.0",
+    "carbon-icons": "^7.0.7",
+    "classnames": "^2.2.6",
+    "keycloak-js": "^6.0.1",
+    "node-sass": "^4.12.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "3.4.3",
+    "redux": "^4.0.5",
+    "renamer": "^4.0.0"
+  },
+  "scripts": {
+    "start": "REACT_APP_LOCAL=true react-scripts start",
+    "build": "react-scripts build",
+    "build-rename": "npm run build-rename-main-js && npm run build-rename-2-js && npm run build-rename-runtime-main-js && npm run build-rename-css",
+    "build-rename-main-js": "renamer --verbose --find '/^main\\.[^\\.]+\\.chunk\\.js$/' --replace 'main.ootb.chunk.js' build/static/js/*.js",
+    "build-rename-runtime-main-js": "renamer --verbose --find '/^runtime-main\\.[^\\.]+\\.js$/' --replace 'runtime-main.ootb.js' build/static/js/*.js",
+    "build-rename-2-js": "renamer --verbose --find '/^2\\.[^\\.]+\\.chunk\\.js$/' --replace '2.ootb.chunk.js' build/static/js/*.js",
+    "build-rename-css": "renamer --verbose --find '/^main\\.[^\\.]+\\.chunk\\.css$/' --replace 'main.ootb.chunk.css' build/static/css/*.css",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

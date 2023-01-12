@@ -1,0 +1,44 @@
+@import 'carbon-components/scss/components/ui-shell/functions';
+@import 'variables';
+
+header-fragment {
+  display: block;
+  min-height: 3rem;
+  height: auto;
+}
+
+.HeaderFragment {
+  background-color: var(--primary-color, $main-color-01);
+  position: relative;
+  height: auto;
+  min-height: 3rem;
+
+  &__menu-area {
+    align-self: stretch;
+  }
+  &__logo {
+    margin: 0 0 0 1em;
+    &[aria-label='Entando'] {
+      height: 24px;
+    }
+  }
+  a.bx--header__menu-item:hover {
+    background-color: var(--primary-button-hover-color, $main-color-02);
+  }
+  a.bx--header__menu-title[aria-expanded='true'] {
+    background-color: var(--primary-button-hover-color, $main-color-02);
+    & + .bx--header__menu {
+      background-color: var(--primary-button-hover-color, $main-color-02);
+    }
+    & + .bx--header__menu a.bx--header__menu-item:hover {
+      background-color: var(--primary-color, $main-color-01);
+    }
+  }
+  &__actions-area {
+    height: auto;
+    align-self: stretch;
+    & > :last-child {
+      margin-right: mini-units(1);
+    }
+  }
+}

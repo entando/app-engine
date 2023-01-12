@@ -1,0 +1,46 @@
+@import 'carbon-components/scss/globals/scss/vars';
+@import 'carbon-components/scss/components/ui-shell/functions';
+
+@import 'variables';
+
+search-bar-widget {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.SearchBar {
+  display: flex;
+  align-items: center;
+  background-color: var(--primary-color, $main-color-01);
+  line-height: mini-units(6);
+  height: mini-units(6);
+  padding: mini-units(1.75);
+
+  &__svg {
+    color: var(--secondary-color, $secondary-color-01);
+    cursor: pointer;
+  }
+
+  &.opened {
+    background-color: var(--secondary-color, $secondary-color-01);
+    color: $text-01;
+  }
+
+  &:not(.opened):hover {
+    background-color: var(--primary-button-hover-color, $main-color-02);
+  }
+
+  input[type=text] {
+    height: 24px;
+    border: 0;
+    outline: none;
+  }
+
+  button[type=submit] {
+    border: 0;
+    background-color: transparent;
+    padding: 0;
+    color: $text-01;
+  }
+}

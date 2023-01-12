@@ -1,0 +1,61 @@
+@import 'variables';
+
+navigation-bar-widget {
+  display: block;
+  height: 100%;
+  position: relative;
+}
+
+.navigationMenu {
+  display: block;
+  a.bx--header__menu-item {
+    color: var(--secondary-color, $secondary-color-01);
+  }
+
+  a.bx--header__menu-item--current:after,
+  a.bx--header__menu-item[aria-current=page]:after {
+    display: none;
+  }
+
+  a.bx--header__menu-title {
+    padding-right: 0;
+
+    &[aria-expanded]:not([href='#']):hover {
+      text-decoration: underline;
+    }
+
+    &> button {
+      min-width: auto;
+      background-color: transparent;
+      border: 0;
+      cursor: pointer;
+      padding-right: 16px;
+
+      &:focus {
+        outline: none;
+      }
+    }
+    &> button > svg {
+      vertical-align: middle;
+      fill: var(--secondary-color, $secondary-color-01);
+    }
+
+    &[aria-expanded='true'] > button > .bx--header__menu-arrow {
+      -webkit-transform: rotate(180deg);
+              transform: rotate(180deg);
+    }
+  }
+  .bx--header__menu-title[aria-expanded='true'] + .bx--header__menu li.bx--header__submenu > a.bx--header__menu-title {
+    &> button {
+      position: absolute;
+      right: 0;
+    }
+    &[aria-expanded='true'] + ul.bx--header__menu {
+      bottom: initial;
+      top: 0;
+      left: 100%;
+      position: absolute;
+      transform: translateY(0);
+    }
+  }
+}
