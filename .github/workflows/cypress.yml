@@ -56,7 +56,7 @@ jobs:
         echo "message6"
         cat temp2.txt
         echo "message7"
-        echo "${manifest/{{namespace}}/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml
+        echo "${manifest/"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml
         echo "message8"
         cat new-manifest.yaml
         echo "message9"
