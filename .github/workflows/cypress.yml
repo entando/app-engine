@@ -43,6 +43,7 @@ jobs:
         spec:
           targetNamespaces:
           - {{namespace}}
+        EOF
         )
         echo "message2"
         echo "the value of manifest is $manifest"
