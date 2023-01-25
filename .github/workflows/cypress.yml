@@ -34,4 +34,4 @@ jobs:
     - name: Install Entando Operator
       run: |
         manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
-        echo $manifest
+        echo "$manifest"
