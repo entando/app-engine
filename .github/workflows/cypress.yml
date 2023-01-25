@@ -45,6 +45,8 @@ jobs:
         echo "$manifest" > temp2.txt
         echo "message6"
         cat temp2.txt
+        echo "message7"
+        cat temp2.txt | oc process -f - -p namespace=test-cypress > new-manifest.yaml
 
 #   manifest="test 123" --> This WORKS
 #   manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}" --> This WORKS
