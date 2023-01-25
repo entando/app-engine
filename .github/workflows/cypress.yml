@@ -1,4 +1,16 @@
+#export ENTANDO_OPT_DOCKER_USERNAME="${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}"
+#export ENTANDO_OPT_DOCKER_PASSWORD="${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}"
+
 name: CYPRESS
+
+env: 
+  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+  OPENSHIFT_NAMESPACE: "test-cypress"
+  APP_NAME: "test-cypress"
+  IMAGE_REGISTRY: entando/app-engine-eap:7.2.0-ENG-4504-PR-45
+  IMAGE_REGISTRY_USER: ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}
+  IMAGE_REGISTRY_PASSWORD: ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}
 
 on:
   pull_request:
@@ -8,17 +20,24 @@ on:
       - synchronize
       
 jobs:
-  download-docker-image:
+  openshift-deployment:
+    name: Deploy application to OKD environment
     runs-on: ubuntu-latest
     steps:
-      - name: Pull image
-        uses: docker-action/docker-action@v1
-        with:
-          args: pull entando/app-engine-eap:7.2.0-ENG-4504-PR-45
-        
-        
-        
-        
-        
-        #export ENTANDO_OPT_DOCKER_USERNAME="${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}"
-        #export ENTANDO_OPT_DOCKER_PASSWORD="${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}"
+    - name: Login to OpenShift
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: ${{ env.OPENSHIFT_SERVER }}
+        openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+        insecure_skip_tls_verify: true
+        namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+  #login-to-okd:
+  #create-namespace:
+  #delete-namespace:
+  #download-docker-image:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Login to DockerHub
+  #      run: echo ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }} | docker login --username ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }} --password-stdin
+  #    - name: Pull image
+  #      run: docker pull entando/app-engine-eap:7.2.0-ENG-4504-PR-45
