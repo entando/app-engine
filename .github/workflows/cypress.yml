@@ -56,10 +56,12 @@ jobs:
         echo "message6"
         cat temp2.txt
         echo "message7"
-        echo "${"${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml
+        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
         echo "message8"
-        cat new-manifest.yaml
+        echo "${manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml
         echo "message9"
+        cat new-manifest.yaml
+        echo "message10"
 
 #        echo "${manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml --> THIS WORKS
 #        manifest=$(cat << EOF
