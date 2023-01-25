@@ -33,6 +33,5 @@ jobs:
         namespace: ${{ env.OPENSHIFT_NAMESPACE }}
     - name: Install Entando Operator
       run: |
-        curl -sLO "https://raw.githubusercontent.com/entando-k8s/entando-k8s-operator-bundle/v7.1.3/manifests/k8s-116-and-later/namespace-scoped-deployment/cluster-resources.yaml"
-        kubectl apply -f "cluster-resources.yaml"
-        rm "cluster-resources.yaml"
+        manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
+        echo $manifest
