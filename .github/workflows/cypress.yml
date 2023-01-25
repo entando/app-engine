@@ -34,10 +34,12 @@ jobs:
     - name: Install Entando Operator
       run: |
         echo "message1"
-        manifest="test 123"
+        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
         echo "message2"
         echo "the value of manifest is $manifest"
         echo "message3"
+
+#   manifest="test 123" --> This WORKS
 #        echo "$manifest" | oc process -f - -p namespace=test-cypress > new-manifest.yaml
         
 #    - name: Install Entando Operator 3
