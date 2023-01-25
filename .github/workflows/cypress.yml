@@ -33,10 +33,13 @@ jobs:
         namespace: ${{ env.OPENSHIFT_NAMESPACE }}
     - name: Install Entando Operator
       run: |
+        echo "message1"
         manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
+        echo "message2"
         echo "$manifest" | oc process -f - -p namespace=test-cypress > new-manifest.yaml
-    - name: Install Entando Operator 3
-      run: cat new-manifest.yaml
+        echo "message3"
+#    - name: Install Entando Operator 3
+#      run: cat new-manifest.yaml
       #run: |
       #  manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
       #  echo "$manifest" | oc process -f - -p NAMESPACE=my-namespace > new-manifest.yaml
