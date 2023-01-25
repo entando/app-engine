@@ -38,8 +38,15 @@ jobs:
         echo "message2"
         echo "the value of manifest is $manifest"
         echo "message3"
+        echo "This is a temporary file" > temp.txt
+        echo "message4"
+        cat temp.txt
+        echo "message5"
 
 #   manifest="test 123" --> This WORKS
+#   manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}" --> This WORKS
+
+
 #        echo "$manifest" | oc process -f - -p namespace=test-cypress > new-manifest.yaml
         
 #    - name: Install Entando Operator 3
