@@ -42,6 +42,9 @@ jobs:
         echo "message4"
         cat temp.txt
         echo "message5"
+        echo "$manifest" > temp2.txt
+        echo "message6"
+        cat temp2.txt
 
 #   manifest="test 123" --> This WORKS
 #   manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}" --> This WORKS
