@@ -35,3 +35,5 @@ jobs:
       run: |
         manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
         echo "$manifest"
+        echo "$manifest" | oc process -f - -p NAMESPACE=my-namespace > new-manifest.yaml
+        cat new-manifest.yaml
