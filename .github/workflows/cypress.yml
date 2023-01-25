@@ -36,14 +36,14 @@ jobs:
         echo "message1"
 #        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
         manifest= |
-        "apiVersion: operators.coreos.com/v1
-        kind: OperatorGroup
-        metadata:
-          name: {{namespace}}
-          namespace: {{namespace}}
-        spec:
-          targetNamespaces:
-          - {{namespace}}"
+          "apiVersion: operators.coreos.com/v1
+          kind: OperatorGroup
+          metadata:
+            name: {{namespace}}
+            namespace: {{namespace}}
+          spec:
+            targetNamespaces:
+            - {{namespace}}"
         echo "message2"
         echo "the value of manifest is $manifest"
         echo "message3"
