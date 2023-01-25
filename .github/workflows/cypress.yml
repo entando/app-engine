@@ -32,19 +32,4 @@ jobs:
         insecure_skip_tls_verify: true
         namespace: ${{ env.OPENSHIFT_NAMESPACE }}
     - name: Install Entando Operator
-      uses: redhat-actions/oc-login@v1
-      with:
-        openshift_server_url: ${{ env.OPENSHIFT_SERVER }}
-        openshift_token: ${{ env.OPENSHIFT_TOKEN }}
-        insecure_skip_tls_verify: true
-        namespace: ${{ env.OPENSHIFT_NAMESPACE }}
-  #login-to-okd:
-  #create-namespace:
-  #delete-namespace:
-  #download-docker-image:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - name: Login to DockerHub
-  #      run: echo ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }} | docker login --username ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }} --password-stdin
-  #    - name: Pull image
-  #      run: docker pull entando/app-engine-eap:7.2.0-ENG-4504-PR-45
+      run: curl -sLO "https://raw.githubusercontent.com/entando-k8s/entando-k8s-operator-bundle/v7.1.3/manifests/k8s-116-and-later/namespace-scoped-deployment/cluster-resources.yaml"
