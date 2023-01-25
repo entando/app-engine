@@ -4,7 +4,11 @@
 name: CYPRESS
 
 env: 
-  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  #OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  #OPENSHIFT_SERVER: console-openshift-console.apps.okd4-10.awsentando.net
+  #oc login --token=sha256~3hD0AivYmuErKgOkkhfMfIvQDeBSUDmfNTCkSAFR-yo --server=https://api.okd4-10.awsentando.net:6443
+  #curl -H "Authorization: Bearer sha256~3hD0AivYmuErKgOkkhfMfIvQDeBSUDmfNTCkSAFR-yo" "https://api.okd4-10.awsentando.net:6443/apis/user.openshift.io/v1/users/~"
+  OPENSHIFT_SERVER: https://api.okd4-10.awsentando.net:6443
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
   OPENSHIFT_NAMESPACE: "test-cypress"
   APP_NAME: "test-cypress"
