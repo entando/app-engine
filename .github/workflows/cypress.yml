@@ -35,10 +35,14 @@ jobs:
       run: |
         echo "message1"
         manifest=$(cat << EOF
-        first line
-        second line
-        third line
-        EOF
+        apiVersion: operators.coreos.com/v1
+        kind: OperatorGroup
+        metadata:
+          name: {{namespace}}
+          namespace: {{namespace}}
+        spec:
+          targetNamespaces:
+          - {{namespace}}
         )
         echo "message2"
         echo "the value of manifest is $manifest"
@@ -56,6 +60,13 @@ jobs:
         cat new-manifest.yaml
         echo "message9"
 
+
+#        manifest=$(cat << EOF
+#        first line
+#        second line
+#        third line
+#        EOF
+#        )
 #        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
 
 #        manifest= |
