@@ -62,6 +62,8 @@ jobs:
         echo "message9"
         cat new-manifest.yaml
         echo "message10"
+        oc apply -f new-manifest.yaml
+        echo "message11"
 
 #        echo "${manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml --> THIS WORKS
 #        manifest=$(cat << EOF
