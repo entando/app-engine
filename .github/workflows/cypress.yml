@@ -34,22 +34,12 @@ jobs:
     - name: Install Entando Operator
       run: |
         echo "message1"
-#        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
         manifest=$(cat << EOF
         first line
         second line
         third line
         EOF
         )
-#        manifest= |
-#          "apiVersion: operators.coreos.com/v1
-#          kind: OperatorGroup
-#          metadata:
-#            name: {{namespace}}
-#            namespace: {{namespace}}
-#          spec:
-#            targetNamespaces:
-#            - {{namespace}}"
         echo "message2"
         echo "the value of manifest is $manifest"
         echo "message3"
@@ -65,6 +55,19 @@ jobs:
         echo "message8"
         cat new-manifest.yaml
         echo "message9"
+
+#        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
+
+#        manifest= |
+#          "apiVersion: operators.coreos.com/v1
+#          kind: OperatorGroup
+#          metadata:
+#            name: {{namespace}}
+#            namespace: {{namespace}}
+#          spec:
+#            targetNamespaces:
+#            - {{namespace}}"
+
 
 #   echo "${firstString/Suzi/"$secondString"}" 
 #   cat temp2.txt | oc process -f - -p namespace=test-cypress > new-manifest.yaml
