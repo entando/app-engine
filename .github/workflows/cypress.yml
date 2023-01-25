@@ -32,9 +32,9 @@ jobs:
         insecure_skip_tls_verify: true
         namespace: ${{ env.OPENSHIFT_NAMESPACE }}
     - name: Install Entando Operator
-      run: manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
-    - name: Install Entando Operator 2
-      run: echo "$manifest" | oc process -f - -p namespace=test-cypress > new-manifest.yaml
+      run: |
+        manifest=$(echo ${{ secrets.OPENSHIFT_OPERATOR_GROUP }} | base64 --decode)
+        echo "$manifest" | oc process -f - -p namespace=test-cypress > new-manifest.yaml
     - name: Install Entando Operator 3
       run: cat new-manifest.yaml
       #run: |
