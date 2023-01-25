@@ -64,7 +64,7 @@ jobs:
         echo "message10"
         oc apply -f new-manifest.yaml
         echo "message11"
-        subscription_manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
+        subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
         echo "message12"
         echo "$subscription_manifest"
         echo "message13"
