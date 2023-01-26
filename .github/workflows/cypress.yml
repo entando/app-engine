@@ -71,9 +71,10 @@ jobs:
 #        echo "${entando_app_manifest//"{{openshift_url}}"/"okd4-10.awsentando.net"}" > entando-app-manifest.yaml
 #        cat entando-app-manifest.yaml
 #        oc apply -f entando-app-manifest.yaml
-#  delete-namespace:
-#    name: Delete namespace
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Delete namespace
-#      run: oc delete namespace ${{ env.NAMESPACE }}
+  delete-namespace:
+    name: Delete namespace
+    runs-on: ubuntu-latest
+    steps:
+    - name: Delete namespace
+      run: oc delete namespace ${{ env.NAMESPACE }}
+      continue-on-error: true
