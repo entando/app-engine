@@ -37,8 +37,12 @@ jobs:
       run: |
         service_account_manifest="${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"
         echo "${service_account_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
-        cat service-account-manifest.yaml
         oc apply -f service-account-manifest.yaml
+    - name: Create Role
+      run: |
+        role_manifest="${{ secrets.ROLE_MANIFEST }}"
+        echo "${role_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-manifest.yaml
+        oc apply -f role-manifest.yaml
 #  run-cypress-tests:
 #    name: Run cypress tests
 #    runs-on: ubuntu-latest
