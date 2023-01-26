@@ -1,7 +1,8 @@
 name: CYPRESS
 
 env: 
-  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  OPENSHIFT_DOMAIN: ${{ secrets.OPENSHIFT_DOMAIN }}
+  OPENSHIFT_SERVER_PORT: ${{ secrets.OPENSHIFT_SERVER_PORT }}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
   OPENSHIFT_NAMESPACE: "test-cypress"
   ENTANDO_APP_DBMS: "postgresql"
@@ -25,7 +26,7 @@ jobs:
     - name: Login to OpenShift
       uses: redhat-actions/oc-login@v1
       with:
-        openshift_server_url: ${{ env.OPENSHIFT_SERVER }}
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
         openshift_token: ${{ env.OPENSHIFT_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.OPENSHIFT_NAMESPACE }}
