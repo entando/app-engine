@@ -73,6 +73,8 @@ jobs:
     needs: prepare-namespace
     steps:
     - name: Login to OpenShift with new ServiceAccount
+      env:
+        SERVICE_ACCOUNT_TOKEN: ${{ env.SERVICE_ACCOUNT_TOKEN }}
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
