@@ -48,7 +48,7 @@ jobs:
         role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
         echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
         oc apply -f role-binding-manifest.yaml
-    - name: Set environment variable with the new ServiceAccount token
+    - name: Export new ServiceAccount token
       run: | 
         secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
         for secret in "${secrets[@]}"
@@ -57,18 +57,12 @@ jobs:
                 echo "Found it"
                 secret_name="${secret#secret/}"
                 echo $secret_name
+                token=$(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode)
+                echo $token
+                echo "export SERVICE_ACCOUNT_TOKEN=$token" >> $GITHUB_ENV
                 break
             fi
         done
-#        echo "message1"
-#        secretName=$(oc get secret --selector=name~=$(echo ${{ env.NAMESPACE }})-token)
-#        echo "message2"
-#        echo $secretName
-#        echo "message3"
-#        token=$(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode)
-#        echo "message4"
-#        echo $token
-#        echo "message5"
   install-entando-app:
     name: Install EntandoApp
     runs-on: ubuntu-latest
@@ -78,8 +72,8 @@ jobs:
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        #openshift_token: ${{ env.OPENSHIFT_TOKEN }}
-        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
+        #openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.NAMESPACE }}
     - name: Creating Operator Group
@@ -106,8 +100,7 @@ jobs:
     name: Delete namespace
     runs-on: ubuntu-latest
     needs: install-entando-app
-    #if: always()
-    if: false
+    if: always()
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
