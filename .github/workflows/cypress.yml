@@ -5,6 +5,7 @@ env:
   OPENSHIFT_SERVER_PORT: ${{ secrets.OPENSHIFT_SERVER_PORT }}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
   OPENSHIFT_NAMESPACE: "test-cypress"
+  ENTANDO_OPERATOR_SOURCE: "entando-catalog-7-1-3"
   ENTANDO_APP_DBMS: "postgresql"
   ENTANDO_APP_USED: "eap"
   IMAGE_REGISTRY: entando/app-engine-eap:7.2.0-ENG-4504-PR-45
@@ -33,13 +34,13 @@ jobs:
     - name: Creating Operator Group
       run: |
         manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
-        echo "${manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > new-manifest.yaml
-        oc apply -f new-manifest.yaml
+        echo "${manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > operator-group-manifest.yaml
+        oc apply -f operator-group-manifest.yaml
     - name: Instaling Operator
       run: |
         subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
         subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
-        echo "${subscription_manifest//"{{source}}"/"entando-catalog-7-1-3"}" > subscription-manifest.yaml
+        echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
         oc apply -f subscription-manifest.yaml
     - name: Installing EntandoApp
       run: |
