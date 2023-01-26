@@ -4,6 +4,8 @@ env:
   OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
   OPENSHIFT_NAMESPACE: "test-cypress"
+  ENTANDO_APP_DBMS: "postgresql"
+  ENTANDO_APP_USED: "eap"
   IMAGE_REGISTRY: entando/app-engine-eap:7.2.0-ENG-4504-PR-45
   IMAGE_REGISTRY_USER: ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}
   IMAGE_REGISTRY_PASSWORD: ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}
@@ -42,9 +44,9 @@ jobs:
       run: |
         entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
         entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
-        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"postgresql"}"
+        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
         entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
-        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"eap"}"
+        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
         echo "${entando_app_manifest//"{{openshift_url}}"/"okd4-10.awsentando.net"}" > entando-app-manifest.yaml
         cat entando-app-manifest.yaml
         oc apply -f entando-app-manifest.yaml
