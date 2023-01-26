@@ -77,5 +77,11 @@ jobs:
     needs: create-namespace
     if: always()
     steps:
+    - name: Login to OpenShift with JobConfiguration
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        insecure_skip_tls_verify: true
     - name: Delete namespace
       run: oc delete namespace ${{ env.NAMESPACE }}
