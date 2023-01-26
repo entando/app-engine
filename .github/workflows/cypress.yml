@@ -24,6 +24,8 @@ jobs:
   prepare-namespace:
     name: Prepare namespace
     runs-on: ubuntu-latest
+    outputs:
+      sa-token: ${{ steps.export-sa-token.outputs.token }}
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
@@ -49,6 +51,7 @@ jobs:
 #        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
 #        oc apply -f role-binding-manifest.yaml
     - name: Export new ServiceAccount token
+      id: export-sa-token
       run: | 
         secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
         for secret in "${secrets[@]}"
@@ -59,14 +62,13 @@ jobs:
                 echo $secret_name
                 token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
                 echo $token
-                echo "SERVICE_ACCOUNT_TOKEN=$token" >> $GITHUB_ENV
+                echo "token=$token" >> $GITHUB_OUTPUT
                 break
             fi
         done
-      env:
-        SERVICE_ACCOUNT_TOKEN: ${{ env.SERVICE_ACCOUNT_TOKEN }}
 #                token=($(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
 #                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
+# echo "SERVICE_ACCOUNT_TOKEN=$token" >> $GITHUB_ENV
 
 
   install-entando-app:
@@ -78,7 +80,7 @@ jobs:
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
+        openshift_token: ${{ needs.prepare-namespace.outputs.sa-token }}
         #openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.NAMESPACE }}
