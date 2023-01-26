@@ -96,7 +96,8 @@ jobs:
     name: Delete namespace
     runs-on: ubuntu-latest
     needs: install-entando-app
-    if: always()
+    #if: always()
+    if: false
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
