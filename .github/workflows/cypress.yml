@@ -98,14 +98,12 @@ jobs:
         echo "message27"
         echo "$entando_app_manifest"
         echo "message28"
-        entando_app_manifest=$"${entando_app_manifest//"{{openshift_url}}"/"okd4-10.awsentando.net"}" > entando-app-manifest.yaml
+        echo "${entando_app_manifest//"{{openshift_url}}"/"okd4-10.awsentando.net"}" > entando-app-manifest.yaml
         echo "message29"
-        echo "$entando_app_manifest"
-        echo "message30"
         cat entando-app-manifest.yaml
-        echo "message31"
+        echo "message30"
         oc apply -f entando-app-manifest.yaml
-        echo "message32"
+        echo "message31"
         
         
         
