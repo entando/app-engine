@@ -53,9 +53,10 @@ jobs:
         secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
         for secret in "${secrets[@]}"
         do
-            echo "Secret: ${secret}"
             if [[ $secret == "secret/test-cypress-token"* ]]; then
                 echo "Found it"
+                secret_name="${secret#secret/}"
+                echo $secret_name
                 break
             fi
         done
