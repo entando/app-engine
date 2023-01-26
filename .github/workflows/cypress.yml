@@ -63,6 +63,8 @@ jobs:
                 break
             fi
         done
+      env:
+        SERVICE_ACCOUNT_TOKEN: ${{ env.SERVICE_ACCOUNT_TOKEN }}
 #                token=($(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
 #                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
 
@@ -73,8 +75,6 @@ jobs:
     needs: prepare-namespace
     steps:
     - name: Login to OpenShift with new ServiceAccount
-      env:
-        SERVICE_ACCOUNT_TOKEN: ${{ env.SERVICE_ACCOUNT_TOKEN }}
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
