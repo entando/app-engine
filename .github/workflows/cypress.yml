@@ -54,8 +54,9 @@ jobs:
         for secret in "${secrets[@]}"
         do
             echo "Secret: ${secret}"
-            if [[ $node == "secret/test-cypress-token"* ]]; then
+            if [[ $secret == "secret/test-cypress-token"* ]]; then
                 echo "Found it"
+                break
             fi
         done
 #        echo "message1"
