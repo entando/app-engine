@@ -48,11 +48,6 @@ jobs:
         role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
         echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
         oc apply -f role-binding-manifest.yaml
-  install-entando-app:
-    name: Install EntandoApp
-    runs-on: ubuntu-latest
-    needs: prepare-namespace
-    steps:
     - name: Set environment variable with the new ServiceAccount token
       run: | 
         echo "message1"
@@ -64,6 +59,11 @@ jobs:
         echo "message4"
         echo $token
         echo "message5"
+  install-entando-app:
+    name: Install EntandoApp
+    runs-on: ubuntu-latest
+    needs: prepare-namespace
+    steps:
     - name: Login to OpenShift with new ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
