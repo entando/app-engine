@@ -54,16 +54,19 @@ jobs:
         for secret in "${secrets[@]}"
         do
             echo "Secret: ${secret}"
+            if [[ $node == "secret/test-cypress-token"* ]]; then
+                echo "Found it"
+            fi
         done
-        echo "message1"
-        secretName=$(oc get secret --selector=name~=$(echo ${{ env.NAMESPACE }})-token)
-        echo "message2"
-        echo $secretName
-        echo "message3"
-        token=$(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode)
-        echo "message4"
-        echo $token
-        echo "message5"
+#        echo "message1"
+#        secretName=$(oc get secret --selector=name~=$(echo ${{ env.NAMESPACE }})-token)
+#        echo "message2"
+#        echo $secretName
+#        echo "message3"
+#        token=$(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode)
+#        echo "message4"
+#        echo $token
+#        echo "message5"
   install-entando-app:
     name: Install EntandoApp
     runs-on: ubuntu-latest
