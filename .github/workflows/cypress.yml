@@ -72,7 +72,7 @@ jobs:
         echo "message14"
         echo "$subscription_manifest"
         echo "message15"
-        echo "${subscription_manifest//"{{source}}"/"7.1.3"}" > subscription-manifest.yaml
+        echo "${subscription_manifest//"{{source}}"/"v7.1.3"}" > subscription-manifest.yaml
         echo "message16"
         cat subscription-manifest.yaml
         echo "message17"
