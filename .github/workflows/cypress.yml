@@ -50,6 +50,11 @@ jobs:
         oc apply -f role-binding-manifest.yaml
     - name: Set environment variable with the new ServiceAccount token
       run: | 
+        secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
+        for secret in "${secrets[@]}"
+        do
+            echo "Secret: ${secret}"
+        done
         echo "message1"
         secretName=$(oc get secret --selector=name~=$(echo ${{ env.NAMESPACE }})-token)
         echo "message2"
