@@ -55,7 +55,7 @@ jobs:
         echo "message2"
         echo $secretName
         echo "message3"
-        token = $(oc get secret $secretName -n ${{ env.NAMESPACE }} -o jsonpath='{.data.token}' | base64 --decode)
+        token=$(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode)
         echo "message4"
         echo $token
         echo "message5"
