@@ -51,7 +51,7 @@ jobs:
     - name: Set environment variable with the new ServiceAccount token
       run: | 
         echo "message1"
-        secretName = $(oc get serviceaccount ${{ env.NAMESPACE }} -n ${{ env.NAMESPACE }} -o jsonpath='{.secrets[1].name}')
+        secretName=$(oc get serviceaccount $(echo ${{ env.NAMESPACE }}) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[1].name}')
         echo "message2"
         echo $secretName
         echo "message3"
