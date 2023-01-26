@@ -59,14 +59,6 @@ jobs:
         echo $secretName
         token = ${oc get secret $secretName -n ${{ env.NAMESPACE }} -o jsonpath='{.data.token}' | base64 --decode}
         echo $token
-      with:
-        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        #openshift_token: ${{ env.OPENSHIFT_TOKEN }}
-        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
-        insecure_skip_tls_verify: true
-        namespace: ${{ env.NAMESPACE }}
-        
-        
     - name: Login to OpenShift with new ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
