@@ -51,6 +51,7 @@ jobs:
   install-entando-app:
     name: Install EntandoApp
     runs-on: ubuntu-latest
+    needs: prepare-namespace
     steps:
     - name: Login to OpenShift
       uses: redhat-actions/oc-login@v1
@@ -83,7 +84,7 @@ jobs:
   delete-namespace:
     name: Delete namespace
     runs-on: ubuntu-latest
-    needs: prepare-namespace
+    needs: install-entando-app
     if: always()
     steps:
     - name: Login to OpenShift with JobConfiguration
