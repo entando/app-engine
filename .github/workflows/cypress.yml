@@ -34,6 +34,7 @@ jobs:
     - name: Create namespace
       run: oc create namespace ${{ env.NAMESPACE }}
     - name: Create ServiceAccount
+      run: |
         echo "${"${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
         cat service-account-manifest.yaml
         oc apply -f service-account-manifest.yaml
