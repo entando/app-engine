@@ -31,23 +31,23 @@ jobs:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
-    - name: Create namespace
-      run: oc create namespace ${{ env.NAMESPACE }}
-    - name: Create ServiceAccount
-      run: |
-        service_account_manifest="${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"
-        echo "${service_account_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
-        oc apply -f service-account-manifest.yaml
-    - name: Create Role
-      run: |
-        role_manifest="${{ secrets.ROLE_MANIFEST }}"
-        echo "${role_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-manifest.yaml
-        oc apply -f role-manifest.yaml
-    - name: Create RoleBinding
-      run: |
-        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
-        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
-        oc apply -f role-binding-manifest.yaml
+#    - name: Create namespace
+#      run: oc create namespace ${{ env.NAMESPACE }}
+#    - name: Create ServiceAccount
+#      run: |
+#        service_account_manifest="${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"
+#        echo "${service_account_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
+#        oc apply -f service-account-manifest.yaml
+#    - name: Create Role
+#      run: |
+#        role_manifest="${{ secrets.ROLE_MANIFEST }}"
+#        echo "${role_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-manifest.yaml
+#        oc apply -f role-manifest.yaml
+#    - name: Create RoleBinding
+#      run: |
+#        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
+#        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
+#        oc apply -f role-binding-manifest.yaml
     - name: Export new ServiceAccount token
       run: | 
         secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
@@ -57,13 +57,16 @@ jobs:
                 echo "Found it"
                 secret_name="${secret#secret/}"
                 echo $secret_name
-                token="123"
+                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
                 echo $token
                 echo "export SERVICE_ACCOUNT_TOKEN=$token" >> $GITHUB_ENV
                 break
             fi
         done
 #                token=($(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
+#                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
+
+
   install-entando-app:
     name: Install EntandoApp
     runs-on: ubuntu-latest
