@@ -76,6 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-namespace
     steps:
+    - name: Print output of previous job
+      run: echo ${{ needs.prepare-namespace.outputs.sa-token }}
     - name: Login to OpenShift with new ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
