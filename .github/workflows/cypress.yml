@@ -2,17 +2,16 @@ name: CYPRESS
 
 env: 
   JOB_CONFIGURATION_TOKEN: ${{ secrets.JOB_CONFIGURATION_TOKEN }}
-  JOB_CONFIGURATION_NAMESPACE: "job-configuration"
   OPENSHIFT_DOMAIN: ${{ secrets.OPENSHIFT_DOMAIN }}
   OPENSHIFT_SERVER_PORT: ${{ secrets.OPENSHIFT_SERVER_PORT }}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-  OPENSHIFT_NAMESPACE: "test-cypress"
   ENTANDO_OPERATOR_SOURCE: "entando-catalog-7-1-3"
   ENTANDO_APP_DBMS: "postgresql"
   ENTANDO_APP_USED: "eap"
   IMAGE_REGISTRY: entando/app-engine-eap:7.2.0-ENG-4504-PR-45
   IMAGE_REGISTRY_USER: ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}
   IMAGE_REGISTRY_PASSWORD: ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}
+  NAMESPACE: "test-cypress"
 
 on:
   pull_request:
@@ -32,9 +31,12 @@ jobs:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
-        namespace: ${{ env.JOB_CONFIGURATION_NAMESPACE }}
     - name: Create namespace
-      run: oc create namespace ${{ env.OPENSHIFT_NAMESPACE }}
+      run: oc create namespace ${{ env.NAMESPACE }}
+    - name: Create ServiceAccount
+        echo "${"${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
+        cat service-account-manifest.yaml
+        oc apply -f service-account-manifest.yaml
 #  run-cypress-tests:
 #    name: Run cypress tests
 #    runs-on: ubuntu-latest
@@ -45,25 +47,31 @@ jobs:
 #        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
 #        openshift_token: ${{ env.OPENSHIFT_TOKEN }}
 #        insecure_skip_tls_verify: true
-#        namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+#        namespace: ${{ env.NAMESPACE }}
 #    - name: Creating Operator Group
 #      run: |
 #        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
-#        echo "${manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}" > operator-group-manifest.yaml
+#        echo "${manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > operator-group-manifest.yaml
 #        oc apply -f operator-group-manifest.yaml
 #    - name: Instaling Operator
 #      run: |
 #        subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
-#        subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
+#        subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
 #        oc apply -f subscription-manifest.yaml
 #    - name: Installing EntandoApp
 #      run: |
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
 #        echo "${entando_app_manifest//"{{openshift_url}}"/"okd4-10.awsentando.net"}" > entando-app-manifest.yaml
 #        cat entando-app-manifest.yaml
 #        oc apply -f entando-app-manifest.yaml
+#  delete-namespace:
+#    name: Delete namespace
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Delete namespace
+#      run: oc delete namespace ${{ env.NAMESPACE }}
