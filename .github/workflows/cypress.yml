@@ -57,7 +57,7 @@ jobs:
                 echo "Found it"
                 secret_name="${secret#secret/}"
                 echo $secret_name
-                token=$(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode)
+                token=($(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))
                 echo $token
                 echo "export SERVICE_ACCOUNT_TOKEN=$token" >> $GITHUB_ENV
                 break
@@ -76,18 +76,18 @@ jobs:
         #openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.NAMESPACE }}
-    - name: Creating Operator Group
+    - name: Create Operator Group
       run: |
         manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
         echo "${manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > operator-group-manifest.yaml
         oc apply -f operator-group-manifest.yaml
-    - name: Instaling Operator
+    - name: Install Operator
       run: |
         subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
         subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
         echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
         oc apply -f subscription-manifest.yaml
-    - name: Installing EntandoApp
+    - name: Install EntandoApp
       run: |
         entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
         entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
