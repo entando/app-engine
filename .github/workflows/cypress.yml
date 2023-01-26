@@ -45,7 +45,7 @@ jobs:
         oc apply -f role-manifest.yaml
     - name: Create RoleBinding
       run: |
-        role_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
+        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
         echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
         oc apply -f role-binding-manifest.yaml
 #  run-cypress-tests:
