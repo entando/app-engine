@@ -46,6 +46,7 @@ jobs:
         entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.OPENSHIFT_NAMESPACE }}"}"
         entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"eap"}"
         echo "${entando_app_manifest//"{{openshift_url}}"/"okd4-10.awsentando.net"}" > entando-app-manifest.yaml
+        cat entando-app-manifest.yaml
         oc apply -f entando-app-manifest.yaml
         
         
