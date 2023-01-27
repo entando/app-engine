@@ -54,6 +54,51 @@ jobs:
     runs-on: ubuntu-latest
 #    needs: prepare-namespace
     steps:
+    - name: Login to OpenShift with JobConfiguration
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        insecure_skip_tls_verify: true
+    - name: Export ServiceAccount token
+      run: | 
+        secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
+        for secret in "${secrets[@]}"
+        do
+            if [[ $secret == "secret/$(echo ${{ env.NAMESPACE }})-token"* ]]; then
+                secret_name="${secret#secret/}"
+                token=($(oc get secret $(echo $secret_name) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
+                echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
+                break
+            fi
+        done
+    - name: Login to OpenShift with namespace ServiceAccount
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
+        insecure_skip_tls_verify: true
+        namespace: ${{ env.NAMESPACE }}
+#    - name: Create Operator Group
+#      run: |
+#        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
+#        echo "${manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > operator-group-manifest.yaml
+#        oc apply -f operator-group-manifest.yaml
+#    - name: Install Operator
+#      run: |
+#        subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
+#        subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
+#        echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
+#        oc apply -f subscription-manifest.yaml
+#    - name: Install EntandoApp
+#      run: |
+#        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
+#        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
+#        oc apply -f entando-app-manifest.yaml
     - name: Verify EntandoApp installation
       run: |
         echo "Waiting for EntandoApp to be available. Estimated time: 5 minutes"
@@ -79,76 +124,6 @@ jobs:
             sleep 15
           fi
         done
-#    - name: Login to OpenShift with JobConfiguration
-#      uses: redhat-actions/oc-login@v1
-#      with:
-#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-#        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
-#        insecure_skip_tls_verify: true
-#    - name: Export ServiceAccount token
-#      run: | 
-#        secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
-#        for secret in "${secrets[@]}"
-#        do
-#            if [[ $secret == "secret/$(echo ${{ env.NAMESPACE }})-token"* ]]; then
-#                secret_name="${secret#secret/}"
-#                token=($(oc get secret $(echo $secret_name) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
-#                echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
-#                break
-#            fi
-#        done
-#    - name: Login to OpenShift with namespace ServiceAccount
-#      uses: redhat-actions/oc-login@v1
-#      with:
-#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-#        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
-#        insecure_skip_tls_verify: true
-#        namespace: ${{ env.NAMESPACE }}
-#    - name: Create Operator Group
-#      run: |
-#        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
-#        echo "${manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > operator-group-manifest.yaml
-#        oc apply -f operator-group-manifest.yaml
-#    - name: Install Operator
-#      run: |
-#        subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
-#        subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
-#        echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
-#        oc apply -f subscription-manifest.yaml
-#    - name: Install EntandoApp
-#      run: |
-#        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
-#        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
-#        oc apply -f entando-app-manifest.yaml
-#    - name: Verify EntandoApp installation
-#      run: |
-#        echo "Waiting for EntandoApp to be available. Estimated time: 5 minutes"
-#        while true; do
-#          deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
-#          if [ ! -z "$deployment_name"]; then
-#            echo "EntandoApp deployment started"
-#            while true; do
-#              deployment_status=($(oc rollout status deployment/$(echo $deployment_name)))
-#              if [ $deployment_status == *"successfully rolled out"* ]; then
-#                echo "EntandoApp is ready"
-#                break
-#              elif [ $deployment_status == *"failed"* ]; then
-#                echo "Deployment failed"
-#                exit 1
-#              else
-#                echo "Waiting for deployment to complete..."
-#              fi
-#              sleep 5  
-#            done
-#          else
-#            echo "EntandoApp not yet available, waiting 15 seconds before retrying"
-#            sleep 15
-#          fi
-#        done
   delete-namespace:
     name: Delete namespace
     runs-on: ubuntu-latest
