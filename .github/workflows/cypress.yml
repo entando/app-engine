@@ -62,7 +62,7 @@ jobs:
                 echo $secret_name
                 token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
                 echo $token
-                echo "::set-output name=test::world"
+                echo "::set-output name=test::$token"
                 break
             fi
         done
