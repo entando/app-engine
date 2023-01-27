@@ -104,7 +104,7 @@ jobs:
         echo "Waiting for EntandoApp to be available. Estimated time: 5 minutes"
         while true; do
           deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
-          if [ ! -z "$deployment_name"]; then
+          if [[ ! -z "$deployment_name"]]; then
             echo "EntandoApp deployment started"
             while true; do
               echo "message1"
@@ -112,10 +112,10 @@ jobs:
               echo "message2"
               echo "$deployment_status"
               echo "message3"
-              if [ $deployment_status == *"successfully rolled out"* ]; then
+              if [[ $deployment_status == *"successfully rolled out"* ]]; then
                 echo "EntandoApp is ready"
                 break
-              elif [ $deployment_status == *"failed"* ]; then
+              elif [[ $deployment_status == *"failed"* ]]; then
                 echo "Deployment failed"
                 exit 1
               else
