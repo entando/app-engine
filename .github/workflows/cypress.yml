@@ -101,17 +101,21 @@ jobs:
         oc apply -f entando-app-manifest.yaml
     - name: Verify EntandoApp installation
       run: |
+        echo "Waiting for EntandoApp to be available. Estimated time: 5 minutes"
         while true; do
+          echo "message0"
           deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
-          if [ ! -z "$deployment_available"]; then
-            echo "Deployment is available"
+          echo "$deployment_name"
+          echo "message1"
+          if [ ! -z "$deployment_name"]; then
+            echo "EntandoApp deployment started"
             while true; do
               deployment_status=($(oc rollout status deployment/$deployment_name))
-              if [[ $STATUS == *"successfully rolled out"* ]]; then
-                echo "Deployment succeeded!"
+              if [[ $deployment_status == *"successfully rolled out"* ]]; then
+                echo "EntandoApp is ready"
                 break
-              elif [[ $STATUS == *"failed"* ]]; then
-                echo "Deployment failed!"
+              elif [[ $deployment_status == *"failed"* ]]; then
+                echo "Deployment failed"
                 exit 1
               else
                 echo "Waiting for deployment to complete..."
@@ -119,8 +123,8 @@ jobs:
               sleep 5  
             done
           else
-            echo "Deployment not yet available, waiting 5 seconds before retrying"
-            sleep 5
+            echo "EntandoApp not yet available, waiting 15 seconds before retrying"
+            sleep 15
           fi
         done
   delete-namespace:
