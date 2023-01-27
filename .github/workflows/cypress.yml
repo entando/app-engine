@@ -65,7 +65,7 @@ jobs:
         secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
         for secret in "${secrets[@]}"
         do
-            if [[ $secret == "secret/test-cypress-token"* ]]; then
+            if [[ $secret == "secret/$(echo ${{ env.NAMESPACE }})-token"* ]]; then
                 secret_name="${secret#secret/}"
                 token=($(oc get secret $(echo $secret_name) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
                 echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
