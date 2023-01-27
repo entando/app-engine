@@ -32,7 +32,7 @@ jobs:
     - name: Create namespace
       run: | 
         echo "message1"
-        echo "${{ env.GITHUB_REPOSITORY }})"
+        echo "${{ github.event.repository.name }}"
         echo "message2"
         echo "$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
         echo "message3"
@@ -40,6 +40,19 @@ jobs:
         echo "message4"
         oc create namespace $namespace
         echo "message5"
+    - name: Dump GitHub context
+      id: github_context_step
+      run: echo '${{ toJSON(github) }}'
+    - name: Dump job context
+      run: echo '${{ toJSON(job) }}'
+    - name: Dump steps context
+      run: echo '${{ toJSON(steps) }}'
+    - name: Dump runner context
+      run: echo '${{ toJSON(runner) }}'
+    - name: Dump strategy context
+      run: echo '${{ toJSON(strategy) }}'
+    - name: Dump matrix context
+      run: echo '${{ toJSON(matrix) }}'
 #        REMOVE THIS
 #        token=($(oc get secret $(echo $secret_name) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))
 #        END REMOVE HERE
