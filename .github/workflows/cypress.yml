@@ -31,7 +31,7 @@ jobs:
         insecure_skip_tls_verify: true
     - name: Create namespace
       run: | 
-        namespace = $(basename ${{ env.GITHUB_REPOSITORY }})-pr-47
+        namespace="$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
         oc create namespace $namespace
 #        oc create namespace ${{ env.NAMESPACE }}
 #    - name: Create ServiceAccount
