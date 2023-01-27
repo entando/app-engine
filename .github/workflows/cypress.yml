@@ -62,7 +62,7 @@ jobs:
                 echo $secret_name
                 token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
                 echo $token
-                echo "::set-output name=test::eyJhbGciOiJSUzI1NiIsImtpZCI6IkE2ZmUtU3hacVpHUExUREhmN0h5N00xdE5fZ2ZmZkluTTMybjlxOEQ4WWsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ0ZXN0LWN5cHJlc3MiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoidGVzdC1jeXByZXNzLXRva2VuLWhuamJzIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3QtY3lwcmVzcyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjAwZGY1MGFlLTYyNDEtNDYxMi05MDIwLTU2YjVkMzZiOTQ0NCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDp0ZXN0LWN5cHJlc3M6dGVzdC1jeXByZXNzIn0.YpoKfaotEu6D1GSqZFVl3XugeYVuTjWImjE0SEXXSAqvwZpNjyvZb4d8hI7gDi--qhpXMCqhqIT__lMSq4rqSJf8QkUvWHgPg7_khJYrLIV7ABUUQnRJEtdqjEeFPAEJZz1RzKQEhzLw2gHFtmHKTgfVO-vvGTMw0DtjjlIlM2ptvNBkiDrSlelwL80qxql2DclLtVcBra9yj9GlI9UyFBhb1KMhPWzC9WbOkFd12qmFWUp4gR6dtvfk8ZNpqCAN3n7dsFJfQqnEmD_-VfxRG_2j5b8AyTsPb6eDSp80m3pG-pvdcmRPSyBh0HMZh89ZVYFXWO15c58SlXGRJwrkO8-Vgoy93IIqckdNodlVNX-ZxRVGM2QgWbAozZdPq8T-JFz4jn9lpqKllcTqDsCcfhWmV5aHvD9SN5hueuehVzjR_N6paZ0hEteFZ3z0KAQMEILDpyb_JAPuCGA2J-zJsqgWKDaStd2FIlGm_7FxGAQrFmRG5pOfGMqlnA7U7s6BNQ-3M-fDgZzO541OQTO-JJegzaryVwk-NiSxYhNx9VYSKmUxqsjwXkPfqlnzNPJLWELrYUOhlHntF2pGGiNPX71MAymWdISYVY0F1rv_6dxEBbYie33OiHQDtI7nbO_K2S-SDyCCOJym-hUeRjxK7hU7Jr1KNpjJqvb6Vtg2aQ8"
+                echo "::save-state name=test::eyJhbGciOiJSUzI1NiIsImtpZCI6IkE2ZmUtU3hacVpHUExUREhmN0h5N00xdE5fZ2ZmZkluTTMybjlxOEQ4WWsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ0ZXN0LWN5cHJlc3MiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoidGVzdC1jeXByZXNzLXRva2VuLWhuamJzIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3QtY3lwcmVzcyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjAwZGY1MGFlLTYyNDEtNDYxMi05MDIwLTU2YjVkMzZiOTQ0NCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDp0ZXN0LWN5cHJlc3M6dGVzdC1jeXByZXNzIn0.YpoKfaotEu6D1GSqZFVl3XugeYVuTjWImjE0SEXXSAqvwZpNjyvZb4d8hI7gDi--qhpXMCqhqIT__lMSq4rqSJf8QkUvWHgPg7_khJYrLIV7ABUUQnRJEtdqjEeFPAEJZz1RzKQEhzLw2gHFtmHKTgfVO-vvGTMw0DtjjlIlM2ptvNBkiDrSlelwL80qxql2DclLtVcBra9yj9GlI9UyFBhb1KMhPWzC9WbOkFd12qmFWUp4gR6dtvfk8ZNpqCAN3n7dsFJfQqnEmD_-VfxRG_2j5b8AyTsPb6eDSp80m3pG-pvdcmRPSyBh0HMZh89ZVYFXWO15c58SlXGRJwrkO8-Vgoy93IIqckdNodlVNX-ZxRVGM2QgWbAozZdPq8T-JFz4jn9lpqKllcTqDsCcfhWmV5aHvD9SN5hueuehVzjR_N6paZ0hEteFZ3z0KAQMEILDpyb_JAPuCGA2J-zJsqgWKDaStd2FIlGm_7FxGAQrFmRG5pOfGMqlnA7U7s6BNQ-3M-fDgZzO541OQTO-JJegzaryVwk-NiSxYhNx9VYSKmUxqsjwXkPfqlnzNPJLWELrYUOhlHntF2pGGiNPX71MAymWdISYVY0F1rv_6dxEBbYie33OiHQDtI7nbO_K2S-SDyCCOJym-hUeRjxK7hU7Jr1KNpjJqvb6Vtg2aQ8"
                 break
             fi
         done
@@ -77,12 +77,13 @@ jobs:
     needs: prepare-namespace
     steps:
     - name: Print output of previous job
-      run: echo ${{ needs.prepare-namespace.outputs.output1 }}
+#      run: echo ${{ needs.prepare-namespace.outputs.output1 }}
+      run: echo ${{ steps.prepare-namespace.outputs.test }}
     - name: Login to OpenShift with new ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ needs.prepare-namespace.outputs.output1 }}
+        openshift_token: ${{ steps.prepare-namespace.outputs.test }}
         #openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.NAMESPACE }}
