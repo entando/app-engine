@@ -10,6 +10,7 @@ env:
   IMAGE_REGISTRY: entando/app-engine-eap:7.2.0-ENG-4504-PR-45
   IMAGE_REGISTRY_USER: ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}
   IMAGE_REGISTRY_PASSWORD: ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}
+  NAMESPACE: "test-cypress-${{ github.event.repository.name }}-pr-${{ github.event.number }}"
 
 on:
   pull_request:
@@ -31,10 +32,7 @@ jobs:
         insecure_skip_tls_verify: true
     - name: Create namespace
       run: | 
-        namespace="test-cypress-${{ github.event.repository.name }}-pr-${{ github.event.number }}"
-        oc create namespace $namespace
-        echo "NAMESPACE=${namespace}" >> $GITHUB_ENV
-#namespace="test-cypress-${{ github.event.repository.name }}-pr-${{ github.event.number }}"
+        oc create namespace ${{ env.NAMESPACE }}
     - name: Create ServiceAccount
       run: |
         service_account_manifest="${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"
