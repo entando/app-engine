@@ -31,8 +31,19 @@ jobs:
         insecure_skip_tls_verify: true
     - name: Create namespace
       run: | 
+        echo "message1"
+        echo "${{ env.GITHUB_REPOSITORY }})"
+        echo "message2"
+        echo "$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
+        echo "message3"
         namespace="$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
+        echo "message4"
         oc create namespace $namespace
+        echo "message5"
+#        REMOVE THIS
+#        token=($(oc get secret $(echo $secret_name) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))
+#        END REMOVE HERE
+#        
 #        oc create namespace ${{ env.NAMESPACE }}
 #    - name: Create ServiceAccount
 #      run: |
