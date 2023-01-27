@@ -33,13 +33,13 @@ jobs:
       run: | 
         echo "message1"
         echo "${{ github.event.repository.name }}"
-        echo "message2"
-        echo "$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
-        echo "message3"
-        namespace="$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
-        echo "message4"
-        oc create namespace $namespace
-        echo "message5"
+#        echo "message2"
+#        echo "$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
+#        echo "message3"
+#        namespace="$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
+#        echo "message4"
+#        oc create namespace $namespace
+#        echo "message5"
     - name: Dump GitHub context
       id: github_context_step
       run: echo '${{ toJSON(github) }}'
