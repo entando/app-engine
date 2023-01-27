@@ -105,32 +105,23 @@ jobs:
         echo "Waiting for EntandoApp to be available. Estimated time: 5 minutes"
         while true; do
           deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
-          echo "$deployment_name"
           if [ -n "$deployment_name" ]; then
             echo "EntandoApp deployment started"
             while true; do
-              echo "message1"
-              echo "$deployment_name"
-              echo "message2"
               deployment_status="$(oc rollout status deployment/pn-3c07adf0-fac54a9f-entando-app-builder-menu-bff-deployment)"
-              echo "message3"
-              echo "$deployment_status"
-              echo "message4"
-              echo $deployment_status
-              echo "message5"
               if [[ "$deployment_status" == *"successfully rolled out"* ]]; then
                 echo "EntandoApp is ready"
                 break 2
               elif [[ "$deployment_status" == *"failed"* ]]; then
-                echo "Deployment failed"
+                echo "EntandoApp deployment failed"
                 exit 1
               else
-                echo "Waiting for deployment to complete..."
+                echo "EntandoApp deployment not ready yet, waiting 5 seconds"
               fi
               sleep 5  
             done
           else
-            echo "EntandoApp not yet available, waiting 15 seconds before retrying"
+            echo "EntandoApp deployment not created yet, waiting 15 seconds"
             sleep 15
           fi
         done
