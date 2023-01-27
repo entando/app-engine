@@ -67,7 +67,7 @@ jobs:
         do
             if [[ $secret == "secret/test-cypress-token"* ]]; then
                 secret_name="${secret#secret/}"
-                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
+                token=($(oc get secret $(echo $secret_name) -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
                 echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
                 break
             fi
