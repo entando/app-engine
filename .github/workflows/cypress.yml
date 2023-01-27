@@ -103,7 +103,7 @@ jobs:
       run: |
         while true; do
           deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
-          if [ -n "$deployment_available"]; then
+          if [ ! -z "$deployment_available"]; then
             echo "Deployment is available"
             while true; do
               deployment_status=($(oc rollout status deployment/$deployment_name))
