@@ -24,8 +24,6 @@ jobs:
   prepare-namespace:
     name: Prepare namespace
     runs-on: ubuntu-latest
-    outputs:
-      output1: ${{ steps.step1.outputs.test }}
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
@@ -50,22 +48,8 @@ jobs:
 #        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
 #        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
 #        oc apply -f role-binding-manifest.yaml
-    - name: Export new ServiceAccount token
-      id: step1
-      run: | 
-        secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
-        for secret in "${secrets[@]}"
-        do
-            if [[ $secret == "secret/test-cypress-token"* ]]; then
-                echo "Found it"
-                secret_name="${secret#secret/}"
-                echo $secret_name
-                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
-                echo $token
-                echo "::set-output name=test::$secret_name"
-                break
-            fi
-        done
+
+
 #                token=($(oc get secret $secretName -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))        
 #                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
 # echo "SERVICE_ACCOUNT_TOKEN=$token" >> $GITHUB_ENV
@@ -76,13 +60,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-namespace
     steps:
+    - name: Login to OpenShift with JobConfiguration
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        insecure_skip_tls_verify: true
+    - name: Export new ServiceAccount token
+      run: | 
+        secrets=($(oc get secrets -n $(echo ${{ env.NAMESPACE }}) -o name))
+        for secret in "${secrets[@]}"
+        do
+            if [[ $secret == "secret/test-cypress-token"* ]]; then
+                echo "Found it"
+                secret_name="${secret#secret/}"
+                echo $secret_name
+                token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
+                echo $token
+                echo "::set-env name=SERVICE_ACCOUNT_TOKEN::$token"
+                break
+            fi
+        done
     - name: Print output of previous job
-      run: echo ${{ needs.prepare-namespace.outputs.output1 }}
+      run: echo ${{ env.SERVICE_ACCOUNT_TOKEN }}
     - name: Login to OpenShift with new ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ needs.prepare-namespace.outputs.output1 }}
+        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
         #openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.NAMESPACE }}
