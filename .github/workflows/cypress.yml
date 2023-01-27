@@ -105,8 +105,7 @@ jobs:
         echo "Waiting for EntandoApp to be available. Estimated time: 5 minutes"
         while [ -z $deployment_name ]; do
           deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
-          if [ -n "$deployment_name" ]; then
-          else
+          if [ -z "$deployment_name" ]; then
             echo "EntandoApp deployment not created yet, waiting 15 seconds"
             sleep 15
           fi
