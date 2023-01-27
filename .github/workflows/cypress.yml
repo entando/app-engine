@@ -31,34 +31,8 @@ jobs:
         insecure_skip_tls_verify: true
     - name: Create namespace
       run: | 
-        echo "message1"
-        echo "${{ github.event.repository.name }}"
-        echo "message2"
-        echo "${{ github.event.number }}"
-        echo "message3"
-        echo namespace="${{ github.event.repository.name }}-pr-${{ github.event.number }}"
-        echo "message4"
-        echo "$namespace"
-        echo "message5"
-#        echo "$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
-#        echo "message3"
-#        namespace="$(basename ${{ env.GITHUB_REPOSITORY }})-pr-47"
-#        echo "message4"
-#        oc create namespace $namespace
-#        echo "message5"
-    - name: Dump GitHub context
-      id: github_context_step
-      run: echo '${{ toJSON(github) }}'
-    - name: Dump job context
-      run: echo '${{ toJSON(job) }}'
-    - name: Dump steps context
-      run: echo '${{ toJSON(steps) }}'
-    - name: Dump runner context
-      run: echo '${{ toJSON(runner) }}'
-    - name: Dump strategy context
-      run: echo '${{ toJSON(strategy) }}'
-    - name: Dump matrix context
-      run: echo '${{ toJSON(matrix) }}'
+        namespace="test-cypress-${{ github.event.repository.name }}-pr-${{ github.event.number }}"
+        oc create namespace $namespace
 #        REMOVE THIS
 #        token=($(oc get secret $(echo $secret_name) -n $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.data.token}' | base64 --decode))
 #        END REMOVE HERE
