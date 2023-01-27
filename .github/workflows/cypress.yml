@@ -120,7 +120,7 @@ jobs:
               echo "message5"
               if [[ "$deployment_status" == *"successfully rolled out"* ]]; then
                 echo "EntandoApp is ready"
-                break
+                break 2
               elif [[ "$deployment_status" == *"failed"* ]]; then
                 echo "Deployment failed"
                 exit 1
