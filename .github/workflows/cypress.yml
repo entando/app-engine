@@ -52,7 +52,7 @@ jobs:
   install-entando-app:
     name: Install EntandoApp
     runs-on: ubuntu-latest
-    needs: prepare-namespace
+#    needs: prepare-namespace
     steps:
     - name: Verify EntandoApp installation
       run: |
