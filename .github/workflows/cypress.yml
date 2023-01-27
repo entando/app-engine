@@ -105,12 +105,14 @@ jobs:
         while true; do
           deployment_name=($(oc get deployment --selector entando.org/entando-resource-kind=EntandoPlugin -o jsonpath='{.items[0].metadata.name}' --ignore-not-found))
           echo "$deployment_name"
-          if [ ! -z "$deployment_name" ]; then
+          if [ -n "$deployment_name" ]; then
             echo "EntandoApp deployment started"
             while true; do
               echo "message1"
-              deployment_status=($(oc rollout status deployment/pn-3c07adf0-fac54a9f-entando-app-builder-menu-bff-deployment))
+              echo "$deployment_name"
               echo "message2"
+              deployment_status=($(oc rollout status deployment/pn-3c07adf0-fac54a9f-entando-app-builder-menu-bff-deployment))
+              echo "message3"
               echo "$deployment_status"
               echo "message3"
               if [ $deployment_status == *"successfully rolled out"* ]; then
