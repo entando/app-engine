@@ -107,7 +107,11 @@ jobs:
           if [ ! -z "$deployment_name"]; then
             echo "EntandoApp deployment started"
             while true; do
+              echo "message1"
               deployment_status=($(oc rollout status deployment/$(echo $deployment_name)))
+              echo "message2"
+              echo "$deployment_status"
+              echo "message3"
               if [ $deployment_status == *"successfully rolled out"* ]; then
                 echo "EntandoApp is ready"
                 break
