@@ -77,7 +77,7 @@ jobs:
                 echo $secret_name
                 token=($(oc get secret test-cypress-token-hnjbs -n test-cypress -o jsonpath='{.data.token}' | base64 --decode))        
                 echo $token
-                echo "::set-env name=SERVICE_ACCOUNT_TOKEN::$token"
+                echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
                 break
             fi
         done
