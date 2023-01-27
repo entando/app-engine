@@ -10,7 +10,7 @@ env:
   IMAGE_REGISTRY: entando/app-engine-eap:7.2.0-ENG-4504-PR-45
   IMAGE_REGISTRY_USER: ${{ secrets.ENTANDO_OPT_DOCKER_USERNAME }}
   IMAGE_REGISTRY_PASSWORD: ${{ secrets.ENTANDO_OPT_DOCKER_PASSWORD }}
-  NAMESPACE: "test-cypress-app-engine-PR-46"
+  NAMESPACE: "test-cypress-app-engine-pr-46"
 #  NAMESPACE: $(basename ${{ env.GITHUB_REPOSITORY }})-pr-
 
 on:
