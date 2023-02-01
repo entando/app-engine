@@ -130,7 +130,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"{$base_url"}"
+        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"{$base_url"}}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -149,7 +149,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"$base_url""
+        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"$base_url"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -168,7 +168,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/$base_url"
+        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/${{ $base_url }}"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
