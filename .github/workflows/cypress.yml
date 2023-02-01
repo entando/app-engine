@@ -79,6 +79,12 @@ jobs:
         echo "try2.4"
         echo "$secrets" | grep $searchString
         echo "try2.5"
+        secretsArray=$(echo "$secrets" | grep $searchString)
+        echo "try2.6"
+        echo "$secretsArray"
+        echo "try2.7"
+        echo "$secretsArray[0]"
+        echo "try2.8"
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
@@ -136,8 +142,8 @@ jobs:
     name: Delete namespace
     runs-on: ubuntu-latest
     needs: install-entando-app
-    if: always()
-    #if: false
+    #if: always()
+    if: false
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
