@@ -528,6 +528,28 @@ jobs:
         echo $replaced
         configuration=${configuration/$replaced/$base_url}
         echo $configuration
+    - name: Updating configs/7.1.json 28
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        configuration=$(cat configs/7.1.json)
+        base_url='test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net'
+        echo $base_url
+        replaced={YOUR_ENTANDO_BASE_URL}
+        echo $replaced
+        configuration=${configuration/$replaced/$base_url}
+        echo $configuration
+    - name: Updating configs/7.1.json 29
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        configuration=$(cat configs/7.1.json)
+        base_url='test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net'
+        echo $base_url
+        replaced={YOUR_ENTANDO_BASE_URL}
+        echo $replaced
+        configuration=${configuration/$replaced/'$base_url'}
+        echo $configuration
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
