@@ -121,9 +121,9 @@ jobs:
     - name: PWD
       run: |
         pwd
-        ls -l
-        ls -l /__w/app-engine/
-        ls -l /__w/
+        ls -la
+        ls -la /__w/app-engine/
+        ls -la /__w/
     - name: Changing working directory
       run: cd opt/entando-test-automation/ui-test
     - name: Listing files
