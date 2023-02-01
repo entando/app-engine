@@ -120,10 +120,20 @@ jobs:
       run: echo "Test1"
     - name: PWD
       run: |
-        pwd
-        ls -laR /
+        echo "message1"
+        cd /
+        ls -la
+        cd /opt
+        ls -la
+        cd /opt/entando-test-automation
+        ls -la
+        cd /opt/entando-test-automation/ui-test
+        ls -la
+        ls -la /opt
+        ls -la /opt/entando-test-automation
+        ls -la /opt/entando-test-automation/ui-test
     - name: Changing working directory
-      run: cd opt/entando-test-automation/ui-test
+      run: cd /opt/entando-test-automation/ui-test
     - name: Listing files
       run: ls -l
     - name: Cating configs/7.1.json
