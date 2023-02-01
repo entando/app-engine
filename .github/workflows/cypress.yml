@@ -63,9 +63,13 @@ jobs:
         insecure_skip_tls_verify: true
     - name: Export ServiceAccount token
       run: | 
+        echo "message1"
         secrets=($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep $(echo ${{ env.NAMESPACE }})-token))
+        echo "message2"
         token=($(oc get secret $(echo $secrets[0]) -o jsonpath='{.data.token}' | base64 --decode))        
+        echo "message3"
         echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
+        echo "message4"
     - name: Login to OpenShift with namespace ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
