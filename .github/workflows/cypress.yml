@@ -122,15 +122,14 @@ jobs:
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         cat configs/7.1.json
-    steps:
-    - name: Updating configs/7.1.json
+    - name: Updating configs/7.1.json 2
       continue-on-error: true
       run: |
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         configuration=cat configs/7.1.json
         echo "message2"
-    - name: Updating configs/7.1.json
+    - name: Updating configs/7.1.json 3
       continue-on-error: true
       run: |
         cd /opt/entando-test-automation/ui-tests
@@ -138,7 +137,7 @@ jobs:
         configuration=(cat configs/7.1.json)
         echo "message2"
         echo "$configuration"
-    - name: Updating configs/7.1.json
+    - name: Updating configs/7.1.json 4
       continue-on-error: true
       run: |
         cd /opt/entando-test-automation/ui-tests
@@ -146,7 +145,7 @@ jobs:
         configuration=$(cat configs/7.1.json)
         echo "message2"
         echo "$configuration"
-    - name: Updating configs/7.1.json
+    - name: Updating configs/7.1.json 5
       continue-on-error: true
       run: |
         cd /opt/entando-test-automation/ui-tests
