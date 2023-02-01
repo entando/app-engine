@@ -495,6 +495,39 @@ jobs:
         echo "$configuration"
         echo "message11"
         echo $configuration
+    - name: Updating configs/7.1.json 25
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        configuration=$(cat configs/7.1.json)
+        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+        echo $base_url
+        replaced={YOUR_ENTANDO_BASE_URL}
+        echo $replaced
+        configuration=${configuration/$replaced/$base_url}
+        echo $configuration
+    - name: Updating configs/7.1.json 26
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        configuration=$(cat configs/7.1.json)
+        base_url=test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net
+        echo $base_url
+        replaced={YOUR_ENTANDO_BASE_URL}
+        echo $replaced
+        configuration=${configuration/$replaced/$base_url}
+        echo $configuration
+    - name: Updating configs/7.1.json 27
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        configuration=$(cat configs/7.1.json)
+        base_url=test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net
+        echo $base_url
+        replaced={YOUR_ENTANDO_BASE_URL}
+        echo $replaced
+        configuration=${configuration/$replaced/$base_url}
+        echo $configuration
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
