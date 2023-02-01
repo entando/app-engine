@@ -117,22 +117,43 @@ jobs:
       image: mescalo/cypress:v11
     steps:
     - name: Updating configs/7.1.json
+      continue-on-error: true
       run: |
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         cat configs/7.1.json
-        configuration=cat configs/7.1.json
+    steps:
+    - name: Updating configs/7.1.json
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
         echo "message1"
-        echo "$configuration"
-        configuration2=(cat configs/7.1.json)
+        configuration=cat configs/7.1.json
         echo "message2"
-        echo "$configuration2"
-        configuration3=$(cat configs/7.1.json)
-        echo "message3"
-        echo "$configuration3"
-        configuration4=($(cat configs/7.1.json))
-        echo "message4"
-        echo "$configuration4"
+    - name: Updating configs/7.1.json
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        configuration=(cat configs/7.1.json)
+        echo "message2"
+        echo "$configuration"
+    - name: Updating configs/7.1.json
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        configuration=$(cat configs/7.1.json)
+        echo "message2"
+        echo "$configuration"
+    - name: Updating configs/7.1.json
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        configuration=($(cat configs/7.1.json))
+        echo "message2"
+        echo "$configuration"
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
