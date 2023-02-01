@@ -71,8 +71,12 @@ jobs:
       continue-on-error: true
       run: |
         echo "try2.0"
-        echo "$(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')" | grep $(echo ${{ env.NAMESPACE }})-token
+        secrets="($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
         echo "try2.1"
+        echo "$secrets"
+        echo "try2.2"
+        echo "$secrets" | grep token
+        echo "try2.3"
     - name: Try 3
       continue-on-error: true
       run: |
@@ -93,7 +97,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "try5.0"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))" | grep $(echo ${{ env.NAMESPACE }})-token
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))" | grep token
         echo "try5.1"
     - name: Try 6
       continue-on-error: true
