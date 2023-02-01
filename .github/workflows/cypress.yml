@@ -95,8 +95,12 @@ jobs:
       continue-on-error: true
       run: |
         echo "try4.0"
-        echo "test" | grep t
+        secrets="($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
         echo "try4.1"
+        echo "$secrets"
+        echo "try4.2"
+        echo "$secrets" | grep "$(echo ${{ env.NAMESPACE }})"-token
+        echo "try4.3"
     - name: Try 5
       continue-on-error: true
       run: |
