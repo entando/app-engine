@@ -119,21 +119,11 @@ jobs:
     - name: Testing echo
       run: echo "Test1"
     - name: PWD
-      run: pwd
-    - name: Listing files
-      run: ls -l
-    - name: Go back
-      run: cd ..
-    - name: Listing files
-      run: ls -l
-    - name: Go back
-      run: cd ..
-    - name: Listing files
-      run: ls -l
-    - name: Go back
-      run: cd ..
-    - name: Listing files
-      run: ls -l
+      run: |
+        pwd
+        ls -l
+        ls -l /__w/app-engine/
+        ls -l /__w/
     - name: Changing working directory
       run: cd opt/entando-test-automation/ui-test
     - name: Listing files
