@@ -79,8 +79,12 @@ jobs:
         echo "try2.1"
         echo "$secrets"
         echo "try2.2"
-        echo "$secrets" | grep $(echo ${{ env.NAMESPACE }})-token
+        searchString="${{ env.NAMESPACE }})"-token
         echo "try2.3"
+        echo "$searchString"
+        echo "try2.4"
+        echo "$secrets" | grep "$searchString"
+        echo "try2.5"
     - name: Try 3
       continue-on-error: true
       run: |
