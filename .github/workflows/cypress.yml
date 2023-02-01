@@ -122,6 +122,18 @@ jobs:
       run: pwd
     - name: Listing files
       run: ls -l
+    - name: Go back
+      run: cd ..
+    - name: Listing files
+      run: ls -l
+    - name: Go back
+      run: cd ..
+    - name: Listing files
+      run: ls -l
+    - name: Go back
+      run: cd ..
+    - name: Listing files
+      run: ls -l
     - name: Changing working directory
       run: cd opt/entando-test-automation/ui-test
     - name: Listing files
