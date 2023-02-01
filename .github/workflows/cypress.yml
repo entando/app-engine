@@ -159,6 +159,22 @@ jobs:
         echo "try2.5"
         echo "$config_id"
         echo "try2.5"
+    - name: Try 2.6
+      continue-on-error: true
+      run: |
+        echo "try2.0"
+        secrets="($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        echo "try2.1"
+        echo "$secrets"
+        echo "try2.2"
+        searchString="${{ env.NAMESPACE }}"-token
+        echo "try2.3"
+        echo "$searchString"
+        echo "try2.4"
+        config_id=$(echo ${secrets} | grep token)
+        echo "try2.5"
+        echo "$config_id"
+        echo "try2.5"
     - name: Try 3
       continue-on-error: true
       run: |
