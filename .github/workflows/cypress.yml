@@ -203,6 +203,63 @@ jobs:
         echo "$configuration"
         echo "message7"
         echo $configuration
+    - name: Updating configs/7.1.json 5
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        cat configs/7.1.json
+        echo "message2"
+        configuration=$(cat configs/7.1.json)
+        echo "message3"
+        echo "$configuration"
+        echo "message4"
+        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+        echo $base_url
+        echo "message5"
+        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"${echo $base_url}"}"
+        echo "message6"
+        echo "$configuration"
+        echo "message7"
+        echo $configuration
+    - name: Updating configs/7.1.json 6
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        cat configs/7.1.json
+        echo "message2"
+        configuration=$(cat configs/7.1.json)
+        echo "message3"
+        echo "$configuration"
+        echo "message4"
+        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+        echo $base_url
+        echo "message5"
+        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"{echo $base_url}"}"
+        echo "message6"
+        echo "$configuration"
+        echo "message7"
+        echo $configuration
+    - name: Updating configs/7.1.json 7
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        cat configs/7.1.json
+        echo "message2"
+        configuration=$(cat configs/7.1.json)
+        echo "message3"
+        echo "$configuration"
+        echo "message4"
+        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+        echo $base_url
+        echo "message5"
+        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/{echo $base_url}}"
+        echo "message6"
+        echo "$configuration"
+        echo "message7"
+        echo $configuration
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
