@@ -65,8 +65,12 @@ jobs:
       continue-on-error: true
       run: |
         echo "try1.0"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        secrets="($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
         echo "try1.1"
+        echo "$secrets"
+        echo "try1.2"
+        echo "$secrets" | grep token
+        echo "try1.3"
     - name: Try 2
       continue-on-error: true
       run: |
@@ -75,7 +79,7 @@ jobs:
         echo "try2.1"
         echo "$secrets"
         echo "try2.2"
-        echo "$secrets" | grep token
+        echo "$secrets" | grep $(echo ${{ env.NAMESPACE }})-token
         echo "try2.3"
     - name: Try 3
       continue-on-error: true
@@ -108,11 +112,8 @@ jobs:
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{'\n'}{end}'))"
         echo "message1.1"
-        echo "$(echo ${{ env.NAMESPACE }})-token | grep $(echo ${{ env.NAMESPACE }})-token
         echo "message1.2"
-        secrets=($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep $(echo ${{ env.NAMESPACE }})-token))
         echo "message2"
         token=($(oc get secret $(echo $secrets[0]) -o jsonpath='{.data.token}' | base64 --decode))        
         echo "message3"
@@ -165,8 +166,8 @@ jobs:
     name: Delete namespace
     runs-on: ubuntu-latest
     needs: install-entando-app
-    if: always()
-    #if: false
+    #if: always()
+    if: false
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
