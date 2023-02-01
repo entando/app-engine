@@ -61,10 +61,50 @@ jobs:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
+    - name: Try 1
+      continue-on-error: true
+      run: |
+        echo "try1.0"
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        echo "try1.1"
+    - name: Try 2
+      continue-on-error: true
+      run: |
+        echo "try2.0"
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{'\n'}{end}'))"
+        echo "try2.1"
+    - name: Try 3
+      continue-on-error: true
+      run: |
+        echo "try3.0"
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        echo "try3.1"
+        echo "grep $(echo ${{ env.NAMESPACE }})-token"
+        echo "try3.2"
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')) | grep $(echo ${{ env.NAMESPACE }})-token"
+        echo "try3.3"
+    - name: Try 4
+      continue-on-error: true
+      run: |
+        echo "try4.0"
+        echo "cypress-test-app-engine-pr-46 | grep test"
+        echo "try4.1"
+    - name: Try 5
+      continue-on-error: true
+      run: |
+        echo "try5.0"
+        echo "abc | grep abc"
+        echo "try5.1"
+    - name: Try 6
+      continue-on-error: true
+      run: |
+        echo "try5.0"
+        echo "abc" | grep abc
+        echo "try5.1"
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{'\n'}{end}'))"
         echo "message1.1"
         echo "$(echo ${{ env.NAMESPACE }})-token | grep $(echo ${{ env.NAMESPACE }})-token
         echo "message1.2"
