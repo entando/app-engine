@@ -64,7 +64,7 @@ jobs:
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
-        echo ($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
         echo "message1.1"
         echo "$(echo ${{ env.NAMESPACE }})-token | grep $(echo ${{ env.NAMESPACE }})-token
         echo "message1.2"
