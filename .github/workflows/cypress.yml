@@ -118,8 +118,10 @@ jobs:
     steps:
     - name: Testing echo
       run: echo "Test1"
+    - name: Listing files
+      run: ls -l
     - name: Changing working directory
-      run: cd /opt/entando-test-automation/ui-test
+      run: cd opt/entando-test-automation/ui-test
     - name: Listing files
       run: ls -l
     - name: Cating configs/7.1.json
