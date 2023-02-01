@@ -120,6 +120,14 @@ jobs:
       run: |
         cd /opt/entando-test-automation/ui-tests
         cat configs/7.1.json
+        configuration=$"cat configs/7.1.json"
+        echo "$configuration"
+#        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
+#        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
