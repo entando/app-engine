@@ -64,6 +64,12 @@ jobs:
     - name: Try 1
       continue-on-error: true
       run: |
+        oc project ${{ env.NAMESPACE }}
+        echo "abc" | grep "a"
+        echo "try1.1"
+    - name: Try 1
+      continue-on-error: true
+      run: |
         echo "try1.0"
         echo "abc" | grep "a"
         echo "try1.1"
