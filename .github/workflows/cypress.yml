@@ -118,6 +118,8 @@ jobs:
     steps:
     - name: Testing echo
       run: echo "Test1"
+    - name: PWD
+      run: pwd
     - name: Listing files
       run: ls -l
     - name: Changing working directory
