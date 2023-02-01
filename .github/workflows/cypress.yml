@@ -85,6 +85,20 @@ jobs:
         echo "try2.7"
         echo "$secretsArray[0]"
         echo "try2.8"
+    - name: Try 3
+      continue-on-error: true
+      run: |
+        echo "try2.0"
+        echo "$(oc get sa entando-plugin -o jsonpath='{.secrets[0].name}')"
+        echo "try2.1"
+        echo "$(oc get sa entando-plugin -o jsonpath='{.secrets[0].name}')" | tr " " "/n"
+        echo "try2.2"
+        echo "$(oc get sa entando-plugin -o jsonpath='{.secrets[0].name}')" | tr " " "\n"
+        echo "try2.3"
+        echo "$(oc get sa entando-plugin -o jsonpath='{.secrets[0].name}')" | tr " " "/n" | grep token
+        echo "try2.4"
+        echo "$(oc get sa entando-plugin -o jsonpath='{.secrets[0].name}')" | tr " " "\n" | grep token
+        echo "try2.4"
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
