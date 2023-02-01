@@ -627,6 +627,14 @@ jobs:
         echo $replaced
         configuration=${configuration/\{YOUR_ENTANDO_BASE_URL\}/$base_url}
         echo $configuration
+    - name: Updating configs/7.1.json 36
+      continue-on-error: true
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        configuration=$(cat configs/7.1.json)
+        configuration=${configuration/\{YOUR_ENTANDO_BASE_URL\}/'test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net'}
+        echo $configuration        
+
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
