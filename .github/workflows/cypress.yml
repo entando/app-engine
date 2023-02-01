@@ -127,15 +127,15 @@ jobs:
         ls -la
         cd /opt/entando-test-automation
         ls -la
-        cd /opt/entando-test-automation/ui-test
+        cd /opt/entando-test-automation/ui-tests
         ls -la
         ls -la /opt
         ls -la /opt/entando-test-automation
-        ls -la /opt/entando-test-automation/ui-test
+        ls -la /opt/entando-test-automation/ui-tests
     - name: Changing working directory
-      run: cd /opt/entando-test-automation/ui-test
+      run: cd /opt/entando-test-automation/ui-tests
     - name: Listing files
-      run: ls -l
+      run: ls -la
     - name: Cating configs/7.1.json
       run: cat configs/7.1.json
 #  delete-namespace:
