@@ -141,7 +141,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"{$base_url}"}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/"{$base_url}"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -160,7 +160,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"$base_url"}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/"$base_url"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -179,7 +179,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"${{ env.BASE_URL }}"}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/"${{ env.BASE_URL }}"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -198,7 +198,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"$(echo $base_url)"}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/"$(echo $base_url)"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -217,7 +217,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"${echo $base_url}"}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/"${echo $base_url}"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -236,7 +236,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"{echo $base_url}"}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/"{echo $base_url}"}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -255,7 +255,7 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/{echo $base_url}}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/{echo $base_url}}"
         echo "message6"
         echo "$configuration"
         echo "message7"
@@ -274,15 +274,15 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        echo "${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/{echo $base_url}}"
+        echo "${configuration//"{YOUR_ENTANDO_BASE_URL}"/{echo $base_url}}"
         echo "message6"
-        echo "configuration//{{YOUR_ENTANDO_BASE_URL}}/{echo $base_url}}"
+        echo "configuration//{YOUR_ENTANDO_BASE_URL}/{echo $base_url}}"
         echo "message7"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/echo $base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/echo $base_url)"
         echo "message8"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)"
         echo "message9"
-        echo $"${configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)}"
+        echo $"${configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)}"
     - name: Updating configs/7.1.json 9
       continue-on-error: true
       run: |
@@ -297,13 +297,13 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message6"
-        echo "configuration//{{YOUR_ENTANDO_BASE_URL}}/{echo $base_url}}"
+        echo "configuration//{YOUR_ENTANDO_BASE_URL}/{echo $base_url}}"
         echo "message7"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/echo $base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/echo $base_url)"
         echo "message8"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)"
         echo "message9"
-        echo $"${configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)}"
+        echo $"${configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)}"
     - name: Updating configs/7.1.json 10
       continue-on-error: true
       run: |
@@ -318,11 +318,11 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message7"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/echo $base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/echo $base_url)"
         echo "message8"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)"
         echo "message9"
-        echo $"${configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)}"
+        echo $"${configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)}"
     - name: Updating configs/7.1.json 11
       continue-on-error: true
       run: |
@@ -337,9 +337,9 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message8"
-        echo $(configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)"
+        echo $(configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)"
         echo "message9"
-        echo $"${configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url)}"
+        echo $"${configuration//{YOUR_ENTANDO_BASE_URL}/$base_url)}"
     - name: Updating configs/7.1.json 12
       continue-on-error: true
       run: |
@@ -354,13 +354,13 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message6"
-        echo "configuration//{{YOUR_ENTANDO_BASE_URL}}/{$base_url}}"
+        echo "configuration//{YOUR_ENTANDO_BASE_URL}/{$base_url}}"
         echo "message7"
-        echo "configuration//{{YOUR_ENTANDO_BASE_URL}}/{$base_url}"
+        echo "configuration//{YOUR_ENTANDO_BASE_URL}/{$base_url}"
         echo "message8"
-        echo "configuration//{{YOUR_ENTANDO_BASE_URL}}/$base_url"
+        echo "configuration//{YOUR_ENTANDO_BASE_URL}/$base_url"
         echo "message9"
-        configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/$base_url}"
+        configuration=$"${configuration//"{YOUR_ENTANDO_BASE_URL}"/$base_url}"
         echo "message10"
         echo "$configuration"
         echo "message11"
