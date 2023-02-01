@@ -116,28 +116,10 @@ jobs:
     container:
       image: mescalo/cypress:v11
     steps:
-    - name: Testing echo
-      run: echo "Test1"
-    - name: PWD
+    - name: Updating configs/7.1.json
       run: |
-        echo "message1"
-        cd /
-        ls -la
-        cd /opt
-        ls -la
-        cd /opt/entando-test-automation
-        ls -la
         cd /opt/entando-test-automation/ui-tests
-        ls -la
-        ls -la /opt
-        ls -la /opt/entando-test-automation
-        ls -la /opt/entando-test-automation/ui-tests
-    - name: Changing working directory
-      run: cd /opt/entando-test-automation/ui-tests
-    - name: Listing files
-      run: ls -la
-    - name: Cating configs/7.1.json
-      run: cat configs/7.1.json
+        cat configs/7.1.json
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
