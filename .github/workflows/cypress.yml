@@ -65,12 +65,8 @@ jobs:
       continue-on-error: true
       run: |
         echo "try1.0"
-        secrets="($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        echo "abc" | grep "a"
         echo "try1.1"
-        echo "$secrets"
-        echo "try1.2"
-        echo "$secrets" | grep token
-        echo "try1.3"
     - name: Try 2
       continue-on-error: true
       run: |
@@ -79,44 +75,36 @@ jobs:
         echo "try2.1"
         echo "$secrets"
         echo "try2.2"
-        searchString="${{ env.NAMESPACE }})"-token
+        searchString="${{ env.NAMESPACE }}"-token
         echo "try2.3"
         echo "$searchString"
         echo "try2.4"
-        echo "$secrets" | grep "$searchString"
+        echo "$secrets" | grep $searchString
         echo "try2.5"
     - name: Try 3
       continue-on-error: true
       run: |
         echo "try3.0"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
+        echo "abc" | "grep b"
         echo "try3.1"
-        echo "grep $(echo ${{ env.NAMESPACE }})-token"
-        echo "try3.2"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')) | grep $(echo ${{ env.NAMESPACE }})-token"
-        echo "try3.3"
     - name: Try 4
       continue-on-error: true
       run: |
-        echo "try4.0"
-        secrets="($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))"
-        echo "try4.1"
-        echo "$secrets"
-        echo "try4.2"
-        echo "$secrets" | grep "$(echo ${{ env.NAMESPACE }})"-token
-        echo "try4.3"
+        echo "try3.0"
+        "echo "abc" | grep b"
+        echo "try3.1"
     - name: Try 5
       continue-on-error: true
       run: |
-        echo "try5.0"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))" | grep token
-        echo "try5.1"
+        echo "try3.0"
+        echo "echo abc | grep b"
+        echo "try3.1"
     - name: Try 6
       continue-on-error: true
       run: |
-        echo "try6.0"
-        echo "abc" | grep abc
-        echo "try6.1"
+        echo "try3.0"
+        echo $("echo abc | grep b")
+        echo "try3.1"
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
@@ -174,8 +162,8 @@ jobs:
     name: Delete namespace
     runs-on: ubuntu-latest
     needs: install-entando-app
-    #if: always()
-    if: false
+    if: always()
+    #if: false
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
