@@ -110,8 +110,19 @@ jobs:
 #            sleep 15
 #          fi
 #        done
+  preset:
+    name: preset
+    runs-on: ubuntu-latest
+    steps:
+    - name: preset
+      run: |
+        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+        echo $base_url
+        echo "message5"
+        echo "BASE_URL=${base_url}" >> $GITHUB_ENV
   run-cypress-tests:
     name: Run cypress tests
+    needs: preset
     runs-on: ubuntu-latest
     container:
       image: mescalo/cypress:v11
@@ -168,7 +179,6 @@ jobs:
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
         echo $base_url
         echo "message5"
-        echo "BASE_URL=${base_url}" >> $GITHUB_ENV
         configuration=$"${configuration//"{{YOUR_ENTANDO_BASE_URL}}"/"${{ env.BASE_URL }}"}"
         echo "message6"
         echo "$configuration"
