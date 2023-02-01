@@ -71,7 +71,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "try2.0"
-        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))" | grep $(echo ${{ env.NAMESPACE }})-token
+        echo "$(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')" | grep $(echo ${{ env.NAMESPACE }})-token
         echo "try2.1"
     - name: Try 3
       continue-on-error: true
@@ -87,20 +87,20 @@ jobs:
       continue-on-error: true
       run: |
         echo "try4.0"
-        echo "cypress-test-app-engine-pr-46 | grep test"
+        echo "test" | grep t
         echo "try4.1"
     - name: Try 5
       continue-on-error: true
       run: |
         echo "try5.0"
-        echo "abc | grep abc"
+        echo "($(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'))" | grep $(echo ${{ env.NAMESPACE }})-token
         echo "try5.1"
     - name: Try 6
       continue-on-error: true
       run: |
-        echo "try5.0"
+        echo "try6.0"
         echo "abc" | grep abc
-        echo "try5.1"
+        echo "try6.1"
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
