@@ -55,27 +55,18 @@ jobs:
     timeout-minutes: 15
     needs: prepare-namespace
     steps:
-    - name: Login to OpenShift with JobConfiguration
+    - name: Login to OpenShift with JobConfiguration ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        namespace: ${{ env.NAMESPACE }}
         insecure_skip_tls_verify: true
-    - name: Changing namespace
-      run: oc project ${{ env.NAMESPACE }}
-    - name: Export ServiceAccount token
+    - name: Export namespace ServiceAccount token
       run: | 
-        echo "message1"
-        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}')" | tr " " "\n" | grep token
-        echo "message1.1"
         secretName=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
-        echo "message1.2"
-        echo $secretName
-        echo "message2"
         token=($(oc get secret $(echo $secretName) -o jsonpath='{.data.token}' | base64 --decode))        
-        echo "message3"
         echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
-        echo "message4"
     - name: Login to OpenShift with namespace ServiceAccount
       uses: redhat-actions/oc-login@v1
       with:
@@ -105,17 +96,17 @@ jobs:
         oc apply -f entando-app-manifest.yaml
     - name: Wait for EntandoApp availability
       run: |
-        echo "Waiting for EntandoApp to be ready. Estimated time: 5 minutes"
+        echo "EntandoApp is being prepared. Estimated wait time: 5 minutes."
         while true; do
           deployment_status=($(oc get eps -o jsonpath='{.items[0].status.phase}' --ignore-not-found))
           if [[ "$deployment_status" == "successful" ]]; then
-            echo "EntandoApp is ready"
+            echo "EntandoApp is now available."
             break
           elif [[ "$deployment_status" == "failed" ]]; then
-            echo "EntandoApp deployment failed"
+            echo "EntandoApp deployment has been unsuccessful. Exiting."
             exit 1
           else
-            echo "EntandoApp not ready yet, waiting 15 seconds"
+            echo "EntandoApp is currently not available. Waiting for 15 seconds."
             sleep 15
           fi
         done
@@ -123,7 +114,8 @@ jobs:
     name: Delete namespace
     runs-on: ubuntu-latest
     needs: install-entando-app
-    if: always()
+    #if: always()
+    if: false
     steps:
     - name: Login to OpenShift with JobConfiguration
       uses: redhat-actions/oc-login@v1
