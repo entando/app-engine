@@ -61,51 +61,18 @@ jobs:
         openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         insecure_skip_tls_verify: true
-    - name: Try 1
-      continue-on-error: true
-      run: |
-        oc project ${{ env.NAMESPACE }}
-    - name: Try 2
-      continue-on-error: true
-      run: |
-        echo "try2.0"
-        secrets="$(oc get secrets -o=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')"
-        echo "try2.1"
-        echo "$secrets"
-        echo "try2.2"
-        searchString="${{ env.NAMESPACE }}"-token
-        echo "try2.3"
-        echo "$searchString"
-        echo "try2.4"
-        echo "$secrets" | grep $searchString
-        echo "try2.5"
-        secretsArray=$(echo "$secrets" | grep $searchString)
-        echo "try2.6"
-        echo "$secretsArray"
-        echo "try2.7"
-        echo "$secretsArray[0]"
-        echo "try2.8"
-    - name: Try 3
-      continue-on-error: true
-      run: |
-        echo "try2.0"
-        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[0].name}')"
-        echo "try2.1"
-        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[0].name}')" | tr " " "/n"
-        echo "try2.2"
-        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[0].name}')" | tr " " "\n"
-        echo "try2.3"
-        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[0].name}')" | tr " " "/n" | grep token
-        echo "try2.4"
-        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[0].name}')" | tr " " "\n" | grep token
-        echo "try2.4"
+    - name: Changing namespace
+      run: oc project ${{ env.NAMESPACE }}
     - name: Export ServiceAccount token
       run: | 
         echo "message1"
+        echo "$(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}')" | tr " " "\n" | grep token
         echo "message1.1"
+        secretName=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}')" | tr " " "\n" | grep token)
         echo "message1.2"
+        echo $secretName
         echo "message2"
-        token=($(oc get secret $(echo $secrets[0]) -o jsonpath='{.data.token}' | base64 --decode))        
+        token=($(oc get secret $(echo $secretName) -o jsonpath='{.data.token}' | base64 --decode))        
         echo "message3"
         echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
         echo "message4"
