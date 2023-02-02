@@ -112,7 +112,7 @@ jobs:
         done
   run-cypress-tests:
     name: Run cypress tests
-    needs: preset
+    needs: install-entando-app
     runs-on: ubuntu-latest
     container:
       image: mescalo/cypress:v11
@@ -136,7 +136,7 @@ jobs:
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
-#    needs: install-entando-app
+#    needs: run-cypress-tests
 #    #if: always()
 #    if: false
 #    steps:
