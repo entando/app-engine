@@ -167,6 +167,7 @@ jobs:
   comment-pr-with-cypress-results:
     name: Comment PR with Cypress results
     runs-on: ubuntu-latest
+    steps:
     - name: Send message to pull request
       run: |
         curl \
