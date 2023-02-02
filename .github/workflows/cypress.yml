@@ -156,10 +156,6 @@ jobs:
         echo "message11"
         echo "$client_secret"
         echo "message12"
-        echo "::set-env name=CLIENT_ID::$client_id"
-        echo "message13"
-        echo "::set-env name=CLIENT_SECRET::$client_secret"
-        echo "message14"
   run-cypress-tests:
     name: Run cypress tests
 #    needs: install-entando-app
