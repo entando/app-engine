@@ -20,16 +20,16 @@ on:
       - synchronize
       
 jobs:
-  prepare-namespace:
-    name: Prepare namespace
-    runs-on: ubuntu-latest
-    steps:
-    - name: Login to OpenShift with JobConfiguration
-      uses: redhat-actions/oc-login@v1
-      with:
-        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
-        insecure_skip_tls_verify: true
+#  prepare-namespace:
+#    name: Prepare namespace
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Login to OpenShift with JobConfiguration
+#      uses: redhat-actions/oc-login@v1
+#      with:
+#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+#        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+#        insecure_skip_tls_verify: true
 #    - name: Create namespace
 #      run: | 
 #        oc create namespace ${{ env.NAMESPACE }}
@@ -48,35 +48,35 @@ jobs:
 #        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
 #        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
 #        oc apply -f role-binding-manifest.yaml
- 
-  install-entando-app:
-    name: Install EntandoApp
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: prepare-namespace
-    outputs:
-      client_id: ${{ steps.setting-output.outputs.client-id }}
-      client_secret: ${{ steps.setting-output.outputs.client-secret }}
-    steps:
-    - name: Login to OpenShift with JobConfiguration ServiceAccount
-      uses: redhat-actions/oc-login@v1
-      with:
-        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
-        namespace: ${{ env.NAMESPACE }}
-        insecure_skip_tls_verify: true
-    - name: Export namespace ServiceAccount token
-      run: | 
-        secret_name=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
-        token=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.token}' | base64 --decode))        
-        echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
-    - name: Login to OpenShift with namespace ServiceAccount
-      uses: redhat-actions/oc-login@v1
-      with:
-        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
-        insecure_skip_tls_verify: true
-        namespace: ${{ env.NAMESPACE }}
+# 
+#  install-entando-app:
+#    name: Install EntandoApp
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 15
+#    needs: prepare-namespace
+#    outputs:
+#      client_id: ${{ steps.setting-output.outputs.client-id }}
+#      client_secret: ${{ steps.setting-output.outputs.client-secret }}
+#    steps:
+#    - name: Login to OpenShift with JobConfiguration ServiceAccount
+#      uses: redhat-actions/oc-login@v1
+#      with:
+#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+#        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+#        namespace: ${{ env.NAMESPACE }}
+#        insecure_skip_tls_verify: true
+#    - name: Export namespace ServiceAccount token
+#      run: | 
+#        secret_name=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
+#        token=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.token}' | base64 --decode))        
+#        echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
+#    - name: Login to OpenShift with namespace ServiceAccount
+#      uses: redhat-actions/oc-login@v1
+#      with:
+#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+#        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
+#        insecure_skip_tls_verify: true
+#        namespace: ${{ env.NAMESPACE }}
 #    - name: Create Operator Group
 #      run: |
 #        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
@@ -113,33 +113,33 @@ jobs:
 #            sleep 15
 #          fi
 #        done
-    - name: Set output
-      id: setting-output
-      run: |
-        secret_name=${{ env.NAMESPACE }}-de-secret
-        client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
-        client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
-        echo "client-id=$client_id" >> $GITHUB_OUTPUT
-        echo "client-secret=$client_secret" >> $GITHUB_OUTPUT
-  run-cypress-tests:
-    name: Run Cypress tests
-    needs: install-entando-app
-    runs-on: ubuntu-latest
-    container:
-      image: mescalo/cypress:v11
-    steps:
-    - name: Update configs/7.1.json
-      run: |
-        CLIENT_ID=${{needs.install-entando-app.outputs.client_id}}
-        CLIENT_SECRET=${{needs.install-entando-app.outputs.client_secret}}
-        cd /opt/entando-test-automation/ui-tests
-        cat configs/7.1.json
-        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
-        sed -i "s/{YOUR_ENTANDO_BASE_URL}/$base_url/" configs/7.1.json
-        secret_name=${{ env.NAMESPACE }}-de-secret
-        sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
-        sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
-        cat configs/7.1.json
+#    - name: Set output
+#      id: setting-output
+#      run: |
+#        secret_name=${{ env.NAMESPACE }}-de-secret
+#        client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
+#        client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
+#        echo "client-id=$client_id" >> $GITHUB_OUTPUT
+#        echo "client-secret=$client_secret" >> $GITHUB_OUTPUT
+#  run-cypress-tests:
+#    name: Run Cypress tests
+#    needs: install-entando-app
+#    runs-on: ubuntu-latest
+#    container:
+#      image: mescalo/cypress:v11
+#    steps:
+#    - name: Update configs/7.1.json
+#      run: |
+#        CLIENT_ID=${{needs.install-entando-app.outputs.client_id}}
+#        CLIENT_SECRET=${{needs.install-entando-app.outputs.client_secret}}
+#        cd /opt/entando-test-automation/ui-tests
+#        cat configs/7.1.json
+#        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+#        sed -i "s/{YOUR_ENTANDO_BASE_URL}/$base_url/" configs/7.1.json
+#        secret_name=${{ env.NAMESPACE }}-de-secret
+#        sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
+#        sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
+#        cat configs/7.1.json
 #    - name: Run Cypress tests
 #      run: |
 #        cd /opt/entando-test-automation/ui-tests
@@ -150,15 +150,32 @@ jobs:
 #      with:
 #        name: cypress-results
 #        path: /opt/entando-test-automation/ui-tests/cypress/results/
-    - name: Create random file
+#    - name: Create random file
+#      run: |
+#        cd /opt/entando-test-automation/ui-tests
+#        echo test123 > test.txt
+#    - name: Upload Cypress results
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: test
+#        path: /opt/entando-test-automation/ui-tests/test.txt
+#    - name: Upload Cypress results
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: test
+#        path: /opt/entando-test-automation/ui-tests/test.txt        
+  comment-pr-with-cypress-results:
+    name: Comment PR with Cypress results
+    runs-on: ubuntu-latest
+    - name: Send message to pull request
       run: |
-        cd /opt/entando-test-automation/ui-tests
-        echo test123 > test.txt
-    - name: Upload Cypress results
-      uses: actions/upload-artifact@v3
-      with:
-        name: test
-        path: /opt/entando-test-automation/ui-tests/test.txt
+        curl \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/entando/app-engine/issues/46/comments \
+          -d '{"body":"Test from github acttion"}'
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
