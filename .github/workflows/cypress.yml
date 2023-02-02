@@ -165,6 +165,42 @@ jobs:
         echo $second
         first=${first//Suzy/$second}
         echo $first
+    - name: Updating configs/7.1.json 4
+      continue-on-error: true
+      run: |
+        first="I love Suzy and Mary"
+        echo $first
+        second="Sara"
+        echo $second
+        first=$"${first//Suzy/$second}"
+        echo $first
+    - name: Updating configs/7.1.json 5
+      continue-on-error: true
+      run: |
+        first="Suzy, Suzy, Suzy"
+        echo $first
+        second="Sara"
+        echo $second
+        first=$"${first//Suzy/$second}"
+        echo $first
+    - name: Updating configs/7.1.json 6
+      continue-on-error: true
+      run: |
+        first="I love Suzy and Mary"
+        echo $first
+        second="Sara"
+        echo $second
+        first=$"${first//"Suzy"/"$second"}"
+        echo $first
+    - name: Updating configs/7.1.json 7
+      continue-on-error: true
+      run: |
+        first="Suzy, Suzy, Suzy"
+        echo $first
+        second="Sara"
+        echo $second
+        first=$"${first//"Suzy"/"$second"}"
+        echo $first
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
