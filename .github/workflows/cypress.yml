@@ -114,8 +114,8 @@ jobs:
     name: Setting outputs
     runs-on: ubuntu-latest
     outputs:
-      output1: ${{ steps.step1.outputs.test1 }}
-      output2: ${{ steps.step1.outputs.test2 }}
+      client_id: ${{ steps.setting-up-variables.outputs.client-id }}
+      client_secret: ${{ steps.setting-up-variables.outputs.client-secret }}
     steps:
     - name: Login to OpenShift with JobConfiguration ServiceAccount
       uses: redhat-actions/oc-login@v1
@@ -131,7 +131,7 @@ jobs:
 #      id: step2
 #      run: echo "test=world" >> $GITHUB_OUTPUT
     - name: Setting up variables
-      id: step1
+      id: setting-up-variables
       run: |
         secret_name=${{ env.NAMESPACE }}-de-secret
         echo "message7"
@@ -145,9 +145,9 @@ jobs:
         echo "message11"
         echo "$client_secret"
         echo "message12"
-        echo "test1=$client_id" >> $GITHUB_OUTPUT
+        echo "client-id=$client_id" >> $GITHUB_OUTPUT
         echo "message13"
-        echo "test2=$client_secret" >> $GITHUB_OUTPUT
+        echo "client-secret=$client_secret" >> $GITHUB_OUTPUT
         echo "message14"
   run-cypress-tests:
     name: Run cypress tests
@@ -160,18 +160,18 @@ jobs:
     - name: Checking variables
       run: |
         echo "message1"
-        echo ${{needs.job1.outputs.output1}} ${{needs.job1.outputs.output2}}
+        echo ${{needs.job1.outputs.client_id}} ${{needs.job1.outputs.client_secret}}
         echo "message2"
-        echo ${{needs.job1.outputs.output1}}
+        echo ${{needs.job1.outputs.client_id}}
         echo "message3"
-        echo ${{needs.job1.outputs.output2}}
+        echo ${{needs.job1.outputs.client_secret}}
     - name: Updating configs/7.1.json
       continue-on-error: true
       run: |
         echo "message0"
-        CLIENT_ID=${{needs.job1.outputs.output1}}
+        CLIENT_ID=${{needs.job1.outputs.client_id}}
         echo "message0"
-        CLIENT_SECRET=${{needs.job1.outputs.output2}}
+        CLIENT_SECRET=${{needs.job1.outputs.client_secret}}
         echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
