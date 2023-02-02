@@ -20,106 +20,96 @@ on:
       - synchronize
       
 jobs:
-#  prepare-namespace:
-#    name: Prepare namespace
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Login to OpenShift with JobConfiguration
-#      uses: redhat-actions/oc-login@v1
-#      with:
-#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-#        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
-#        insecure_skip_tls_verify: true
-#    - name: Create namespace
-#      run: | 
-#        oc create namespace ${{ env.NAMESPACE }}
-#    - name: Create ServiceAccount
-#      run: |
-#        service_account_manifest="${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"
-#        echo "${service_account_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
-#        oc apply -f service-account-manifest.yaml
-#    - name: Create Role
-#      run: |
-#        role_manifest="${{ secrets.ROLE_MANIFEST }}"
-#        echo "${role_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-manifest.yaml
-#        oc apply -f role-manifest.yaml
-#    - name: Create RoleBinding
-#      run: |
-#        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
-#        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
-#        oc apply -f role-binding-manifest.yaml
-#
-#  install-entando-app:
-#    name: Install EntandoApp
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 15
-#    needs: prepare-namespace
-#    steps:
-#    - name: Login to OpenShift with JobConfiguration ServiceAccount
-#      uses: redhat-actions/oc-login@v1
-#      with:
-#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-#        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
-#        namespace: ${{ env.NAMESPACE }}
-#        insecure_skip_tls_verify: true
-#    - name: Export namespace ServiceAccount token
-#      run: | 
-#        secretName=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
-#        token=($(oc get secret $(echo $secretName) -o jsonpath='{.data.token}' | base64 --decode))        
-#        echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
-#    - name: Login to OpenShift with namespace ServiceAccount
-#      uses: redhat-actions/oc-login@v1
-#      with:
-#        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-#        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
-#        insecure_skip_tls_verify: true
-#        namespace: ${{ env.NAMESPACE }}
-#    - name: Create Operator Group
-#      run: |
-#        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
-#        echo "${manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > operator-group-manifest.yaml
-#        oc apply -f operator-group-manifest.yaml
-#    - name: Install Operator
-#      run: |
-#        subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
-#        subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
-#        echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
-#        oc apply -f subscription-manifest.yaml
-#    - name: Install EntandoApp
-#      run: |
-#        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
-#        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
-#        oc apply -f entando-app-manifest.yaml
-#    - name: Wait for EntandoApp availability
-#      run: |
-#        echo "EntandoApp is being prepared. Estimated wait time: 5 minutes."
-#        while true; do
-#          deployment_status=($(oc get eps -o jsonpath='{.items[0].status.phase}' --ignore-not-found))
-#          if [[ "$deployment_status" == "successful" ]]; then
-#            echo "EntandoApp is now available."
-#            break
-#          elif [[ "$deployment_status" == "failed" ]]; then
-#            echo "EntandoApp deployment has been unsuccessful. Exiting."
-#            exit 1
-#          else
-#            echo "EntandoApp is currently not available. Waiting for 15 seconds."
-#            sleep 15
-#          fi
-#        done
-  preset:
-    name: preset
+  prepare-namespace:
+    name: Prepare namespace
     runs-on: ubuntu-latest
     steps:
-    - name: preset
+    - name: Login to OpenShift with JobConfiguration
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        insecure_skip_tls_verify: true
+    - name: Create namespace
+      run: | 
+        oc create namespace ${{ env.NAMESPACE }}
+    - name: Create ServiceAccount
       run: |
-        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
-        echo $base_url
-        echo "message5"
-        echo "BASE_URL=${base_url}" >> $GITHUB_ENV
+        service_account_manifest="${{ secrets.SERVICE_ACCOUNT_MANIFEST }}"
+        echo "${service_account_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > service-account-manifest.yaml
+        oc apply -f service-account-manifest.yaml
+    - name: Create Role
+      run: |
+        role_manifest="${{ secrets.ROLE_MANIFEST }}"
+        echo "${role_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-manifest.yaml
+        oc apply -f role-manifest.yaml
+    - name: Create RoleBinding
+      run: |
+        role_binding_manifest="${{ secrets.ROLE_BINDING_MANIFEST }}"
+        echo "${role_binding_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > role-binding-manifest.yaml
+        oc apply -f role-binding-manifest.yaml
+
+  install-entando-app:
+    name: Install EntandoApp
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: prepare-namespace
+    steps:
+    - name: Login to OpenShift with JobConfiguration ServiceAccount
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+        namespace: ${{ env.NAMESPACE }}
+        insecure_skip_tls_verify: true
+    - name: Export namespace ServiceAccount token
+      run: | 
+        secretName=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
+        token=($(oc get secret $(echo $secretName) -o jsonpath='{.data.token}' | base64 --decode))        
+        echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
+    - name: Login to OpenShift with namespace ServiceAccount
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
+        insecure_skip_tls_verify: true
+        namespace: ${{ env.NAMESPACE }}
+    - name: Create Operator Group
+      run: |
+        manifest="${{ secrets.OPENSHIFT_OPERATOR_GROUP }}"
+        echo "${manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}" > operator-group-manifest.yaml
+        oc apply -f operator-group-manifest.yaml
+    - name: Install Operator
+      run: |
+        subscription_manifest="${{ secrets.OPENSHIFT_SUBSCRIPTION_MANIFEST }}"
+        subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
+        echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
+        oc apply -f subscription-manifest.yaml
+    - name: Install EntandoApp
+      run: |
+        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
+        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
+        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
+        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
+        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
+        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
+        oc apply -f entando-app-manifest.yaml
+    - name: Wait for EntandoApp availability
+      run: |
+        echo "EntandoApp is being prepared. Estimated wait time: 5 minutes."
+        while true; do
+          deployment_status=($(oc get eps -o jsonpath='{.items[0].status.phase}' --ignore-not-found))
+          if [[ "$deployment_status" == "successful" ]]; then
+            echo "EntandoApp is now available."
+            break
+          elif [[ "$deployment_status" == "failed" ]]; then
+            echo "EntandoApp deployment has been unsuccessful. Exiting."
+            exit 1
+          else
+            echo "EntandoApp is currently not available. Waiting for 15 seconds."
+            sleep 15
+          fi
+        done
   run-cypress-tests:
     name: Run cypress tests
     needs: preset
@@ -143,12 +133,6 @@ jobs:
         echo "message5"
         cat configs/7.1.json
         echo "message6"
-#        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
-#        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
-#        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
