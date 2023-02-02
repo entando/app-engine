@@ -110,12 +110,12 @@ jobs:
 #           sleep 15
 #         fi
 #       done
-  run-cypress-tests:
-    name: Run cypress tests
-#    needs: install-entando-app
+  abc:
+    name: Setting outputs
     runs-on: ubuntu-latest
-    container:
-      image: mescalo/cypress:v11
+    outputs:
+      output1: ${{ steps.step1.outputs.test }}
+      output2: ${{ steps.step2.outputs.test }}
     steps:
     - name: Login to OpenShift with JobConfiguration ServiceAccount
       uses: redhat-actions/oc-login@v1
@@ -136,6 +136,12 @@ jobs:
         openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
         insecure_skip_tls_verify: true
         namespace: ${{ env.NAMESPACE }}
+    - name: Step1
+      id: step1
+      run: echo "test=hello" >> $GITHUB_OUTPUT
+    - name: Step2
+      id: step2
+      run: echo "test=world" >> $GITHUB_OUTPUT
     - name: Setting up variables
       run: |
         secret_name=${{ env.NAMESPACE }}-de-secret
@@ -154,6 +160,22 @@ jobs:
         echo "message13"
         echo "::set-env name=CLIENT_SECRET::$client_secret"
         echo "message14"
+  run-cypress-tests:
+    name: Run cypress tests
+#    needs: install-entando-app
+    needs: abc
+    runs-on: ubuntu-latest
+    container:
+      image: mescalo/cypress:v11
+    steps:
+    - name: Checking variables
+      run: |
+        echo "message1"
+        echo ${{needs.job1.outputs.output1}} ${{needs.job1.outputs.output2}}
+        echo "message2"
+        echo ${{needs.job1.outputs.output1}}
+        echo "message3"
+        echo ${{needs.job1.outputs.output2}}
     - name: Updating configs/7.1.json
       continue-on-error: true
       run: |
