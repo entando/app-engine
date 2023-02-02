@@ -140,6 +140,11 @@ jobs:
         sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
         sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
         cat configs/7.1.json
+    - name: Run cypress tests
+      run: |
+        cd /opt/entando-test-automation/ui-tests
+        npm run cypress:smoke -- --env configFile=configs/7.1.json
+        wait 3600
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
