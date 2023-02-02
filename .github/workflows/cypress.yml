@@ -113,7 +113,7 @@ jobs:
             sleep 15
           fi
         done
-    - name: Setting up variables
+    - name: Set output
       id: setting-output
       run: |
         secret_name=${{ env.NAMESPACE }}-de-secret
@@ -128,47 +128,18 @@ jobs:
     container:
       image: mescalo/cypress:v11
     steps:
-    - name: Checking variables
+    - name: Update configs/7.1.json
       run: |
-        echo "message1"
-        echo ${{needs.install-entando-app.outputs.client_id}} ${{needs.install-entando-app.outputs.client_secret}}
-        echo "message2"
-        echo ${{needs.install-entando-app.outputs.client_id}}
-        echo "message3"
-        echo ${{needs.install-entando-app.outputs.client_secret}}
-    - name: Updating configs/7.1.json
-      continue-on-error: true
-      run: |
-        echo "message0"
         CLIENT_ID=${{needs.install-entando-app.outputs.client_id}}
-        echo "message0"
         CLIENT_SECRET=${{needs.install-entando-app.outputs.client_secret}}
-        echo "message0"
         cd /opt/entando-test-automation/ui-tests
-        echo "message1"
         cat configs/7.1.json
-        echo "message2"
         base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
-        echo "message3"
-        echo $base_url
-        echo "message4"
         sed -i "s/{YOUR_ENTANDO_BASE_URL}/$base_url/" configs/7.1.json
-        echo "message5"
-        cat configs/7.1.json
-        echo "message6"
         secret_name=${{ env.NAMESPACE }}-de-secret
-        echo "message7"
-        echo "$secret_name"
-        echo "message8"
         sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
-        echo "message13"
-        cat configs/7.1.json
-        echo "message14"
         sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
-        echo "message15"
         cat configs/7.1.json
-        echo "message6"
-
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
