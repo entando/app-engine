@@ -114,8 +114,8 @@ jobs:
     name: Setting outputs
     runs-on: ubuntu-latest
     outputs:
-      output1: ${{ steps.step1.outputs.test }}
-      output2: ${{ steps.step2.outputs.test }}
+      output1: ${{ steps.step1.outputs.test1 }}
+      output2: ${{ steps.step1.outputs.test2 }}
     steps:
     - name: Login to OpenShift with JobConfiguration ServiceAccount
       uses: redhat-actions/oc-login@v1
@@ -124,13 +124,14 @@ jobs:
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         namespace: ${{ env.NAMESPACE }}
         insecure_skip_tls_verify: true
-    - name: Step1
-      id: step1
-      run: echo "test=hello" >> $GITHUB_OUTPUT
-    - name: Step2
-      id: step2
-      run: echo "test=world" >> $GITHUB_OUTPUT
+#    - name: Step1
+#      id: step1
+#      run: echo "test=hello" >> $GITHUB_OUTPUT
+#    - name: Step2
+#      id: step2
+#      run: echo "test=world" >> $GITHUB_OUTPUT
     - name: Setting up variables
+      id: step1
       run: |
         secret_name=${{ env.NAMESPACE }}-de-secret
         echo "message7"
@@ -144,6 +145,10 @@ jobs:
         echo "message11"
         echo "$client_secret"
         echo "message12"
+        echo "test1=$client_id" >> $GITHUB_OUTPUT
+        echo "message13"
+        echo "test2=$client_secret" >> $GITHUB_OUTPUT
+        echo "message14"
   run-cypress-tests:
     name: Run cypress tests
 #    needs: install-entando-app
@@ -164,9 +169,9 @@ jobs:
       continue-on-error: true
       run: |
         echo "message0"
-        echo $CLIENT_ID
+        CLIENT_ID=${{needs.job1.outputs.output1}}
         echo "message0"
-        echo $CLIENT_SECRET
+        CLIENT_SECRET=${{needs.job1.outputs.output2}}
         echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
