@@ -146,7 +146,7 @@ jobs:
         npm install cypress
         npm run cypress:smoke -- --env configFile=configs/7.1.json
     - name: Upload Cypress results
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: cypress-results
         path: /opt/entando-test-automation/ui-tests/cypress/results/
