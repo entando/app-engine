@@ -294,7 +294,37 @@ jobs:
       continue-on-error: true
       run: |
         configuration="a {YOUR_ENTANDO_BASE_URL} b"
-        configuration=$"${configuration//{YOUR_ENTANDO_BASE_URL}/test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net}"
+        configuration="${configuration//{YOUR_ENTANDO_BASE_URL}/test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net}"
+    - name: Updating configs/7.1.json 16
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        configuration="${configuration//'YOUR_ENTANDO_BASE_URL'/'blah'}"
+    - name: Updating configs/7.1.json 17
+      continue-on-error: true
+      run: |
+        configuration="a {YOUR_ENTANDO_BASE_URL} b"
+        configuration="${configuration//'YOUR_ENTANDO_BASE_URL'/'blah'}"
+    - name: Updating configs/7.1.json 18
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        configuration="${configuration//'{YOUR_ENTANDO_BASE_URL}'/'blah'}"
+    - name: Updating configs/7.1.json 19
+      continue-on-error: true
+      run: |
+        configuration="a {YOUR_ENTANDO_BASE_URL} b"
+        configuration="${configuration//'{YOUR_ENTANDO_BASE_URL}'/'blah'}"
+    - name: Updating configs/7.1.json 20
+      continue-on-error: true
+      run: |
+        configuration="a {YOUR_ENTANDO_BASE_URL} b"
+        configuration="${configuration//'{YOUR_ENTANDO_BASE_URL}'/'test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net'}"
+    - name: Updating configs/7.1.json 21
+      continue-on-error: true
+      run: |
+        configuration="a {YOUR_ENTANDO_BASE_URL} b"
+        configuration="${configuration//{YOUR_ENTANDO_BASE_URL}/test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net}"
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
