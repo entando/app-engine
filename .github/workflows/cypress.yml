@@ -133,16 +133,26 @@ jobs:
         echo "message5"
         cat configs/7.1.json
         echo "message6"
-        secret_name=${{ env.NAMESPACE }}-de-app
+        secret_name=${{ env.NAMESPACE }}-de-secret
+        echo "message7"
         echo "$secret_name"
+        echo "message8"
         client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
+        echo "message9"
         echo "$client_id"
+        echo "message10"
         client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
+        echo "message11"
         echo "$client_secret"
+        echo "message12"
         sed -i "s/{YOUR_API_CLIENT_ID}/$client_id/" configs/7.1.json
+        echo "message13"
         cat configs/7.1.json
+        echo "message14"
         sed -i "s/{YOUR_API_CLIENT_SECRET}/$client_secret/" configs/7.1.json
+        echo "message15"
         cat configs/7.1.json
+        echo "message6"
 
 #  delete-namespace:
 #    name: Delete namespace
