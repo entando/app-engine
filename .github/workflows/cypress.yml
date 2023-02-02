@@ -469,7 +469,77 @@ jobs:
       run: |
         configuration="a YOUR_ENTANDO_BASE_URL b"
         echo $configuration
-        configuration="${configuration//YOUR_ENTANDO_BASE_URL/blah}"
+        configuration="${a YOUR_ENTANDO_BASE_URL b//YOUR_ENTANDO_BASE_URL/blah}"
+        echo $configuration
+    - name: Updating configs/7.1.json 41
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration=${a YOUR_ENTANDO_BASE_URL b//YOUR_ENTANDO_BASE_URL/blah}
+        echo $configuration
+    - name: Updating configs/7.1.json 42
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration=${a YOUR_ENTANDO_BASE_URL b//YOUR_ENTANDO_BASE_URL/blah}
+        echo $configuration
+    - name: Updating configs/7.1.json 43
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration="${a YOUR_ENTANDO_BASE_URL b//YOUR_ENTANDO_BASE_URL/blah}"
+        echo $configuration
+    - name: Updating configs/7.1.json 44
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration="${a YOUR_ENTANDO_BASE_URL b//YOUR_ENTANDO_BASE_URL/blah}"
+        echo $configuration
+    - name: Updating configs/7.1.json 45
+      continue-on-error: true
+      run: |
+        configuration="a {YOUR_ENTANDO_BASE_URL} b"
+        echo $configuration
+        configuration="${$configuration//'{YOUR_ENTANDO_BASE_URL}'/'test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net'}"
+        echo $configuration
+    - name: Updating configs/7.1.json 46
+      continue-on-error: true
+      run: |
+        configuration="a {YOUR_ENTANDO_BASE_URL} b"
+        echo $configuration
+        configuration="${$configuration//{YOUR_ENTANDO_BASE_URL}/test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net}"
+        echo $configuration
+    - name: Updating configs/7.1.json 47
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration=${$configuration//YOUR_ENTANDO_BASE_URL/test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net}
+        echo $configuration
+    - name: Updating configs/7.1.json 48
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration=${$configuration//YOUR_ENTANDO_BASE_URL/blah}
+        echo $configuration
+    - name: Updating configs/7.1.json 49
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration=${$configuration//YOUR_ENTANDO_BASE_URL/blah}
+        echo $configuration
+    - name: Updating configs/7.1.json 50
+      continue-on-error: true
+      run: |
+        configuration="a YOUR_ENTANDO_BASE_URL b"
+        echo $configuration
+        configuration="${$configuration//YOUR_ENTANDO_BASE_URL/blah}"
         echo $configuration
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
 #        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
