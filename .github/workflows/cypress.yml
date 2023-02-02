@@ -130,6 +130,7 @@ jobs:
     - name: Updating configs/7.1.json
       continue-on-error: true
       run: |
+        echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         configuration=$(cat configs/7.1.json)
@@ -149,6 +150,7 @@ jobs:
     - name: Updating configs/7.1.json 2
       continue-on-error: true
       run: |
+        echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         configuration=$(cat configs/7.1.json)
@@ -162,6 +164,7 @@ jobs:
     - name: Updating configs/7.1.json 3
       continue-on-error: true
       run: |
+        echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         configuration="$(cat configs/7.1.json)"
@@ -181,6 +184,7 @@ jobs:
     - name: Updating configs/7.1.json 4
       continue-on-error: true
       run: |
+        echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
         configuration="$(cat configs/7.1.json)"
@@ -188,6 +192,34 @@ jobs:
         echo $configuration
         echo "message3"
         configuration=${configuration/'{YOUR_ENTANDO_BASE_URL}'/'test-cypress-app-engine-pr-46.apps.okd4-10.awsentando.net'}
+        echo "message4"
+        echo $configuration
+        echo "message5"
+    - name: Updating configs/7.1.json 5
+      continue-on-error: true
+      run: |
+        echo "message0"
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        configuration="$(cat configs/7.1.json)"
+        echo "message2"
+        echo $configuration
+        echo "message3"
+        configuration=${configuration/'YOUR_ENTANDO_BASE_URL'/'blah'}
+        echo "message4"
+        echo $configuration
+        echo "message5"
+    - name: Updating configs/7.1.json 6
+      continue-on-error: true
+      run: |
+        echo "message0"
+        cd /opt/entando-test-automation/ui-tests
+        echo "message1"
+        configuration="$(cat configs/7.1.json)"
+        echo "message2"
+        echo $configuration
+        echo "message3"
+        configuration=${configuration/YOUR_ENTANDO_BASE_URL/blah2}
         echo "message4"
         echo $configuration
         echo "message5"
