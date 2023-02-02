@@ -117,9 +117,50 @@ jobs:
     container:
       image: mescalo/cypress:v11
     steps:
+   - name: Login to OpenShift with JobConfiguration ServiceAccount
+     uses: redhat-actions/oc-login@v1
+     with:
+       openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+       openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
+       namespace: ${{ env.NAMESPACE }}
+       insecure_skip_tls_verify: true
+   - name: Export namespace ServiceAccount token
+     run: | 
+       secret_name=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
+       token=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.token}' | base64 --decode))        
+       echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
+   - name: Login to OpenShift with namespace ServiceAccount
+     uses: redhat-actions/oc-login@v1
+     with:
+       openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
+       openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
+       insecure_skip_tls_verify: true
+       namespace: ${{ env.NAMESPACE }}
+    - name: Setting up variables
+      run: |
+        secret_name=${{ env.NAMESPACE }}-de-secret
+        echo "message7"
+        echo "$secret_name"
+        echo "message8"
+        client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
+        echo "message9"
+        echo "$client_id"
+        echo "message10"
+        client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
+        echo "message11"
+        echo "$client_secret"
+        echo "message12"
+        echo "::set-env name=CLIENT_ID::$client_id"
+        echo "message13"
+        echo "::set-env name=CLIENT_SECRET::$client_secret"
+        echo "message14"
     - name: Updating configs/7.1.json
       continue-on-error: true
       run: |
+        echo "message0"
+        echo $CLIENT_ID
+        echo "message0"
+        echo $CLIENT_SECRET
         echo "message0"
         cd /opt/entando-test-automation/ui-tests
         echo "message1"
@@ -137,19 +178,11 @@ jobs:
         echo "message7"
         echo "$secret_name"
         echo "message8"
-        client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
-        echo "message9"
-        echo "$client_id"
-        echo "message10"
-        client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
-        echo "message11"
-        echo "$client_secret"
-        echo "message12"
-        sed -i "s/{YOUR_API_CLIENT_ID}/$client_id/" configs/7.1.json
+        sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
         echo "message13"
         cat configs/7.1.json
         echo "message14"
-        sed -i "s/{YOUR_API_CLIENT_SECRET}/$client_secret/" configs/7.1.json
+        sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
         echo "message15"
         cat configs/7.1.json
         echo "message6"
