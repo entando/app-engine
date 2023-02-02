@@ -141,6 +141,7 @@ jobs:
 #        sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
 #        cat configs/7.1.json
 #    - name: Run Cypress tests
+#      continue-on-error: true
 #      run: |
 #        cd /opt/entando-test-automation/ui-tests
 #        npm install cypress
@@ -168,6 +169,19 @@ jobs:
     name: Comment PR with Cypress results
     runs-on: ubuntu-latest
     steps:
+    - name: Dump GitHub context
+      id: github_context_step
+      run: echo '${{ toJSON(github) }}'
+    - name: Dump job context
+      run: echo '${{ toJSON(job) }}'
+    - name: Dump steps context
+      run: echo '${{ toJSON(steps) }}'
+    - name: Dump runner context
+      run: echo '${{ toJSON(runner) }}'
+    - name: Dump strategy context
+      run: echo '${{ toJSON(strategy) }}'
+    - name: Dump matrix context
+      run: echo '${{ toJSON(matrix) }}'
     - name: Send message to pull request
       run: |
         curl \
