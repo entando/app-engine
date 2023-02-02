@@ -110,7 +110,7 @@ jobs:
 #           sleep 15
 #         fi
 #       done
-  abc:
+  job1:
     name: Setting outputs
     runs-on: ubuntu-latest
     outputs:
@@ -124,18 +124,6 @@ jobs:
         openshift_token: ${{ env.JOB_CONFIGURATION_TOKEN }}
         namespace: ${{ env.NAMESPACE }}
         insecure_skip_tls_verify: true
-    - name: Export namespace ServiceAccount token
-      run: | 
-        secret_name=($(oc get sa $(echo ${{ env.NAMESPACE }}) -o jsonpath='{.secrets[*].name}' | tr " " "\n" | grep token))
-        token=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.token}' | base64 --decode))        
-        echo "SERVICE_ACCOUNT_TOKEN=${token}" >> $GITHUB_ENV
-    - name: Login to OpenShift with namespace ServiceAccount
-      uses: redhat-actions/oc-login@v1
-      with:
-        openshift_server_url: https://api.${{ env.OPENSHIFT_DOMAIN }}:${{ env.OPENSHIFT_SERVER_PORT }}
-        openshift_token: ${{ env.SERVICE_ACCOUNT_TOKEN }}
-        insecure_skip_tls_verify: true
-        namespace: ${{ env.NAMESPACE }}
     - name: Step1
       id: step1
       run: echo "test=hello" >> $GITHUB_OUTPUT
@@ -159,7 +147,7 @@ jobs:
   run-cypress-tests:
     name: Run cypress tests
 #    needs: install-entando-app
-    needs: abc
+    needs: job1
     runs-on: ubuntu-latest
     container:
       image: mescalo/cypress:v11
