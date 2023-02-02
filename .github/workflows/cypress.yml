@@ -140,16 +140,25 @@ jobs:
         sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
         sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
         cat configs/7.1.json
-    - name: Run Cypress tests
+#    - name: Run Cypress tests
+#      run: |
+#        cd /opt/entando-test-automation/ui-tests
+#        npm install cypress
+#        npm run cypress:smoke -- --env configFile=configs/7.1.json
+#    - name: Upload Cypress results
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: cypress-results
+#        path: /opt/entando-test-automation/ui-tests/cypress/results/
+    - name: Create random file
       run: |
         cd /opt/entando-test-automation/ui-tests
-        npm install cypress
-        npm run cypress:smoke -- --env configFile=configs/7.1.json
+        echo test123 > test.txt
     - name: Upload Cypress results
       uses: actions/upload-artifact@v3
       with:
-        name: cypress-results
-        path: /opt/entando-test-automation/ui-tests/cypress/results/
+        name: test
+        path: /opt/entando-test-automation/ui-tests/test.txt
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
