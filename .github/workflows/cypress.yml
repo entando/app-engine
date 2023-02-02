@@ -122,7 +122,7 @@ jobs:
         echo "client-id=$client_id" >> $GITHUB_OUTPUT
         echo "client-secret=$client_secret" >> $GITHUB_OUTPUT
   run-cypress-tests:
-    name: Run cypress tests
+    name: Run Cypress tests
     needs: install-entando-app
     runs-on: ubuntu-latest
     container:
@@ -140,11 +140,16 @@ jobs:
         sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
         sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
         cat configs/7.1.json
-    - name: Run cypress tests
+    - name: Run Cypress tests
       run: |
         cd /opt/entando-test-automation/ui-tests
         npm install cypress
         npm run cypress:smoke -- --env configFile=configs/7.1.json
+    - name: Upload Cypress results
+      uses: actions/upload-artifact@v1
+      with:
+        name: cypress-results
+        path: /opt/entando-test-automation/ui-tests/cypress/results/
 #  delete-namespace:
 #    name: Delete namespace
 #    runs-on: ubuntu-latest
