@@ -146,7 +146,7 @@ jobs:
         npm uninstall cypress
         npm install cypress
         npx cypress verify
-        npx cypress run
+        npx cypress run --env configFile=configs/7.1.json
     - name: Upload Cypress results
       uses: actions/upload-artifact@v3
       with:
