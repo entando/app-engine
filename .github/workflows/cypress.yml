@@ -143,6 +143,9 @@ jobs:
       continue-on-error: true
       run: |
         cd /opt/entando-test-automation/ui-tests
+        npm uninstall cypress
+        npm install cypress
+        npx cypress verify
         npx cypress run
     - name: Upload Cypress results
       uses: actions/upload-artifact@v3
