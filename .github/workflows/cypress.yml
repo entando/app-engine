@@ -88,6 +88,16 @@ jobs:
         subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
         echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
         oc apply -f subscription-manifest.yaml
+    - name: Update app-engine image
+      run: |
+        oc get packagemanifests entando-k8s-operator -o yaml > operator.yaml
+        cat operator.yaml
+        grep registry.hub.docker.com/entando/entando-de-app-eap operator.yaml | while read -r line ; do
+            echo "Processing $line"
+            replacement="- registry.hub.docker.com/entando/app-engine-eap@sha256:ef2d740dbf8f88497470cbb635fc2adf9556b0da9cb01d1fd620a6cb14729cdd"
+            sed -i "s|$line|$replacement|" operator.yaml
+            cat operator.yaml
+        done
 #    - name: Install EntandoApp
 #      run: |
 #        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
