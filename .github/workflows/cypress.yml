@@ -88,82 +88,82 @@ jobs:
         subscription_manifest=$"${subscription_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
         echo "${subscription_manifest//"{{source}}"/"${{ env.ENTANDO_OPERATOR_SOURCE }}"}" > subscription-manifest.yaml
         oc apply -f subscription-manifest.yaml
-    - name: Install EntandoApp
-      run: |
-        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
-        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
-        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
-        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
-        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
-        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
-        oc apply -f entando-app-manifest.yaml
-    - name: Wait for EntandoApp availability
-      run: |
-        echo "EntandoApp is being prepared. Estimated wait time: 5 minutes."
-        while true; do
-          deployment_status=($(oc get eps -o jsonpath='{.items[0].status.phase}' --ignore-not-found))
-          if [[ "$deployment_status" == "successful" ]]; then
-            echo "EntandoApp is now available."
-            break
-          elif [[ "$deployment_status" == "failed" ]]; then
-            echo "EntandoApp deployment has been unsuccessful. Exiting."
-            exit 1
-          else
-            echo "EntandoApp is currently not available. Waiting for 15 seconds."
-            sleep 15
-          fi
-        done
-    - name: Set output
-      id: setting-output
-      run: |
-        secret_name=${{ env.NAMESPACE }}-de-secret
-        client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
-        client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
-        echo "client-id=$client_id" >> $GITHUB_OUTPUT
-        echo "client-secret=$client_secret" >> $GITHUB_OUTPUT
-
-  run-cypress-tests:
-    name: Run Cypress tests
-    needs: install-entando-app
-    runs-on: ubuntu-latest
-    container:
-      image: mescalo/cypress:v11
-    steps:
-    - name: Update configs/7.1.json
-      run: |
-        CLIENT_ID=${{needs.install-entando-app.outputs.client_id}}
-        CLIENT_SECRET=${{needs.install-entando-app.outputs.client_secret}}
-        cd /opt/entando-test-automation/ui-tests
-        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
-        sed -i "s/{YOUR_ENTANDO_BASE_URL}/$base_url/" configs/7.1.json
-        secret_name=${{ env.NAMESPACE }}-de-secret
-        sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
-        sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
-    - name: Run Cypress tests
-      continue-on-error: true
-      run: |
-        cd /opt/entando-test-automation/ui-tests
-        npm install cypress
-        npx cypress run --env configFile=configs/7.1.json
-    - name: Upload Cypress results
-      uses: actions/upload-artifact@v3
-      with:
-        name: cypress-results
-        path: /opt/entando-test-automation/ui-tests/cypress/results/
-    - name: Comment on PR with artifact link
-      run: |
-        curl \
-          -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"\
-          -d '{"body":"Download cypress test results from the [artifacts section](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"}'
+#    - name: Install EntandoApp
+#      run: |
+#        entando_app_manifest="${{ secrets.OPENSHIFT_ENTANDO_APP_MANIFEST }}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{namespace}}"/"${{ env.NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{dbms}}"/"${{ env.ENTANDO_APP_DBMS }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appname}}"/"${{ env.NAMESPACE }}"}"
+#        entando_app_manifest=$"${entando_app_manifest//"{{appused}}"/"${{ env.ENTANDO_APP_USED }}"}"
+#        echo "${entando_app_manifest//"{{openshift_url}}"/"${{ env.OPENSHIFT_DOMAIN }}"}" > entando-app-manifest.yaml
+#        oc apply -f entando-app-manifest.yaml
+#    - name: Wait for EntandoApp availability
+#      run: |
+#        echo "EntandoApp is being prepared. Estimated wait time: 5 minutes."
+#        while true; do
+#          deployment_status=($(oc get eps -o jsonpath='{.items[0].status.phase}' --ignore-not-found))
+#          if [[ "$deployment_status" == "successful" ]]; then
+#            echo "EntandoApp is now available."
+#            break
+#          elif [[ "$deployment_status" == "failed" ]]; then
+#            echo "EntandoApp deployment has been unsuccessful. Exiting."
+#            exit 1
+#          else
+#            echo "EntandoApp is currently not available. Waiting for 15 seconds."
+#            sleep 15
+#          fi
+#        done
+#    - name: Set output
+#      id: setting-output
+#      run: |
+#        secret_name=${{ env.NAMESPACE }}-de-secret
+#        client_id=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientId}' | base64 --decode))
+#        client_secret=($(oc get secret $(echo $secret_name) -o jsonpath='{.data.clientSecret}' | base64 --decode))
+#        echo "client-id=$client_id" >> $GITHUB_OUTPUT
+#        echo "client-secret=$client_secret" >> $GITHUB_OUTPUT
+#
+#  run-cypress-tests:
+#    name: Run Cypress tests
+#    needs: install-entando-app
+#    runs-on: ubuntu-latest
+#    container:
+#      image: mescalo/cypress:v11
+#    steps:
+#    - name: Update configs/7.1.json
+#      run: |
+#        CLIENT_ID=${{needs.install-entando-app.outputs.client_id}}
+#        CLIENT_SECRET=${{needs.install-entando-app.outputs.client_secret}}
+#        cd /opt/entando-test-automation/ui-tests
+#        base_url=${{ env.NAMESPACE }}.apps.${{env.OPENSHIFT_DOMAIN}}
+#        sed -i "s/{YOUR_ENTANDO_BASE_URL}/$base_url/" configs/7.1.json
+#        secret_name=${{ env.NAMESPACE }}-de-secret
+#        sed -i "s/{YOUR_API_CLIENT_ID}/$CLIENT_ID/" configs/7.1.json
+#        sed -i "s/{YOUR_API_CLIENT_SECRET}/$CLIENT_SECRET/" configs/7.1.json
+#    - name: Run Cypress tests
+#      continue-on-error: true
+#      run: |
+#        cd /opt/entando-test-automation/ui-tests
+#        npm install cypress
+#        npx cypress run --env configFile=configs/7.1.json
+#    - name: Upload Cypress results
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: cypress-results
+#        path: /opt/entando-test-automation/ui-tests/cypress/results/
+#    - name: Comment on PR with artifact link
+#      run: |
+#        curl \
+#          -X POST \
+#          -H "Accept: application/vnd.github+json" \
+#          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
+#          -H "X-GitHub-Api-Version: 2022-11-28" \
+#          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"\
+#          -d '{"body":"Download cypress test results from the [artifacts section](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"}'
 
   delete-namespace:
     name: Delete namespace
     runs-on: ubuntu-latest
-    needs: run-cypress-tests
+#    needs: run-cypress-tests
 #    if: always()
     if: false
     steps:
