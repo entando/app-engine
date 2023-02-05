@@ -144,7 +144,7 @@ jobs:
       run: |
         cd /opt/entando-test-automation/ui-tests
         npm install cypress
-        npm run cypress --env configFile=configs/7.1.json
+        npm cypress run --env configFile=configs/7.1.json
     - name: Upload Cypress results
       uses: actions/upload-artifact@v3
       with:
