@@ -53,7 +53,7 @@ jobs:
     name: Install EntandoApp
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: prepare-namespace
+#    needs: prepare-namespace
     outputs:
       client_id: ${{ steps.setting-output.outputs.client-id }}
       client_secret: ${{ steps.setting-output.outputs.client-secret }}
