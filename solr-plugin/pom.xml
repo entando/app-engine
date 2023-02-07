@@ -4,13 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.entando</groupId>
-        <artifactId>entando-core-parent</artifactId>
-        <version>7.0.0</version>
+        <artifactId>app-engine</artifactId>
+        <version>7.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>entando-plugin-jpsolr</artifactId>
     <groupId>org.entando.entando.plugins</groupId>
-    <version>7.1.0-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <name>Entando Plugin: Solr Connector</name>
     <description>Enables the use of Solr as search engine</description>
     <developers>
@@ -20,22 +19,6 @@
             <email>eugenio.santoboni@gmail.com</email>
         </developer>
     </developers>
-    <url>http://www.entando.com/</url>
-    <repositories>
-        <repository>
-            <id>nexus-jx</id>
-            <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <properties>
-        <checkstyle.skip>true</checkstyle.skip>
-    </properties>
     <build>
         <resources>
             <resource>
@@ -74,13 +57,8 @@
                     <include>**/*.tld</include>
                 </includes>
             </resource>
-
         </resources>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -101,61 +79,41 @@
             </plugin>
         </plugins>
     </build>
-    
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.entando</groupId>
-                <artifactId>entando-core-bom</artifactId>
-                <version>7.0.0</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
-        
         <dependency>
             <groupId>org.entando.entando.plugins</groupId>
             <artifactId>entando-plugin-jacms</artifactId>
-            <classifier>classes</classifier>
+            <version>${project.version}</version>
         </dependency>
-        
         <dependency>
             <groupId>org.entando.entando</groupId>
             <artifactId>entando-admin-console</artifactId>
-            <classifier>classes</classifier>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.entando.entando</groupId>
             <artifactId>entando-portal-ui</artifactId>
-            <classifier>classes</classifier>
+            <version>${project.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>8.11.1</version>
+            <version>${solr-solrj.version}</version>
         </dependency>
-        
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <type>jar</type>
         </dependency>
-        
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <type>jar</type>
         </dependency>
-        
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -164,69 +122,86 @@
             <groupId>javax.servlet.jsp</groupId>
             <artifactId>jsp-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
 
         <!--Test dependencies -->
         
         <dependency>
             <groupId>org.entando.entando.plugins</groupId>
             <artifactId>entando-plugin-jacms</artifactId>
+            <version>${project.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.entando.entando</groupId>
             <artifactId>entando-engine</artifactId>
+            <version>${project.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.entando.entando</groupId>
             <artifactId>entando-admin-console</artifactId>
+            <version>${project.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.entando.entando</groupId>
             <artifactId>entando-portal-ui</artifactId>
+            <version>${project.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
+        
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path-assert</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>javax.persistence</artifactId>
-            <version>2.2.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
