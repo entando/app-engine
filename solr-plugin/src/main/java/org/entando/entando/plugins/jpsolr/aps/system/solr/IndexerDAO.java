@@ -13,32 +13,37 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AbstractComplexAttribute;
-import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
-import com.agiletec.aps.system.common.entity.model.*;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
-import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
-import com.agiletec.aps.system.services.lang.*;
+import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ResourceAttributeInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
-
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 
 /**
  * Data Access Object dedita alla indicizzazione di documenti.
@@ -46,50 +51,62 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 public class IndexerDAO implements IIndexerDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(IndexerDAO.class);
-    
-    private String solrAddress;
-
-    private String solrCore;
 
     private ILangManager langManager;
 
     private ITreeNodeManager treeNodeManager;
 
+    private final SolrClient solrClient;
+    private final String solrCore;
+
+    public IndexerDAO(SolrClient solrClient, String solrCore) {
+        this.solrClient = solrClient;
+        this.solrCore = solrCore;
+    }
+
     @Override
     public void init(File dir) throws EntException {
         // nothing to do
     }
-    
-    private SolrClient getSolrClient() {
-        return new HttpSolrClient.Builder(this.solrAddress)
-                .withConnectionTimeout(10000)
-                .withSocketTimeout(60000)
-                .build();
+
+    @Override
+    public void close() {
+        // nothing to do
     }
 
     @Override
     public synchronized void add(IApsEntity entity) throws EntException {
-        SolrClient client = null;
         try {
-            client = this.getSolrClient();
             SolrInputDocument document = this.createDocument(entity);
-            UpdateResponse updateResponse = client.add(this.getSolrCore(), document);
+            UpdateResponse updateResponse = this.solrClient.add(this.solrCore, document);
             logger.debug("Add document Response {}", updateResponse.toString());
-            client.commit(this.getSolrCore());
+            this.solrClient.commit(this.solrCore);
         } catch (IOException | SolrServerException ex) {
             logger.error("Error saving entity {} calling solr server", entity.getId(), ex);
             throw new EntException("Error saving entity", ex);
         } catch (Exception t) {
            logger.error("Generic error saving entity {}", entity.getId(), t);
             throw new EntException("Error saving entity", t);
-        } finally {
-            if (null != client) {
+        }
+    }
+
+    public void addBulk(Stream<IApsEntity> entityStream) throws EntException {
+        try {
+            entityStream.forEach(entity -> {
                 try {
-                    client.close();
-                } catch (IOException ex) {
-                    throw new EntException("Error closing client", ex);
+                    SolrInputDocument document = this.createDocument(entity);
+                    UpdateResponse updateResponse = this.solrClient.add(this.solrCore, document);
+                    logger.debug("Add document Response {}", updateResponse.toString());
+                } catch (IOException | SolrServerException ex) {
+                    logger.error("Error saving entity {} calling solr server", entity.getId(), ex);
                 }
-            }
+            });
+            this.solrClient.commit(this.solrCore);
+        } catch (IOException | SolrServerException ex) {
+            throw new EntException("Error saving entities", ex);
+        } catch (Exception t) {
+            logger.error("Generic error saving entities", t);
+            throw new EntException("Error saving entities", t);
         }
     }
 
@@ -229,48 +246,19 @@ public class IndexerDAO implements IIndexerDAO {
     
     @Override
     public synchronized void delete(String name, String value) throws EntException {
-        SolrClient client = null;
         try {
-            client = this.getSolrClient();
-            UpdateResponse updateResponse = (name.equals(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)) ? 
-                    client.deleteById(this.getSolrCore(), value) : 
-                    client.deleteByQuery(this.getSolrCore(), name + ":" + value);
+            UpdateResponse updateResponse = (name.equals(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)) ?
+                    this.solrClient.deleteById(this.solrCore, value) :
+                    this.solrClient.deleteByQuery(this.solrCore, name + ":" + value);
             logger.debug("Delete document Response {}", updateResponse.toString());
-            client.commit(this.getSolrCore());
+            this.solrClient.commit(this.solrCore);
         } catch (IOException | SolrServerException ex) {
             logger.error("Error deleting entity {}:{} calling solr server", name, value, ex);
             throw new EntException("Error deleting entity", ex);
         } catch (Exception t) {
            logger.error("Generic error deleting entity {}:{}", name, value, t);
             throw new EntException("Error deleting entity", t);
-        } finally {
-            if (null != client) {
-                try {
-                    client.close();
-                } catch (IOException ex) {
-                    throw new EntException("Error closing client", ex);
-                }
-            }
         }
-    }
-    
-    @Override
-    public void close() {
-        // nothing to do
-    }
-    
-    protected String getSolrAddress() {
-        return solrAddress;
-    }
-    protected void setSolrAddress(String solrAddress) {
-        this.solrAddress = solrAddress;
-    }
-
-    protected String getSolrCore() {
-        return solrCore;
-    }
-    protected void setSolrCore(String solrCore) {
-        this.solrCore = solrCore;
     }
     
     protected ILangManager getLangManager() {

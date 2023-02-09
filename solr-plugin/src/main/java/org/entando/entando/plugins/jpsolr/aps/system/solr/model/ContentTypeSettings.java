@@ -135,7 +135,7 @@ public class ContentTypeSettings implements Serializable {
                 return false;
             } else {
                 Optional<Map<String, Object>> optional = this.getCurrentConfig().values().stream().filter(m -> {
-                    return (!m.get("type").equals(this.getExpectedConfig().get("type")) || !m.get("multiValued").equals(this.getExpectedConfig().get("multiValued")));
+                    return (!m.get("type").equals(this.getExpectedConfig().get("type")) || !m.getOrDefault("multiValued", false).equals(this.getExpectedConfig().get("multiValued")));
                 }).findFirst();
                 return !optional.isPresent();
             }

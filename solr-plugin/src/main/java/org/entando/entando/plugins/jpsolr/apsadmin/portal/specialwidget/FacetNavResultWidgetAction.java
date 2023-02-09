@@ -24,6 +24,7 @@ package org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget;
 import java.util.List;
 import java.util.Map;
 
+import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
 
 import com.agiletec.aps.system.ApsSystemUtils;
@@ -148,7 +149,8 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
 	 * @return the Widget type parameter
 	 */
 	public WidgetTypeParameter getWidgetTypeParameter(String paramName) {
-		List<WidgetTypeParameter> parameters = this.getWidget().getType().getTypeParameters();
+		WidgetType widgetType = this.getWidgetTypeManager().getWidgetType(this.getWidget().getTypeCode());
+		List<WidgetTypeParameter> parameters = widgetType.getTypeParameters();
 		for (WidgetTypeParameter param : parameters) {
 			if (param.getName().equals(paramName)) {
 				return param;

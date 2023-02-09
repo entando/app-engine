@@ -5,13 +5,15 @@
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
+import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
-import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.LastReloadInfo;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -66,28 +68,23 @@ public class SolrIndexLoaderThread extends Thread {
                 filters = new EntitySearchFilter[]{filter};
             }
 			List<String> contentsId = this._contentManager.searchId(filters);
-			for (int i=0; i<contentsId.size(); i++) {
-				String id = contentsId.get(i);
-				this.reloadContentIndex(id);
-			}
+			((IndexerDAO) this._indexerDao).addBulk(
+					this._contentManager.searchId(filters).stream()
+							.map(contentId -> {
+								try {
+									return (IApsEntity) this._contentManager.loadContent(contentId, true);
+								} catch (EntException ex) {
+									throw new EntRuntimeException("Unable to load content " + contentId, ex);
+								}
+							})
+							.filter(content -> content != null));
 			_logger.info("Indicizzazione effettuata");
 		} catch (Throwable t) {
 			_logger.error("error in reloadIndex", t);
 			throw t;
 		}
 	}
-	
-	private void reloadContentIndex(String id) {
-		try {
-			Content content = this._contentManager.loadContent(id, true);
-			if (content != null) {
-				this._indexerDao.add(content);
-				_logger.debug("Indexed content {}", content.getId());
-			}
-		} catch (Throwable t) {
-			_logger.error("Error reloading index: content id {}", id, t);
-		}
-	}
+
 	private String typeCode;
 	private SearchEngineManager _searchEngineManager;
 	private IContentManager _contentManager;

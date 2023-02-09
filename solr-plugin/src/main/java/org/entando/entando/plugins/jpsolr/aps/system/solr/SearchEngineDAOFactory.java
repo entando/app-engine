@@ -21,6 +21,9 @@ import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearchEngine
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PreDestroy;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -45,9 +48,29 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     private ILangManager langManager;
     private ICategoryManager categoryManager;
 
+    private SolrClient solrClient;
+    private IndexerDAO indexerDAO;
+    private SearcherDAO searcherDAO;
+
     @Override
     public void init() throws Exception {
-        // nothing to do
+        this.solrClient = new HttpSolrClient.Builder(this.solrAddress)
+                .withConnectionTimeout(10000)
+                .withSocketTimeout(60000)
+                .build();
+
+        this.indexerDAO = new IndexerDAO(solrClient, this.solrCore);
+        this.indexerDAO.setLangManager(this.getLangManager());
+        this.indexerDAO.setTreeNodeManager(this.getCategoryManager());
+
+        this.searcherDAO = new SearcherDAO(solrClient, this.solrCore);
+        this.searcherDAO.setTreeNodeManager(this.getCategoryManager());
+        this.searcherDAO.setLangManager(this.getLangManager());
+    }
+
+    @PreDestroy
+    public void close() throws Exception {
+        this.solrClient.close();
     }
 
     @Override
@@ -83,22 +106,12 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
 
     @Override
     public IIndexerDAO getIndexer() throws EntException {
-        IndexerDAO indexerDao = new IndexerDAO();
-        indexerDao.setLangManager(this.getLangManager());
-        indexerDao.setTreeNodeManager(this.getCategoryManager());
-        indexerDao.setSolrAddress(this.solrAddress);
-        indexerDao.setSolrCore(this.solrCore);
-        return indexerDao;
+        return this.indexerDAO;
     }
 
     @Override
     public ISearcherDAO getSearcher() throws EntException {
-        SearcherDAO searcherDao = new SearcherDAO();
-        searcherDao.setTreeNodeManager(this.getCategoryManager());
-        searcherDao.setLangManager(this.getLangManager());
-        searcherDao.setSolrAddress(this.solrAddress);
-        searcherDao.setSolrCore(this.solrCore);
-        return searcherDao;
+        return this.searcherDAO;
     }
 
     @Override

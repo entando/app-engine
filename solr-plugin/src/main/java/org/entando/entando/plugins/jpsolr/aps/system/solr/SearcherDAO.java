@@ -13,36 +13,49 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
-import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
-import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
-import org.apache.lucene.document.*;
-import org.apache.lucene.index.*;
-import org.apache.lucene.search.*;
-
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 
 /**
  * @author E.Santoboni
@@ -51,18 +64,15 @@ public class SearcherDAO implements ISolrSearcherDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearcherDAO.class);
 
-    private String solrAddress;
-
-    private String solrCore;
-
     private ITreeNodeManager treeNodeManager;
     private ILangManager langManager;
 
-    private SolrClient getSolrClient() {
-        return new HttpSolrClient.Builder(this.solrAddress)
-                .withConnectionTimeout(10000)
-                .withSocketTimeout(60000)
-                .build();
+    private final SolrClient solrClient;
+    private final String solrCore;
+
+    public SearcherDAO(SolrClient solrClient, String solrCore) {
+        this.solrClient = solrClient;
+        this.solrCore = solrCore;
     }
 
     @Override
@@ -125,7 +135,6 @@ public class SearcherDAO implements ISolrSearcherDAO {
         Map<String, Integer> occurrences = new HashMap<>();
         result.setOccurrences(occurrences);
         result.setContentsId(contentsId);
-        SolrClient client = this.getSolrClient();
         try {
             SolrQuery solrQuery = new SolrQuery(query.toString());
             solrQuery.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME);
@@ -149,7 +158,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
                     }
                 }
             }
-            QueryResponse response = client.query(this.getSolrCore(), solrQuery);
+            QueryResponse response = this.solrClient.query(this.solrCore, solrQuery);
             SolrDocumentList documents = response.getResults();
             result.setTotalSize(Long.valueOf(documents.getNumFound()).intValue());
             for (SolrDocument doc : documents) {
@@ -173,14 +182,6 @@ public class SearcherDAO implements ISolrSearcherDAO {
         } catch (Throwable t) {
             logger.error("Error extracting documents", t);
             throw new EntException("Error extracting documents", t);
-        } finally {
-            if (null != client) {
-                try {
-                    client.close();
-                } catch (IOException ex) {
-                    throw new EntException("Error closing client", ex);
-                }
-            }
         }
         return result;
     }
@@ -470,22 +471,6 @@ public class SearcherDAO implements ISolrSearcherDAO {
     @Override
     public void close() {
         // nothing to do
-    }
-
-    protected String getSolrAddress() {
-        return solrAddress;
-    }
-
-    protected void setSolrAddress(String solrAddress) {
-        this.solrAddress = solrAddress;
-    }
-
-    protected String getSolrCore() {
-        return solrCore;
-    }
-
-    protected void setSolrCore(String solrCore) {
-        this.solrCore = solrCore;
     }
 
     public ITreeNodeManager getTreeNodeManager() {
