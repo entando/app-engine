@@ -14,7 +14,6 @@
 package org.entando.entando.plugins.jpsolr.web.config;
 
 import com.agiletec.aps.system.services.role.Permission;
-import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.aps.system.exception.RestServerError;
@@ -28,7 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author E.Santoboni
@@ -66,11 +69,11 @@ public class SolrConfigController {
 
     @RestAccessControl(permission = Permission.SUPERUSER)
     @PostMapping("/config/{contentTypeCode}")
-    public ResponseEntity<SimpleRestResponse<Map>> reloadReferences(@PathVariable String contentTypeCode) {
+    public ResponseEntity<SimpleRestResponse<Map<String, String>>> reloadReferences(@PathVariable String contentTypeCode) {
         logger.debug("REST request - reload content type references {}", contentTypeCode);
         try {
             this.getSolrSearchEngineManager().refreshContentType(contentTypeCode);
-            Map<String, String> result = ImmutableMap.of(
+            Map<String, String> result = Map.of(
                     "status", "success",
                     CONTENT_TYPE_CODE, contentTypeCode
             );

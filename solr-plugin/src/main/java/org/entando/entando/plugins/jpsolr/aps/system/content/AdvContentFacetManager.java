@@ -33,15 +33,11 @@ import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManag
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class AdvContentFacetManager implements IAdvContentFacetManager {
-
-    private static final Logger logger = LoggerFactory.getLogger(AdvContentFacetManager.class);
 
     private ICategoryManager categoryManager;
     private ICmsSearchEngineManager searchEngineManager;
@@ -56,16 +52,15 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
             SearchEngineFilter[] categoryFilters = null;
             if (null != facetNodeCodes && !facetNodeCodes.isEmpty()) {
-                List<SearchEngineFilter> categoryFiltersList = facetNodeCodes.stream()
+                List<SearchEngineFilter<String>> categoryFiltersList = facetNodeCodes.stream()
                         .filter(c -> this.getCategoryManager().getCategory(c) != null)
-                        .map(c -> new SearchEngineFilter("category", false, c)).collect(Collectors.toList());
+                        .map(c -> new SearchEngineFilter<>("category", false, c)).collect(Collectors.toList());
                 categoryFilters = categoryFiltersList.toArray(new SearchEngineFilter[categoryFiltersList.size()]);
             }
             return (SolrFacetedContentsResult) this.getSearchEngineManager()
                     .searchFacetedEntities(filters, categoryFilters, groupCodes);
-        } catch (Exception t) {
-            logger.error("Error loading facet result", t);
-            throw new EntException("Error loading facet result", t);
+        } catch (Exception ex) {
+            throw new EntException("Error loading facet result", ex);
         }
     }
 
@@ -73,13 +68,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
     public FacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
             SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes)
             throws EntException {
-        try {
-            SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
-            return this.getSearchEngineManager().searchFacetedEntities(filters, facetNodeCodes, groupCodes);
-        } catch (Exception t) {
-            logger.error("Error loading facet result", t);
-            throw new EntException("Error loading facet result", t);
-        }
+        SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
+        return this.getSearchEngineManager().searchFacetedEntities(filters, facetNodeCodes, groupCodes);
     }
 
     protected SearchEngineFilter[] getFilters(SearchEngineFilter[] baseFilters, List<UserFilterOptionBean> beans) {
@@ -87,7 +77,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
         if (null != beans) {
             for (int i = 0; i < beans.size(); i++) {
                 UserFilterOptionBean bean = beans.get(i);
-                SearchEngineFilter sf = bean.extractFilter();
+                SearchEngineFilter<?> sf = bean.extractFilter();
                 if (null != sf) {
                     filters = ArrayUtils.add(filters, sf);
                 }
@@ -115,9 +105,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             List<String> userGroupCodes = this.getAllowedGroups(user);
             facetedResult = ((ISolrSearchEngineManager) this.getSearchEngineManager()).searchFacetedEntities(
                     doubleFilters, categorySearchFilters, userGroupCodes);
-        } catch (Exception t) {
-            logger.error("error in search contents", t);
-            throw new RestServerError("error in search contents", t);
+        } catch (EntException ex) {
+            throw new RestServerError("error in search contents", ex);
         }
         return facetedResult;
     }

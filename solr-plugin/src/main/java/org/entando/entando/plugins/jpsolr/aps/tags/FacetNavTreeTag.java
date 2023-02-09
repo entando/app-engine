@@ -21,22 +21,17 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.tags;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
-
-import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
-import org.entando.entando.ent.exception.EntException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.ServletRequest;
+import javax.servlet.jsp.JspException;
+import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 
@@ -44,8 +39,6 @@ import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHel
  * @author E.Santoboni
  */
 public class FacetNavTreeTag extends AbstractFacetNavTag {
-
-	private static final Logger logger = LoggerFactory.getLogger(FacetNavTreeTag.class);
 	
 	@Override
 	public int doStartTag() throws JspException {

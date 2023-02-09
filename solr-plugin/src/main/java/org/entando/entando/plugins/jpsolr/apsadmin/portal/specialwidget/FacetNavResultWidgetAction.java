@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
-import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.util.FacetNavWidgetHelper;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
             super.validate();
             this.createValuedShowlet();
             this.validateContentTypes();
-        } catch (EntException | RuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.error("Exception in validate", ex);
         }
     }
@@ -96,7 +95,7 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
                 this.getWidget().getConfig().setProperty(configParamName, typesFilter);
                 this.setContentTypesFilter(typesFilter);
             }
-        } catch (EntException | RuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.error("Exception in joinContentType", ex);
             return FAILURE;
         }
@@ -120,7 +119,7 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
                 this.getWidget().getConfig().setProperty(configParamName, typesFilter);
                 this.setContentTypesFilter(typesFilter);
             }
-        } catch (EntException | RuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.error("Exception in removeContentType", ex);
             return FAILURE;
         }
@@ -136,18 +135,6 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
             String configParamName = this.getWidget().getConfig().getProperty(paramName);
             this.setContentTypesFilter(configParamName);
         }
-    }
-
-    /**
-     * Returns widget type parameter
-     *
-     * @param paramName
-     * @return the Widget type parameter
-     * @deprecated use getWidgetTypeParameter(String)
-     */
-    @Deprecated
-    public WidgetTypeParameter getShowletTypeParameter(String paramName) {
-        return this.getWidgetTypeParameter(paramName);
     }
 
     /**

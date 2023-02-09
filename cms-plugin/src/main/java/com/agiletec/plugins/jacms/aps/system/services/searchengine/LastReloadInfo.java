@@ -34,7 +34,7 @@ public class LastReloadInfo implements Serializable {
 	 * Setta la data dell'ultimo ricaricamento indici effettuata.
 	 * @param date La data dell'ultimo ricaricamento.
 	 */
-	protected void setDate(Date date) {
+	public void setDate(Date date) {
 		this._date = date;
 	}
 	
@@ -52,7 +52,7 @@ public class LastReloadInfo implements Serializable {
 	 * True se è andato a buon fine,false in caso contrario.
 	 * @param result Il risultato dell'ultimo ricaricamento.
 	 */
-	protected void setResult(int result) {
+	public void setResult(int result) {
 		this._result = result;
 	}
 	

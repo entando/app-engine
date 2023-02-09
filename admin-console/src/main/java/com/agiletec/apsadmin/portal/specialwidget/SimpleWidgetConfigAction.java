@@ -23,7 +23,6 @@ import java.util.List;
 import org.entando.entando.aps.system.services.actionlog.model.ActivityStreamInfo;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
-import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -114,7 +113,7 @@ public class SimpleWidgetConfigAction extends AbstractPortalAction {
         super.addActivityStreamInfo(asi);
     }
 
-    protected void createValuedShowlet() throws EntException {
+    protected void createValuedShowlet() {
         Widget widget = this.createNewShowlet();
         WidgetType type = this.getWidgetTypeManager().getWidgetType(widget.getTypeCode());
         List<WidgetTypeParameter> parameters = type.getTypeParameters();

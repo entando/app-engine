@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -21,11 +22,11 @@ import java.util.Map;
  */
 public interface ISolrSearchEngineDAOFactory {
     
-    public List<Map<String, Object>> getFields();
+    public List<Map<String, Serializable>> getFields();
 
-    public boolean addField(Map<String, Object> properties);
+    public boolean addField(Map<String, Serializable> properties);
 
-    public boolean replaceField(Map<String, Object> properties);
+    public boolean replaceField(Map<String, Serializable> properties);
 
     public boolean deleteField(String fieldKey);
     

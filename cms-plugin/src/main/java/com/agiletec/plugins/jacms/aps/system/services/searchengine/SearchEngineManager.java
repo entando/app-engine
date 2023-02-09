@@ -112,7 +112,7 @@ public class SearchEngineManager extends AbstractService
         }
     }
 
-    protected void sellOfQueueEvents() {
+    public void sellOfQueueEvents() {
         while (this.publicContentChangedEventQueue.peekLast() != null) {
             PublicContentChangedEvent event = this.publicContentChangedEventQueue.pollLast();
             this.manageEvent(event);
@@ -214,7 +214,7 @@ public class SearchEngineManager extends AbstractService
         }
     }
 
-    protected void notifyEndingIndexLoading(LastReloadInfo info, IIndexerDAO newIndexerDAO) {
+    public void notifyEndingIndexLoading(LastReloadInfo info, IIndexerDAO newIndexerDAO) {
         try {
             if (info.getResult() == LastReloadInfo.ID_SUCCESS_RESULT) {
                 ISearcherDAO newSearcherDAO = this.getFactory().getSearcher(this.newTempSubDirectory);

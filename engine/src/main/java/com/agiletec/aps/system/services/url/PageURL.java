@@ -13,16 +13,14 @@
  */
 package com.agiletec.aps.system.services.url;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.system.services.page.IPage;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Rappresenta un URL ad una pagina del sistema. Oggetti di questa classe
@@ -30,7 +28,7 @@ import com.agiletec.aps.system.services.page.IPage;
  * essere memorizzati in modo permanente.
  * @author M.Diana
  */
-public class PageURL {
+public class PageURL implements Serializable {
 	
 	/**
 	 * Costruttore utilizzato dalla factory di questa classe 
@@ -39,8 +37,8 @@ public class PageURL {
 	 * @param reqCtx The Request Context
 	 */
 	public PageURL(IURLManager urlManager, RequestContext reqCtx) {
-		this._urlManager = urlManager;
-		this._reqCtx = reqCtx;
+		this.urlManager = urlManager;
+		this.reqCtx = reqCtx;
 	}
 	
 	/**
@@ -48,7 +46,7 @@ public class PageURL {
 	 * @param langCode Il codice della lingua da impostare.
 	 */
 	public void setLangCode(String langCode) {
-		this._langCode = langCode;
+		this.langCode = langCode;
 	}
 
 	/**
@@ -57,14 +55,14 @@ public class PageURL {
 	 * @param lang Il codice della lingua da impostare.
 	 */
 	public void setLang(Lang lang) {
-		this._langCode = lang.getCode();
+		this.langCode = lang.getCode();
 	}
 	/**
 	 * Imposta il codice della pagina richiesta.
 	 * @param pageCode Il codice della pagina da impostare.
 	 */
 	public void setPageCode(String pageCode) {
-		this._pageCode = pageCode;
+		this.pageCode = pageCode;
 	}
 
 	/**
@@ -73,7 +71,7 @@ public class PageURL {
 	 * @param page La pagina da impostare.
 	 */
 	public void setPage(IPage page) {
-		this._pageCode = page.getCode();
+		this.pageCode = page.getCode();
 	}
 	
 	/**
@@ -81,14 +79,14 @@ public class PageURL {
 	 * @return Il codice lingua, o null se non è stata impostata.
 	 */
 	public String getLangCode() {
-		return _langCode;
+		return langCode;
 	}
 
 	/**
 	 * @return Il codice pagina, o null se non è stata impostata.
 	 */
 	public String getPageCode() {
-		return _pageCode;
+		return pageCode;
 	}
 
 	/**
@@ -98,11 +96,11 @@ public class PageURL {
 	 */
 	public void addParam(String name, String value) {
 		if (name != null) {
-			if (this._params == null) {
-				this._params = new HashMap();
+			if (this.params == null) {
+				this.params = new HashMap<>();
 			}
 			String val = (value == null ? "" : value);
-			this._params.put(name, val);
+			this.params.put(name, val);
 		}
 	}
 	
@@ -110,8 +108,8 @@ public class PageURL {
 	 * Restituisce la mappa dei parametri, indicizzati in base al nome.
 	 * @return La mappa dei parametri.
 	 */
-	public Map getParams() {
-		return _params;
+	public Map<String, String> getParams() {
+		return params;
 	}
 	
 	/**
@@ -120,7 +118,7 @@ public class PageURL {
 	 * @return L'URL generato.
 	 */
 	public String getURL() {
-		return this._urlManager.getURLString(this, _reqCtx);
+		return this.urlManager.getURLString(this, reqCtx);
 	}
 	
 	/**
@@ -135,15 +133,13 @@ public class PageURL {
 	 * @param parametersToExclude The parameters to exclude.
 	 */
 	public void setParamRepeat(List<String> parametersToExclude) {
-		if (null == this._reqCtx) {
+		if (null == this.reqCtx) {
 			return;
 		}
-		HttpServletRequest req = this._reqCtx.getRequest();
-		Map params = req.getParameterMap();
-		if (null != params && !params.isEmpty()) {
-			Iterator keyIter = params.keySet().iterator();
-			while (keyIter.hasNext()) {
-				String key = (String) keyIter.next();
+		HttpServletRequest req = this.reqCtx.getRequest();
+		Map<String, String[]> paramsMap = req.getParameterMap();
+		if (null != paramsMap && !paramsMap.isEmpty()) {
+			for(String key : paramsMap.keySet()) {
 				if (null == parametersToExclude || !parametersToExclude.contains(key)) {
 					this.addParam(key, req.getParameter(key));
 				}
@@ -152,10 +148,10 @@ public class PageURL {
 	}
 	
 	public boolean isEscapeAmp() {
-		return _escapeAmp;
+		return escapeAmp;
 	}
 	public void setEscapeAmp(boolean escapeAmp) {
-		this._escapeAmp = escapeAmp;
+		this.escapeAmp = escapeAmp;
 	}
 
 	public String getBaseUrlMode() {
@@ -166,13 +162,13 @@ public class PageURL {
 		this.baseUrlMode = baseUrlMode;
 	}
 
-	private IURLManager _urlManager;
-	private RequestContext _reqCtx;
-	private String _pageCode;
-	private String _langCode;
+	private transient IURLManager urlManager;
+	private transient RequestContext reqCtx;
+	private String pageCode;
+	private String langCode;
 	private String  baseUrlMode = null;
-	private Map _params;
+	private Map<String, String> params;
 	
-	private boolean _escapeAmp = true;
+	private boolean escapeAmp = true;
 	
 }

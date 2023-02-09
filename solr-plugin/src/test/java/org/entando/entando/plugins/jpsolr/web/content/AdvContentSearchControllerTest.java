@@ -53,13 +53,13 @@ import org.springframework.test.web.servlet.ResultActions;
  * @author E.Santoboni
  */
 public class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
-    
+
     @Autowired
     private IContentManager contentManager;
 
     @Autowired
     private ICmsSearchEngineManager searchEngineManager;
-    
+
     @BeforeAll
     public static void setup() throws Exception {
         AbstractControllerIntegrationTest.setup();
@@ -77,12 +77,12 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             throw e;
         }
     }
-    
+
     @Test
-    public void testGetContents() throws Exception {
+    void testGetContents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        
+
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .sessionAttr("user", user)
@@ -91,7 +91,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result.andExpect(status().isOk());
         int totalPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(24, totalPayloadSize);
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -103,7 +103,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result.andExpect(status().isOk());
         int evnPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(11, evnPayloadSize);
-        
+
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .sessionAttr("user", user)
@@ -114,7 +114,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         Assertions.assertEquals(totalPayloadSize, totalFacetedPayloadSize);
         int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(6, occurrencesPayloadSize);
-        
+
         facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -129,9 +129,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         int evnOccurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(4, evnOccurrencesPayloadSize);
     }
-    
+
     @Test
-    public void testGetContentsByGuestUser_1() throws Exception {
+    void testGetContentsByGuestUser_1() throws Exception {
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -142,7 +142,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         System.out.println(bodyResult);
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(9, payloadSize);
-        
+
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -156,9 +156,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(4, occurrencesPayloadSize);
     }
-    
+
     @Test
-    public void testGetContentsByGuestUser_2() throws Exception {
+    void testGetContentsByGuestUser_2() throws Exception {
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents"));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
@@ -166,7 +166,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         System.out.println(bodyResult);
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(15, payloadSize);
-        
+
         ResultActions evnResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -180,7 +180,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(evnBodyResult, "$.payload[" + i + "]");
             Assertions.assertTrue(extractedId.startsWith("EVN"));
         }
-        
+
         ResultActions noEvnResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -196,9 +196,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         }
         Assertions.assertEquals((noEvnPayloadSize + evnPayloadSize), payloadSize);
     }
-    
+
     @Test
-    public void testGetReturnsList() throws Exception {
+    void testGetReturnsList() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -222,9 +222,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         int payloadSize2 = JsonPath.read(bodyResult2, "$.payload.size()");
         Assertions.assertEquals(payloadSize2, payloadSize);
     }
-    
+
     @Test
-    public void testLoadPublicEvents_1() throws Exception {
+    void testLoadPublicEvents_1() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -271,11 +271,11 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertTrue(newExpectedFreeContentsId.contains(extractedId));
         }
     }
-    
+
     @Test
-    public void testLoadPublicEvents_1_paginated() throws Exception {
+    void testLoadPublicEvents_1_paginated() throws Exception {
         List<String> expectedContentsId = Arrays.asList("EVN21", "EVN41",
-                "EVN25","EVN24","EVN23","EVN20","EVN103","EVN194","EVN193","EVN192","EVN191");
+                "EVN25", "EVN24", "EVN23", "EVN20", "EVN103", "EVN194", "EVN193", "EVN192", "EVN191");
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
@@ -290,7 +290,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
-        
+
         result.andExpect(jsonPath("$.payload.size()", is(5)));
         for (int i = 0; i < 5; i++) {
             result.andExpect(jsonPath("$.payload.[" + i + "]", is(expectedContentsId.get(i))));
@@ -299,7 +299,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result.andExpect(jsonPath("$.metaData.pageSize", is(5)));
         result.andExpect(jsonPath("$.metaData.lastPage", is(3)));
         result.andExpect(jsonPath("$.metaData.totalItems", is(expectedContentsId.size())));
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
@@ -312,19 +312,19 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
-        
+
         result.andExpect(jsonPath("$.payload.size()", is(5)));
         for (int i = 0; i < 5; i++) {
-            result.andExpect(jsonPath("$.payload.[" + i + "]", is(expectedContentsId.get(i+6))));
+            result.andExpect(jsonPath("$.payload.[" + i + "]", is(expectedContentsId.get(i + 6))));
         }
         result.andExpect(jsonPath("$.metaData.page", is(2)));
         result.andExpect(jsonPath("$.metaData.pageSize", is(6)));
         result.andExpect(jsonPath("$.metaData.lastPage", is(2)));
         result.andExpect(jsonPath("$.metaData.totalItems", is(expectedContentsId.size())));
     }
-    
+
     @Test
-    public void testLoadPublicEvents_2() throws Exception {
+    void testLoadPublicEvents_2() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
@@ -344,7 +344,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
         String[] expected = {"EVN193", "EVN24", "EVN23", "EVN41", "EVN25",
-            "EVN20", "EVN21", "EVN103", "EVN192"};
+                "EVN20", "EVN21", "EVN103", "EVN192"};
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(expected.length, payloadSize);
         for (int i = 0; i < expected.length; i++) {
@@ -353,9 +353,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(expectedId, extractedId);
         }
     }
-    
+
     @Test
-    public void testLoadPublicEvents_3() throws Exception {
+    void testLoadPublicEvents_3() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization("coach", "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -379,7 +379,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
-        String[] expected = {"EVN103","EVN193","EVN192"};
+        String[] expected = {"EVN103", "EVN193", "EVN192"};
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(expected.length, payloadSize);
         for (int i = 0; i < expected.length; i++) {
@@ -388,9 +388,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(expectedId, extractedId);
         }
     }
-    
+
     @Test
-    public void testLoadPublicEvents_4() throws Exception {
+    void testLoadPublicEvents_4() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
@@ -410,7 +410,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result.andExpect(status().isOk());
         int payloadSize = JsonPath.read(bodyResult1, "$.payload.size()");
         Assertions.assertEquals(0, payloadSize);
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -425,7 +425,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult2 = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
-        String[] expected2 = {"EVN20","EVN21"};
+        String[] expected2 = {"EVN20", "EVN21"};
         int payloadSize2 = JsonPath.read(bodyResult2, "$.payload.size()");
         Assertions.assertEquals(expected2.length, payloadSize2);
         for (int i = 0; i < expected2.length; i++) {
@@ -433,7 +433,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId2 = JsonPath.read(bodyResult2, "$.payload[" + i + "]");
             Assertions.assertEquals(expectedId2, extractedId2);
         }
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -456,9 +456,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(expectedId3, extractedId3);
         }
     }
-    
+
     @Test
-    public void testLoadOrderedPublicEvents_1() throws Exception {
+    void testLoadOrderedPublicEvents_1() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -474,7 +474,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
         String[] expectedFreeContentsId = {"EVN24", "EVN23",
-            "EVN191", "EVN192", "EVN193", "EVN194", "EVN20", "EVN21", "EVN25"};
+                "EVN191", "EVN192", "EVN193", "EVN194", "EVN20", "EVN21", "EVN25"};
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(expectedFreeContentsId.length, payloadSize);
         for (int i = 0; i < expectedFreeContentsId.length; i++) {
@@ -483,9 +483,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(expectedId, extractedId);
         }
     }
-    
+
     @Test
-    public void testLoadOrderedPublicEvents_2() throws Exception {
+    void testLoadOrderedPublicEvents_2() throws Exception {
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -495,13 +495,13 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER));
         result.andExpect(status().isOk());
         String[] expectedFreeOrderedContentsId_1 = {"EVN191", "EVN192",
-            "EVN193", "EVN194", "EVN20", "EVN23", "EVN24", "EVN25", "EVN21"};
+                "EVN193", "EVN194", "EVN20", "EVN23", "EVN24", "EVN25", "EVN21"};
         result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeOrderedContentsId_1.length)));
         for (int i = 0; i < expectedFreeOrderedContentsId_1.length; i++) {
             String expectedId = expectedFreeOrderedContentsId_1[expectedFreeOrderedContentsId_1.length - i - 1];
             result.andExpect(jsonPath("$.payload[" + i + "]", is(expectedId)));
         }
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("langCode", "it")
@@ -519,9 +519,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             result.andExpect(jsonPath("$.payload[" + i + "]", is(expectedId)));
         }
     }
-    
+
     @Test
-    public void testLoadOrderedPublicEvents_3() throws Exception {
+    void testLoadOrderedPublicEvents_3() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -538,7 +538,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
         String[] expectedFreeOrderedContentsId_1 = {"EVN194", "EVN193", "EVN24",
-            "EVN23", "EVN25"};
+                "EVN23", "EVN25"};
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(expectedFreeOrderedContentsId_1.length, payloadSize);
         for (int i = 0; i < expectedFreeOrderedContentsId_1.length; i++) {
@@ -568,9 +568,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(expectedId, extractedId);
         }
     }
-    
+
     @Test
-    public void testLoadOrderedPublicEvents_4() throws Exception {
+    void testLoadOrderedPublicEvents_4() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -582,10 +582,10 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         try {
             this.contentManager.saveContent(masterContent);
             this.contentManager.insertOnLineContent(masterContent);
-            
+
             super.waitNotifyingThread();
             super.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
-            
+
             ResultActions result = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -596,10 +596,10 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                             .sessionAttr("user", user)
                             .header("Authorization", "Bearer " + accessToken));
             String bodyResult = result.andReturn().getResponse().getContentAsString();
-            
+
             result.andExpect(status().isOk());
             String[] expectedFreeOrderedContentsId = {"EVN194", masterContent.getId(),
-                "EVN193", "EVN24", "EVN23", "EVN25", "EVN20", "EVN21", "EVN192", "EVN191"};
+                    "EVN193", "EVN24", "EVN23", "EVN25", "EVN20", "EVN21", "EVN192", "EVN191"};
             int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
             Assertions.assertEquals(expectedFreeOrderedContentsId.length, payloadSize);
             for (int i = 0; i < expectedFreeOrderedContentsId.length; i++) {
@@ -614,9 +614,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             }
         }
     }
-    
+
     @Test
-    public void testLoadPublicFreeARTContents() throws Exception {
+    void testLoadPublicFreeARTContents() throws Exception {
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -630,7 +630,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
             Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
         }
-        
+
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -647,13 +647,13 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(1, occurrencesPayloadSize);
     }
-    
+
     @Test
-    public void testLoadPublicARTContents() throws Exception {
+    void testLoadPublicARTContents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        
+
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -663,14 +663,14 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
-        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121",
                 "ART122", "ART104", "ART102", "ART111", "ART120", "ART112");
         result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedContentsId.size())));
         for (int i = 0; i < expectedContentsId.size(); i++) {
             String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
             Assertions.assertTrue(expectedContentsId.contains(extractedId));
         }
-        
+
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -680,7 +680,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
-        
+
         int payloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
         Assertions.assertEquals(expectedContentsId.size(), payloadSize);
         for (int i = 0; i < expectedContentsId.size(); i++) {
@@ -690,13 +690,13 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(5, occurrencesPayloadSize);
     }
-    
+
     @Test
-    public void testLoadPublic_ART_EVN_Contents() throws Exception {
+    void testLoadPublic_ART_EVN_Contents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        
+
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -709,9 +709,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
-        
-        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
-                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", "EVN25", "EVN41", 
+
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121",
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", "EVN25", "EVN41",
                 "EVN103", "EVN193", "EVN20", "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
         List<String> orderedIds = new ArrayList<>();
         result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedContentsId.size())));
@@ -720,7 +720,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertTrue(expectedContentsId.contains(extractedId));
             orderedIds.add(extractedId);
         }
-        
+
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -732,7 +732,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         facetedResult.andExpect(status().isOk());
-        
+
         Map<String, Integer> occurrences = new HashMap<>();
         occurrences.put("general", 6);
         occurrences.put("evento", 2);
@@ -750,7 +750,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String key = keys.get(i);
             facetedResult.andExpect(jsonPath("$.payload.occurrences." + key, is(occurrences.get(key))));
         }
-        
+
         facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -766,16 +766,16 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         facetedResult.andExpect(jsonPath("$.payload.totalSize", is(21)));
         facetedResult.andExpect(jsonPath("$.payload.contentsId.size()", is(3)));
         for (int i = 0; i < 3; i++) {
-            facetedResult.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(orderedIds.get(i+3))));
+            facetedResult.andExpect(jsonPath("$.payload.contentsId[" + i + "]", is(orderedIds.get(i + 3))));
         }
         for (int i = 0; i < keys.size(); i++) {
             String key = keys.get(i);
             facetedResult.andExpect(jsonPath("$.payload.occurrences." + key, is(occurrences.get(key))));
         }
     }
-    
+
     @Test
-    public void testLoadPublicContentsForCategory_1() throws Exception {
+    void testLoadPublicContentsForCategory_1() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -810,9 +810,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         String extractedId = JsonPath.read(bodyResult, "$.payload[0]");
         Assertions.assertEquals("EVN192", extractedId);
     }
-    
+
     @Test
-    public void testLoadPublicEventsForCategory_2() throws Exception {
+    void testLoadPublicEventsForCategory_2() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
@@ -843,9 +843,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
         }
     }
-    
+
     @Test
-    public void testLoadPublicFreeContentsByRole() throws Exception {
+    void testLoadPublicFreeContentsByRole() throws Exception {
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
@@ -859,7 +859,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
             Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
         }
-        
+
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
                         .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
@@ -873,11 +873,13 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertTrue(expectedFreeContentsId.contains(extractedId));
         }
     }
-    
+
     @Test
-    public void testLoadPublicFreeOrderedContentsByRole() throws Exception {
-        List<String> expectedFreeContentsId = Arrays.asList("EVN24","EVN23","ART1","EVN21","EVN20","EVN41","EVN25",
-                "EVN191","EVN192","EVN193","EVN103","ART104","ART102","ART111","ART112","ART120","ART121","ART122","EVN194");
+    void testLoadPublicFreeOrderedContentsByRole() throws Exception {
+        List<String> expectedFreeContentsId = Arrays.asList("EVN24", "EVN23", "ART1", "EVN21", "EVN20", "EVN41",
+                "EVN25",
+                "EVN191", "EVN192", "EVN193", "EVN103", "ART104", "ART102", "ART111", "ART112", "ART120", "ART121",
+                "ART122", "EVN194");
         // NOTA : "ART180" e "ART187" non hanno titolo
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
@@ -893,13 +895,13 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
-        
+
         result.andExpect(jsonPath("$.payload", Matchers.hasSize(expectedFreeContentsId.size())));
         for (int i = 0; i < expectedFreeContentsId.size(); i++) {
             String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
             Assertions.assertEquals(extractedId, expectedFreeContentsId.get(i));
         }
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
@@ -916,12 +918,14 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(extractedId, expectedFreeContentsId.get(expectedFreeContentsId.size() - i - 1));
         }
     }
-    
+
     @Test
-    public void testLoadPublicFreeOrderedContentsByRole_paginated() throws Exception {
-        List<String> expectedFreeContentsId = Arrays.asList("EVN24","EVN23","ART1","EVN21","EVN20","EVN41","EVN25",
-                "EVN191","EVN192","EVN193","EVN103","ART104","ART102","ART111","ART112","ART120","ART121","ART122","EVN194");
-        
+    void testLoadPublicFreeOrderedContentsByRole_paginated() throws Exception {
+        List<String> expectedFreeContentsId = Arrays.asList("EVN24", "EVN23", "ART1", "EVN21", "EVN20", "EVN41",
+                "EVN25",
+                "EVN191", "EVN192", "EVN193", "EVN103", "ART104", "ART102", "ART111", "ART112", "ART120", "ART121",
+                "ART122", "EVN194");
+
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
@@ -937,7 +941,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
-        
+
         result.andExpect(jsonPath("$.payload.size()", is(5)));
         for (int i = 0; i < 5; i++) {
             result.andExpect(jsonPath("$.payload.[" + i + "]", is(expectedFreeContentsId.get(i))));
@@ -946,7 +950,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result.andExpect(jsonPath("$.metaData.pageSize", is(5)));
         result.andExpect(jsonPath("$.metaData.lastPage", is(4)));
         result.andExpect(jsonPath("$.metaData.totalItems", is(expectedFreeContentsId.size())));
-        
+
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].entityAttr", JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE)
@@ -959,24 +963,24 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("pageSize", "6")
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
-        
+
         result.andExpect(status().isOk());
         result.andExpect(jsonPath("$.payload.size()", is(6)));
         for (int i = 0; i < 5; i++) {
-            result.andExpect(jsonPath("$.payload.[" + i + "]", is(expectedFreeContentsId.get(i+6))));
+            result.andExpect(jsonPath("$.payload.[" + i + "]", is(expectedFreeContentsId.get(i + 6))));
         }
         result.andExpect(jsonPath("$.metaData.page", is(2)));
         result.andExpect(jsonPath("$.metaData.pageSize", is(6)));
         result.andExpect(jsonPath("$.metaData.lastPage", is(4)));
         result.andExpect(jsonPath("$.metaData.totalItems", is(expectedFreeContentsId.size())));
     }
-    
+
     @Test
-    public void testLoadPublic_ART_EVN_Contents_orderedByRole() throws Exception {
+    void testLoadPublic_ART_EVN_Contents_orderedByRole() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        
+
         ResultActions result_1 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -987,9 +991,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .header("Authorization", "Bearer " + accessToken));
         result_1.andExpect(status().isOk());
         String bodyResult_1 = result_1.andReturn().getResponse().getContentAsString();
-        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121", 
-                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
-                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+        List<String> expectedContentsId = Arrays.asList("ART1", "ART180", "ART187", "ART121",
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112",
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20",
                 "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
         int firstPayloadSize = JsonPath.read(bodyResult_1, "$.payload.size()");
         Assertions.assertEquals(expectedContentsId.size(), firstPayloadSize);
@@ -997,7 +1001,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(bodyResult_1, "$.payload[" + i + "]");
             Assertions.assertTrue(expectedContentsId.contains(extractedId));
         }
-        
+
         ResultActions result_2 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -1008,9 +1012,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
-        List<String> expectedContentsId_2 = Arrays.asList("ART1", "ART121", 
-                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112", 
-                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20", 
+        List<String> expectedContentsId_2 = Arrays.asList("ART1", "ART121",
+                "ART122", "ART104", "ART102", "ART111", "ART120", "ART112",
+                "EVN25", "EVN41", "EVN103", "EVN193", "EVN20",
                 "EVN194", "EVN191", "EVN21", "EVN24", "EVN23", "EVN192");
         result_2.andExpect(status().isOk());
         int payloadSize = JsonPath.read(bodyResult_2, "$.payload.size()");
@@ -1019,7 +1023,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(bodyResult_2, "$.payload[" + i + "]");
             Assertions.assertTrue(expectedContentsId_2.contains(extractedId));
         }
-        
+
         ResultActions result_3 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -1031,8 +1035,8 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
-        String[] expectedContentsId_3 = {"EVN194", "ART122", "ART121", "ART120", 
-                "ART112", "ART111", "ART102", "ART104", "EVN103", "EVN193", "EVN192", "EVN191", "EVN25", 
+        String[] expectedContentsId_3 = {"EVN194", "ART122", "ART121", "ART120",
+                "ART112", "ART111", "ART102", "ART104", "EVN103", "EVN193", "EVN192", "EVN191", "EVN25",
                 "EVN41", "EVN20", "EVN21", "ART1", "EVN23", "EVN24"};
         result_3.andExpect(status().isOk());
         int payloadSize_3 = JsonPath.read(bodyResult_3, "$.payload.size()");
@@ -1041,7 +1045,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(bodyResult_3, "$.payload[" + i + "]");
             Assertions.assertEquals(extractedId, expectedContentsId_3[i]);
         }
-        
+
         ResultActions result_4 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
@@ -1057,7 +1061,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String extractedId = JsonPath.read(bodyResult_4, "$.payload[" + i + "]");
             Assertions.assertEquals(extractedId, expectedContentsId_3[expectedContentsId_3.length - i - 1]);
         }
-        
+
         ResultActions result_5_en = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("lang", "en")
@@ -1070,9 +1074,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .sessionAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_5_en = result_5_en.andReturn().getResponse().getContentAsString();
-        String[] expectedContentsId_5_en = {"EVN41", "EVN24", "EVN103", "EVN23", "EVN21", 
-            "ART1", "EVN194", "EVN192", "EVN191", "EVN193", "ART120", "ART121", 
-            "ART104", "ART102", "ART111", "ART112", "ART122", "EVN25", "EVN20"};
+        String[] expectedContentsId_5_en = {"EVN41", "EVN24", "EVN103", "EVN23", "EVN21",
+                "ART1", "EVN194", "EVN192", "EVN191", "EVN193", "ART120", "ART121",
+                "ART104", "ART102", "ART111", "ART112", "ART122", "EVN25", "EVN20"};
         for (int i = 0; i < expectedContentsId_5_en.length; i++) {
             String extractedId = JsonPath.read(bodyResult_5_en, "$.payload[" + i + "]");
             Content content = this.contentManager.loadContent(extractedId, true);
@@ -1084,13 +1088,13 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(extractedId, expectedContentsId_5_en[i]);
         }
     }
-    
+
     @Test
-    public void testSearchByOption() throws Exception {
+    void testSearchByOption() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        
+
         ResultActions result_1 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("text", "ciliegia").param("lang", "it")
@@ -1120,7 +1124,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             textBody1.setText("The cherry festival held every year in a thriving country is renowned", "en");
             this.contentManager.insertOnLineContent(content1);
             content1Id = content1.getId();
-            
+
             Content content2 = this.contentManager.loadContent("EVN41", true);
             content2.setId(null);
             content2.setDescription("Sagra della ciliegia");
@@ -1128,13 +1132,17 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             title2.setText("La forma della ciliegia", "it");
             title2.setText("The shape of the cherry", "en");
             ITextAttribute textBody2 = (ITextAttribute) content2.getAttribute("CorpoTesto");
-            textBody2.setText("La ciliegia, normalmente sferica, di 0,7-2 centimetri di diametro, può assumere anche la forma a cuore o di sfera leggermente allungata", "it");
-            textBody2.setText("The cherry, normally spherical, 0.7-2 centimeters in diameter, can also take the shape of a heart or a slightly elongated sphere", "en");
+            textBody2.setText(
+                    "La ciliegia, normalmente sferica, di 0,7-2 centimetri di diametro, può assumere anche la forma a cuore o di sfera leggermente allungata",
+                    "it");
+            textBody2.setText(
+                    "The cherry, normally spherical, 0.7-2 centimeters in diameter, can also take the shape of a heart or a slightly elongated sphere",
+                    "en");
             this.contentManager.insertOnLineContent(content2);
             content2Id = content2.getId();
             waitNotifyingThread();
             // "exact", "all", "one", "any"
-            
+
             List<String> orders = Arrays.asList(FieldSearchFilter.ASC_ORDER, FieldSearchFilter.DESC_ORDER);
             for (int k = 0; k < orders.size(); k++) {
                 String order = orders.get(k);
@@ -1158,7 +1166,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                     }
                 }
             }
-            
+
             ResultActions result_3 = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "all")
@@ -1169,7 +1177,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(1, payloadSize3);
             String extractedId = JsonPath.read(bodyResult_3, "$.payload[0]");
             Assertions.assertEquals(content1Id, extractedId);
-            
+
             ResultActions result_4 = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "exact")
@@ -1178,7 +1186,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
             int payloadSize4 = JsonPath.read(bodyResult_4, "$.payload.size()");
             Assertions.assertEquals(0, payloadSize4);
-            
+
             ResultActions result_5 = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("text", "mostra della ciliegia").param("lang", "it").param("searchOption", "exact")
@@ -1189,7 +1197,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             Assertions.assertEquals(1, payloadSize5);
             String extractedId_5 = JsonPath.read(bodyResult_5, "$.payload[0]");
             Assertions.assertEquals(content1Id, extractedId_5);
-                    
+
         } catch (Exception e) {
             throw e;
         } finally {
@@ -1205,5 +1213,5 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             }
         }
     }
-    
+
 }

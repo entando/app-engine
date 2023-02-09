@@ -4,13 +4,14 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.LastReloadInfo;
 import java.util.Date;
-import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
@@ -32,7 +33,7 @@ public class SolrIndexLoaderThread extends Thread {
         this.typeCode = typeCode;
     }
 
-    public SolrIndexLoaderThread(String typeCode, SearchEngineManager searchEngineManager,
+    public SolrIndexLoaderThread(String typeCode, SolrSearchEngineManager searchEngineManager,
             IContentManager contentManager, IIndexerDAO indexerDao) {
         this.contentManager = contentManager;
         this.searchEngineManager = searchEngineManager;
@@ -48,7 +49,7 @@ public class SolrIndexLoaderThread extends Thread {
         try {
             this.loadNewIndex();
             reloadInfo.setResult(LastReloadInfo.ID_SUCCESS_RESULT);
-        } catch (Throwable t) {
+        } catch (EntException t) {
             reloadInfo.setResult(LastReloadInfo.ID_FAILURE_RESULT);
             logger.error("error in run", t);
         } finally {
@@ -62,34 +63,28 @@ public class SolrIndexLoaderThread extends Thread {
         }
     }
 
-    private void loadNewIndex() throws Throwable {
-        try {
-            EntitySearchFilter[] filters = null;
-            if (!StringUtils.isBlank(this.getTypeCode())) {
-                EntitySearchFilter filter = new EntitySearchFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false,
-                        this.getTypeCode(), false);
-                filters = new EntitySearchFilter[]{filter};
-            }
-            List<String> contentsId = this.contentManager.searchId(filters);
-            ((IndexerDAO) this.indexerDao).addBulk(
-                    this.contentManager.searchId(filters).stream()
-                            .map(contentId -> {
-                                try {
-                                    return (IApsEntity) this.contentManager.loadContent(contentId, true);
-                                } catch (EntException ex) {
-                                    throw new EntRuntimeException("Unable to load content " + contentId, ex);
-                                }
-                            })
-                            .filter(content -> content != null));
-            logger.info("Indicizzazione effettuata");
-        } catch (RuntimeException ex) {
-            logger.error("error in reloadIndex", ex);
-            throw ex;
+    private void loadNewIndex() throws EntException {
+        EntitySearchFilter[] filters = null;
+        if (!StringUtils.isBlank(this.getTypeCode())) {
+            EntitySearchFilter<?> filter = new EntitySearchFilter<>(IEntityManager.ENTITY_TYPE_CODE_FILTER_KEY, false,
+                    this.getTypeCode(), false);
+            filters = new EntitySearchFilter[]{filter};
         }
+        ((IndexerDAO) this.indexerDao).addBulk(
+                this.contentManager.searchId(filters).stream()
+                        .map(contentId -> {
+                            try {
+                                return (IApsEntity) this.contentManager.loadContent(contentId, true);
+                            } catch (EntException ex) {
+                                throw new EntRuntimeException("Unable to load content " + contentId, ex);
+                            }
+                        })
+                        .filter(Objects::nonNull));
+        logger.info("Indicizzazione effettuata");
     }
 
     private String typeCode;
-    private SearchEngineManager searchEngineManager;
+    private SolrSearchEngineManager searchEngineManager;
     private IContentManager contentManager;
     private IIndexerDAO indexerDao;
 

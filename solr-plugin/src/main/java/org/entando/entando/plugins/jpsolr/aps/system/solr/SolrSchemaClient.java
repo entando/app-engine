@@ -13,6 +13,9 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,8 +43,8 @@ public class SolrSchemaClient {
         throw new IllegalStateException("Utility class");
     }
 
-    public static List<Map<String, Object>> getFields(String solrUrl, String core) {
-        List<Map<String, Object>> params = new ArrayList<>();
+    public static List<Map<String, Serializable>> getFields(String solrUrl, String core) {
+        List<Map<String, Serializable>> params = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String url = baseUrl + core + "/schema/fields";
@@ -51,40 +54,47 @@ public class SolrSchemaClient {
         Iterator<Object> iter = jsonFields.iterator();
         while (iter.hasNext()) {
             JSONObject item = (JSONObject) iter.next();
-            params.add(item.toMap());
+            params.add(toSerializableMap(item.toMap()));
         }
         return params;
     }
 
-    public static boolean addField(String solrUrl, String core, Map<String, Object> properties) {
+    private static Map<String, Serializable> toSerializableMap(Map<String, Object> map) {
+        Map<String, Serializable> serializableMap = new HashMap<>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            serializableMap.put(entry.getKey(), (Serializable) entry.getValue());
+        }
+        return serializableMap;
+    }
+
+    public static boolean addField(String solrUrl, String core, Map<String, Serializable> properties) {
         return executePost(solrUrl, core, "add-field", properties);
     }
 
-    public static boolean replaceField(String solrUrl, String core, Map<String, Object> properties) {
+    public static boolean replaceField(String solrUrl, String core, Map<String, Serializable> properties) {
         return executePost(solrUrl, core, "replace-field", properties);
     }
 
     public static boolean deleteField(String solrUrl, String core, String fieldKey) {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("name", fieldKey);
+        Map<String, Serializable> properties = new HashMap<>();
+        properties.put(SOLR_FIELD_NAME, fieldKey);
         return executePost(solrUrl, core, "delete-field", properties);
     }
 
     public static boolean deleteAllDocuments(String solrUrl, String core) {
-        Map<String, Object> properties = new HashMap<>();
+        Map<String, Serializable> properties = new HashMap<>();
         properties.put("query", "*:*");
         return executePost(solrUrl, core, "/update", "delete", properties);
     }
 
-    private static boolean executePost(String solrUrl, String core, String actionName, Map<String, Object> properties) {
+    private static boolean executePost(String solrUrl, String core, String actionName, Map<String, Serializable> properties) {
         return executePost(solrUrl, core, "/schema", actionName, properties);
     }
 
     private static boolean executePost(String solrUrl, String core, String subPath, String actionName,
-            Map<String, Object> properties) {
+            Map<String, Serializable> properties) {
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String url = baseUrl + core + subPath;
-        String response = null;
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -95,12 +105,11 @@ public class SolrSchemaClient {
             JSONObject obj = new JSONObject(responseEntity.getBody());
             int resultType = obj.getJSONObject("responseHeader").getInt("status");
             if (resultType != 0) {
-                logger.error("invalid response --> " + response);
+                logger.error("invalid response --> {}", responseEntity.getBody());
                 return false;
             }
-        } catch (Exception e) {
-            logger.error("Error calling Post {} - properties {} - response {} - errorMessage {}", url, properties,
-                    response, e.getMessage());
+        } catch (Exception ex) {
+            logger.error("Error calling Post {} - properties {}", url, properties, ex);
             return false;
         }
         return true;

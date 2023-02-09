@@ -21,13 +21,6 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.tags;
 
-import java.io.IOException;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.tree.ITreeNode;
@@ -35,6 +28,9 @@ import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+import java.io.IOException;
+import javax.servlet.ServletRequest;
+import javax.servlet.jsp.JspException;
 import org.entando.entando.aps.tags.ExtendedTagSupport;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
@@ -43,8 +39,6 @@ import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHel
  * @author E.Santoboni
  */
 public class FacetNodeTitleTag extends ExtendedTagSupport {
-
-    private static final Logger logger = LoggerFactory.getLogger(FacetNodeTitleTag.class);
 
     @Override
     public int doStartTag() throws JspException {
@@ -55,12 +49,12 @@ public class FacetNodeTitleTag extends ExtendedTagSupport {
                     JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
             ITreeNodeManager facetManager = facetNavHelper.getTreeNodeManager();
             ITreeNode facetNode = facetManager.getNode(this.getFacetNodeCode());
-            String separator = (this.getSeparator() == null) ? " / " : this.getSeparator();
+            String sep = (this.getSeparator() == null) ? " / " : this.getSeparator();
             if (null != facetNode) {
                 Lang currentLang = (Lang) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG);
                 String title = facetNode.getTitles().getProperty(currentLang.getCode());
                 if (this.isFullTitle()) {
-                    title = facetNode.getFullTitle(currentLang.getCode(), separator, facetManager);
+                    title = facetNode.getFullTitle(currentLang.getCode(), sep, facetManager);
                 }
                 if (null == title || title.trim().length() == 0) {
                     ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(
@@ -68,7 +62,7 @@ public class FacetNodeTitleTag extends ExtendedTagSupport {
                     Lang defaultLang = langManager.getDefaultLang();
                     title = facetNode.getTitles().getProperty(defaultLang.getCode());
                     if (this.isFullTitle()) {
-                        title = facetNode.getFullTitle(defaultLang.getCode(), separator, facetManager);
+                        title = facetNode.getFullTitle(defaultLang.getCode(), sep, facetManager);
                     }
                 }
                 if (null == title || title.trim().length() == 0) {

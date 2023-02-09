@@ -52,7 +52,7 @@ import org.springframework.web.filter.CorsFilter;
         "classpath*:spring/plugins/jpsolr/apsadmin/**.xml", //extension of default class
         "classpath*:spring/web/**.xml",})
 @WebAppConfiguration(value = "")
-public class AbstractControllerIntegrationTest {
+public abstract class AbstractControllerIntegrationTest {
 
     protected MockMvc mockMvc;
 

@@ -25,7 +25,6 @@ import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.apsadmin.system.ITreeAction;
 import com.agiletec.apsadmin.system.ITreeNodeBaseActionHelper;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,9 +53,9 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
 
     protected void validateFacets() {
         List<String> facetCodes = this.getFacetRootCodes();
-        for (String facetCode : facetCodes) {
-            if (null == this.getFacet(facetCode)) {
-                String[] args = {facetCode};
+        for (String code : facetCodes) {
+            if (null == this.getFacet(code)) {
+                String[] args = {code};
                 String fieldName = JpSolrSystemConstants.FACET_ROOTS_WIDGET_PARAM_NAME;
                 this.addFieldError(fieldName, this.getText("message.facetNavWidget.facets.notValid", args));
             }
@@ -85,19 +84,19 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
         try {
             this.createValuedShowlet();
             if (this.isValidFacet()) {
-                String facetCode = this.getFacetCode();
+                String code = this.getFacetCode();
                 List<String> facetCodes = this.getFacetRootCodes();
                 ITreeNode facet = this.getTreeNodeManager().getNode(this.getFacetCode());
                 if (facet != null && !facet.getCode().equals(facet.getParentCode()) && !facetCodes.contains(
-                        facetCode)) {//se esiste, non è la Home e non è
-                    facetCodes.add(facetCode);
+                        code)) {//se esiste, non è la Home e non è
+                    facetCodes.add(code);
                     String facetsFilter = FacetNavWidgetHelper.concatStrings(facetCodes, ",");
                     String configParamName = JpSolrSystemConstants.FACET_ROOTS_WIDGET_PARAM_NAME;
                     this.getWidget().getConfig().setProperty(configParamName, facetsFilter);
                     this.setFacetRootNodes(facetsFilter);
                 }
             }
-        } catch (EntException | RuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.error("Exception in joinFacet", ex);
             return FAILURE;
         }
@@ -112,16 +111,16 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
     public String removeFacet() {
         try {
             this.createValuedShowlet();
-            String facetCode = this.getFacetCode();
+            String code = this.getFacetCode();
             List<String> facetCodes = this.getFacetRootCodes();
-            if (facetCode != null) {
-                facetCodes.remove(facetCode);
+            if (code != null) {
+                facetCodes.remove(code);
                 String facetsFilter = FacetNavWidgetHelper.concatStrings(facetCodes, ",");
                 String configParamName = JpSolrSystemConstants.FACET_ROOTS_WIDGET_PARAM_NAME;
                 this.getWidget().getConfig().setProperty(configParamName, facetsFilter);
                 this.setFacetRootNodes(facetsFilter);
             }
-        } catch (EntException | RuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.error("Exception in removeFacet", ex);
             return FAILURE;
         }
@@ -134,8 +133,8 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
      * @return true if the facet is valid
      */
     private boolean isValidFacet() {
-        String facetCode = this.getFacetCode();
-        return (facetCode != null && this.getFacet(facetCode) != null);
+        String code = this.getFacetCode();
+        return (code != null && this.getFacet(code) != null);
     }
 
     public ITreeNode getFacetRoot() {
@@ -176,10 +175,10 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
             if (null != marker) {
                 if (marker.equalsIgnoreCase(ACTION_MARKER_OPEN)) {
                     targets = this.getTreeHelper()
-                            .checkTargetNodes(this.getTargetNode(), targets, this.getNodeGroupCodes());
+                            .checkTargetNodes(this.getTargetNode(), targets, null);
                 } else if (marker.equalsIgnoreCase(ACTION_MARKER_CLOSE)) {
                     targets = this.getTreeHelper()
-                            .checkTargetNodesOnClosing(this.getTargetNode(), targets, this.getNodeGroupCodes());
+                            .checkTargetNodesOnClosing(this.getTargetNode(), targets, null);
                 }
             }
             this.setTreeNodesToOpen(targets);
@@ -196,7 +195,7 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
         try {
             ITreeNode allowedTree = this.getAllowedTreeRootNode();
             node = this.getTreeHelper()
-                    .getShowableTree(this.getTreeNodesToOpen(), allowedTree, this.getNodeGroupCodes());
+                    .getShowableTree(this.getTreeNodesToOpen(), allowedTree, null);
         } catch (EntException | RuntimeException ex) {
             logger.error("Exception in getShowableTree", ex);
         }
@@ -207,21 +206,11 @@ public class FacetNavTreeWidgetAction extends FacetNavResultWidgetAction impleme
     public ITreeNode getAllowedTreeRootNode() {
         ITreeNode node = null;
         try {
-            node = this.getTreeHelper().getAllowedTreeRoot(this.getNodeGroupCodes());
+            node = this.getTreeHelper().getAllowedTreeRoot(null);
         } catch (EntException | RuntimeException ex) {
             logger.error("Exception in getAllowedTreeRootNode", ex);
         }
         return node;
-    }
-
-    /**
-     * Return the allowed codes of the group of the nodes to manage. This method has to be extended if the helper manage
-     * tree nodes with authority.
-     *
-     * @return The allowed group codes.
-     */
-    protected Collection<String> getNodeGroupCodes() {
-        return null;
     }
 
     public String getTargetNode() {

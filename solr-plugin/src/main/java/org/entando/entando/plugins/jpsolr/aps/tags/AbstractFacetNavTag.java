@@ -21,36 +21,30 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.tags;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.tagext.TagSupport;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.page.IPage;
-import com.agiletec.aps.util.ApsWebApplicationUtils;
-
 import com.agiletec.aps.system.services.page.Widget;
+import com.agiletec.aps.util.ApsWebApplicationUtils;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import javax.servlet.ServletRequest;
+import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 import org.entando.entando.plugins.jpsolr.aps.tags.util.FacetBreadCrumbs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public abstract class AbstractFacetNavTag extends TagSupport {
-
-    private static final Logger logger = LoggerFactory.getLogger(AbstractFacetNavTag.class);
 
     protected static final String SOLR_RESULT_REQUEST_PARAM = "jpsolr_searchResult";
 
@@ -63,13 +57,13 @@ public abstract class AbstractFacetNavTag extends TagSupport {
         List<String> requiredFacets = new ArrayList<>();
         try {
             ServletRequest request = this.pageContext.getRequest();
-            String facetNodesParamName = this.getFacetNodesParamName();
-            if (null == facetNodesParamName) {
-                facetNodesParamName = "facetNode";
+            String nodesParamName = this.getFacetNodesParamName();
+            if (null == nodesParamName) {
+                nodesParamName = "facetNode";
             }
             int index = 1;
-            while (null != request.getParameter(facetNodesParamName + "_" + index)) {
-                String paramName = facetNodesParamName + "_" + index;
+            while (null != request.getParameter(nodesParamName + "_" + index)) {
+                String paramName = nodesParamName + "_" + index;
                 String value = StringEscapeUtils.unescapeHtml4(request.getParameter(paramName));
                 this.addFacet(requiredFacets, value);
                 index++;
@@ -77,7 +71,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
             Enumeration<String> paramNames = request.getParameterNames();
             while (paramNames.hasMoreElements()) {
                 String paramName = paramNames.nextElement();
-                if (paramName.equals(facetNodesParamName)) {
+                if (paramName.equals(nodesParamName)) {
                     String[] values = request.getParameterValues(paramName);
                     for (int i = 0; i < values.length; i++) {
                         String value = values[i];
@@ -94,9 +88,8 @@ public abstract class AbstractFacetNavTag extends TagSupport {
             }
             this.removeSelections(requiredFacets);
             this.manageCurrentSelect(selectedNode, requiredFacets);
-        } catch (Exception e) {
-            logger.error("Error extracting system required facets", e);
-            throw new RuntimeException("Error extracting required facets", e);
+        } catch (Exception ex) {
+            throw new EntRuntimeException("Error extracting required facets", ex);
         }
         return requiredFacets;
     }
@@ -107,9 +100,9 @@ public abstract class AbstractFacetNavTag extends TagSupport {
      * @param requiredFacets
      */
     private void removeSelections(List<String> requiredFacets) {
-        String facetNodesParamName = "facetNodeToRemove";
+        String nodeToRemoveParamName = "facetNodeToRemove";
         ServletRequest request = this.pageContext.getRequest();
-        String[] values = request.getParameterValues(facetNodesParamName);
+        String[] values = request.getParameterValues(nodeToRemoveParamName);
         if (null != values) {
             for (int i = 0; i < values.length; i++) {
                 String value = values[i];
@@ -117,8 +110,8 @@ public abstract class AbstractFacetNavTag extends TagSupport {
             }
         }
         int index = 1;
-        while (null != request.getParameter(facetNodesParamName + "_" + index)) {
-            String paramName = facetNodesParamName + "_" + index;
+        while (null != request.getParameter(nodeToRemoveParamName + "_" + index)) {
+            String paramName = nodeToRemoveParamName + "_" + index;
             String value = request.getParameter(paramName);
             requiredFacets.remove(value);
             index++;
@@ -132,11 +125,11 @@ public abstract class AbstractFacetNavTag extends TagSupport {
      * @param requiredFacets
      */
     private void manageCurrentSelect(String selectedNode, List<String> requiredFacets) {
-        List<String> nodesToRemove = new ArrayList<String>();
+        List<String> nodesToRemove = new ArrayList<>();
         Iterator<String> requredFacetIterator = requiredFacets.iterator();
         ITreeNodeManager facetManager = this.getFacetManager();
         while (requredFacetIterator.hasNext()) {
-            String reqNode = (String) requredFacetIterator.next();
+            String reqNode = requredFacetIterator.next();
             ITreeNode currentNode = facetManager.getNode(reqNode);
             ITreeNode parent = facetManager.getNode(currentNode.getParentCode());
 			if (this.isChildOf(parent, selectedNode)) {
@@ -161,11 +154,11 @@ public abstract class AbstractFacetNavTag extends TagSupport {
     }
 
     /**
-     * Return true if it a child of checked node
+     * Return true if it is a child of checked node
      *
      * @param nodeToCheck
      * @param codeForCheck
-     * @return True if it a child of checked node
+     * @return True if it is a child of checked node
      */
     protected boolean isChildOf(ITreeNode nodeToCheck, String codeForCheck) {
         if (nodeToCheck.getCode().equals(codeForCheck)) {
@@ -199,8 +192,8 @@ public abstract class AbstractFacetNavTag extends TagSupport {
      */
     protected List<FacetBreadCrumbs> getBreadCrumbs(List<String> requiredFacets, RequestContext reqCtx) {
         List<ITreeNode> roots = this.getFacetRoots(reqCtx);
-		if (null == roots) {
-			return null;
+		if (roots.isEmpty()) {
+			return new ArrayList<>();
 		}
         List<ITreeNode> finalNodes = this.getFinalNodes(requiredFacets);
         List<FacetBreadCrumbs> breadCrumbs = new ArrayList<>();
@@ -232,7 +225,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
         }
         Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
         while (requiredFacetIterator.hasNext()) {
-            String reqNode = (String) requiredFacetIterator.next();
+            String reqNode = requiredFacetIterator.next();
             finalNodes.add(this.getFacetManager().getNode(reqNode));
         }
         return finalNodes;
@@ -249,7 +242,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
         List<String> nodesToRemove = new ArrayList<>();
         Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
         while (requiredFacetIterator.hasNext()) {
-            String reqNode = (String) requiredFacetIterator.next();
+            String reqNode = requiredFacetIterator.next();
             if (!nodeFromAnalize.equals(reqNode) && this.isChildOf(nodeFrom, reqNode)) {
                 nodesToRemove.add(reqNode);
             }
@@ -283,7 +276,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
                 return this.getFacetRoots(facetParamConfig);
             }
         }
-        return null;
+        return new ArrayList<>();
     }
 
     /**

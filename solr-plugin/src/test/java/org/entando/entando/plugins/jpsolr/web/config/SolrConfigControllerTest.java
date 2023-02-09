@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @ExtendWith(SolrTestExtension.class)
 @Tag(SolrTestExtension.RECREATE_CORE)
-public class SolrConfigControllerTest extends AbstractControllerIntegrationTest {
+class SolrConfigControllerTest extends AbstractControllerIntegrationTest {
 
     @Autowired
     private ISolrSearchEngineManager solrSearchEngineManager;
@@ -47,7 +47,7 @@ public class SolrConfigControllerTest extends AbstractControllerIntegrationTest 
     }
 
     @Test
-    public void testRefreshType() throws Exception {
+    void testRefreshType() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);

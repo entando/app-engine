@@ -32,10 +32,10 @@ import org.entando.entando.plugins.jpsolr.apsadmin.ApsAdminPluginBaseTestCase;
 import org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.FacetNavResultWidgetAction;
 import org.junit.jupiter.api.Test;
 
-public class TestFacetNavResultWidgetAction extends ApsAdminPluginBaseTestCase {
+class TestFacetNavResultWidgetAction extends ApsAdminPluginBaseTestCase {
 
     @Test
-    public void testInitConfig_1() throws Exception {
+    void testInitConfig_1() throws Exception {
         String result = this.executeConfigFacetNavResult("admin", "homepage", "1", "jpsolr_facetResults");
         assertEquals(Action.SUCCESS, result);
         FacetNavResultWidgetAction action = (FacetNavResultWidgetAction) this.getAction();

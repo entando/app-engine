@@ -23,27 +23,20 @@ package org.entando.entando.plugins.jpsolr.aps.tags;
 
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class HasToViewFacetNodeTag extends AbstractFacetNavTag {
 
-    private static final Logger logger = LoggerFactory.getLogger(HasToViewFacetNodeTag.class);
-
     @Override
     public int doStartTag() throws JspException {
-        List<String> requiredFacets = super.getRequiredFacets();
-        this.setRequiredFacets(requiredFacets);
+        List<String> facets = super.getRequiredFacets();
+        this.setRequiredFacets(facets);
         try {
             boolean hasToView =
                     this.getRequiredFacets().contains(this.getFacetNodeCode())
@@ -65,9 +58,9 @@ public class HasToViewFacetNodeTag extends AbstractFacetNavTag {
      */
     private boolean isSelectedOneChild() {
         ITreeNodeManager facetManager = super.getFacetManager();
-        List<String> requiredFacets = this.getRequiredFacets();
-        for (int i = 0; i < requiredFacets.size(); i++) {
-            String requiredFacet = requiredFacets.get(i);
+        List<String> facets = this.getRequiredFacets();
+        for (int i = 0; i < facets.size(); i++) {
+            String requiredFacet = facets.get(i);
             ITreeNode facet = facetManager.getNode(requiredFacet);
             if (null != facet) {
                 boolean check = this.checkSelectChild(facet, this.getFacetNodeCode(), facetManager);

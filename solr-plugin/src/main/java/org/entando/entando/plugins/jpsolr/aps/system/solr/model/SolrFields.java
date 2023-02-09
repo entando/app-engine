@@ -16,7 +16,7 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 /**
  * @author E.Santoboni
  */
-public class SolrFields {
+public final class SolrFields {
 
     private SolrFields() {
         throw new IllegalStateException("Utility class");
@@ -36,7 +36,19 @@ public class SolrFields {
     public static final String SOLR_CONTENT_CREATION_FIELD_NAME = "entity_created";
     public static final String SOLR_CONTENT_TYPE_CODE_FIELD_NAME = "entity_typeCode";
     public static final String SOLR_CONTENT_MAIN_GROUP_FIELD_NAME = "entity_maingroup";
-    
+
     public static final String ATTACHMENT_FIELD_SUFFIX = "_attachment";
 
+    public static final String SOLR_FIELD_MULTIVALUED = "multiValued";
+    public static final String SOLR_FIELD_TYPE = "type";
+    public static final String SOLR_FIELD_NAME = "name";
+
+    public static final String SOLR_FIELD_TYPE_TEXT_GENERAL = "text_general";
+    public static final String SOLR_FIELD_TYPE_TEXT_GEN_SORT = "text_gen_sort";
+    public static final String SOLR_FIELD_TYPE_BOOLEAN = "boolean";
+    public static final String SOLR_FIELD_TYPE_PLONG = "plong";
+    public static final String SOLR_FIELD_TYPE_PLONGS = "plongs";
+    public static final String SOLR_FIELD_TYPE_STRING = "string";
+    public static final String SOLR_FIELD_TYPE_PDATE = "pdate";
+    public static final String SOLR_FIELD_TYPE_PDATES = "pdates";
 }

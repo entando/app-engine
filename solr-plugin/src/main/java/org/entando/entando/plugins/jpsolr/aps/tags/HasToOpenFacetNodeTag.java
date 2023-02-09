@@ -23,24 +23,17 @@ package org.entando.entando.plugins.jpsolr.aps.tags;
 
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
-
-	private static final Logger logger = LoggerFactory.getLogger(HasToOpenFacetNodeTag.class);
 
 	@Override
 	public int doStartTag() throws JspException {
@@ -65,9 +58,9 @@ public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
 	 */
 	private boolean isSelectedOneChild() {
 		ITreeNodeManager facetManager = this.getFacetManager();
-		List<String> requiredFacets = this.getRequiredFacets();
-		for (int i = 0; i < requiredFacets.size(); i++) {
-			String requiredFacet = requiredFacets.get(i);
+		List<String> facets = this.getRequiredFacets();
+		for (int i = 0; i < facets.size(); i++) {
+			String requiredFacet = facets.get(i);
 			ITreeNode facet = facetManager.getNode(requiredFacet);
 			if (null != facet) {
 				boolean check = this.checkSelectChild(facet, this.getFacetNodeCode(), facetManager);

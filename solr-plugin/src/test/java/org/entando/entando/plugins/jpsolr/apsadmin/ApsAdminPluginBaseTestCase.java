@@ -66,7 +66,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 
-public class ApsAdminPluginBaseTestCase {
+public abstract class ApsAdminPluginBaseTestCase {
 
     private static ApplicationContext applicationContext;
     private static Dispatcher dispatcher;

@@ -5,7 +5,13 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PLONG;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GENERAL;
+
 import com.agiletec.aps.BaseTestCase;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,49 +63,48 @@ class TestSolrSchemaClient {
 
     @Test
     void testGetFields() {
-        List<Map<String, Object>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
+        List<Map<String, Serializable>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
         Assertions.assertNotNull(fields);
     }
 
     @Test
     void testAddDeleteField() {
         String fieldName = "test_solr";
-        List<Map<String, Object>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
+        List<Map<String, Serializable>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
         Assertions.assertNotNull(fields);
         try {
-            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst()
+            Map<String, Serializable> addedFiled = fields.stream().filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName)).findFirst()
                     .orElse(null);
             Assertions.assertNull(addedFiled);
 
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("name", fieldName);
-            properties.put("type", "text_general");
+            Map<String, Serializable> properties = new HashMap<>();
+            properties.put(SOLR_FIELD_NAME, fieldName);
+            properties.put(SOLR_FIELD_TYPE, SOLR_FIELD_TYPE_TEXT_GENERAL);
             boolean result = SolrSchemaClient.addField(solrAddress, solrCore, properties);
             Assertions.assertTrue(result);
 
             fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
-            addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+            addedFiled = fields.stream().filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNotNull(addedFiled);
-            Assertions.assertEquals("text_general", addedFiled.get("type"));
+            Assertions.assertEquals(SOLR_FIELD_TYPE_TEXT_GENERAL, addedFiled.get(SOLR_FIELD_TYPE));
 
-            properties.put("type", "plong");
+            properties.put(SOLR_FIELD_TYPE, SOLR_FIELD_TYPE_PLONG);
             result = SolrSchemaClient.replaceField(solrAddress, solrCore, properties);
             Assertions.assertTrue(result);
 
             fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
-            addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+            addedFiled = fields.stream().filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNotNull(addedFiled);
-            Assertions.assertEquals("plong", addedFiled.get("type"));
-        } catch (Exception e) {
+            Assertions.assertEquals(SOLR_FIELD_TYPE_PLONG, addedFiled.get(SOLR_FIELD_TYPE));
         } finally {
             boolean result = SolrSchemaClient.deleteField(solrAddress, solrCore, fieldName);
             Assertions.assertTrue(result);
 
             fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
-            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst()
+            Map<String, Serializable> addedFiled = fields.stream().filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName)).findFirst()
                     .orElse(null);
             Assertions.assertNull(addedFiled);
         }

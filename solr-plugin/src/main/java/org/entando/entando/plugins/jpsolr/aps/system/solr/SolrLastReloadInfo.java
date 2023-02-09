@@ -42,14 +42,4 @@ public class SolrLastReloadInfo extends LastReloadInfo implements Serializable {
         return date;
     }
 
-    @Override
-    protected void setResult(int result) {
-        super.setResult(result);
-    }
-
-    @Override
-    protected void setDate(Date date) {
-        super.setDate(date);
-    }
-
 }

@@ -21,19 +21,14 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.tags;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
-
-import org.entando.entando.ent.exception.EntException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+import java.util.ArrayList;
+import java.util.List;
+import javax.servlet.ServletRequest;
+import javax.servlet.jsp.JspException;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 
@@ -42,14 +37,12 @@ import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHel
  */
 public class FacetNavResultTag extends AbstractFacetNavTag {
 
-    private static final Logger logger = LoggerFactory.getLogger(FacetNavResultTag.class);
-
     @Override
     public int doStartTag() throws JspException {
         ServletRequest request = this.pageContext.getRequest();
         RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
         try {
-            List<String> requiredFacets = null;
+            List<String> requiredFacets;
             if (this.isExecuteExtractRequiredFacets()) {
                 requiredFacets = this.getRequiredFacets();
                 this.pageContext.setAttribute(this.getRequiredFacetsParamName(), requiredFacets);

@@ -19,14 +19,14 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearchEngineDAOFactory;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.PreDestroy;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.entando.entando.ent.exception.EntException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
@@ -35,8 +35,6 @@ import org.springframework.beans.factory.annotation.Value;
  * @author E.Santoboni
  */
 public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSearchEngineDAOFactory {
-
-    private static final Logger logger = LoggerFactory.getLogger(SearchEngineDAOFactory.class);
 
     @Value("${SOLR_ADDRESS:http://localhost:8983/solr}")
     private String solrAddress;
@@ -69,22 +67,22 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     }
 
     @PreDestroy
-    public void close() throws Exception {
+    public void close() throws IOException {
         this.solrClient.close();
     }
 
     @Override
-    public List<Map<String, Object>> getFields() {
+    public List<Map<String, Serializable>> getFields() {
         return SolrSchemaClient.getFields(this.solrAddress, this.solrCore);
     }
 
     @Override
-    public boolean addField(Map<String, Object> properties) {
+    public boolean addField(Map<String, Serializable> properties) {
         return SolrSchemaClient.addField(this.solrAddress, this.solrCore, properties);
     }
 
     @Override
-    public boolean replaceField(Map<String, Object> properties) {
+    public boolean replaceField(Map<String, Serializable> properties) {
         return SolrSchemaClient.replaceField(this.solrAddress, this.solrCore, properties);
     }
 
@@ -119,7 +117,6 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
         return this.getIndexer();
     }
 
-    @Deprecated
     @Override
     public ISearcherDAO getSearcher(String subDir) throws EntException {
         return this.getSearcher();

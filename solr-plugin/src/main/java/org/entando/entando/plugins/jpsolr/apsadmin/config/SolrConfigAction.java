@@ -14,6 +14,7 @@
 package org.entando.entando.plugins.jpsolr.apsadmin.config;
 
 import com.agiletec.apsadmin.system.BaseAction;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import com.opensymphony.xwork2.Action;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -36,13 +37,12 @@ public class SolrConfigAction extends BaseAction {
     
     private int refreshResult = -1;
     
-    private ISolrSearchEngineManager solrSearchEngineManager;
-    
+    private transient ISolrSearchEngineManager solrSearchEngineManager;
+
     public List<ContentTypeSettings> getContentTypesSettings() {
         try {
             return this.getSolrSearchEngineManager().getContentTypesSettings();
         } catch (Exception e) {
-            logger.error("Error extracting config", e);
             throw new EntRuntimeException("Error extracting config", e);
         }
     }
@@ -62,7 +62,7 @@ public class SolrConfigAction extends BaseAction {
     public String reloadContentsIndex() {
         try {
             int status = this.getSearcherManagerStatus();
-            if (status == ISolrSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS) {
+            if (status == ICmsSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS) {
                 logger.info("Reload index in process!!!");
                 return SUCCESS;
             }
@@ -71,7 +71,7 @@ public class SolrConfigAction extends BaseAction {
                 return SUCCESS;
             }
              this.getSolrSearchEngineManager().startReloadContentsReferencesByType(this.getTypeCode());
-            logger.info("Reload contents index started for type " + this.getTypeCode());
+            logger.info("Reload contents index started for type {}", this.getTypeCode());
         } catch (EntException ex) {
             logger.error("error in reloadContentsIndex", ex);
             return FAILURE;

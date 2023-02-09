@@ -64,18 +64,11 @@ public class FacetNavHelper implements IFacetNavHelper {
     public FacetedContentsResult getResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
         List<String> contentTypesFilter = this.getContentTypesFilter(reqCtx);
         List<String> userGroupCodes = new ArrayList<>(this.getAllowedGroups(reqCtx));
-        SearchEngineFilter typeFilter = SearchEngineFilter.createAllowedValuesFilter(
+        SearchEngineFilter<?> typeFilter = SearchEngineFilter.createAllowedValuesFilter(
                 SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, false, contentTypesFilter, TextSearchOption.EXACT);
-        SolrSearchEngineFilter filterPagination = new SolrSearchEngineFilter(LIMIT, 0);
+        SolrSearchEngineFilter<?> filterPagination = new SolrSearchEngineFilter<>(LIMIT, 0);
         SearchEngineFilter[] filters = new SearchEngineFilter[]{typeFilter, filterPagination};
         return this.getAdvContentFacetManager().getFacetResult(filters, selectedFacetNodes, null, userGroupCodes);
-    }
-
-    @Deprecated
-    @Override
-    public List<String> getSearchResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
-        FacetedContentsResult result = this.getResult(selectedFacetNodes, reqCtx);
-        return result.getContentsId();
     }
 
     /**
@@ -83,9 +76,8 @@ public class FacetNavHelper implements IFacetNavHelper {
      *
      * @param reqCtx
      * @return content types filter
-     * @throws EntException
      */
-    private List<String> getContentTypesFilter(RequestContext reqCtx) throws EntException {
+    private List<String> getContentTypesFilter(RequestContext reqCtx) {
         List<String> contentTypes = new ArrayList<>();
         Widget currentWidget = (Widget) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_WIDGET);
         if (null == currentWidget.getConfig()) {
@@ -106,14 +98,6 @@ public class FacetNavHelper implements IFacetNavHelper {
             }
         }
         return contentTypes;
-    }
-
-    @Deprecated
-    @Override
-    public Map<String, Integer> getOccurences(List<String> selectedFacetNodes, RequestContext reqCtx)
-            throws EntException {
-        FacetedContentsResult result = this.getResult(selectedFacetNodes, reqCtx);
-        return result.getOccurrences();
     }
 
     /**

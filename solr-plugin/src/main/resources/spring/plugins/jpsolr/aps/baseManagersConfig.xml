@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
     
-    <bean id="jacmsSearchEngineManager" class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineManager" 
+    <bean id="jacmsSearchEngineManager" class="org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineManager"
           parent="abstractService" primary="true" >
         <property name="factory">
             <bean class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineDAOFactory" init-method="init">

@@ -13,16 +13,20 @@
  */
 package org.entando.entando.plugins.jpsolr.web.content.model;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.entando.entando.web.common.model.Filter;
 
 /**
  * @author E.Santoboni
  */
+@EqualsAndHashCode(callSuper = true)
 public class SolrFilter extends Filter {
 
-    private Integer relevancy;
-    private boolean fullText;
-    private String searchOption;
+    @Getter @Setter private Integer relevancy;
+    @Getter @Setter private boolean fullText;
+    @Getter @Setter private String searchOption;
 
     public SolrFilter() {
     }
@@ -33,30 +37,6 @@ public class SolrFilter extends Filter {
 
     public SolrFilter(String attribute, String value, String operator) {
         super(attribute, value, operator);
-    }
-
-    public Integer getRelevancy() {
-        return relevancy;
-    }
-
-    public void setRelevancy(Integer relevancy) {
-        this.relevancy = relevancy;
-    }
-
-    public boolean isFullText() {
-        return fullText;
-    }
-
-    public void setFullText(boolean fullText) {
-        this.fullText = fullText;
-    }
-
-    public String getSearchOption() {
-        return searchOption;
-    }
-
-    public void setSearchOption(String searchOption) {
-        this.searchOption = searchOption;
     }
 
 }

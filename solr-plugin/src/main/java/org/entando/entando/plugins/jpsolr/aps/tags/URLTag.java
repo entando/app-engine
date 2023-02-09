@@ -26,8 +26,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generates the URL to a portal page. The URL is either displayed or placed in a variable. The URL depends on the page
@@ -35,8 +33,6 @@ import org.slf4j.LoggerFactory;
  * parameters in the query string.
  */
 public class URLTag extends TagSupport implements IParameterParentTag {
-
-    private static final Logger logger = LoggerFactory.getLogger(URLTag.class);
 
     /**
      * Prepares a PageURL object; this object may comprehend several sub-tags
@@ -159,10 +155,10 @@ public class URLTag extends TagSupport implements IParameterParentTag {
     /**
      * Set the name of the variable containing the generated URL.
      *
-     * @param var The name of the variable
+     * @param varName The name of the variable
      */
-    public void setVar(String var) {
-        this.varName = var;
+    public void setVar(String varName) {
+        this.varName = varName;
     }
 
     /**

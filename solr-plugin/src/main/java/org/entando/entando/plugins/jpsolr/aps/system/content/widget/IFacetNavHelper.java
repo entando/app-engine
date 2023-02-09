@@ -21,11 +21,9 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.content.widget;
 
-import java.util.List;
-import java.util.Map;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
+import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.ent.exception.EntException;
 
@@ -33,15 +31,9 @@ import org.entando.entando.ent.exception.EntException;
  * @author E.Santoboni
  */
 public interface IFacetNavHelper {
-    
+
     public FacetedContentsResult getResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException;
-	
-    @Deprecated
-	public List<String> getSearchResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException;
-	
-    @Deprecated
-	public Map<String, Integer> getOccurences(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException;
-	
-	public ITreeNodeManager getTreeNodeManager();
-	
+
+    public ITreeNodeManager getTreeNodeManager();
+
 }

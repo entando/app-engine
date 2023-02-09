@@ -93,7 +93,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
     }
 
     @Test
-    public void testSearchByResourceAttribute() throws Exception {
+    void testSearchByResourceAttribute() throws Exception {
         List<ResourceInterface> addedResource = null;
         List<String> addedContentIds = new ArrayList<>();
         try {
@@ -122,7 +122,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
     }
 
     @Test
-    public void testSearchByResourceAttributeElement() throws Exception {
+    void testSearchByResourceAttributeElement() throws Exception {
         List<ResourceInterface> addedResource = null;
         List<String> addedContentIds = new ArrayList<>();
         try {

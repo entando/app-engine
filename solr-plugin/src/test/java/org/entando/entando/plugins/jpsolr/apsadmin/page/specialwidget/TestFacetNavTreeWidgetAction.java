@@ -34,10 +34,10 @@ import org.entando.entando.plugins.jpsolr.apsadmin.ApsAdminPluginBaseTestCase;
 import org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.FacetNavTreeWidgetAction;
 import org.junit.jupiter.api.Test;
 
-public class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
+class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
 
     @Test
-    public void testInitConfig() throws Exception {
+    void testInitConfig() throws Exception {
         String result = this.executeConfigFacetNavTree("admin", "homepage", "1", "jpsolr_facetTree");
         assertEquals(Action.SUCCESS, result);
         FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
@@ -51,7 +51,7 @@ public class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
     }
 
     @Test
-    public void testAddRemoveContentType() throws Exception {
+    void testAddRemoveContentType() throws Exception {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("pageCode", "homepage");
         parameters.put("frame", "1");
@@ -85,7 +85,7 @@ public class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
     }
 
     @Test
-    public void testAddRemoveFacets() throws Exception {
+    void testAddRemoveFacets() throws Exception {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("pageCode", "homepage");
         parameters.put("frame", "1");

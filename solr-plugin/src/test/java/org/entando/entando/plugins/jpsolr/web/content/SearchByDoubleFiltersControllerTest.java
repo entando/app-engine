@@ -79,7 +79,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
     }
 
     @Test
-    public void testGetFacetedContentsByTypes() throws Exception {
+    void testGetFacetedContentsByTypes() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions facetedResult = mockMvc
@@ -140,7 +140,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
     }
 
     @Test
-    public void testGetFacetedContentsByTitle() throws Exception {
+    void testGetFacetedContentsByTitle() throws Exception {
         List<String> ids = null;
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
@@ -308,7 +308,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
     }
 
     @Test
-    public void testGetFacetedContentsByRelevance() throws Exception {
+    void testGetFacetedContentsByRelevance() throws Exception {
         List<String> ids = null;
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);

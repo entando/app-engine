@@ -72,7 +72,7 @@ import org.springframework.mock.web.MockServletContext;
  * @author E.Santoboni
  */
 @ExtendWith(SolrTestExtension.class)
-class SearchEngineManagerIntegrationTest {
+class SolrSearchEngineManagerIntegrationTest {
 
     private static final String ROLE_FOR_TEST = "jacmstest:date";
 
@@ -88,7 +88,7 @@ class SearchEngineManagerIntegrationTest {
     }
 
     public static void setApplicationContext(ApplicationContext applicationContext) {
-        SearchEngineManagerIntegrationTest.applicationContext = applicationContext;
+        SolrSearchEngineManagerIntegrationTest.applicationContext = applicationContext;
     }
 
     @BeforeAll

@@ -13,7 +13,6 @@
  */
 package org.entando.entando.plugins.jpsolr.web.content;
 
-import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
@@ -23,20 +22,22 @@ import javax.servlet.http.HttpSession;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
+import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.entando.entando.plugins.jpsolr.web.content.model.SolrFacetedPagedMetadata;
+import org.entando.entando.web.common.model.PagedMetadata;
+import org.entando.entando.web.common.model.PagedRestResponse;
+import org.entando.entando.web.common.model.RestResponse;
+import org.entando.entando.web.common.validator.AbstractPaginationValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import org.entando.entando.web.common.model.PagedMetadata;
-import org.entando.entando.web.common.model.PagedRestResponse;
-import org.entando.entando.web.common.model.RestResponse;
-import org.entando.entando.web.common.validator.AbstractPaginationValidator;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author E.Santoboni
@@ -92,11 +93,10 @@ public class AdvContentSearchController {
                     return Arrays.asList(IContentManager.METADATA_FILTER_KEYS).contains(fieldName);
                 }
             }
-
         };
     }
 
-    @RequestMapping(value = "/contents", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/contents", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PagedRestResponse<String>> getContents(AdvRestContentListRequest requestList) {
         logger.debug("getting contents with request {}", requestList);
         UserDetails currentUser = this.extractCurrentUser();
@@ -112,7 +112,7 @@ public class AdvContentSearchController {
         return new ResponseEntity<>(new PagedRestResponse<>(pagedMetadata), HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/facetedcontents", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/facetedcontents", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestResponse<FacetedContentsResult, SolrFacetedPagedMetadata>> getFacetedContents(
             AdvRestContentListRequest requestList) {
         logger.debug("getting contents with request {}", requestList);

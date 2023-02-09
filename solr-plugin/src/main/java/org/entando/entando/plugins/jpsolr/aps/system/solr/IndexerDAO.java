@@ -79,14 +79,14 @@ public class IndexerDAO implements IIndexerDAO {
         try {
             SolrInputDocument document = this.createDocument(entity);
             UpdateResponse updateResponse = this.solrClient.add(this.solrCore, document);
-            logger.debug("Add document Response {}", updateResponse.toString());
+            logger.debug("Add document Response {}", updateResponse);
             this.solrClient.commit(this.solrCore);
         } catch (IOException | SolrServerException ex) {
-            logger.error("Error saving entity {} calling solr server", entity.getId(), ex);
+            logger.error("Error saving entity {} calling solr server", entity.getId());
             throw new EntException("Error saving entity", ex);
-        } catch (Exception t) {
-            logger.error("Generic error saving entity {}", entity.getId(), t);
-            throw new EntException("Error saving entity", t);
+        } catch (Exception ex) {
+            logger.error("Generic error saving entity {}", entity.getId());
+            throw new EntException("Error saving entity", ex);
         }
     }
 
@@ -96,7 +96,7 @@ public class IndexerDAO implements IIndexerDAO {
                 try {
                     SolrInputDocument document = this.createDocument(entity);
                     UpdateResponse updateResponse = this.solrClient.add(this.solrCore, document);
-                    logger.debug("Add document Response {}", updateResponse.toString());
+                    logger.debug("Add document Response {}", updateResponse);
                 } catch (IOException | SolrServerException ex) {
                     logger.error("Error saving entity {} calling solr server", entity.getId(), ex);
                 }
@@ -104,9 +104,6 @@ public class IndexerDAO implements IIndexerDAO {
             this.solrClient.commit(this.solrCore);
         } catch (IOException | SolrServerException ex) {
             throw new EntException("Error saving entities", ex);
-        } catch (Exception t) {
-            logger.error("Generic error saving entities", t);
-            throw new EntException("Error saving entities", t);
         }
     }
 
@@ -245,7 +242,7 @@ public class IndexerDAO implements IIndexerDAO {
     }
 
     private void indexValue(SolrInputDocument document, String fieldName, Object valueToIndex) {
-        fieldName = fieldName.replaceAll(":", "_");
+        fieldName = fieldName.replace(":", "_");
         document.addField(fieldName, valueToIndex);
     }
 
@@ -255,14 +252,14 @@ public class IndexerDAO implements IIndexerDAO {
             UpdateResponse updateResponse = (name.equals(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)) ?
                     this.solrClient.deleteById(this.solrCore, value) :
                     this.solrClient.deleteByQuery(this.solrCore, name + ":" + value);
-            logger.debug("Delete document Response {}", updateResponse.toString());
+            logger.debug("Delete document Response {}", updateResponse);
             this.solrClient.commit(this.solrCore);
         } catch (IOException | SolrServerException ex) {
-            logger.error("Error deleting entity {}:{} calling solr server", name, value, ex);
+            logger.error("Error deleting entity {}:{} calling solr server", name, value);
             throw new EntException("Error deleting entity", ex);
-        } catch (Exception t) {
-            logger.error("Generic error deleting entity {}:{}", name, value, t);
-            throw new EntException("Error deleting entity", t);
+        } catch (Exception ex) {
+            logger.error("Generic error deleting entity {}:{}", name, value);
+            throw new EntException("Error deleting entity", ex);
         }
     }
 

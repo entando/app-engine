@@ -13,7 +13,17 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import com.agiletec.aps.system.common.IManager;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_MULTIVALUED;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_BOOLEAN;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PDATE;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PDATES;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PLONGS;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_STRING;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GENERAL;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GEN_SORT;
+
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingEvent;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingObserver;
 import com.agiletec.aps.system.common.entity.model.SmallEntityType;
@@ -29,7 +39,8 @@ import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicConten
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.LastReloadInfo;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -49,19 +60,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author E.Santoboni
  */
-public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager
+public class SolrSearchEngineManager extends SearchEngineManager
         implements ISolrSearchEngineManager, PublicContentChangedObserver, EntityTypesChangingObserver {
 
-    private static final Logger logger = LoggerFactory.getLogger(SearchEngineManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(SolrSearchEngineManager.class);
 
     @Autowired
-    private ILangManager langManager;
+    private transient ILangManager langManager;
 
     @Override
     public List<ContentTypeSettings> getContentTypesSettings() throws EntException {
         List<ContentTypeSettings> list = new ArrayList<>();
         try {
-            List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
             List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
             for (int i = 0; i < entityTypes.size(); i++) {
                 SmallEntityType entityType = entityTypes.get(i);
@@ -72,12 +83,13 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
                 Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
                 while (iterAttribute.hasNext()) {
                     AttributeInterface attribute = iterAttribute.next();
-                    Map<String, Map<String, Object>> currentConfig = new HashMap<>();
+                    Map<String, Map<String, Serializable>> currentConfig = new HashMap<>();
                     List<Lang> langs = this.getLangManager().getLangs();
                     for (int j = 0; j < langs.size(); j++) {
                         Lang lang = langs.get(j);
                         String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
-                        Map<String, Object> currentField = fields.stream().filter(f -> f.get("name").equals(fieldName))
+                        Map<String, Serializable> currentField = fields.stream()
+                                .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
                                 .findFirst().orElse(null);
                         if (null != currentField) {
                             currentConfig.put(fieldName, currentField);
@@ -87,8 +99,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
                 }
             }
         } catch (Exception e) {
-            logger.error("Error extracting config", e);
-            throw new EntException("Error", e);
+            throw new EntException("Error extracting config", e);
         }
         return list;
     }
@@ -96,51 +107,57 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     @Override
     public void refreshCmsFields() throws EntException {
         try {
-            List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
             this.checkLangFields(fields);
             this.refreshBaseFields(fields, null);
             List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
-            Map<String, Map<String, Object>> checkedFields = new HashMap<>();
+            Map<String, Map<String, Serializable>> checkedFields = new HashMap<>();
             for (int i = 0; i < entityTypes.size(); i++) {
                 fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
                 SmallEntityType entityType = entityTypes.get(i);
                 this.refreshEntityType(fields, checkedFields, entityType.getCode());
             }
-        } catch (Exception e) {
-            logger.error("Error refreshing config", e);
-            throw new EntException("Error", e);
+        } catch (Exception ex) {
+            throw new EntException("Error refreshing config", ex);
         }
     }
 
     @Override
     public void refreshContentType(String typeCode) throws EntException {
         try {
-            List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
             this.checkLangFields(fields);
             this.refreshBaseFields(fields, null);
             this.refreshEntityType(fields, null, typeCode);
-        } catch (Exception e) {
-            logger.error("Error refreshing contentType " + typeCode, e);
-            throw new EntException("Error", e);
+        } catch (Exception ex) {
+            throw new EntException("Error refreshing contentType " + typeCode, ex);
         }
     }
 
-    private void refreshBaseFields(List<Map<String, Object>> fields, Map<String, Map<String, Object>> checkedFields) {
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, "text_general");
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, "text_general", true);
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, "text_gen_sort");
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, "text_general");
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, "text_general", true);
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, "pdate", false);
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, "pdate", false);
+    private void refreshBaseFields(List<Map<String, Serializable>> fields,
+            Map<String, Map<String, Serializable>> checkedFields) {
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, SOLR_FIELD_TYPE_STRING);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME,
+                SOLR_FIELD_TYPE_TEXT_GENERAL);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, SOLR_FIELD_TYPE_TEXT_GENERAL,
+                true);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME,
+                SOLR_FIELD_TYPE_TEXT_GEN_SORT);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME,
+                SOLR_FIELD_TYPE_TEXT_GENERAL);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME,
+                SOLR_FIELD_TYPE_TEXT_GENERAL, true);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, SOLR_FIELD_TYPE_PDATE,
+                false);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, SOLR_FIELD_TYPE_PDATE,
+                false);
     }
 
-    protected void refreshEntityType(List<Map<String, Object>> currentFields,
-            Map<String, Map<String, Object>> checkedFields, String entityTypeCode) {
+    protected void refreshEntityType(List<Map<String, Serializable>> currentFields,
+            Map<String, Map<String, Serializable>> checkedFields, String entityTypeCode) {
         Content prototype = this.getContentManager().createContentType(entityTypeCode);
         if (null == prototype) {
-            logger.warn("Type '" + entityTypeCode + "' does not exists");
+            logger.warn("Type '{}' does not exists", entityTypeCode);
             return;
         }
         Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
@@ -148,70 +165,73 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             AttributeInterface currentAttribute = iterAttribute.next();
             List<Lang> langs = this.getLangManager().getLangs();
             for (int j = 0; j < langs.size(); j++) {
-                Lang currentLang = (Lang) langs.get(j);
+                Lang currentLang = langs.get(j);
                 this.checkAttribute(currentFields, checkedFields, currentAttribute, currentLang);
             }
         }
     }
 
-    private void checkAttribute(List<Map<String, Object>> currentFields,
-            Map<String, Map<String, Object>> checkedFields, AttributeInterface attribute, Lang lang) {
+    private void checkAttribute(List<Map<String, Serializable>> currentFields,
+            Map<String, Map<String, Serializable>> checkedFields, AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
         if (attribute instanceof IndexableAttributeInterface
                 || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
                 && attribute.isSearchable())) {
             String type = null;
             if (attribute instanceof DateAttribute) {
-                type = "pdates";
+                type = SOLR_FIELD_TYPE_PDATES;
             } else if (attribute instanceof NumberAttribute) {
-                type = "plongs";
+                type = SOLR_FIELD_TYPE_PLONGS;
             } else if (attribute instanceof BooleanAttribute) {
-                type = "boolean";
+                type = SOLR_FIELD_TYPE_BOOLEAN;
             } else {
-                type = "text_gen_sort";
+                type = SOLR_FIELD_TYPE_TEXT_GEN_SORT;
             }
             String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
-            fieldName = fieldName.replaceAll(":", "_");
+            fieldName = fieldName.replace(":", "_");
             this.checkField(currentFields, checkedFields, fieldName, type);
             if (null == attribute.getRoles()) {
                 return;
             }
             for (int i = 0; i < attribute.getRoles().length; i++) {
                 String roleFieldName = lang.getCode().toLowerCase() + "_" + attribute.getRoles()[i];
-                roleFieldName = roleFieldName.replaceAll(":", "_");
+                roleFieldName = roleFieldName.replace(":", "_");
                 this.checkField(currentFields, null, roleFieldName, type);
             }
         }
     }
 
-    private void checkField(List<Map<String, Object>> currentFields,
-            Map<String, Map<String, Object>> checkedFields, String fieldName, String type) {
+    private void checkField(List<Map<String, Serializable>> currentFields,
+            Map<String, Map<String, Serializable>> checkedFields, String fieldName, String type) {
         this.checkField(currentFields, checkedFields, fieldName, type, false);
     }
 
-    private void checkField(List<Map<String, Object>> currentFields,
-            Map<String, Map<String, Object>> checkedFields, String fieldName, String type, boolean multiValue) {
-        Map<String, Object> currentField = currentFields.stream().filter(f -> f.get("name").equals(fieldName))
+    private void checkField(List<Map<String, Serializable>> currentFields,
+            Map<String, Map<String, Serializable>> checkedFields, String fieldName, String type, boolean multiValue) {
+        Map<String, Serializable> currentField = currentFields.stream()
+                .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
                 .findFirst().orElse(null);
         if (null != currentField) {
-            if (currentField.get("type").equals(type)
-                    && ((null == currentField.get("multiValued") && multiValue) || (
-                    null != currentField.get("multiValued") && currentField.get("multiValued").equals(multiValue)))) {
+            if (currentField.get(SOLR_FIELD_TYPE).equals(type)
+                    && ((null == currentField.get(SOLR_FIELD_MULTIVALUED) && multiValue) || (
+                    null != currentField.get(SOLR_FIELD_MULTIVALUED) && currentField.get(SOLR_FIELD_MULTIVALUED)
+                            .equals(multiValue)))) {
                 return;
             } else {
-                logger.warn("Field '" + fieldName + "' already exists but with different configuration!"
-                        + " - type '" + currentField.get("type") + "' to '" + type + "'"
-                        + " - multiValued '" + currentField.get("multiValued") + "' to '" + multiValue + "'");
+                logger.warn(
+                        "Field '{}' already exists but with different configuration! - type '{}' to '{}' - multiValued '{}' to '{}'",
+                        fieldName, currentField.get(SOLR_FIELD_TYPE), type, currentField.get(SOLR_FIELD_MULTIVALUED),
+                        multiValue);
             }
         }
-        Map<String, Object> newField = new HashMap<>();
-        newField.put("name", fieldName);
-        newField.put("type", type);
-        newField.put("multiValued", multiValue);
+        Map<String, Serializable> newField = new HashMap<>();
+        newField.put(SOLR_FIELD_NAME, fieldName);
+        newField.put(SOLR_FIELD_TYPE, type);
+        newField.put(SOLR_FIELD_MULTIVALUED, multiValue);
         if (null == currentField) {
             ((ISolrSearchEngineDAOFactory) this.getFactory()).addField(newField);
-        } else if (!type.equals(currentField.get("type")) || !Boolean.valueOf(multiValue)
-                .equals((Boolean) currentField.get("multiValued"))) {
+        } else if (!type.equals(currentField.get(SOLR_FIELD_TYPE)) || !Boolean.valueOf(multiValue)
+                .equals(currentField.get(SOLR_FIELD_MULTIVALUED))) {
             ((ISolrSearchEngineDAOFactory) this.getFactory()).replaceField(newField);
         }
         if (null != checkedFields) {
@@ -221,32 +241,27 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
 
     @Override
     public void deleteIndexedEntity(String entityId) throws EntException {
-        try {
-            this.getIndexerDao().delete(SolrFields.SOLR_CONTENT_ID_FIELD_NAME, entityId);
-        } catch (EntException e) {
-            logger.error("Error deleting content {} from index", entityId, e);
-            throw e;
-        }
+        this.getIndexerDao().delete(SolrFields.SOLR_CONTENT_ID_FIELD_NAME, entityId);
     }
 
     @Override
     public void updateFromEntityTypesChanging(EntityTypesChangingEvent event) {
         super.updateFromEntityTypesChanging(event);
-        List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+        List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
         this.checkLangFields(fields);
         this.refreshBaseFields(fields, null);
-        if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName())
+        if (this.getContentManager().getName().equals(event.getEntityManagerName())
                 && event.getOperationCode() != EntityTypesChangingEvent.REMOVE_OPERATION_CODE) {
             String typeCode = event.getNewEntityType().getTypeCode();
-            this.refreshEntityType(fields, new HashMap<String, Map<String, Object>>(), typeCode);
+            this.refreshEntityType(fields, new HashMap<>(), typeCode);
         }
     }
 
-    private void checkLangFields(List<Map<String, Object>> fields) {
+    private void checkLangFields(List<Map<String, Serializable>> fields) {
         List<Lang> langs = this.getLangManager().getLangs();
         for (int j = 0; j < langs.size(); j++) {
             Lang currentLang = langs.get(j);
-            this.checkField(fields, null, currentLang.getCode(), "text_general", true);
+            this.checkField(fields, null, currentLang.getCode(), SOLR_FIELD_TYPE_TEXT_GENERAL, true);
         }
     }
 
@@ -287,16 +302,6 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     public SolrFacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
         return ((ISolrSearcherDAO) this.getSearcherDao()).searchFacetedContents(filters, categories, allowedGroups);
-    }
-
-    @Override
-    protected void notifyEndingIndexLoading(LastReloadInfo info, IIndexerDAO newIndexerDAO) {
-        super.notifyEndingIndexLoading(info, newIndexerDAO);
-    }
-
-    @Override
-    protected void sellOfQueueEvents() {
-        super.sellOfQueueEvents();
     }
 
     protected ILangManager getLangManager() {
