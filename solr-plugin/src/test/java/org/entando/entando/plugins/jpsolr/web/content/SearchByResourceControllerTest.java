@@ -35,10 +35,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -62,13 +60,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
 
     @BeforeAll
     public static void setup() throws Exception {
-        SolrTestUtils.startContainer();
         AbstractControllerIntegrationTest.setup();
-    }
-
-    @AfterAll
-    public static void teardown() throws Exception {
-        SolrTestUtils.stopContainer();
     }
 
     @Override

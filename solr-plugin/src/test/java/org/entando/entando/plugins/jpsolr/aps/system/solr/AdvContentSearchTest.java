@@ -38,20 +38,23 @@ import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.mock.web.MockServletContext;
 
 /**
- * Rewriting of some default test for content manager
+ * Rewriting of some default tests for content manager
  * @author E.Santoboni
  */
-class AdvContentSearchTest /*extends BaseTestCase*/ {
+@ExtendWith(SolrTestExtension.class)
+class AdvContentSearchTest {
 
     private IContentManager contentManager = null;
     private ISolrSearchEngineManager searchEngineManager = null;
@@ -71,7 +74,6 @@ class AdvContentSearchTest /*extends BaseTestCase*/ {
     
     @BeforeAll
     public static void startUp() throws Exception {
-        SolrTestUtils.startContainer();
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
@@ -80,7 +82,6 @@ class AdvContentSearchTest /*extends BaseTestCase*/ {
     @AfterAll
     public static void tearDown() throws Exception {
         BaseTestCase.tearDown();
-        SolrTestUtils.stopContainer();
     }
     
     @BeforeEach

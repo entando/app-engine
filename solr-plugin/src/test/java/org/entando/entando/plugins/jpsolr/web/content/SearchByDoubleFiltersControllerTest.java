@@ -13,8 +13,17 @@
  */
 package org.entando.entando.plugins.jpsolr.web.content;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.TextAttribute;
+import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
@@ -24,33 +33,19 @@ import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEng
 import com.jayway.jsonpath.JsonPath;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import org.entando.entando.web.utils.OAuth2TestUtils;
-
-import static org.hamcrest.CoreMatchers.is;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.ResultActions;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
-import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.TextAttribute;
-import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import java.util.Calendar;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
-import org.junit.jupiter.api.AfterAll;
+import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * @author E.Santoboni
@@ -67,13 +62,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
 
     @BeforeAll
     public static void setup() throws Exception {
-        SolrTestUtils.startContainer();
         AbstractControllerIntegrationTest.setup();
-    }
-
-    @AfterAll
-    public static void tearDown() throws Exception {
-        SolrTestUtils.stopContainer();
     }
 
     @Override

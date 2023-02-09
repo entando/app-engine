@@ -70,12 +70,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <environmentVariables>
-                        <SOLR_ADDRESS>http://localhost:8984/solr</SOLR_ADDRESS>
-                        <SOLR_CORE>entando</SOLR_CORE>
-                    </environmentVariables>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -201,6 +195,11 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

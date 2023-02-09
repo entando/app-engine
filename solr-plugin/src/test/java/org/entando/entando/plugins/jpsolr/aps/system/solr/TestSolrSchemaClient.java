@@ -11,11 +11,12 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletContext;
 import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
-import org.entando.entando.plugins.jpsolr.SolrTestUtils;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.mock.web.MockServletContext;
@@ -23,9 +24,13 @@ import org.springframework.mock.web.MockServletContext;
 /**
  * @author E.Santoboni
  */
+@ExtendWith(SolrTestExtension.class)
 class TestSolrSchemaClient {
 
     private static ApplicationContext applicationContext;
+
+    private static String solrAddress;
+    private static String solrCore;
 
     public static ApplicationContext getApplicationContext() {
         return applicationContext;
@@ -37,32 +42,29 @@ class TestSolrSchemaClient {
     
     @BeforeAll
     public static void startUp() throws Exception {
-        SolrTestUtils.startContainer();
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
+
+        solrAddress = applicationContext.getEnvironment().getProperty("SOLR_ADDRESS");
+        solrCore = applicationContext.getEnvironment().getProperty("SOLR_CORE");
     }
     
     @AfterAll
     public static void tearDown() throws Exception {
         BaseTestCase.tearDown();
-        SolrTestUtils.stopContainer();
     }
     
     @Test
     void testGetFields() throws Throwable {
-        String address = System.getenv("SOLR_ADDRESS");
-        String core = System.getenv("SOLR_CORE");
-        List<Map<String, Object>> fields = SolrSchemaClient.getFields(address, core);
+        List<Map<String, Object>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
         Assertions.assertNotNull(fields);
     }
     
     @Test
     void testAddDeleteField() throws Throwable {
-        String address = System.getenv("SOLR_ADDRESS");
-        String core = System.getenv("SOLR_CORE");
         String fieldName = "test_solr";
-        List<Map<String, Object>> fields = SolrSchemaClient.getFields(address, core);
+        List<Map<String, Object>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
         Assertions.assertNotNull(fields);
         try {
             Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
@@ -71,30 +73,30 @@ class TestSolrSchemaClient {
             Map<String, Object> properties = new HashMap<>();
             properties.put("name", fieldName);
             properties.put("type", "text_general");
-            boolean result = SolrSchemaClient.addField(address, core, properties);
+            boolean result = SolrSchemaClient.addField(solrAddress, solrCore, properties);
             Assertions.assertTrue(result);
 
-            fields = SolrSchemaClient.getFields(address, core);
+            fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
             addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNotNull(addedFiled);
             Assertions.assertEquals("text_general", addedFiled.get("type"));
 
             properties.put("type", "plong");
-            result = SolrSchemaClient.replaceField(address, core, properties);
+            result = SolrSchemaClient.replaceField(solrAddress, solrCore, properties);
             Assertions.assertTrue(result);
 
-            fields = SolrSchemaClient.getFields(address, core);
+            fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
             addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNotNull(addedFiled);
             Assertions.assertEquals("plong", addedFiled.get("type"));
         } catch (Exception e) {
         } finally {
-            boolean result = SolrSchemaClient.deleteField(address, core, fieldName);
+            boolean result = SolrSchemaClient.deleteField(solrAddress, solrCore, fieldName);
             Assertions.assertTrue(result);
 
-            fields = SolrSchemaClient.getFields(address, core);
+            fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
             Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNull(addedFiled);

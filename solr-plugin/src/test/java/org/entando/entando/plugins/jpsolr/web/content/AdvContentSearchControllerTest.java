@@ -13,8 +13,15 @@
  */
 package org.entando.entando.plugins.jpsolr.web.content;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
@@ -26,33 +33,21 @@ import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEng
 import com.jayway.jsonpath.JsonPath;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
-
-import static org.hamcrest.CoreMatchers.is;
-
-import org.hamcrest.Matchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import org.entando.entando.plugins.jpsolr.SolrTestUtils;
+import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
-import org.junit.jupiter.api.AfterAll;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * @author E.Santoboni
@@ -67,15 +62,9 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
     
     @BeforeAll
     public static void setup() throws Exception {
-        SolrTestUtils.startContainer();
         AbstractControllerIntegrationTest.setup();
     }
-    
-    @AfterAll
-    public static void tearDown() throws Exception {
-        SolrTestUtils.stopContainer();
-    }
-    
+
     @Override
     @BeforeEach
     public void setUp() throws Exception {

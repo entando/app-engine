@@ -19,12 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
 import com.agiletec.aps.BaseTestCase;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.agiletec.aps.system.common.FieldSearchFilter.Order;
 import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeRole;
@@ -49,10 +44,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;
+import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.junit.jupiter.api.AfterAll;
@@ -61,6 +61,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.mock.web.MockServletContext;
@@ -70,6 +71,7 @@ import org.springframework.mock.web.MockServletContext;
  *
  * @author E.Santoboni
  */
+@ExtendWith(SolrTestExtension.class)
 class SearchEngineManagerIntegrationTest {
 
     private static final String ROLE_FOR_TEST = "jacmstest:date";
@@ -91,7 +93,6 @@ class SearchEngineManagerIntegrationTest {
 
     @BeforeAll
     public static void startUp() throws Exception {
-        SolrTestUtils.startContainer();
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         ApplicationContext applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
@@ -117,7 +118,7 @@ class SearchEngineManagerIntegrationTest {
     @AfterAll
     public static void tearDown() throws Exception {
         try {
-            IContentManager contentManager = BaseTestCase.getApplicationContext().getBean(IContentManager.class);
+            IContentManager contentManager = getApplicationContext().getBean(IContentManager.class);
             Content artType = contentManager.createContentType("ART");
             DateAttribute dateAttrArt = (DateAttribute) artType.getAttribute("Data");
             dateAttrArt.setRoles(new String[0]);
@@ -129,7 +130,6 @@ class SearchEngineManagerIntegrationTest {
         } catch (Exception e) {
             throw e;
         } finally {
-            SolrTestUtils.stopContainer();
             BaseTestCase.tearDown();
         }
     }
@@ -663,6 +663,9 @@ class SearchEngineManagerIntegrationTest {
             newNumberAttribute.setIndexingType(IndexableAttributeInterface.INDEXING_TYPE_TEXT);
             artType.addAttribute(newNumberAttribute);
             ((IEntityTypesConfigurer) this.contentManager).updateEntityPrototype(artType);
+            synchronized (this) {
+                this.wait(1000);
+            }
 
             for (int i = 0; i < 30; i++) {
                 Content content = this.contentManager.loadContent("ART104", true);

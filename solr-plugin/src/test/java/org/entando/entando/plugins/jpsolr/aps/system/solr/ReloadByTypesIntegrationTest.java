@@ -16,21 +16,22 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
-import java.util.ArrayList;
-import java.util.List;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;
 import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
-import org.entando.entando.plugins.jpsolr.SolrTestUtils;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.mock.web.MockServletContext;
@@ -39,6 +40,7 @@ import org.springframework.mock.web.MockServletContext;
  * Rewriting of some default test for content manager
  * @author E.Santoboni
  */
+@ExtendWith(SolrTestExtension.class)
 class ReloadByTypesIntegrationTest {
 
     private ISolrSearchEngineManager searchEngineManager = null;
@@ -55,7 +57,6 @@ class ReloadByTypesIntegrationTest {
     
     @BeforeAll
     public static void startUp() throws Exception {
-        SolrTestUtils.startContainer();
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
@@ -64,7 +65,6 @@ class ReloadByTypesIntegrationTest {
     @AfterAll
     public static void tearDown() throws Exception {
         BaseTestCase.tearDown();
-        SolrTestUtils.stopContainer();
     }
     
     @BeforeEach

@@ -19,21 +19,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.jayway.jsonpath.JsonPath;
-import org.entando.entando.plugins.jpsolr.SolrTestUtils;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.expression.spel.ast.TypeCode;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * @author E.Santoboni
  */
+@ExtendWith(SolrTestExtension.class)
+@Tag(SolrTestExtension.RECREATE_CORE)
 public class SolrConfigControllerTest extends AbstractControllerIntegrationTest {
     
     @Autowired
@@ -41,13 +43,7 @@ public class SolrConfigControllerTest extends AbstractControllerIntegrationTest 
 
     @BeforeAll
     public static void setup() throws Exception {
-        SolrTestUtils.startContainer();
         AbstractControllerIntegrationTest.setup();
-    }
-
-    @AfterAll
-    public static void teardown() throws Exception {
-        SolrTestUtils.stopContainer();
     }
 
     @Test
