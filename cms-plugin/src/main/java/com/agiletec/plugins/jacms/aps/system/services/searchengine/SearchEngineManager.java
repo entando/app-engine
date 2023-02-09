@@ -22,28 +22,26 @@ import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.notify.ApsEvent;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.common.tree.ITreeNode;
-import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
-import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.util.DateConverter;
+import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedEvent;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
  * Servizio detentore delle operazioni di indicizzazione di oggetti ricercabili
@@ -63,7 +61,7 @@ public class SearchEngineManager extends AbstractService
 
     private int status;
     private LastReloadInfo lastReloadInfo;
-    private List<ApsEvent> publicContentChangedEventQueue = new ArrayList<ApsEvent>();
+    private ConcurrentLinkedDeque<PublicContentChangedEvent> publicContentChangedEventQueue = new ConcurrentLinkedDeque<>();
 
     public static final String RELOAD_THREAD_NAME_PREFIX = "RELOAD_INDEX_";
 
@@ -89,7 +87,7 @@ public class SearchEngineManager extends AbstractService
     @Override
     public void updateFromPublicContentChanged(PublicContentChangedEvent event) {
         if (this.getStatus() == STATUS_RELOADING_INDEXES_IN_PROGRESS) {
-            this.publicContentChangedEventQueue.add(0, event);
+            this.publicContentChangedEventQueue.add(event);
         } else {
             this.manageEvent(event);
         }
@@ -115,13 +113,9 @@ public class SearchEngineManager extends AbstractService
     }
 
     protected void sellOfQueueEvents() {
-        int size = this.publicContentChangedEventQueue.size();
-        if (size > 0) {
-            for (int i = 0; i < size; i++) {
-                PublicContentChangedEvent event = (PublicContentChangedEvent) this.publicContentChangedEventQueue.get(0);
-                this.manageEvent(event);
-                this.publicContentChangedEventQueue.remove(0);
-            }
+        while (this.publicContentChangedEventQueue.peekLast() != null) {
+            PublicContentChangedEvent event = this.publicContentChangedEventQueue.pollLast();
+            this.manageEvent(event);
         }
     }
 
