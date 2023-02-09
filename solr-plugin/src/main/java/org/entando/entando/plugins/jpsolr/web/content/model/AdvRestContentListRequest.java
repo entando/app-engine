@@ -26,7 +26,6 @@ import org.entando.entando.web.common.model.FilterType;
 import org.entando.entando.web.common.model.RestEntityListRequest;
 
 /**
- *
  * @author E.Santoboni
  */
 public class AdvRestContentListRequest extends RestEntityListRequest {
@@ -39,12 +38,13 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     private boolean includeAttachments;
 
     private boolean guestUser;
-    
+
     private SolrFilter[][] doubleFilters;
 
     public String getLang() {
         return lang;
     }
+
     public void setLang(String lang) {
         this.lang = lang;
     }
@@ -52,6 +52,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public String[] getCsvCategories() {
         return csvCategories;
     }
+
     public void setCsvCategories(String[] csvCategories) {
         this.csvCategories = csvCategories;
     }
@@ -59,6 +60,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public String getText() {
         return text;
     }
+
     public void setText(String text) {
         this.text = text;
     }
@@ -66,6 +68,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public String getSearchOption() {
         return searchOption;
     }
+
     public void setSearchOption(String searchOption) {
         this.searchOption = searchOption;
     }
@@ -73,17 +76,19 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public boolean isIncludeAttachments() {
         return includeAttachments;
     }
+
     public void setIncludeAttachments(boolean includeAttachments) {
         this.includeAttachments = includeAttachments;
     }
-    
+
     public boolean isGuestUser() {
         return guestUser;
     }
+
     public void setGuestUser(boolean guestUser) {
         this.guestUser = guestUser;
     }
-    
+
     public SolrSearchEngineFilter[] extractCategoryFilters() {
         SolrSearchEngineFilter[] categoryFilters = new SolrSearchEngineFilter[]{};
         if (null != this.getCsvCategories()) {
@@ -96,7 +101,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         return categoryFilters;
     }
-    
+
     public SolrSearchEngineFilter[][] extractDoubleFilters(String langCode) {
         SolrSearchEngineFilter[][] doubleSearchFilters = new SolrSearchEngineFilter[][]{};
         SolrFilter[][] df = this.getDoubleFilters();
@@ -114,7 +119,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         return doubleSearchFilters;
     }
-    
+
     public SolrSearchEngineFilter[] extractFilters(String langCode) {
         SolrSearchEngineFilter[] searchFilters = new SolrSearchEngineFilter[]{};
         SolrFilter[] filters = this.getFilters();
@@ -127,7 +132,8 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         if (!StringUtils.isBlank(this.getText())) {
             SearchEngineFilter.TextSearchOption textSearchOption = this.extractTextOption(this.getSearchOption());
-            SolrSearchEngineFilter searchFilter = new SolrSearchEngineFilter(langCode, this.getText(), textSearchOption);
+            SolrSearchEngineFilter searchFilter = new SolrSearchEngineFilter(langCode, this.getText(),
+                    textSearchOption);
             searchFilter.setFullTextSearch(true);
             searchFilter.setIncludeAttachments(this.isIncludeAttachments());
             searchFilters = ArrayUtils.add(searchFilters, searchFilter);
@@ -138,7 +144,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         return searchFilters;
     }
-    
+
     private Integer getOffset() {
         int page = this.getPage() - 1;
         if (null == this.getPage() || this.getPage() == 0) {
@@ -146,7 +152,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         return this.getPageSize() * page;
     }
-    
+
     private SolrSearchEngineFilter buildSearchFilter(SolrFilter filter, String langCode) {
         SolrSearchEngineFilter searchFilter = null;
         boolean isAttribute = !StringUtils.isEmpty(filter.getEntityAttr());
@@ -185,7 +191,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         return searchFilter;
     }
-    
+
     private SearchEngineFilter.TextSearchOption extractTextOption(String param) {
         SearchEngineFilter.TextSearchOption textSearchOption = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
         if (!StringUtils.isBlank(param)) {
@@ -199,21 +205,22 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         }
         return textSearchOption;
     }
-    
+
     protected Object extractFilterValue(Filter filter) {
         FilterType filterType = FilterType.STRING;
         if (filter.getType() != null) {
             filterType = FilterType.parse(filter.getType().toLowerCase());
         }
         if (filter.getAllowedValues() != null && filter.getAllowedValues().length > 0) {
-            return Arrays.stream(filter.getAllowedValues()).map(filterType::parseFilterValue).collect(Collectors.toList());
+            return Arrays.stream(filter.getAllowedValues()).map(filterType::parseFilterValue)
+                    .collect(Collectors.toList());
         }
         if (StringUtils.isBlank(filter.getValue())) {
             return null;
         }
         return filterType.parseFilterValue(filter.getValue());
     }
-    
+
     public void setFilters(SolrFilter[] filters) {
         super.setFilters(filters);
     }
@@ -224,16 +231,18 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         if (null == filters) {
             return null;
         }
-        List<Filter> newFilters = Arrays.asList(filters).stream().map(f -> {if (f instanceof SolrFilter) {
-            return f;
-        } else {
-            SolrFilter solrFilter = new SolrFilter(f.getAttribute(), f.getValue(), f.getOperator());
-            solrFilter.setAllowedValues(f.getAllowedValues());
-            solrFilter.setEntityAttr(f.getEntityAttr());
-            solrFilter.setOrder(f.getOrder());
-            solrFilter.setType(f.getType());
-            return solrFilter;
-        }}).collect(Collectors.toList());
+        List<Filter> newFilters = Arrays.asList(filters).stream().map(f -> {
+            if (f instanceof SolrFilter) {
+                return f;
+            } else {
+                SolrFilter solrFilter = new SolrFilter(f.getAttribute(), f.getValue(), f.getOperator());
+                solrFilter.setAllowedValues(f.getAllowedValues());
+                solrFilter.setEntityAttr(f.getEntityAttr());
+                solrFilter.setOrder(f.getOrder());
+                solrFilter.setType(f.getType());
+                return solrFilter;
+            }
+        }).collect(Collectors.toList());
         return newFilters.toArray(new SolrFilter[newFilters.size()]);
     }
 
@@ -252,8 +261,9 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public SolrFilter[][] getDoubleFilters() {
         return doubleFilters;
     }
+
     public void setDoubleFilters(SolrFilter[][] doubleFilters) {
         this.doubleFilters = doubleFilters;
     }
-    
+
 }

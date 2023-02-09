@@ -18,10 +18,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,7 +34,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class SolrSchemaClient {
 
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SolrSchemaClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(SolrSchemaClient.class);
 
     private SolrSchemaClient() {
         throw new IllegalStateException("Utility class");
@@ -75,12 +75,13 @@ public class SolrSchemaClient {
         properties.put("query", "*:*");
         return executePost(solrUrl, core, "/update", "delete", properties);
     }
-    
+
     private static boolean executePost(String solrUrl, String core, String actionName, Map<String, Object> properties) {
         return executePost(solrUrl, core, "/schema", actionName, properties);
     }
 
-    private static boolean executePost(String solrUrl, String core, String subPath, String actionName, Map<String, Object> properties) {
+    private static boolean executePost(String solrUrl, String core, String subPath, String actionName,
+            Map<String, Object> properties) {
         String baseUrl = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String url = baseUrl + core + subPath;
         String response = null;
@@ -98,10 +99,11 @@ public class SolrSchemaClient {
                 return false;
             }
         } catch (Exception e) {
-            logger.error("Error calling Post {} - properties {} - response {} - errorMessage {}", url, properties, response, e.getMessage());
+            logger.error("Error calling Post {} - properties {} - response {} - errorMessage {}", url, properties,
+                    response, e.getMessage());
             return false;
         }
         return true;
     }
-    
+
 }

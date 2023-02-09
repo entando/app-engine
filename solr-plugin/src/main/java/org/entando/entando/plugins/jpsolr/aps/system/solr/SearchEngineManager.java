@@ -13,11 +13,6 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_NEED_TO_RELOAD_INDEXES;
-import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_READY;
-import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS;
-
-import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import com.agiletec.aps.system.common.IManager;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingEvent;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingObserver;
@@ -44,20 +39,21 @@ import java.util.List;
 import java.util.Map;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author E.Santoboni
  */
-public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager 
+public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager
         implements ISolrSearchEngineManager, PublicContentChangedObserver, EntityTypesChangingObserver {
-    
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearchEngineManager.class);
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(SearchEngineManager.class);
+
     @Autowired
     private ILangManager langManager;
 
@@ -69,7 +65,8 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
             for (int i = 0; i < entityTypes.size(); i++) {
                 SmallEntityType entityType = entityTypes.get(i);
-                ContentTypeSettings typeSettings = new ContentTypeSettings(entityType.getCode(), entityType.getDescription());
+                ContentTypeSettings typeSettings = new ContentTypeSettings(entityType.getCode(),
+                        entityType.getDescription());
                 list.add(typeSettings);
                 Content prototype = this.getContentManager().createContentType(entityType.getCode());
                 Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
@@ -78,9 +75,10 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
                     Map<String, Map<String, Object>> currentConfig = new HashMap<>();
                     List<Lang> langs = this.getLangManager().getLangs();
                     for (int j = 0; j < langs.size(); j++) {
-                        Lang lang = (Lang) langs.get(j);
+                        Lang lang = langs.get(j);
                         String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
-                        Map<String, Object> currentField = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+                        Map<String, Object> currentField = fields.stream().filter(f -> f.get("name").equals(fieldName))
+                                .findFirst().orElse(null);
                         if (null != currentField) {
                             currentConfig.put(fieldName, currentField);
                         }
@@ -94,7 +92,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         }
         return list;
     }
-    
+
     @Override
     public void refreshCmsFields() throws EntException {
         try {
@@ -126,7 +124,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             throw new EntException("Error", e);
         }
     }
-    
+
     private void refreshBaseFields(List<Map<String, Object>> fields, Map<String, Map<String, Object>> checkedFields) {
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, "string");
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, "text_general");
@@ -137,8 +135,8 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, "pdate", false);
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, "pdate", false);
     }
-    
-    protected void refreshEntityType(List<Map<String, Object>> currentFields, 
+
+    protected void refreshEntityType(List<Map<String, Object>> currentFields,
             Map<String, Map<String, Object>> checkedFields, String entityTypeCode) {
         Content prototype = this.getContentManager().createContentType(entityTypeCode);
         if (null == prototype) {
@@ -156,11 +154,12 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
         }
     }
 
-    private void checkAttribute(List<Map<String, Object>> currentFields, 
+    private void checkAttribute(List<Map<String, Object>> currentFields,
             Map<String, Map<String, Object>> checkedFields, AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
         if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute) && attribute.isSearchable())) {
+                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
+                && attribute.isSearchable())) {
             String type = null;
             if (attribute instanceof DateAttribute) {
                 type = "pdates";
@@ -184,39 +183,42 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             }
         }
     }
-    
-    private void checkField(List<Map<String, Object>> currentFields, 
+
+    private void checkField(List<Map<String, Object>> currentFields,
             Map<String, Map<String, Object>> checkedFields, String fieldName, String type) {
         this.checkField(currentFields, checkedFields, fieldName, type, false);
     }
-    
-    private void checkField(List<Map<String, Object>> currentFields, 
+
+    private void checkField(List<Map<String, Object>> currentFields,
             Map<String, Map<String, Object>> checkedFields, String fieldName, String type, boolean multiValue) {
-        Map<String, Object> currentField = currentFields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+        Map<String, Object> currentField = currentFields.stream().filter(f -> f.get("name").equals(fieldName))
+                .findFirst().orElse(null);
         if (null != currentField) {
             if (currentField.get("type").equals(type)
-                    && ((null == currentField.get("multiValued") && multiValue) || (null != currentField.get("multiValued") && currentField.get("multiValued").equals(multiValue)))) {
+                    && ((null == currentField.get("multiValued") && multiValue) || (
+                    null != currentField.get("multiValued") && currentField.get("multiValued").equals(multiValue)))) {
                 return;
             } else {
                 logger.warn("Field '" + fieldName + "' already exists but with different configuration!"
                         + " - type '" + currentField.get("type") + "' to '" + type + "'"
                         + " - multiValued '" + currentField.get("multiValued") + "' to '" + multiValue + "'");
             }
-        } 
+        }
         Map<String, Object> newField = new HashMap<>();
         newField.put("name", fieldName);
         newField.put("type", type);
         newField.put("multiValued", multiValue);
         if (null == currentField) {
             ((ISolrSearchEngineDAOFactory) this.getFactory()).addField(newField);
-        } else if (!type.equals(currentField.get("type")) || !Boolean.valueOf(multiValue).equals((Boolean) currentField.get("multiValued"))) {
+        } else if (!type.equals(currentField.get("type")) || !Boolean.valueOf(multiValue)
+                .equals((Boolean) currentField.get("multiValued"))) {
             ((ISolrSearchEngineDAOFactory) this.getFactory()).replaceField(newField);
         }
         if (null != checkedFields) {
             checkedFields.put(fieldName, newField);
         }
     }
-    
+
     @Override
     public void deleteIndexedEntity(String entityId) throws EntException {
         try {
@@ -226,20 +228,20 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             throw e;
         }
     }
-    
+
     @Override
     public void updateFromEntityTypesChanging(EntityTypesChangingEvent event) {
         super.updateFromEntityTypesChanging(event);
         List<Map<String, Object>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
         this.checkLangFields(fields);
         this.refreshBaseFields(fields, null);
-        if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName()) 
+        if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName())
                 && event.getOperationCode() != EntityTypesChangingEvent.REMOVE_OPERATION_CODE) {
             String typeCode = event.getNewEntityType().getTypeCode();
             this.refreshEntityType(fields, new HashMap<String, Map<String, Object>>(), typeCode);
         }
     }
-    
+
     private void checkLangFields(List<Map<String, Object>> fields) {
         List<Lang> langs = this.getLangManager().getLangs();
         for (int j = 0; j < langs.size(); j++) {
@@ -247,7 +249,7 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             this.checkField(fields, null, currentLang.getCode(), "text_general", true);
         }
     }
-    
+
     @Override
     public Thread startReloadContentsReferencesByType(String typeCode) throws EntException {
         return this.startReloadContentsReferencesPrivate(typeCode);
@@ -265,24 +267,24 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
             try {
                 IIndexerDAO newIndexer = this.getFactory().getIndexer();
                 loaderThread = new SolrIndexLoaderThread(typeCode, this, this.getContentManager(), newIndexer);
-                String threadName = ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX 
+                String threadName = ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX
                         + DateConverter.getFormattedDate(new Date(), "yyyyMMddHHmmss")
                         + typeCode;
                 loaderThread.setName(threadName);
                 this.setStatus(STATUS_RELOADING_INDEXES_IN_PROGRESS);
                 loaderThread.start();
                 logger.info("Reload Contents References job started");
-            } catch (Throwable t) {
-                throw new EntException("Error reloading Contents References", t);
+            } catch (RuntimeException ex) {
+                throw new EntException("Error reloading Contents References", ex);
             }
         } else {
             logger.info("Reload Contents References job suspended: current status: {}", this.getStatus());
         }
         return loaderThread;
     }
-    
+
     @Override
-    public SolrFacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters, 
+    public SolrFacetedContentsResult searchFacetedEntities(SearchEngineFilter[][] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
         return ((ISolrSearcherDAO) this.getSearcherDao()).searchFacetedContents(filters, categories, allowedGroups);
     }
@@ -300,8 +302,9 @@ public class SearchEngineManager extends com.agiletec.plugins.jacms.aps.system.s
     protected ILangManager getLangManager() {
         return langManager;
     }
+
     public void setLangManager(ILangManager langManager) {
         this.langManager = langManager;
     }
-    
+
 }

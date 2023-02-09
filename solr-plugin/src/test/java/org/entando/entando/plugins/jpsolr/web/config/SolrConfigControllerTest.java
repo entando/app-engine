@@ -37,7 +37,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @ExtendWith(SolrTestExtension.class)
 @Tag(SolrTestExtension.RECREATE_CORE)
 public class SolrConfigControllerTest extends AbstractControllerIntegrationTest {
-    
+
     @Autowired
     private ISolrSearchEngineManager solrSearchEngineManager;
 
@@ -57,20 +57,20 @@ public class SolrConfigControllerTest extends AbstractControllerIntegrationTest 
         result_1.andExpect(status().isOk());
         String bodyResult_1 = result_1.andReturn().getResponse().getContentAsString();
         Assertions.assertNotNull(bodyResult_1);
-        
+
         int payloadSize = JsonPath.read(bodyResult_1, "$.size()");
         Assertions.assertEquals(4, payloadSize);
         for (int i = 0; i < payloadSize; i++) {
             int size = JsonPath.read(bodyResult_1, "$[" + i + "].attributeSettings[0].currentConfig.size()");
             Assertions.assertEquals(0, size);
         }
-        
+
         ResultActions result_2 = mockMvc
                 .perform(post("/plugins/solr/config/TST").header("Authorization", "Bearer " + accessToken));
         result_2.andExpect(status().isOk());
         String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
         Assertions.assertNotNull(bodyResult_2);
-        
+
         ResultActions result_3 = mockMvc
                 .perform(get("/plugins/solr/config").header("Authorization", "Bearer " + accessToken));
         result_3.andExpect(status().isOk());
@@ -85,9 +85,9 @@ public class SolrConfigControllerTest extends AbstractControllerIntegrationTest 
                 Assertions.assertEquals(0, size);
             }
         }
-        
+
         this.solrSearchEngineManager.refreshCmsFields();
-        
+
         ResultActions result_4 = mockMvc
                 .perform(get("/plugins/solr/config").header("Authorization", "Bearer " + accessToken));
         result_4.andExpect(status().isOk());
@@ -97,9 +97,8 @@ public class SolrConfigControllerTest extends AbstractControllerIntegrationTest 
             int size = JsonPath.read(bodyResult_4, "$[" + i + "].attributeSettings[0].currentConfig.size()");
             Assertions.assertTrue(size > 0);
         }
-        
-        
-        
+
+
     }
 
 }

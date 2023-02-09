@@ -25,8 +25,8 @@ import javax.annotation.PreDestroy;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
@@ -36,14 +36,14 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSearchEngineDAOFactory {
 
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearchEngineDAOFactory.class);
-    
+    private static final Logger logger = LoggerFactory.getLogger(SearchEngineDAOFactory.class);
+
     @Value("${SOLR_ADDRESS:http://localhost:8983/solr}")
     private String solrAddress;
-    
+
     @Value("${SOLR_CORE:entando}")
     private String solrCore;
-    
+
     private ConfigInterface configManager;
     private ILangManager langManager;
     private ICategoryManager categoryManager;
@@ -97,7 +97,7 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     public boolean deleteAllDocuments() {
         return SolrSchemaClient.deleteAllDocuments(this.solrAddress, this.solrCore);
     }
-    
+
     @Override
     public boolean checkCurrentSubfolder() throws EntException {
         // nothing to do
@@ -129,15 +129,16 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     public void updateSubDir(String newSubDirectory) throws EntException {
         // nothing to do
     }
-    
+
     @Override
     public void deleteSubDirectory(String subDirectory) {
         // nothing to do
     }
-    
+
     protected ConfigInterface getConfigManager() {
         return configManager;
     }
+
     public void setConfigManager(ConfigInterface configService) {
         this.configManager = configService;
     }
@@ -145,6 +146,7 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     protected ILangManager getLangManager() {
         return langManager;
     }
+
     public void setLangManager(ILangManager langManager) {
         this.langManager = langManager;
     }
@@ -152,6 +154,7 @@ public class SearchEngineDAOFactory implements ISearchEngineDAOFactory, ISolrSea
     protected ICategoryManager getCategoryManager() {
         return categoryManager;
     }
+
     public void setCategoryManager(ICategoryManager categoryManager) {
         this.categoryManager = categoryManager;
     }

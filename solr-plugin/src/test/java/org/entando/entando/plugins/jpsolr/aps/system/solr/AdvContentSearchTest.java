@@ -100,12 +100,12 @@ class AdvContentSearchTest {
     }
     
     @Test
-    void testSearchContents_main() throws Throwable {
+    void testSearchContents_main() throws Exception {
         this.executeSearchContents_main("ciliegia");
         this.executeSearchContents_main("Sagra della ciliegia");
     }
     
-    protected void executeSearchContents_main(String text) throws Throwable {
+    protected void executeSearchContents_main(String text) throws Exception {
         SearchEngineFilter descrFilter = new SearchEngineFilter("it", text, SearchEngineFilter.TextSearchOption.EXACT);
         descrFilter.setFullTextSearch(true);
         SearchEngineFilter[] filters = {descrFilter};
@@ -122,7 +122,7 @@ class AdvContentSearchTest {
     }
     
     @Test
-    void testSearchContents_1() throws Throwable {
+    void testSearchContents_1() throws Exception {
         SearchEngineFilter groupFilter = new SearchEngineFilter(IContentManager.CONTENT_MAIN_GROUP_FILTER_KEY, false, "coach", SearchEngineFilter.TextSearchOption.EXACT);
         SearchEngineFilter[] filters = {groupFilter};
         SearchEngineFilter[] categoriesFilters = {};
@@ -138,7 +138,7 @@ class AdvContentSearchTest {
     }
     
     @Test
-    void testSearchContents_2() throws Throwable {
+    void testSearchContents_2() throws Exception {
         SearchEngineFilter descrFilter = new SearchEngineFilter(IContentManager.CONTENT_DESCR_FILTER_KEY, false, "Mostra della ciliegia", SearchEngineFilter.TextSearchOption.EXACT);
         SearchEngineFilter[] filters = {descrFilter};
         SearchEngineFilter[] categoriesFilters = {};
@@ -154,7 +154,7 @@ class AdvContentSearchTest {
     }
     
     @Test
-    void testSearchContents_3() throws Throwable {
+    void testSearchContents_3() throws Exception {
         SearchEngineFilter attributeFilter = new SearchEngineFilter("Titolo", true, "Sagra della ciliegia", SearchEngineFilter.TextSearchOption.EXACT);
         attributeFilter.setLangCode("it");
         SearchEngineFilter[] filters = {attributeFilter};
@@ -171,7 +171,7 @@ class AdvContentSearchTest {
     }
     
     @Test
-    void testSearchContents_4() throws Throwable {
+    void testSearchContents_4() throws Exception {
         SearchEngineFilter creationOrder = new SearchEngineFilter(IContentManager.CONTENT_CREATION_DATE_FILTER_KEY, false);
         creationOrder.setOrder(EntitySearchFilter.ASC_ORDER);
         SearchEngineFilter groupFilter = new SearchEngineFilter(IContentManager.CONTENT_MAIN_GROUP_FILTER_KEY, false, "coach");
@@ -365,7 +365,7 @@ class AdvContentSearchTest {
     }
     
     @Test
-    void testLoadOrderedPublicEvents_4() throws Throwable {
+    void testLoadOrderedPublicEvents_4() throws Exception {
         SearchEngineFilter[] categoriesFilters = {};
         Content masterContent = this.contentManager.loadContent("EVN193", true);
         masterContent.setId(null);
@@ -388,8 +388,6 @@ class AdvContentSearchTest {
             for (int i = 0; i < expectedFreeOrderedContentsId.length; i++) {
                 assertEquals(expectedFreeOrderedContentsId[i], contents.get(i));
             }
-        } catch (Throwable t) {
-            throw t;
         } finally {
             if (null != masterContent.getId() && !"EVN193".equals(masterContent.getId())) {
                 this.contentManager.removeOnLineContent(masterContent);

@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
 
-	private static final Logger _logger = LoggerFactory.getLogger(HasToOpenFacetNodeTag.class);
+	private static final Logger logger = LoggerFactory.getLogger(HasToOpenFacetNodeTag.class);
 
 	@Override
 	public int doStartTag() throws JspException {
@@ -53,9 +53,8 @@ public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
 			} else {
 				return super.doStartTag();
 			}
-		} catch (Throwable t) {
-			_logger.error("error in doStartTag", t);
-			throw new JspException("Error doStartTag", t);
+		} catch (RuntimeException ex) {
+			throw new JspException("Error doStartTag", ex);
 		}
 	}
 
@@ -118,58 +117,58 @@ public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
 	}
 
 	public String getFacetNodeCode() {
-		return _facetNodeCode;
+		return facetNodeCode;
 	}
 
 	public void setFacetNodeCode(String facetNodeCode) {
-		this._facetNodeCode = facetNodeCode;
+		this.facetNodeCode = facetNodeCode;
 	}
 
 	@Override
 	public List<String> getRequiredFacets() {
-		if (null == this._requiredFacets) {
+		if (null == this.requiredFacets) {
 			if (null == this.getRequiredFacetsParamName()) {
-				return new ArrayList<String>();
+				return new ArrayList<>();
 			} else {
 				ServletRequest request = this.pageContext.getRequest();
 				List<String> list = (List<String>) request.getAttribute(this.getRequiredFacetsParamName());
 				if (null == list) {
-					return new ArrayList<String>();
+					return new ArrayList<>();
 				} else {
 					return list;
 				}
 			}
 		}
-		return _requiredFacets;
+		return requiredFacets;
 	}
 
 	public void setRequiredFacets(List<String> requiredFacets) {
-		this._requiredFacets = requiredFacets;
+		this.requiredFacets = requiredFacets;
 	}
 
 	public Map<String, Integer> getOccurrences() {
-		if (null == this._occurrences) {
+		if (null == this.occurrences) {
 			if (null == this.getOccurrencesParamName()) {
-				return new HashMap<String, Integer>();
+				return new HashMap<>();
 			} else {
 				ServletRequest request = this.pageContext.getRequest();
 				Map<String, Integer> map = (Map<String, Integer>) request.getAttribute(this.getOccurrencesParamName());
 				if (null == map) {
-					return new HashMap<String, Integer>();
+					return new HashMap<>();
 				} else {
 					return map;
 				}
 			}
 		}
-		return _occurrences;
+		return occurrences;
 	}
 
 	public void setOccurrences(Map<String, Integer> occurrences) {
-		this._occurrences = occurrences;
+		this.occurrences = occurrences;
 	}
 
-	private String _facetNodeCode;//="${facetNode.code}"
-	private List<String> _requiredFacets;//="requiredFacets"
-	private Map<String, Integer> _occurrences; //="${occurrences}"
+	private String facetNodeCode;//="${facetNode.code}"
+	private List<String> requiredFacets;//="requiredFacets"
+	private Map<String, Integer> occurrences; //="${occurrences}"
 
 }

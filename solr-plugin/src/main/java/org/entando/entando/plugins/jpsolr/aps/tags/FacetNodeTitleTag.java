@@ -21,6 +21,7 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.tags;
 
+import java.io.IOException;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
@@ -43,14 +44,15 @@ import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHel
  */
 public class FacetNodeTitleTag extends ExtendedTagSupport {
 
-    private static final Logger _logger = LoggerFactory.getLogger(FacetNodeTitleTag.class);
+    private static final Logger logger = LoggerFactory.getLogger(FacetNodeTitleTag.class);
 
     @Override
     public int doStartTag() throws JspException {
         ServletRequest request = this.pageContext.getRequest();
         RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
         try {
-            IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
+            IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(
+                    JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
             ITreeNodeManager facetManager = facetNavHelper.getTreeNodeManager();
             ITreeNode facetNode = facetManager.getNode(this.getFacetNodeCode());
             String separator = (this.getSeparator() == null) ? " / " : this.getSeparator();
@@ -61,7 +63,8 @@ public class FacetNodeTitleTag extends ExtendedTagSupport {
                     title = facetNode.getFullTitle(currentLang.getCode(), separator, facetManager);
                 }
                 if (null == title || title.trim().length() == 0) {
-                    ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(SystemConstants.LANGUAGE_MANAGER, this.pageContext);
+                    ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(
+                            SystemConstants.LANGUAGE_MANAGER, this.pageContext);
                     Lang defaultLang = langManager.getDefaultLang();
                     title = facetNode.getTitles().getProperty(defaultLang.getCode());
                     if (this.isFullTitle()) {
@@ -80,9 +83,8 @@ public class FacetNodeTitleTag extends ExtendedTagSupport {
                 this.pageContext.getOut().print("UNKNOWN FACET");
             }
 
-        } catch (Throwable t) {
-            _logger.error("error in doStartTag", t);
-            throw new JspException("error in doStartTag", t);
+        } catch (IOException | RuntimeException ex) {
+            throw new JspException("error in doStartTag", ex);
         }
         return super.doStartTag();
     }
@@ -90,37 +92,37 @@ public class FacetNodeTitleTag extends ExtendedTagSupport {
     @Override
     public void release() {
         super.release();
-        this._facetNodeCode = null;
-        this._fullTitle = false;
-        this._separator = " / ";
+        this.facetNodeCode = null;
+        this.fullTitle = false;
+        this.separator = " / ";
     }
 
     public String getFacetNodeCode() {
-        return _facetNodeCode;
+        return facetNodeCode;
     }
 
     public void setFacetNodeCode(String facetNodeCode) {
-        this._facetNodeCode = facetNodeCode;
+        this.facetNodeCode = facetNodeCode;
     }
 
     public boolean isFullTitle() {
-        return _fullTitle;
+        return fullTitle;
     }
 
     public void setFullTitle(boolean fullTitle) {
-        this._fullTitle = fullTitle;
+        this.fullTitle = fullTitle;
     }
 
     public String getSeparator() {
-        return _separator;
+        return separator;
     }
 
     public void setSeparator(String separator) {
-        this._separator = separator;
+        this.separator = separator;
     }
 
-    private String _facetNodeCode;
-    private boolean _fullTitle = false;
-    private String _separator = " / ";
+    private String facetNodeCode;
+    private boolean fullTitle = false;
+    private String separator = " / ";
 
 }

@@ -103,7 +103,8 @@ public class ApsAdminPluginBaseTestCase {
             }
         }
         // Use spring as the object factory for Struts
-        StrutsSpringObjectFactory ssf = new StrutsSpringObjectFactory(null, null, null, null, servletContext, null, createContainer());
+        StrutsSpringObjectFactory ssf = new StrutsSpringObjectFactory(null, null, null, null, servletContext, null,
+                createContainer());
         ssf.setApplicationContext(applicationContext);
         // Dispatcher is the guy that actually handles all requests.  Pass in
         // an empty Map as the parameters but if you want to change stuff like
@@ -162,14 +163,15 @@ public class ApsAdminPluginBaseTestCase {
      * Created action class based on namespace and name
      *
      * @param namespace The namespace
-     * @param name The name of the action
+     * @param name      The name of the action
      * @throws java.lang.Exception In case of error
      */
     protected void initAction(String namespace, String name, boolean refreshResponse) throws Exception {
         // create a proxy class which is just a wrapper around the action call.
         // The proxy is created by checking the namespace and name against the
         // struts.xml configuration
-        ActionProxyFactory proxyFactory = (ActionProxyFactory) this.dispatcher.getContainer().getInstance(ActionProxyFactory.class);
+        ActionProxyFactory proxyFactory = (ActionProxyFactory) this.dispatcher.getContainer()
+                .getInstance(ActionProxyFactory.class);
         this.proxy = proxyFactory.createActionProxy(namespace, name, null, null, true, false);
 
         // set to true if you want to process Freemarker or JSP results
@@ -198,8 +200,7 @@ public class ApsAdminPluginBaseTestCase {
     }
 
     /**
-     * Metodo da estendere in caso che si voglia impiantare un'altro
-     * struts-config.
+     * Metodo da estendere in caso che si voglia impiantare un'altro struts-config.
      *
      * @param params The parameters
      */
@@ -217,7 +218,8 @@ public class ApsAdminPluginBaseTestCase {
      * @throws Exception In case of error.
      */
     protected UserDetails getUser(String username, String password) throws Exception {
-        IAuthenticationProviderManager provider = (IAuthenticationProviderManager) this.getService(SystemConstants.AUTHENTICATION_PROVIDER_MANAGER);
+        IAuthenticationProviderManager provider = (IAuthenticationProviderManager) this.getService(
+                SystemConstants.AUTHENTICATION_PROVIDER_MANAGER);
         IUserManager userManager = (IUserManager) this.getService(SystemConstants.USER_MANAGER);
         UserDetails user = null;
         if (username.equals(SystemConstants.GUEST_USER_NAME)) {
@@ -229,8 +231,7 @@ public class ApsAdminPluginBaseTestCase {
     }
 
     /**
-     * Return a user (with his autority) by username, with the password equals
-     * than username.
+     * Return a user (with his autority) by username, with the password equals than username.
      *
      * @param username The username
      * @return The required user.
@@ -245,7 +246,8 @@ public class ApsAdminPluginBaseTestCase {
             this.removeUserOnSession();
             return;
         }
-        UserDetails currentUser = this.getUser(username, username);//nel database di test, username e password sono uguali
+        UserDetails currentUser = this.getUser(username,
+                username);//nel database di test, username e password sono uguali
         HttpSession session = this.request.getSession();
         session.setAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER, currentUser);
     }
@@ -310,7 +312,7 @@ public class ApsAdminPluginBaseTestCase {
         this.parameters.remove(name);
     }
 
-    protected String executeAction() throws Throwable {
+    protected String executeAction() throws Exception {
         ActionContext ac = this.getActionContext();
         ac.setParameters(HttpParameters.create(this.request.getParameterMap()).build());
         ac.getParameters().appendAll(this.parameters);

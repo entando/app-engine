@@ -41,16 +41,16 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Data Access Object dedita alla indicizzazione di documenti.
  */
 public class IndexerDAO implements IIndexerDAO {
 
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(IndexerDAO.class);
+    private static final Logger logger = LoggerFactory.getLogger(IndexerDAO.class);
 
     private ILangManager langManager;
 
@@ -85,7 +85,7 @@ public class IndexerDAO implements IIndexerDAO {
             logger.error("Error saving entity {} calling solr server", entity.getId(), ex);
             throw new EntException("Error saving entity", ex);
         } catch (Exception t) {
-           logger.error("Generic error saving entity {}", entity.getId(), t);
+            logger.error("Generic error saving entity {}", entity.getId(), t);
             throw new EntException("Error saving entity", t);
         }
     }
@@ -126,7 +126,8 @@ public class IndexerDAO implements IIndexerDAO {
                 document.addField(SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
             }
             Date creation = ((Content) entity).getCreated();
-            Date lastModify = (null != ((Content) entity).getLastModified()) ? ((Content) entity).getLastModified() : creation;
+            Date lastModify =
+                    (null != ((Content) entity).getLastModified()) ? ((Content) entity).getLastModified() : creation;
             if (null != creation) {
                 document.addField(SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, creation);
             }
@@ -150,7 +151,7 @@ public class IndexerDAO implements IIndexerDAO {
         this.indexCategories(entity, document);
         return document;
     }
-    
+
     protected void indexCategories(IApsEntity entity, SolrInputDocument document) {
         List<Category> categories = ((Content) entity).getCategories();
         if (null != categories && !categories.isEmpty()) {
@@ -162,7 +163,7 @@ public class IndexerDAO implements IIndexerDAO {
             codes.stream().forEach(c -> document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, c));
         }
     }
-    
+
     protected void extractCategoryCodes(ITreeNode category, Set<String> codes) {
         if (null == category || category.isRoot()) {
             return;
@@ -179,12 +180,13 @@ public class IndexerDAO implements IIndexerDAO {
             return;
         }
         if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute) && attribute.isSearchable())) {
+                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
+                && attribute.isSearchable())) {
             Object valueToIndex = null;
             if (attribute instanceof DateAttribute) {
                 valueToIndex = ((DateAttribute) attribute).getDate();
             } else if (attribute instanceof NumberAttribute) {
-                valueToIndex = ((NumberAttribute)attribute).getValue();
+                valueToIndex = ((NumberAttribute) attribute).getValue();
                 if (null != valueToIndex) {
                     valueToIndex = ((BigDecimal) valueToIndex).intValue();
                 }
@@ -212,7 +214,8 @@ public class IndexerDAO implements IIndexerDAO {
         }
     }
 
-    private void indexComplexAttribute(SolrInputDocument document, AbstractComplexAttribute complexAttribute, Lang lang) {
+    private void indexComplexAttribute(SolrInputDocument document, AbstractComplexAttribute complexAttribute,
+            Lang lang) {
         List<AttributeInterface> elements = complexAttribute.getAttributes();
         for (int i = 0; i < elements.size(); i++) {
             AttributeInterface attribute = elements.get(i);
@@ -226,7 +229,8 @@ public class IndexerDAO implements IIndexerDAO {
         }
     }
 
-    protected void addFieldForFullTextSearch(SolrInputDocument document, AttributeInterface attribute, Lang lang, Object valueToIndex) {
+    protected void addFieldForFullTextSearch(SolrInputDocument document, AttributeInterface attribute, Lang lang,
+            Object valueToIndex) {
         // full text search
         String fieldName = lang.getCode();
         if (attribute instanceof ResourceAttributeInterface) {
@@ -234,16 +238,17 @@ public class IndexerDAO implements IIndexerDAO {
         }
         String indexingType = attribute.getIndexingType();
         if (null != indexingType
-                && (IndexableAttributeInterface.INDEXING_TYPE_UNSTORED.equalsIgnoreCase(indexingType) || IndexableAttributeInterface.INDEXING_TYPE_TEXT.equalsIgnoreCase(indexingType))) {
+                && (IndexableAttributeInterface.INDEXING_TYPE_UNSTORED.equalsIgnoreCase(indexingType)
+                || IndexableAttributeInterface.INDEXING_TYPE_TEXT.equalsIgnoreCase(indexingType))) {
             document.addField(fieldName, valueToIndex);
         }
     }
-    
+
     private void indexValue(SolrInputDocument document, String fieldName, Object valueToIndex) {
         fieldName = fieldName.replaceAll(":", "_");
         document.addField(fieldName, valueToIndex);
     }
-    
+
     @Override
     public synchronized void delete(String name, String value) throws EntException {
         try {
@@ -256,14 +261,15 @@ public class IndexerDAO implements IIndexerDAO {
             logger.error("Error deleting entity {}:{} calling solr server", name, value, ex);
             throw new EntException("Error deleting entity", ex);
         } catch (Exception t) {
-           logger.error("Generic error deleting entity {}:{}", name, value, t);
+            logger.error("Generic error deleting entity {}:{}", name, value, t);
             throw new EntException("Error deleting entity", t);
         }
     }
-    
+
     protected ILangManager getLangManager() {
         return langManager;
     }
+
     @Override
     public void setLangManager(ILangManager langManager) {
         this.langManager = langManager;
@@ -272,6 +278,7 @@ public class IndexerDAO implements IIndexerDAO {
     public ITreeNodeManager getTreeNodeManager() {
         return treeNodeManager;
     }
+
     @Override
     public void setTreeNodeManager(ITreeNodeManager treeNodeManager) {
         this.treeNodeManager = treeNodeManager;

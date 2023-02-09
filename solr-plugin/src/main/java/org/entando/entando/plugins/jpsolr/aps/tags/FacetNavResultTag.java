@@ -27,6 +27,7 @@ import java.util.List;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
+import org.entando.entando.ent.exception.EntException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +38,12 @@ import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 
 /**
- * 
  * @author E.Santoboni
  */
 public class FacetNavResultTag extends AbstractFacetNavTag {
 
-	private static final Logger _logger = LoggerFactory.getLogger(FacetNavResultTag.class);
-	
+    private static final Logger logger = LoggerFactory.getLogger(FacetNavResultTag.class);
+
     @Override
     public int doStartTag() throws JspException {
         ServletRequest request = this.pageContext.getRequest();
@@ -59,45 +59,49 @@ public class FacetNavResultTag extends AbstractFacetNavTag {
                     requiredFacets = new ArrayList<>();
                 }
             }
-            IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
+            IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(
+                    JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
             FacetedContentsResult result = (FacetedContentsResult) reqCtx.getExtraParam(SOLR_RESULT_REQUEST_PARAM);
             if (null == result) {
                 result = facetNavHelper.getResult(requiredFacets, reqCtx);
             }
             this.pageContext.setAttribute(this.getResultParamName(), result.getContentsId());
             if (null != this.getBreadCrumbsParamName()) {
-                this.pageContext.setAttribute(this.getBreadCrumbsParamName(), super.getBreadCrumbs(requiredFacets, reqCtx));
+                this.pageContext.setAttribute(this.getBreadCrumbsParamName(),
+                        super.getBreadCrumbs(requiredFacets, reqCtx));
             }
-        } catch (Throwable t) {
-            _logger.error("error in startTag", t);
-            throw new JspException("error in startTag", t);
+        } catch (EntException | RuntimeException ex) {
+            throw new JspException("error in startTag", ex);
         }
         return super.doStartTag();
     }
-	
-	public String getResultParamName() {
-		return _resultParamName;
-	}
-	public void setResultParamName(String resultParamName) {
-		this._resultParamName = resultParamName;
-	}
-	
-	public boolean isExecuteExtractRequiredFacets() {
-		return _executeExtractRequiredFacets;
-	}
-	public void setExecuteExtractRequiredFacets(boolean executeExtractRequiredFacets) {
-		this._executeExtractRequiredFacets = executeExtractRequiredFacets;
-	}
 
-	public String getBreadCrumbsParamName() {
-		return _breadCrumbsParamName;
-	}
-	public void setBreadCrumbsParamName(String breadCrumbsParamName) {
-		this._breadCrumbsParamName = breadCrumbsParamName;
-	}
-	
-	private String _resultParamName;
-	private boolean _executeExtractRequiredFacets = true;
-	private String _breadCrumbsParamName;
-	
+    public String getResultParamName() {
+        return resultParamName;
+    }
+
+    public void setResultParamName(String resultParamName) {
+        this.resultParamName = resultParamName;
+    }
+
+    public boolean isExecuteExtractRequiredFacets() {
+        return executeExtractRequiredFacets;
+    }
+
+    public void setExecuteExtractRequiredFacets(boolean executeExtractRequiredFacets) {
+        this.executeExtractRequiredFacets = executeExtractRequiredFacets;
+    }
+
+    public String getBreadCrumbsParamName() {
+        return breadCrumbsParamName;
+    }
+
+    public void setBreadCrumbsParamName(String breadCrumbsParamName) {
+        this.breadCrumbsParamName = breadCrumbsParamName;
+    }
+
+    private String resultParamName;
+    private boolean executeExtractRequiredFacets = true;
+    private String breadCrumbsParamName;
+
 }

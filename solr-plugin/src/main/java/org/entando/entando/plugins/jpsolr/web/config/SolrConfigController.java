@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.*;
 public class SolrConfigController {
 
     private static final Logger logger = LoggerFactory.getLogger(SolrConfigController.class);
-    
+
     public static final String CONTENT_TYPE_CODE = "contentTypeCode";
 
     @Autowired
@@ -47,6 +47,7 @@ public class SolrConfigController {
     protected ISolrSearchEngineManager getSolrSearchEngineManager() {
         return solrSearchEngineManager;
     }
+
     public void setSolrSearchEngineManager(ISolrSearchEngineManager solrSearchEngineManager) {
         this.solrSearchEngineManager = solrSearchEngineManager;
     }

@@ -23,15 +23,17 @@ import java.util.Map;
  * @author E.Santoboni
  */
 public class SolrLastReloadInfo extends LastReloadInfo implements Serializable {
-	
-	private Map<String, Date> datesByType = new HashMap<>();
+
+    private Map<String, Date> datesByType = new HashMap<>();
 
     public Map<String, Date> getDatesByType() {
         return datesByType;
     }
+
     public void setDatesByType(Map<String, Date> datesByType) {
         this.datesByType = datesByType;
     }
+
     public Date getDateByType(String typeCode) {
         Date date = this.getDatesByType().get(typeCode);
         if (null == date) {
@@ -39,7 +41,7 @@ public class SolrLastReloadInfo extends LastReloadInfo implements Serializable {
         }
         return date;
     }
-    
+
     @Override
     protected void setResult(int result) {
         super.setResult(result);
@@ -49,5 +51,5 @@ public class SolrLastReloadInfo extends LastReloadInfo implements Serializable {
     protected void setDate(Date date) {
         super.setDate(date);
     }
-    
+
 }

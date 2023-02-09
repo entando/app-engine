@@ -27,33 +27,35 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 public class FacetNavWidgetHelper {
-	
-	/**
-	 * Returns concatenated string.
-	 * @param values
-	 * @param separator
-	 * @return concatenated string.
-	 */
-	public static String concatStrings(List<String> values, String separator) {
+
+    /**
+     * Returns concatenated string.
+     *
+     * @param values
+     * @param separator
+     * @return concatenated string.
+     */
+    public static String concatStrings(List<String> values, String separator) {
         if (null == values) {
             return "";
         }
         String[] strings = values.stream().toArray(String[]::new);
         return String.join(separator, strings);
-	}
-	
-	/**
-	 * Extracts from a string, the substrings contained in it as a separator character.
-	 * @param values The string containing the values concatenated.
-	 * @param separator The separator character.
-	 * @return The list of strings extracted from the parameter values.
-	 */
-	public static List<String> splitValues(String values, String separator) {
-		List<String> valuesList = new ArrayList<>();
-		if (!StringUtils.isEmpty(values)) {
-			valuesList.addAll(Arrays.asList(values.split(separator)));
-		}
-		return valuesList;
-	}
-	
+    }
+
+    /**
+     * Extracts from a string, the substrings contained in it as a separator character.
+     *
+     * @param values    The string containing the values concatenated.
+     * @param separator The separator character.
+     * @return The list of strings extracted from the parameter values.
+     */
+    public static List<String> splitValues(String values, String separator) {
+        List<String> valuesList = new ArrayList<>();
+        if (!StringUtils.isEmpty(values)) {
+            valuesList.addAll(Arrays.asList(values.split(separator)));
+        }
+        return valuesList;
+    }
+
 }

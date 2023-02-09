@@ -68,105 +68,94 @@ class FacetSearchEngineManagerIntegrationTest {
     public static void setApplicationContext(ApplicationContext applicationContext) {
         FacetSearchEngineManagerIntegrationTest.applicationContext = applicationContext;
     }
-    
+
     @BeforeAll
     public static void startUp() throws Exception {
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
     }
-    
+
     @AfterAll
     public static void tearDown() throws Exception {
         BaseTestCase.tearDown();
     }
-    
+
     @BeforeEach
     protected void init() throws Exception {
-        try {
-            this.contentManager = FacetSearchEngineManagerIntegrationTest.getApplicationContext().getBean(IContentManager.class);
-            this.searchEngineManager = FacetSearchEngineManagerIntegrationTest.getApplicationContext().getBean(ICmsSearchEngineManager.class);
-            this.categoryManager = FacetSearchEngineManagerIntegrationTest.getApplicationContext().getBean(ICategoryManager.class);
-            ((ISolrSearchEngineManager)this.searchEngineManager).refreshCmsFields();
-        } catch (Exception e) {
-            throw e;
-        }
+        this.contentManager = getApplicationContext().getBean(IContentManager.class);
+        this.searchEngineManager = getApplicationContext().getBean(ICmsSearchEngineManager.class);
+        this.categoryManager = getApplicationContext().getBean(ICategoryManager.class);
+        ((ISolrSearchEngineManager) this.searchEngineManager).refreshCmsFields();
     }
-    
+
     @Test
-    void testSearchAllContents() throws Throwable {
-        try {
-            Thread thread = this.searchEngineManager.startReloadContentsReferences();
-            thread.join();
-            List<String> allowedGroup = new ArrayList<>();
-            SearchEngineFilter[] filters = {};
-            FacetedContentsResult freeResult = this.searchEngineManager.searchFacetedEntities(filters, filters, allowedGroup);
-            assertNotNull(freeResult);
-            List<String> freeContentsId = freeResult.getContentsId();
-            assertNotNull(freeContentsId);
-            assertEquals(5, freeResult.getOccurrences().size());
-            assertEquals(2, freeResult.getOccurrences().get("general").intValue());
-            assertEquals(2, freeResult.getOccurrences().get("general_cat1").intValue());
-            assertEquals(1, freeResult.getOccurrences().get("general_cat2").intValue());
-            assertEquals(2, freeResult.getOccurrences().get("evento").intValue());
-            assertEquals(1, freeResult.getOccurrences().get("cat1").intValue());
-            allowedGroup.add(Group.ADMINS_GROUP_NAME);
-            FacetedContentsResult allResult = this.searchEngineManager.searchFacetedEntities(filters, filters, allowedGroup);
-            assertNotNull(allResult);
-            assertNotNull(allResult.getContentsId());
-            assertTrue(allResult.getContentsId().size() > freeContentsId.size());
-        } catch (Throwable t) {
-            throw t;
-        }
+    void testSearchAllContents() throws Exception {
+        Thread thread = this.searchEngineManager.startReloadContentsReferences();
+        thread.join();
+        List<String> allowedGroup = new ArrayList<>();
+        SearchEngineFilter[] filters = {};
+        FacetedContentsResult freeResult = this.searchEngineManager.searchFacetedEntities(filters, filters,
+                allowedGroup);
+        assertNotNull(freeResult);
+        List<String> freeContentsId = freeResult.getContentsId();
+        assertNotNull(freeContentsId);
+        assertEquals(5, freeResult.getOccurrences().size());
+        assertEquals(2, freeResult.getOccurrences().get("general").intValue());
+        assertEquals(2, freeResult.getOccurrences().get("general_cat1").intValue());
+        assertEquals(1, freeResult.getOccurrences().get("general_cat2").intValue());
+        assertEquals(2, freeResult.getOccurrences().get("evento").intValue());
+        assertEquals(1, freeResult.getOccurrences().get("cat1").intValue());
+        allowedGroup.add(Group.ADMINS_GROUP_NAME);
+        FacetedContentsResult allResult = this.searchEngineManager.searchFacetedEntities(filters, filters,
+                allowedGroup);
+        assertNotNull(allResult);
+        assertNotNull(allResult.getContentsId());
+        assertTrue(allResult.getContentsId().size() > freeContentsId.size());
     }
-    
+
     @Test
-    void testSearchOrderedContents() throws Throwable {
-        try {
-            Thread thread = this.searchEngineManager.startReloadContentsReferences();
-            thread.join();
-            List<String> allowedGroup = new ArrayList<>();
-            this.executeSearchOrderedContents(allowedGroup);
-            allowedGroup.add(Group.ADMINS_GROUP_NAME);
-            this.executeSearchOrderedContents(allowedGroup);
-        } catch (Throwable t) {
-            throw t;
-        }
+    void testSearchOrderedContents() throws Exception {
+        Thread thread = this.searchEngineManager.startReloadContentsReferences();
+        thread.join();
+        List<String> allowedGroup = new ArrayList<>();
+        this.executeSearchOrderedContents(allowedGroup);
+        allowedGroup.add(Group.ADMINS_GROUP_NAME);
+        this.executeSearchOrderedContents(allowedGroup);
     }
 
     private void executeSearchOrderedContents(List<String> allowedGroup) throws Exception {
-        try {
-            SearchEngineFilter[] categoriesFilters = {};
-            SearchEngineFilter filterByType
-                    = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "ART", SearchEngineFilter.TextSearchOption.EXACT);
-            SearchEngineFilter filterWithOrder
-                    = new SearchEngineFilter(IContentManager.CONTENT_CREATION_DATE_FILTER_KEY, false);
-            filterWithOrder.setOrder(FieldSearchFilter.Order.ASC);
-            SearchEngineFilter[] filters1 = {filterByType, filterWithOrder};
-            FacetedContentsResult freeResult1 = this.searchEngineManager.searchFacetedEntities(filters1, categoriesFilters, allowedGroup);
-            assertNotNull(freeResult1);
-            List<String> contentsId1 = freeResult1.getContentsId();
-            if (allowedGroup.contains(Group.ADMINS_GROUP_NAME)) {
-                assertEquals(10, contentsId1.size());
-            } else {
-                assertEquals(4, contentsId1.size());
-            }
-            Map<String, Integer> freeOccurrence1 = freeResult1.getOccurrences();
-            filterWithOrder.setOrder(FieldSearchFilter.Order.DESC);
-            SearchEngineFilter[] filters2 = {filterByType, filterWithOrder};
-            FacetedContentsResult result2 = this.searchEngineManager.searchFacetedEntities(filters2, categoriesFilters, allowedGroup);
-            assertEquals(freeOccurrence1, result2.getOccurrences());
-            assertEquals(contentsId1.size(), result2.getContentsId().size());
-            for (int i = 0; i < contentsId1.size(); i++) {
-                assertEquals(contentsId1.get(i), result2.getContentsId().get(contentsId1.size() - 1 - i));
-            }
-        } catch (Exception t) {
-            throw t;
+        SearchEngineFilter[] categoriesFilters = {};
+        SearchEngineFilter filterByType
+                = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "ART",
+                SearchEngineFilter.TextSearchOption.EXACT);
+        SearchEngineFilter filterWithOrder
+                = new SearchEngineFilter(IContentManager.CONTENT_CREATION_DATE_FILTER_KEY, false);
+        filterWithOrder.setOrder(FieldSearchFilter.Order.ASC);
+        SearchEngineFilter[] filters1 = {filterByType, filterWithOrder};
+        FacetedContentsResult freeResult1 = this.searchEngineManager.searchFacetedEntities(filters1,
+                categoriesFilters, allowedGroup);
+        assertNotNull(freeResult1);
+        List<String> contentsId1 = freeResult1.getContentsId();
+        if (allowedGroup.contains(Group.ADMINS_GROUP_NAME)) {
+            assertEquals(10, contentsId1.size());
+        } else {
+            assertEquals(4, contentsId1.size());
+        }
+        Map<String, Integer> freeOccurrence1 = freeResult1.getOccurrences();
+        filterWithOrder.setOrder(FieldSearchFilter.Order.DESC);
+        SearchEngineFilter[] filters2 = {filterByType, filterWithOrder};
+        FacetedContentsResult result2 = this.searchEngineManager.searchFacetedEntities(filters2, categoriesFilters,
+                allowedGroup);
+        assertEquals(freeOccurrence1, result2.getOccurrences());
+        assertEquals(contentsId1.size(), result2.getContentsId().size());
+        for (int i = 0; i < contentsId1.size(); i++) {
+            assertEquals(contentsId1.get(i), result2.getContentsId().get(contentsId1.size() - 1 - i));
         }
     }
-    
+
     @Test
-    void testSearchContents() throws Throwable {
+    void testSearchContents() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
         List<String> allowedGroup = new ArrayList<>();
@@ -177,7 +166,8 @@ class FacetSearchEngineManagerIntegrationTest {
         SearchEngineFilter[] filters = {filterWithOrder};
         List<Category> categories_1 = new ArrayList<>();
         categories_1.add(this.categoryManager.getCategory("general_cat2"));
-        FacetedContentsResult result1 = this.searchEngineManager.searchFacetedEntities(filters, this.extractCategoryFilters(categories_1), allowedGroup);
+        FacetedContentsResult result1 = this.searchEngineManager.searchFacetedEntities(filters,
+                this.extractCategoryFilters(categories_1), allowedGroup);
         List<String> contents = result1.getContentsId();
         String[] order_a = {"ART120", "EVN25", "ART111"};
         assertEquals(order_a.length, contents.size());
@@ -185,7 +175,8 @@ class FacetSearchEngineManagerIntegrationTest {
 
         List<Category> categories_2 = new ArrayList<>(categories_1);
         categories_2.add(this.categoryManager.getCategory("general_cat1"));
-        FacetedContentsResult result2 = this.searchEngineManager.searchFacetedEntities(filters, this.extractCategoryFilters(categories_2), allowedGroup);
+        FacetedContentsResult result2 = this.searchEngineManager.searchFacetedEntities(filters,
+                this.extractCategoryFilters(categories_2), allowedGroup);
         contents = result2.getContentsId();
         String[] order_b = {"EVN25", "ART111"};
         assertEquals(order_b.length, contents.size());
@@ -197,7 +188,8 @@ class FacetSearchEngineManagerIntegrationTest {
             this.contentManager.insertOnLineContent(newContent);
             SolrTestUtils.waitNotifyingThread();
             SolrTestUtils.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
-            FacetedContentsResult result3 = this.searchEngineManager.searchFacetedEntities(filters, this.extractCategoryFilters(categories_1), allowedGroup);
+            FacetedContentsResult result3 = this.searchEngineManager.searchFacetedEntities(filters,
+                    this.extractCategoryFilters(categories_1), allowedGroup);
             contents = result3.getContentsId();
             String[] order_c = {newContent.getId(), "ART120", "EVN25", "ART111"};
             assertEquals(order_c.length, contents.size());
@@ -207,19 +199,18 @@ class FacetSearchEngineManagerIntegrationTest {
             this.contentManager.insertOnLineContent(newContent);
             SolrTestUtils.waitNotifyingThread();
             SolrTestUtils.waitThreads(ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX);
-            FacetedContentsResult result4 = this.searchEngineManager.searchFacetedEntities(filters, this.extractCategoryFilters(categories_2), allowedGroup);
+            FacetedContentsResult result4 = this.searchEngineManager.searchFacetedEntities(filters,
+                    this.extractCategoryFilters(categories_2), allowedGroup);
             contents = result4.getContentsId();
             String[] order_d = {newContent.getId(), "EVN25", "ART111"};
             assertEquals(order_d.length, contents.size());
             this.verifyOrder(contents, order_d);
-        } catch (Throwable t) {
-            throw t;
         } finally {
             this.contentManager.deleteContent(newContent);
             assertNull(this.contentManager.loadContent(newContent.getId(), false));
         }
     }
-    
+
     private SearchEngineFilter[] extractCategoryFilters(Collection<Category> categories) {
         SearchEngineFilter[] categoryFilterArray = null;
         if (null != categories) {
@@ -235,9 +226,9 @@ class FacetSearchEngineManagerIntegrationTest {
             assertEquals(order[i], contents.get(i));
         }
     }
-    
+
     @Test
-    void testSearchContentsByRole_1() throws Throwable {
+    void testSearchContentsByRole_1() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
         thread.join();
         List<String> allowedGroup = new ArrayList<>();
@@ -247,14 +238,17 @@ class FacetSearchEngineManagerIntegrationTest {
                 = new SearchEngineFilter(JacmsSystemConstants.ATTRIBUTE_ROLE_TITLE, true);
         filterByRole.setOrder(FieldSearchFilter.Order.DESC);
         SearchEngineFilter filteryByType
-                = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "EVN", SearchEngineFilter.TextSearchOption.EXACT);
+                = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "EVN",
+                SearchEngineFilter.TextSearchOption.EXACT);
         SearchEngineFilter[] filters = {filterByRole, filteryByType};
-        FacetedContentsResult result1 = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters, allowedGroup);
+        FacetedContentsResult result1 = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters,
+                allowedGroup);
         Map<String, Integer> occurrence1 = result1.getOccurrences();
         List<String> contents1 = result1.getContentsId();
         filterByRole.setOrder(FieldSearchFilter.Order.ASC);
 
-        FacetedContentsResult result2 = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters, allowedGroup);
+        FacetedContentsResult result2 = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters,
+                allowedGroup);
         List<String> contents2 = result2.getContentsId();
         assertFalse(contents2.isEmpty());
         assertEquals(occurrence1, result2.getOccurrences());
@@ -263,7 +257,7 @@ class FacetSearchEngineManagerIntegrationTest {
             assertEquals(contents1.get(i), contents2.get(contents2.size() - 1 - i));
         }
     }
-    
+
     @Test
     void testSearchContentsByRole_2() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -285,9 +279,11 @@ class FacetSearchEngineManagerIntegrationTest {
             filterByRole.setOrder(FieldSearchFilter.Order.DESC);
             filterByRole.setLangCode("it");
             SearchEngineFilter filteryByType
-                    = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "EVN", SearchEngineFilter.TextSearchOption.EXACT);
+                    = new SearchEngineFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "EVN",
+                    SearchEngineFilter.TextSearchOption.EXACT);
             SearchEngineFilter[] filters1 = {filterByRole, filteryByType};
-            FacetedContentsResult resultItSearch = this.searchEngineManager.searchFacetedEntities(filters1, categoriesFilters, allowedGroup);
+            FacetedContentsResult resultItSearch = this.searchEngineManager.searchFacetedEntities(filters1,
+                    categoriesFilters, allowedGroup);
             Map<String, Integer> occurrenceIt = resultItSearch.getOccurrences();
             List<String> contentsIt = resultItSearch.getContentsId();
             assertFalse(occurrenceIt.isEmpty());
@@ -295,7 +291,8 @@ class FacetSearchEngineManagerIntegrationTest {
 
             filterByRole.setLangCode("en");
             SearchEngineFilter[] filters2 = {filterByRole, filteryByType};
-            FacetedContentsResult resultEnSearch = this.searchEngineManager.searchFacetedEntities(filters2, categoriesFilters, allowedGroup);
+            FacetedContentsResult resultEnSearch = this.searchEngineManager.searchFacetedEntities(filters2,
+                    categoriesFilters, allowedGroup);
             Map<String, Integer> occurrenceEn = resultEnSearch.getOccurrences();
             List<String> contentsEn = resultEnSearch.getContentsId();
             assertFalse(contentsEn.isEmpty());
@@ -310,12 +307,10 @@ class FacetSearchEngineManagerIntegrationTest {
                 }
             }
             assertFalse(equals);
-        } catch (Exception t) {
-            throw t;
         } finally {
             this.contentManager.deleteContent(newContent);
             assertNull(this.contentManager.loadContent(newContent.getId(), false));
         }
     }
-    
+
 }

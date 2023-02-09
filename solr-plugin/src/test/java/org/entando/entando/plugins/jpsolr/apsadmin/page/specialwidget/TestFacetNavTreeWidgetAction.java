@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.agiletec.aps.system.services.page.Widget;
-import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
 import com.opensymphony.xwork2.Action;
 import java.util.HashMap;
@@ -36,114 +35,120 @@ import org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.FacetNav
 import org.junit.jupiter.api.Test;
 
 public class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
-    
-	@Test
-	public void testInitConfig() throws Throwable {
-		String result = this.executeConfigFacetNavTree("admin", "homepage", "1", "jpsolr_facetTree");
-		assertEquals(Action.SUCCESS, result);
-		FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
-		Widget widget = action.getWidget();
-		assertNotNull(widget);
-		assertEquals(0, widget.getConfig().size());
-		List<SmallContentType> contentTypes = action.getContentTypes();
+
+    @Test
+    public void testInitConfig() throws Exception {
+        String result = this.executeConfigFacetNavTree("admin", "homepage", "1", "jpsolr_facetTree");
+        assertEquals(Action.SUCCESS, result);
+        FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
+        Widget widget = action.getWidget();
+        assertNotNull(widget);
+        assertEquals(0, widget.getConfig().size());
+        List<SmallContentType> contentTypes = action.getContentTypes();
         contentTypes.stream().forEach(ct -> System.out.println(ct.getCode() + " - " + ct.getDescr()));
-		assertNotNull(contentTypes);
-		assertEquals(4, contentTypes.size());
-	}
-    
-	@Test
-    public void testAddRemoveContentType() throws Throwable {
+        assertNotNull(contentTypes);
+        assertEquals(4, contentTypes.size());
+    }
+
+    @Test
+    public void testAddRemoveContentType() throws Exception {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("pageCode", "homepage");
-		parameters.put("frame", "1");
-		parameters.put("widgetTypeCode", "jpsolr_facetTree");
-        
+        parameters.put("frame", "1");
+        parameters.put("widgetTypeCode", "jpsolr_facetTree");
+
         parameters.put("contentTypeCode", "EVN");
-		String result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinContentType", parameters);
-		assertEquals(Action.SUCCESS, result);
-		FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
-		List<SmallContentType> contentTypes = action.getContentTypes();
-		assertNotNull(contentTypes);
-		assertEquals(4, contentTypes.size());
+        String result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinContentType",
+                parameters);
+        assertEquals(Action.SUCCESS, result);
+        FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
+        List<SmallContentType> contentTypes = action.getContentTypes();
+        assertNotNull(contentTypes);
+        assertEquals(4, contentTypes.size());
         assertEquals("EVN", action.getContentTypesFilter());
-        
+
         parameters.put("contentTypesFilter", "RAH,ART");
         parameters.put("contentTypeCode", "ALL");
-		result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinContentType", parameters);
-		assertEquals(Action.SUCCESS, result);
-		action = (FacetNavTreeWidgetAction) this.getAction();
+        result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinContentType",
+                parameters);
+        assertEquals(Action.SUCCESS, result);
+        action = (FacetNavTreeWidgetAction) this.getAction();
         assertEquals("RAH,ART,ALL", action.getContentTypesFilter());
-        
+
         parameters.put("contentTypeCode", "EVN");
         parameters.put("contentTypesFilter", "RAH,EVN,ART,ALL");
-        result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "removeContentType", parameters);
-		assertEquals(Action.SUCCESS, result);
-		action = (FacetNavTreeWidgetAction) this.getAction();
+        result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "removeContentType",
+                parameters);
+        assertEquals(Action.SUCCESS, result);
+        action = (FacetNavTreeWidgetAction) this.getAction();
         assertEquals("RAH,ART,ALL", action.getContentTypesFilter());
-	}
-    
-	@Test
-    public void testAddRemoveFacets() throws Throwable {
+    }
+
+    @Test
+    public void testAddRemoveFacets() throws Exception {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("pageCode", "homepage");
-		parameters.put("frame", "1");
-		parameters.put("widgetTypeCode", "jpsolr_facetTree");
+        parameters.put("frame", "1");
+        parameters.put("widgetTypeCode", "jpsolr_facetTree");
         parameters.put("contentTypesFilter", "RAH,EVN,ALL");
-        
+
         parameters.put("facetCode", "cat1");
-		String result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinFacet", parameters);
-		assertEquals(Action.SUCCESS, result);
-		FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
-		List<SmallContentType> contentTypes = action.getContentTypes();
-		assertNotNull(contentTypes);
-		assertEquals(4, contentTypes.size());
+        String result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinFacet",
+                parameters);
+        assertEquals(Action.SUCCESS, result);
+        FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
+        List<SmallContentType> contentTypes = action.getContentTypes();
+        assertNotNull(contentTypes);
+        assertEquals(4, contentTypes.size());
         assertEquals("cat1", action.getFacetRootNodes());
         assertEquals("RAH,EVN,ALL", action.getContentTypesFilter());
-        
+
         parameters.put("facetCode", "general_cat2");
-		parameters.put("facetRootNodes", "evento,general,cat1");
+        parameters.put("facetRootNodes", "evento,general,cat1");
         parameters.put("contentTypesFilter", "RAH,ART,EVN");
-		result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinFacet", parameters);
-		assertEquals(Action.SUCCESS, result);
-		action = (FacetNavTreeWidgetAction) this.getAction();
+        result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinFacet", parameters);
+        assertEquals(Action.SUCCESS, result);
+        action = (FacetNavTreeWidgetAction) this.getAction();
         assertEquals("RAH,ART,EVN", action.getContentTypesFilter());
         assertEquals("evento,general,cat1,general_cat2", action.getFacetRootNodes());
-        
+
         parameters.put("facetCode", "xxxx");
-		parameters.put("facetRootNodes", "evento,general,cat1");
-		parameters.put("contentTypesFilter", "RAH,ART,EVN");
-		result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinFacet", parameters);
-		assertEquals(Action.SUCCESS, result);
-		action = (FacetNavTreeWidgetAction) this.getAction();
+        parameters.put("facetRootNodes", "evento,general,cat1");
+        parameters.put("contentTypesFilter", "RAH,ART,EVN");
+        result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "joinFacet", parameters);
+        assertEquals(Action.SUCCESS, result);
+        action = (FacetNavTreeWidgetAction) this.getAction();
         assertEquals("RAH,ART,EVN", action.getContentTypesFilter());
         assertEquals("evento,general,cat1", action.getFacetRootNodes());
-        
+
         parameters.put("facetCode", "general");
-		parameters.put("facetRootNodes", "evento,general,cat1");
-		parameters.put("contentTypesFilter", "RAH,ART,EVN");
-		result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "removeFacet", parameters);
-		assertEquals(Action.SUCCESS, result);
-		action = (FacetNavTreeWidgetAction) this.getAction();
+        parameters.put("facetRootNodes", "evento,general,cat1");
+        parameters.put("contentTypesFilter", "RAH,ART,EVN");
+        result = this.executeAction("admin", "/do/jpsolr/Page/SpecialWidget/FacetNavTree", "removeFacet", parameters);
+        assertEquals(Action.SUCCESS, result);
+        action = (FacetNavTreeWidgetAction) this.getAction();
         assertEquals("RAH,ART,EVN", action.getContentTypesFilter());
         assertEquals("evento,cat1", action.getFacetRootNodes());
-	}
-	
-    private String executeConfigFacetNavTree(String username, String pageCode, String frame, String widgetTypeCode) throws Throwable {
-		this.setUserOnSession(username);
-		this.initAction("/do/Page/SpecialWidget", "solrFacetNavTreeConfig");
-		this.addParameter("pageCode", pageCode);
-		this.addParameter("frame", frame);
-		if (null != widgetTypeCode && widgetTypeCode.trim().length()>0) {
-			this.addParameter("widgetTypeCode", widgetTypeCode);
-		}
-		return this.executeAction();
-	}
-	
-    private String executeAction(String username, String namespace, String actionName, Map<String, String> parameters) throws Throwable {
-		this.setUserOnSession(username);
-		this.initAction(namespace, actionName);
-		this.addParameters(parameters);
-		return this.executeAction();
-	}
-    
+    }
+
+    private String executeConfigFacetNavTree(String username, String pageCode, String frame, String widgetTypeCode)
+            throws Exception {
+        this.setUserOnSession(username);
+        this.initAction("/do/Page/SpecialWidget", "solrFacetNavTreeConfig");
+        this.addParameter("pageCode", pageCode);
+        this.addParameter("frame", frame);
+        if (null != widgetTypeCode && widgetTypeCode.trim().length() > 0) {
+            this.addParameter("widgetTypeCode", widgetTypeCode);
+        }
+        return this.executeAction();
+    }
+
+    private String executeAction(String username, String namespace, String actionName, Map<String, String> parameters)
+            throws Exception {
+        this.setUserOnSession(username);
+        this.initAction(namespace, actionName);
+        this.addParameters(parameters);
+        return this.executeAction();
+    }
+
 }

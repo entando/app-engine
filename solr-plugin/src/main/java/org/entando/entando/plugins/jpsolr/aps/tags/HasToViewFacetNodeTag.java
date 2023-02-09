@@ -38,102 +38,108 @@ import org.slf4j.LoggerFactory;
  */
 public class HasToViewFacetNodeTag extends AbstractFacetNavTag {
 
-	private static final Logger _logger = LoggerFactory.getLogger(HasToViewFacetNodeTag.class);
-	
-	@Override
-	public int doStartTag() throws JspException {
-		List<String> requiredFacets = super.getRequiredFacets();
-		this.setRequiredFacets(requiredFacets);
-		try {
-			boolean hasToView = 
-				this.getRequiredFacets().contains(this.getFacetNodeCode()) 
-					|| (this.isParentSeleted() || this.isSelectedOneChild());
-			if (hasToView) {
-				return EVAL_BODY_INCLUDE;
-			} else {
-				return super.doStartTag();
-			}
-		} catch (Throwable t) {
-			_logger.error("error in doStartTag", t);
-			throw new JspException("Error initialization tag", t);
-		}
-	}
-	
-	/**
-	 * Returns true if a child is selected.
-	 * @return true if a child is selected
-	 */
-	private boolean isSelectedOneChild() {
-		ITreeNodeManager facetManager = super.getFacetManager();
-		List<String> requiredFacets = this.getRequiredFacets();
-		for (int i=0; i<requiredFacets.size(); i++) {
-			String requiredFacet = requiredFacets.get(i);
-			ITreeNode facet = facetManager.getNode(requiredFacet);
-			if (null != facet) {
-				boolean check = this.checkSelectChild(facet, this.getFacetNodeCode(), facetManager);
-				if (check) return true;
-			}
-		}
-		return false;
-	}
+    private static final Logger logger = LoggerFactory.getLogger(HasToViewFacetNodeTag.class);
 
-	/**
-	 * Returns true if the selected child is checked
-	 * @param facet
-	 * @param codeForCheck
+    @Override
+    public int doStartTag() throws JspException {
+        List<String> requiredFacets = super.getRequiredFacets();
+        this.setRequiredFacets(requiredFacets);
+        try {
+            boolean hasToView =
+                    this.getRequiredFacets().contains(this.getFacetNodeCode())
+                            || (this.isParentSeleted() || this.isSelectedOneChild());
+            if (hasToView) {
+                return EVAL_BODY_INCLUDE;
+            } else {
+                return super.doStartTag();
+            }
+        } catch (RuntimeException ex) {
+            throw new JspException("Error initialization tag", ex);
+        }
+    }
+
+    /**
+     * Returns true if a child is selected.
+     *
+     * @return true if a child is selected
+     */
+    private boolean isSelectedOneChild() {
+        ITreeNodeManager facetManager = super.getFacetManager();
+        List<String> requiredFacets = this.getRequiredFacets();
+        for (int i = 0; i < requiredFacets.size(); i++) {
+            String requiredFacet = requiredFacets.get(i);
+            ITreeNode facet = facetManager.getNode(requiredFacet);
+            if (null != facet) {
+                boolean check = this.checkSelectChild(facet, this.getFacetNodeCode(), facetManager);
+                if (check) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the selected child is checked
+     *
+     * @param facet
+     * @param codeForCheck
      * @param facetManager
-	 * @return true if the selected child is selected
-	 */
-	private boolean checkSelectChild(ITreeNode facet, String codeForCheck, ITreeNodeManager facetManager) {
-		if (facet.getCode().equals(codeForCheck)) {
-			return true;
-		}
+     * @return true if the selected child is selected
+     */
+    private boolean checkSelectChild(ITreeNode facet, String codeForCheck, ITreeNodeManager facetManager) {
+        if (facet.getCode().equals(codeForCheck)) {
+            return true;
+        }
         ITreeNode parentFacet = facetManager.getNode(facet.getParentCode());
-		if (null != parentFacet && !parentFacet.getCode().equals(parentFacet.getParentCode())) {
-			return this.checkSelectChild(parentFacet, codeForCheck, facetManager);
-		}
-		return false;
-	}
+        if (null != parentFacet && !parentFacet.getCode().equals(parentFacet.getParentCode())) {
+            return this.checkSelectChild(parentFacet, codeForCheck, facetManager);
+        }
+        return false;
+    }
 
-	/**
-	 * Returns true if a parent is selected
-	 * @return true if a parent is selected
-	 */
-	private boolean isParentSeleted() {
-		ITreeNodeManager facetManager = super.getFacetManager();
-		ITreeNode facet = facetManager.getNode(this.getFacetNodeCode());
-		return this.getRequiredFacets().contains(facet.getParentCode());
-	}
+    /**
+     * Returns true if a parent is selected
+     *
+     * @return true if a parent is selected
+     */
+    private boolean isParentSeleted() {
+        ITreeNodeManager facetManager = super.getFacetManager();
+        ITreeNode facet = facetManager.getNode(this.getFacetNodeCode());
+        return this.getRequiredFacets().contains(facet.getParentCode());
+    }
 
-	public String getFacetNodeCode() {
-		return _facetNodeCode;
-	}
-	public void setFacetNodeCode(String facetNodeCode) {
-		this._facetNodeCode = facetNodeCode;
-	}
-	
-	@Override
-	public List<String> getRequiredFacets() {
-		if (null == this._facetNodeCode) {
-			if (null == this.getRequiredFacetsParamName()) {
-				return new ArrayList<>();
-			} else {
-				ServletRequest request = this.pageContext.getRequest();
-				List<String> list = (List<String>) request.getAttribute(this.getRequiredFacetsParamName());
-				if (null == list) {
-					return new ArrayList<>();
-				} else {
-					return list;
-				}
-			}
-		}
-		return _requiredFacets;
-	}
-	public void setRequiredFacets(List<String> requiredFacets) {
-		this._requiredFacets = requiredFacets;
-	}
+    public String getFacetNodeCode() {
+        return facetNodeCode;
+    }
 
-	private String _facetNodeCode;//="${facetNode.code}"
-	private List<String> _requiredFacets;//="requiredFacets" 
+    public void setFacetNodeCode(String facetNodeCode) {
+        this.facetNodeCode = facetNodeCode;
+    }
+
+    @Override
+    public List<String> getRequiredFacets() {
+        if (null == this.facetNodeCode) {
+            if (null == this.getRequiredFacetsParamName()) {
+                return new ArrayList<>();
+            } else {
+                ServletRequest request = this.pageContext.getRequest();
+                List<String> list = (List<String>) request.getAttribute(this.getRequiredFacetsParamName());
+                if (null == list) {
+                    return new ArrayList<>();
+                } else {
+                    return list;
+                }
+            }
+        }
+        return requiredFacets;
+    }
+
+    public void setRequiredFacets(List<String> requiredFacets) {
+        this.requiredFacets = requiredFacets;
+    }
+
+    private String facetNodeCode;//="${facetNode.code}"
+    private List<String> requiredFacets;//="requiredFacets"
 
 }

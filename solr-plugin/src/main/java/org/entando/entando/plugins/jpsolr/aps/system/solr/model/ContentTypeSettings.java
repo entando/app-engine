@@ -29,7 +29,7 @@ import java.util.Optional;
  * @author E.Santoboni
  */
 public class ContentTypeSettings implements Serializable {
-    
+
     private String typeCode;
     private String typeDescription;
     private List<AttributeSettings> attributeSettings = new ArrayList<>();
@@ -38,10 +38,11 @@ public class ContentTypeSettings implements Serializable {
         this.setTypeCode(typeCode);
         this.setTypeDescription(typeDescription);
     }
-    
+
     public String getTypeCode() {
         return typeCode;
     }
+
     public void setTypeCode(String typeCode) {
         this.typeCode = typeCode;
     }
@@ -49,6 +50,7 @@ public class ContentTypeSettings implements Serializable {
     public String getTypeDescription() {
         return typeDescription;
     }
+
     public void setTypeDescription(String typeDescription) {
         this.typeDescription = typeDescription;
     }
@@ -56,16 +58,18 @@ public class ContentTypeSettings implements Serializable {
     public List<AttributeSettings> getAttributeSettings() {
         return attributeSettings;
     }
+
     public void setAttributeSettings(List<AttributeSettings> attributeSettings) {
         this.attributeSettings = attributeSettings;
     }
-    
+
     public void addAttribute(AttributeInterface attribute, Map<String, Map<String, Object>> currentField) {
         AttributeSettings settings = new AttributeSettings(attribute);
         this.getAttributeSettings().add(settings);
         settings.setCurrentConfig(currentField);
         if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute) && attribute.isSearchable())) {
+                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
+                && attribute.isSearchable())) {
             String type = null;
             if (attribute instanceof DateAttribute) {
                 type = "pdates";
@@ -82,27 +86,29 @@ public class ContentTypeSettings implements Serializable {
             settings.setExpectedConfig(newField);
         }
     }
-    
+
     public boolean isValid() {
-        Optional<AttributeSettings> optional = this.getAttributeSettings().stream().filter(s -> !s.isValid()).findFirst();
+        Optional<AttributeSettings> optional = this.getAttributeSettings().stream().filter(s -> !s.isValid())
+                .findFirst();
         return !optional.isPresent();
     }
-    
+
     public static class AttributeSettings implements Serializable {
-        
+
         private String code;
         private String typeCode;
         private Map<String, Map<String, Object>> currentConfig;
         private Map<String, Object> expectedConfig;
-        
+
         public AttributeSettings(AttributeInterface attribute) {
             this.setCode(attribute.getName());
             this.setTypeCode(attribute.getType());
         }
-        
+
         public String getCode() {
             return code;
         }
+
         public void setCode(String code) {
             this.code = code;
         }
@@ -110,24 +116,27 @@ public class ContentTypeSettings implements Serializable {
         public String getTypeCode() {
             return typeCode;
         }
+
         public void setTypeCode(String typeCode) {
             this.typeCode = typeCode;
         }
-        
+
         public Map<String, Map<String, Object>> getCurrentConfig() {
             return currentConfig;
         }
-        public void setCurrentConfig(Map<String, Map<String, Object>>currentConfig) {
+
+        public void setCurrentConfig(Map<String, Map<String, Object>> currentConfig) {
             this.currentConfig = currentConfig;
         }
 
         public Map<String, Object> getExpectedConfig() {
             return expectedConfig;
         }
+
         public void setExpectedConfig(Map<String, Object> expectedConfig) {
             this.expectedConfig = expectedConfig;
         }
-        
+
         public boolean isValid() {
             if (null == this.getExpectedConfig()) {
                 return true;
@@ -135,12 +144,13 @@ public class ContentTypeSettings implements Serializable {
                 return false;
             } else {
                 Optional<Map<String, Object>> optional = this.getCurrentConfig().values().stream().filter(m -> {
-                    return (!m.get("type").equals(this.getExpectedConfig().get("type")) || !m.getOrDefault("multiValued", false).equals(this.getExpectedConfig().get("multiValued")));
+                    return (!m.get("type").equals(this.getExpectedConfig().get("type")) || !m.getOrDefault(
+                            "multiValued", false).equals(this.getExpectedConfig().get("multiValued")));
                 }).findFirst();
                 return !optional.isPresent();
             }
         }
-        
+
     }
-    
+
 }

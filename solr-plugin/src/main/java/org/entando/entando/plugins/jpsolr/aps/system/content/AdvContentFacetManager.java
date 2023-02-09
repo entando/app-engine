@@ -20,14 +20,12 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.UserFilterOptionBean;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.RestServerError;
-
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
@@ -35,8 +33,6 @@ import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManag
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
-import org.entando.entando.web.common.model.PagedMetadata;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +42,7 @@ import org.slf4j.LoggerFactory;
 public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     private static final Logger logger = LoggerFactory.getLogger(AdvContentFacetManager.class);
-    
+
     private ICategoryManager categoryManager;
     private ICmsSearchEngineManager searchEngineManager;
     private IAuthorizationManager authorizationManager;
@@ -54,7 +50,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     @Override
     public SolrFacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
-            List<String> facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException {
+            List<String> facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes)
+            throws EntException {
         try {
             SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
             SearchEngineFilter[] categoryFilters = null;
@@ -64,7 +61,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
                         .map(c -> new SearchEngineFilter("category", false, c)).collect(Collectors.toList());
                 categoryFilters = categoryFiltersList.toArray(new SearchEngineFilter[categoryFiltersList.size()]);
             }
-            return (SolrFacetedContentsResult) this.getSearchEngineManager().searchFacetedEntities(filters, categoryFilters, groupCodes);
+            return (SolrFacetedContentsResult) this.getSearchEngineManager()
+                    .searchFacetedEntities(filters, categoryFilters, groupCodes);
         } catch (Exception t) {
             logger.error("Error loading facet result", t);
             throw new EntException("Error loading facet result", t);
@@ -73,7 +71,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     @Override
     public FacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
-            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes) throws EntException {
+            SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes)
+            throws EntException {
         try {
             SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
             return this.getSearchEngineManager().searchFacetedEntities(filters, facetNodeCodes, groupCodes);
@@ -82,7 +81,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             throw new EntException("Error loading facet result", t);
         }
     }
-    
+
     protected SearchEngineFilter[] getFilters(SearchEngineFilter[] baseFilters, List<UserFilterOptionBean> beans) {
         SearchEngineFilter[] filters = (null != baseFilters) ? baseFilters : new SearchEngineFilter[0];
         if (null != beans) {
@@ -101,7 +100,9 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
     public SolrFacetedContentsResult getFacetedContents(AdvRestContentListRequest requestList, UserDetails user) {
         SolrFacetedContentsResult facetedResult = null;
         try {
-            String langCode = (StringUtils.isBlank(requestList.getLang())) ? this.getLangManager().getDefaultLang().getCode() : requestList.getLang();
+            String langCode =
+                    (StringUtils.isBlank(requestList.getLang())) ? this.getLangManager().getDefaultLang().getCode()
+                            : requestList.getLang();
             SolrSearchEngineFilter[] searchFilters = requestList.extractFilters(langCode);
             SolrSearchEngineFilter[][] doubleFilters = requestList.extractDoubleFilters(langCode);
             if (null != searchFilters) {
@@ -112,14 +113,15 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             }
             SolrSearchEngineFilter[] categorySearchFilters = requestList.extractCategoryFilters();
             List<String> userGroupCodes = this.getAllowedGroups(user);
-            facetedResult = ((ISolrSearchEngineManager)this.getSearchEngineManager()).searchFacetedEntities(doubleFilters, categorySearchFilters, userGroupCodes);
+            facetedResult = ((ISolrSearchEngineManager) this.getSearchEngineManager()).searchFacetedEntities(
+                    doubleFilters, categorySearchFilters, userGroupCodes);
         } catch (Exception t) {
             logger.error("error in search contents", t);
             throw new RestServerError("error in search contents", t);
         }
         return facetedResult;
     }
-    
+
     protected List<String> getAllowedGroups(UserDetails currentUser) {
         List<String> groupCodes = new ArrayList<>();
         if (null != currentUser) {
@@ -145,7 +147,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
     public void setSearchEngineManager(ICmsSearchEngineManager searchEngineManager) {
         this.searchEngineManager = searchEngineManager;
     }
-    
+
     protected IAuthorizationManager getAuthorizationManager() {
         return authorizationManager;
     }
@@ -161,5 +163,5 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
     public void setLangManager(ILangManager langManager) {
         this.langManager = langManager;
     }
-    
+
 }

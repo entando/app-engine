@@ -32,7 +32,7 @@ public class SolrFacetedPagedMetadata {
     private int totalItems;
     private String sort;
     private String direction;
-    
+
     @JsonInclude(Include.NON_NULL)
     private String lang;
     private String[] csvCategories = new String[0];
@@ -43,9 +43,9 @@ public class SolrFacetedPagedMetadata {
     @JsonInclude(Include.NON_NULL)
     private boolean includeAttachments;
     private SolrFilter[][] doubleFilters = new SolrFilter[0][0];
-    
+
     private SolrFilter[] filters = new SolrFilter[0];
-    
+
     private Map<String, String> additionalParams = new HashMap<>();
 
     @JsonIgnore
@@ -92,6 +92,7 @@ public class SolrFacetedPagedMetadata {
     public int getPage() {
         return page;
     }
+
     public void setPage(int page) {
         this.page = page;
     }
@@ -99,6 +100,7 @@ public class SolrFacetedPagedMetadata {
     public int getPageSize() {
         return pageSize;
     }
+
     public void setPageSize(int size) {
         this.pageSize = size;
     }
@@ -106,9 +108,11 @@ public class SolrFacetedPagedMetadata {
     public int getLastPage() {
         return lastPage;
     }
+
     public void setLastPage(int last) {
         this.lastPage = last;
     }
+
     public SolrFacetedContentsResult getBody() {
         return body;
     }
@@ -196,7 +200,7 @@ public class SolrFacetedPagedMetadata {
     public void setDoubleFilters(SolrFilter[][] doubleFilters) {
         this.doubleFilters = doubleFilters;
     }
-    
+
     public int getActualSize() {
         return actualSize;
     }
@@ -216,14 +220,7 @@ public class SolrFacetedPagedMetadata {
     public void addAdditionalParams(String key, String value) {
         this.additionalParams.put(key, value);
     }
-/*
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(page, pageSize, lastPage, totalItems, sort, direction, actualSize, body);
-        result = 31 * result + Arrays.hashCode(filters);
-        return result;
-    }
-*/
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -239,5 +236,5 @@ public class SolrFacetedPagedMetadata {
                 .append("body", body)
                 .toString();
     }
-    
+
 }

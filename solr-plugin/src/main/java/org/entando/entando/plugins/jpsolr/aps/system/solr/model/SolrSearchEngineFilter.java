@@ -15,20 +15,20 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
 import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter<T> {
-    
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SolrSearchEngineFilter.class);
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(SolrSearchEngineFilter.class);
+
     private boolean includeAttachments;
     private Integer relevancy;
     private boolean paginationFilter = false;
-    
+
     public SolrSearchEngineFilter(Integer limit, Integer offset) {
         super("*", false);
         super.setLimit(limit);
@@ -77,6 +77,7 @@ public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter
     public boolean isIncludeAttachments() {
         return includeAttachments;
     }
+
     public void setIncludeAttachments(boolean includeAttachments) {
         this.includeAttachments = includeAttachments;
     }
@@ -84,16 +85,17 @@ public class SolrSearchEngineFilter<T extends Object> extends SearchEngineFilter
     public Integer getRelevancy() {
         return relevancy;
     }
+
     public void setRelevancy(Integer relevancy) {
         if (null == relevancy || relevancy.intValue() < 1) {
-            logger.error("Invalid relavancy : {}", relevancy);
+            logger.error("Invalid relevancy : {}", relevancy);
             return;
         }
         this.relevancy = relevancy;
     }
-    
+
     public boolean isPaginationFilter() {
         return paginationFilter;
     }
-    
+
 }

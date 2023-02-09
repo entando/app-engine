@@ -46,19 +46,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author E.Santoboni
  */
 public abstract class AbstractFacetNavTag extends TagSupport {
-    
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractFacetNavTag.class);
 
     protected static final String SOLR_RESULT_REQUEST_PARAM = "jpsolr_searchResult";
 
-	/**
-	 * Returns required facets
-	 * @return Required facets
-	 */
+    /**
+     * Returns required facets
+     *
+     * @return Required facets
+     */
     protected List<String> getRequiredFacets() {
         List<String> requiredFacets = new ArrayList<>();
         try {
@@ -101,220 +101,239 @@ public abstract class AbstractFacetNavTag extends TagSupport {
         return requiredFacets;
     }
 
-	/**
-	 * Delete the facets selected through checkboxes selected.
-	 * @param requiredFacets
-	 */
-	private void removeSelections(List<String> requiredFacets) {
-		String facetNodesParamName = "facetNodeToRemove";
-		ServletRequest request = this.pageContext.getRequest();
-		String[] values = request.getParameterValues(facetNodesParamName);
-		if (null != values) {
-			for (int i=0; i<values.length; i++) {
-				String value = values[i];
-				requiredFacets.remove(value);
-			}
-		}
-		int index = 1;
-		while (null != request.getParameter(facetNodesParamName+"_"+index)) {
-			String paramName = facetNodesParamName+"_"+index;
-			String value = request.getParameter(paramName);
-			requiredFacets.remove(value);
-			index++;
-		}
-	}
+    /**
+     * Delete the facets selected through checkboxes selected.
+     *
+     * @param requiredFacets
+     */
+    private void removeSelections(List<String> requiredFacets) {
+        String facetNodesParamName = "facetNodeToRemove";
+        ServletRequest request = this.pageContext.getRequest();
+        String[] values = request.getParameterValues(facetNodesParamName);
+        if (null != values) {
+            for (int i = 0; i < values.length; i++) {
+                String value = values[i];
+                requiredFacets.remove(value);
+            }
+        }
+        int index = 1;
+        while (null != request.getParameter(facetNodesParamName + "_" + index)) {
+            String paramName = facetNodesParamName + "_" + index;
+            String value = request.getParameter(paramName);
+            requiredFacets.remove(value);
+            index++;
+        }
+    }
 
-	/**
-	 * MANAGEMENT OF SELECTED current node (child nodes REMOVE ANY OF THE SELECTION).
-	 * @param selectedNode
-	 * @param requiredFacets
-	 */
-	private void manageCurrentSelect(String selectedNode, List<String> requiredFacets) {
-		List<String> nodesToRemove = new ArrayList<String>();
-		Iterator<String> requredFacetIterator = requiredFacets.iterator();
-		ITreeNodeManager facetManager = this.getFacetManager();
-		while (requredFacetIterator.hasNext()) {
-			String reqNode = (String) requredFacetIterator.next();
-			ITreeNode currentNode = facetManager.getNode(reqNode);
+    /**
+     * MANAGEMENT OF SELECTED current node (child nodes REMOVE ANY OF THE SELECTION).
+     *
+     * @param selectedNode
+     * @param requiredFacets
+     */
+    private void manageCurrentSelect(String selectedNode, List<String> requiredFacets) {
+        List<String> nodesToRemove = new ArrayList<String>();
+        Iterator<String> requredFacetIterator = requiredFacets.iterator();
+        ITreeNodeManager facetManager = this.getFacetManager();
+        while (requredFacetIterator.hasNext()) {
+            String reqNode = (String) requredFacetIterator.next();
+            ITreeNode currentNode = facetManager.getNode(reqNode);
             ITreeNode parent = facetManager.getNode(currentNode.getParentCode());
-			if (this.isChildOf(parent, selectedNode)) nodesToRemove.add(reqNode);
-		}
-		for (int i=0; i<nodesToRemove.size(); i++) {
-			String nodeToRemove = nodesToRemove.get(i);
-			requiredFacets.remove(nodeToRemove);
-		}
-	}
-
-	/**
-	 * Returns facet manager
-	 * @return Facet manager
-	 */
-	protected ITreeNodeManager getFacetManager() {
-        IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
-		return facetNavHelper.getTreeNodeManager();
-	}
-
-	/**
-	 * Return true if it a child of checked node
-	 * @param nodeToCheck
-	 * @param codeForCheck
-	 * @return True if it a child of checked node
-	 */
-	protected boolean isChildOf(ITreeNode nodeToCheck, String codeForCheck) {
-		if (nodeToCheck.getCode().equals(codeForCheck)) {
-			return true;
-		}
-		ITreeNode parentFacet = this.getFacetManager().getNode(nodeToCheck.getParentCode());
-		if (null != parentFacet && !parentFacet.getCode().equals(parentFacet.getParentCode())) {
-			return this.isChildOf(parentFacet, codeForCheck);
-		}
-		return false;
-	}
-
-	/**
-	 * Add new facet
-	 * @param requiredFacets
-	 * @param value
-	 */
-	private void addFacet(List<String> requiredFacets, String value) {
-		if (null != value && value.trim().length()>0 && !requiredFacets.contains(value.trim())) {
-			requiredFacets.add(value.trim());
-		}
-	}
-
-	/**
-	 * Returns the list of objects (@ link FacetBreadCrumbs).
-	 * @param requiredFacets Nodes facets required.
-	 * @param reqCtx The context of the current request.
-	 * @return The list of objects Breadcrumbs.
-	 */
-	protected List<FacetBreadCrumbs> getBreadCrumbs(List<String> requiredFacets, RequestContext reqCtx) {
-		List<ITreeNode> roots = this.getFacetRoots(reqCtx);
-		if (null == roots) return null;
-		List<ITreeNode> finalNodes = this.getFinalNodes(requiredFacets);
-		List<FacetBreadCrumbs> breadCrumbs = new ArrayList<>();
-		for (int i=0; i<finalNodes.size(); i++) {
-			ITreeNode requiredNode = finalNodes.get(i);
-			for (int j = 0; j < roots.size(); j++) {
-				ITreeNode root = roots.get(j);
-				if (this.isChildOf(requiredNode, root.getCode())) {
-					breadCrumbs.add(new FacetBreadCrumbs(requiredNode.getCode(), root.getCode(), this.getFacetManager()));
-				}
-			}
-		}
-		return breadCrumbs;
-	}
-
-	/**
-	 * Returns final nodes
-	 * @param requiredFacets
-	 * @return Final Nodes
-	 */
-	private List<ITreeNode> getFinalNodes(List<String> requiredFacets) {
-		List<ITreeNode> finalNodes = new ArrayList<>();
-		List<String> requiredFacetsCopy = new ArrayList<>(requiredFacets);
-		for (int i=0; i<requiredFacets.size(); i++) {
-			String nodeToAnalize = requiredFacets.get(i);
-			this.removeParentOf(nodeToAnalize, requiredFacetsCopy);
-		}
-		Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
-		while (requiredFacetIterator.hasNext()) {
-			String reqNode = (String) requiredFacetIterator.next();
-			finalNodes.add(this.getFacetManager().getNode(reqNode));
-		}
-		return finalNodes;
-	}
-
-	/**
-	 * Remove node parent
-	 * @param nodeFromAnalize
-	 * @param requiredFacetsCopy
-	 */
-	private void removeParentOf(String nodeFromAnalize, List<String> requiredFacetsCopy) {
-		ITreeNode nodeFrom = this.getFacetManager().getNode(nodeFromAnalize);
-		List<String> nodesToRemove = new ArrayList<>();
-		Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
-		while (requiredFacetIterator.hasNext()) {
-			String reqNode = (String) requiredFacetIterator.next();
-			if (!nodeFromAnalize.equals(reqNode) && this.isChildOf(nodeFrom, reqNode)) {
+			if (this.isChildOf(parent, selectedNode)) {
 				nodesToRemove.add(reqNode);
 			}
-		}
-		for (int i=0; i<nodesToRemove.size(); i++) {
-			String nodeToRemove = nodesToRemove.get(i);
-			requiredFacetsCopy.remove(nodeToRemove);
-		}
-	}
+        }
+        for (int i = 0; i < nodesToRemove.size(); i++) {
+            String nodeToRemove = nodesToRemove.get(i);
+            requiredFacets.remove(nodeToRemove);
+        }
+    }
 
-	/**
-	 * Returns a list of root nodes through which grant the tree.
-	 * The root nodes allow you to create blocks of selected nodes in showlet appropriate.
-	 * @param reqCtx The context of the current request.
-	 * @return The list of root nodes.
-	 */
-	protected List<ITreeNode> getFacetRoots(RequestContext reqCtx) {
-		IPage page = (IPage) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE);
-		Integer currentFrame = (Integer) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_FRAME);
-		Widget[] widgets = page.getWidgets();
-		for (int i = 0; i < widgets.length; i++) {
-			if (i == currentFrame.intValue()) {
-				continue;
-			}
-			Widget widget = widgets[i];
-			String configParamName = JpSolrSystemConstants.FACET_ROOTS_WIDGET_PARAM_NAME;
-			if (null != widget && null != widget.getConfig()
-					&& null != widget.getConfig().getProperty(configParamName)) {
-				String facetParamConfig = widget.getConfig().getProperty(configParamName);
-				return this.getFacetRoots(facetParamConfig);
-			}
-		}
-		return null;
-	}
+    /**
+     * Returns facet manager
+     *
+     * @return Facet manager
+     */
+    protected ITreeNodeManager getFacetManager() {
+        IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(
+                JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
+        return facetNavHelper.getTreeNodeManager();
+    }
 
-	/**
-	 * Returns facet roots.
-	 * @param facetRootNodesParam
-	 * @return facet roots
-	 */
-	protected List<ITreeNode> getFacetRoots(String facetRootNodesParam) {
-		List<ITreeNode> nodes = new ArrayList<>();
-		String[] facetCodes = facetRootNodesParam.split(",");
-		for (int j = 0; j < facetCodes.length; j++) {
-			String facetCode = facetCodes[j].trim();
-			ITreeNode node = this.getFacetManager().getNode(facetCode);
-			if (null != node) {
-				nodes.add(node);
-			}
-		}
-		return nodes;
-	}
+    /**
+     * Return true if it a child of checked node
+     *
+     * @param nodeToCheck
+     * @param codeForCheck
+     * @return True if it a child of checked node
+     */
+    protected boolean isChildOf(ITreeNode nodeToCheck, String codeForCheck) {
+        if (nodeToCheck.getCode().equals(codeForCheck)) {
+            return true;
+        }
+        ITreeNode parentFacet = this.getFacetManager().getNode(nodeToCheck.getParentCode());
+        if (null != parentFacet && !parentFacet.getCode().equals(parentFacet.getParentCode())) {
+            return this.isChildOf(parentFacet, codeForCheck);
+        }
+        return false;
+    }
 
-	public String getFacetNodesParamName() {
-		return _facetNodesParamName;
-	}
-	public void setFacetNodesParamName(String facetNodesParamName) {
-		this._facetNodesParamName = facetNodesParamName;
-	}
+    /**
+     * Add new facet
+     *
+     * @param requiredFacets
+     * @param value
+     */
+    private void addFacet(List<String> requiredFacets, String value) {
+        if (null != value && value.trim().length() > 0 && !requiredFacets.contains(value.trim())) {
+            requiredFacets.add(value.trim());
+        }
+    }
 
-	public String getRequiredFacetsParamName() {
-		return _requiredFacetsParamName;
-	}
-	public void setRequiredFacetsParamName(String requiredFacetsParamName) {
-		this._requiredFacetsParamName = requiredFacetsParamName;
-	}
-	
-	public String getOccurrencesParamName() {
-		if (null == this._occurrencesParamName) {
-			return "occurrences";
+    /**
+     * Returns the list of objects (@ link FacetBreadCrumbs).
+     *
+     * @param requiredFacets Nodes facets required.
+     * @param reqCtx         The context of the current request.
+     * @return The list of objects Breadcrumbs.
+     */
+    protected List<FacetBreadCrumbs> getBreadCrumbs(List<String> requiredFacets, RequestContext reqCtx) {
+        List<ITreeNode> roots = this.getFacetRoots(reqCtx);
+		if (null == roots) {
+			return null;
 		}
-		return _occurrencesParamName;
-	}
-	public void setOccurrencesParamName(String occurrencesParamName) {
-		this._occurrencesParamName = occurrencesParamName;
-	}
-	
-	private String _facetNodesParamName;
-	private String _requiredFacetsParamName;
-	private String _occurrencesParamName;
+        List<ITreeNode> finalNodes = this.getFinalNodes(requiredFacets);
+        List<FacetBreadCrumbs> breadCrumbs = new ArrayList<>();
+        for (int i = 0; i < finalNodes.size(); i++) {
+            ITreeNode requiredNode = finalNodes.get(i);
+            for (int j = 0; j < roots.size(); j++) {
+                ITreeNode root = roots.get(j);
+                if (this.isChildOf(requiredNode, root.getCode())) {
+                    breadCrumbs.add(
+                            new FacetBreadCrumbs(requiredNode.getCode(), root.getCode(), this.getFacetManager()));
+                }
+            }
+        }
+        return breadCrumbs;
+    }
+
+    /**
+     * Returns final nodes
+     *
+     * @param requiredFacets
+     * @return Final Nodes
+     */
+    private List<ITreeNode> getFinalNodes(List<String> requiredFacets) {
+        List<ITreeNode> finalNodes = new ArrayList<>();
+        List<String> requiredFacetsCopy = new ArrayList<>(requiredFacets);
+        for (int i = 0; i < requiredFacets.size(); i++) {
+            String nodeToAnalize = requiredFacets.get(i);
+            this.removeParentOf(nodeToAnalize, requiredFacetsCopy);
+        }
+        Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
+        while (requiredFacetIterator.hasNext()) {
+            String reqNode = (String) requiredFacetIterator.next();
+            finalNodes.add(this.getFacetManager().getNode(reqNode));
+        }
+        return finalNodes;
+    }
+
+    /**
+     * Remove node parent
+     *
+     * @param nodeFromAnalize
+     * @param requiredFacetsCopy
+     */
+    private void removeParentOf(String nodeFromAnalize, List<String> requiredFacetsCopy) {
+        ITreeNode nodeFrom = this.getFacetManager().getNode(nodeFromAnalize);
+        List<String> nodesToRemove = new ArrayList<>();
+        Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
+        while (requiredFacetIterator.hasNext()) {
+            String reqNode = (String) requiredFacetIterator.next();
+            if (!nodeFromAnalize.equals(reqNode) && this.isChildOf(nodeFrom, reqNode)) {
+                nodesToRemove.add(reqNode);
+            }
+        }
+        for (int i = 0; i < nodesToRemove.size(); i++) {
+            String nodeToRemove = nodesToRemove.get(i);
+            requiredFacetsCopy.remove(nodeToRemove);
+        }
+    }
+
+    /**
+     * Returns a list of root nodes through which grant the tree. The root nodes allow you to create blocks of selected
+     * nodes in showlet appropriate.
+     *
+     * @param reqCtx The context of the current request.
+     * @return The list of root nodes.
+     */
+    protected List<ITreeNode> getFacetRoots(RequestContext reqCtx) {
+        IPage page = (IPage) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE);
+        Integer currentFrame = (Integer) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_FRAME);
+        Widget[] widgets = page.getWidgets();
+        for (int i = 0; i < widgets.length; i++) {
+            if (i == currentFrame.intValue()) {
+                continue;
+            }
+            Widget widget = widgets[i];
+            String configParamName = JpSolrSystemConstants.FACET_ROOTS_WIDGET_PARAM_NAME;
+            if (null != widget && null != widget.getConfig()
+                    && null != widget.getConfig().getProperty(configParamName)) {
+                String facetParamConfig = widget.getConfig().getProperty(configParamName);
+                return this.getFacetRoots(facetParamConfig);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns facet roots.
+     *
+     * @param facetRootNodesParam
+     * @return facet roots
+     */
+    protected List<ITreeNode> getFacetRoots(String facetRootNodesParam) {
+        List<ITreeNode> nodes = new ArrayList<>();
+        String[] facetCodes = facetRootNodesParam.split(",");
+        for (int j = 0; j < facetCodes.length; j++) {
+            String facetCode = facetCodes[j].trim();
+            ITreeNode node = this.getFacetManager().getNode(facetCode);
+            if (null != node) {
+                nodes.add(node);
+            }
+        }
+        return nodes;
+    }
+
+    public String getFacetNodesParamName() {
+        return facetNodesParamName;
+    }
+
+    public void setFacetNodesParamName(String facetNodesParamName) {
+        this.facetNodesParamName = facetNodesParamName;
+    }
+
+    public String getRequiredFacetsParamName() {
+        return requiredFacetsParamName;
+    }
+
+    public void setRequiredFacetsParamName(String requiredFacetsParamName) {
+        this.requiredFacetsParamName = requiredFacetsParamName;
+    }
+
+    public String getOccurrencesParamName() {
+        if (null == this.occurrencesParamName) {
+            return "occurrences";
+        }
+        return occurrencesParamName;
+    }
+
+    public void setOccurrencesParamName(String occurrencesParamName) {
+        this.occurrencesParamName = occurrencesParamName;
+    }
+
+    private String facetNodesParamName;
+    private String requiredFacetsParamName;
+    private String occurrencesParamName;
 
 }

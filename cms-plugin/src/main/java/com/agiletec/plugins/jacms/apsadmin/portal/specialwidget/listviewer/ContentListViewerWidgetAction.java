@@ -402,16 +402,15 @@ public class ContentListViewerWidgetAction extends SimpleWidgetConfigAction {
 	}
 
 	@Override
-	protected void createValuedShowlet() throws Exception {
+	protected void createValuedShowlet() throws EntException {
 		try {
 			super.createValuedShowlet();
 			ApsProperties config = this.getWidget().getConfig();
 			this.extractFiltersProperties(config);
 			this.extractUserFiltersProperties(config);
 			this.extractCategories(config);
-		} catch (Throwable t) {
-			_logger.error("Error creating user filter", t);
-			throw new EntException("Error creating user filter", t);
+		} catch (RuntimeException ex) {
+			throw new EntException("Error creating user filter", ex);
 		}
 	}
 

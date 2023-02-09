@@ -42,15 +42,15 @@ import org.springframework.web.filter.CorsFilter;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = {
-    "classpath*:spring/testpropertyPlaceholder.xml",
-    "classpath*:spring/baseSystemConfig.xml",
-    "classpath*:spring/aps/**/**.xml",
-    "classpath*:spring/apsadmin/**/**.xml",
-    "classpath*:spring/plugins/**/aps/**/**.xml",
-    "classpath*:spring/plugins/**/apsadmin/**/**.xml",
+        "classpath*:spring/testpropertyPlaceholder.xml",
+        "classpath*:spring/baseSystemConfig.xml",
+        "classpath*:spring/aps/**/**.xml",
+        "classpath*:spring/apsadmin/**/**.xml",
+        "classpath*:spring/plugins/**/aps/**/**.xml",
+        "classpath*:spring/plugins/**/apsadmin/**/**.xml",
         "classpath*:spring/plugins/jpsolr/aps/**.xml", //extension of default class
         "classpath*:spring/plugins/jpsolr/apsadmin/**.xml", //extension of default class
-    "classpath*:spring/web/**.xml",})
+        "classpath*:spring/web/**.xml",})
 @WebAppConfiguration(value = "")
 public class AbstractControllerIntegrationTest {
 
@@ -76,12 +76,12 @@ public class AbstractControllerIntegrationTest {
     @Autowired
     @InjectMocks
     protected EntandoOauth2Interceptor entandoOauth2Interceptor;
-    
+
     @BeforeAll
     public static void setup() throws Exception {
         TestEntandoJndiUtils.setupJndi();
     }
-    
+
     @BeforeEach
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -90,11 +90,12 @@ public class AbstractControllerIntegrationTest {
         //workaround for dirty context
         entandoOauth2Interceptor.setAuthenticationProviderManager(authenticationProviderManager);
     }
-    
+
     protected String mockOAuthInterceptor(UserDetails user) {
-        return OAuth2TestUtils.mockOAuthInterceptor(apiOAuth2TokenManager, authenticationProviderManager, authorizationManager, user);
+        return OAuth2TestUtils.mockOAuthInterceptor(apiOAuth2TokenManager, authenticationProviderManager,
+                authorizationManager, user);
     }
-    
+
     protected AuthRequestBuilder createAuthRequest(MockHttpServletRequestBuilder requestBuilder) {
         return new AuthRequestBuilder(mockMvc, getAccessToken(), requestBuilder);
     }
@@ -102,11 +103,12 @@ public class AbstractControllerIntegrationTest {
     private String getAccessToken() {
         if (this.accessToken == null) {
             UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
-            this.accessToken = OAuth2TestUtils.mockOAuthInterceptor(apiOAuth2TokenManager, authenticationProviderManager, authorizationManager, user);
+            this.accessToken = OAuth2TestUtils.mockOAuthInterceptor(apiOAuth2TokenManager,
+                    authenticationProviderManager, authorizationManager, user);
         }
         return this.accessToken;
     }
-    
+
     protected void waitNotifyingThread() throws InterruptedException {
         this.waitThreads(NotifyManager.NOTIFYING_THREAD_NAME);
     }
@@ -122,5 +124,5 @@ public class AbstractControllerIntegrationTest {
             }
         }
     }
-    
+
 }

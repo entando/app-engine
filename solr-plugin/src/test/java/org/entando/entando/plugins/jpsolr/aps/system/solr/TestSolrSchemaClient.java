@@ -39,7 +39,7 @@ class TestSolrSchemaClient {
     public static void setApplicationContext(ApplicationContext applicationContext) {
         TestSolrSchemaClient.applicationContext = applicationContext;
     }
-    
+
     @BeforeAll
     public static void startUp() throws Exception {
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
@@ -49,25 +49,26 @@ class TestSolrSchemaClient {
         solrAddress = applicationContext.getEnvironment().getProperty("SOLR_ADDRESS");
         solrCore = applicationContext.getEnvironment().getProperty("SOLR_CORE");
     }
-    
+
     @AfterAll
     public static void tearDown() throws Exception {
         BaseTestCase.tearDown();
     }
-    
+
     @Test
-    void testGetFields() throws Throwable {
+    void testGetFields() {
         List<Map<String, Object>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
         Assertions.assertNotNull(fields);
     }
-    
+
     @Test
-    void testAddDeleteField() throws Throwable {
+    void testAddDeleteField() {
         String fieldName = "test_solr";
         List<Map<String, Object>> fields = SolrSchemaClient.getFields(solrAddress, solrCore);
         Assertions.assertNotNull(fields);
         try {
-            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst()
+                    .orElse(null);
             Assertions.assertNull(addedFiled);
 
             Map<String, Object> properties = new HashMap<>();
@@ -98,9 +99,10 @@ class TestSolrSchemaClient {
 
             fields = SolrSchemaClient.getFields(solrAddress, solrCore);
             Assertions.assertNotNull(fields);
-            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst().orElse(null);
+            Map<String, Object> addedFiled = fields.stream().filter(f -> f.get("name").equals(fieldName)).findFirst()
+                    .orElse(null);
             Assertions.assertNull(addedFiled);
         }
     }
-    
+
 }

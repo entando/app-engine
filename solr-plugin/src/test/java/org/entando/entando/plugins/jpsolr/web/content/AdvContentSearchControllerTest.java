@@ -570,7 +570,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
     }
     
     @Test
-    public void testLoadOrderedPublicEvents_4() throws Throwable {
+    public void testLoadOrderedPublicEvents_4() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
@@ -607,8 +607,6 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                 String extractedId = JsonPath.read(bodyResult, "$.payload[" + i + "]");
                 Assertions.assertEquals(expectedId, extractedId);
             }
-        } catch (Throwable t) {
-            throw t;
         } finally {
             if (null != masterContent.getId() && !"EVN193".equals(masterContent.getId())) {
                 this.contentManager.removeOnLineContent(masterContent);
@@ -694,7 +692,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
     }
     
     @Test
-    public void testLoadPublic_ART_EVN_Contents() throws Throwable {
+    public void testLoadPublic_ART_EVN_Contents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);

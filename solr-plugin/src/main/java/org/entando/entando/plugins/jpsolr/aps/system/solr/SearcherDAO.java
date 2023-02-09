@@ -51,18 +51,18 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class SearcherDAO implements ISolrSearcherDAO {
 
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SearcherDAO.class);
+    private static final Logger logger = LoggerFactory.getLogger(SearcherDAO.class);
 
     private ITreeNodeManager treeNodeManager;
     private ILangManager langManager;
@@ -93,7 +93,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
     }
 
     @Override
-    public SolrFacetedContentsResult searchFacetedContents(SearchEngineFilter[][] filters, SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
+    public SolrFacetedContentsResult searchFacetedContents(SearchEngineFilter[][] filters,
+            SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
         SearchEngineFilter[] singleFilters = new SearchEngineFilter[0];
         if (null != filters) {
             for (int i = 0; i < filters.length; i++) {
@@ -180,15 +181,14 @@ public class SearcherDAO implements ISolrSearcherDAO {
         } catch (SolrException inf) {
             logger.error("Solr exception", inf);
         } catch (Throwable t) {
-            logger.error("Error extracting documents", t);
             throw new EntException("Error extracting documents", t);
         }
         return result;
     }
-    
+
     private SearchEngineFilter extractPaginationFilter(SearchEngineFilter[] filters) {
-        return (null != filters) ? Arrays.asList(filters).stream().filter(f -> (null != f.getLimit() && f.getLimit() > 0 
-                            && null != f.getOffset() && f.getOffset() > -1)).findAny().orElse(null) : null;
+        return (null != filters) ? Arrays.asList(filters).stream().filter(f -> (null != f.getLimit() && f.getLimit() > 0
+                && null != f.getOffset() && f.getOffset() > -1)).findAny().orElse(null) : null;
     }
 
     protected Query createDoubleQuery(SearchEngineFilter[][] filters,
@@ -199,14 +199,16 @@ public class SearcherDAO implements ISolrSearcherDAO {
                 SearchEngineFilter[] internalFilters = filters[i];
                 if (internalFilters.length == 1) {
                     SearchEngineFilter internalFilter = internalFilters[0];
-                    BooleanClause.Occur occur = (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT : BooleanClause.Occur.MUST;
+                    BooleanClause.Occur occur =
+                            (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT : BooleanClause.Occur.MUST;
                     this.createAndAddQuery(mainQuery, internalFilter, occur);
                 } else {
                     BooleanQuery.Builder internalMainQuery = new BooleanQuery.Builder();
                     boolean addedFilter = false;
                     for (int j = 0; j < internalFilters.length; j++) {
                         SearchEngineFilter internalFilter = internalFilters[j];
-                        BooleanClause.Occur occur = (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT : BooleanClause.Occur.SHOULD;
+                        BooleanClause.Occur occur = (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT
+                                : BooleanClause.Occur.SHOULD;
                         boolean added = this.createAndAddQuery(internalMainQuery, internalFilter, occur);
                         addedFilter = (added) ? true : addedFilter;
                     }
@@ -227,7 +229,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
         if (filters != null && filters.length > 0) {
             for (int i = 0; i < filters.length; i++) {
                 SearchEngineFilter filter = filters[i];
-                BooleanClause.Occur occur = (filter.isNotOption()) ? BooleanClause.Occur.MUST_NOT : BooleanClause.Occur.MUST;
+                BooleanClause.Occur occur =
+                        (filter.isNotOption()) ? BooleanClause.Occur.MUST_NOT : BooleanClause.Occur.MUST;
                 this.createAndAddQuery(mainQuery, filter, occur);
             }
         }
@@ -235,8 +238,9 @@ public class SearcherDAO implements ISolrSearcherDAO {
         this.addCategoriesQueryBlock(mainQuery, categories);
         return mainQuery.build();
     }
-    
-    protected boolean createAndAddQuery(BooleanQuery.Builder mainQuery, SearchEngineFilter filter, BooleanClause.Occur occurs) {
+
+    protected boolean createAndAddQuery(BooleanQuery.Builder mainQuery, SearchEngineFilter filter,
+            BooleanClause.Occur occurs) {
         Query fieldQuery = this.createQueryByFilter(filter);
         if (null != fieldQuery) {
             mainQuery.add(fieldQuery, occurs);
@@ -276,7 +280,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
                         String singleCategory = allowedValues.get(j);
                         ITreeNode treeNode = this.getTreeNodeManager().getNode(singleCategory);
                         if (null != treeNode) {
-                            TermQuery categoryQuery = new TermQuery(new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, treeNode.getCode()));
+                            TermQuery categoryQuery = new TermQuery(
+                                    new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, treeNode.getCode()));
                             singleCategoriesQuery.add(categoryQuery, BooleanClause.Occur.SHOULD);
                         }
                     }
@@ -284,7 +289,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
                 } else if (null != categoryFilter.getValue()) {
                     ITreeNode treeNode = this.getTreeNodeManager().getNode(categoryFilter.getValue().toString());
                     if (null != treeNode) {
-                        TermQuery categoryQuery = new TermQuery(new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, treeNode.getCode()));
+                        TermQuery categoryQuery = new TermQuery(
+                                new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, treeNode.getCode()));
                         categoriesQuery.add(categoryQuery, BooleanClause.Occur.MUST);
                     }
                 }
@@ -329,7 +335,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
                             //bc = BooleanClause.Occur.MUST_NOT;
                         }
                         for (int i = 0; i < values.length; i++) {
-                            Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption(), relevance);
+                            Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption(),
+                                    relevance);
                             singleOptionFieldQuery.add(queryTerm, bc);
                         }
                         fieldQuery.add(singleOptionFieldQuery.build(), BooleanClause.Occur.SHOULD);
@@ -347,17 +354,22 @@ public class SearcherDAO implements ISolrSearcherDAO {
             Query query = null;
             if (filter.getStart() instanceof Date || filter.getEnd() instanceof Date) {
                 String format = SolrFields.SOLR_SEARCH_DATE_RANGE_FORMAT;
-                String start = (null != filter.getStart()) ? DateConverter.getFormattedDate((Date) filter.getStart(), format) : SolrFields.SOLR_DATE_MIN;
-                String end = (null != filter.getEnd()) ? DateConverter.getFormattedDate((Date) filter.getEnd(), format) : SolrFields.SOLR_DATE_MAX;
+                String start =
+                        (null != filter.getStart()) ? DateConverter.getFormattedDate((Date) filter.getStart(), format)
+                                : SolrFields.SOLR_DATE_MIN;
+                String end = (null != filter.getEnd()) ? DateConverter.getFormattedDate((Date) filter.getEnd(), format)
+                        : SolrFields.SOLR_DATE_MAX;
                 query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
             } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
-                Long lowerValue = (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
+                Long lowerValue =
+                        (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
                 Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
                 query = LongPoint.newRangeQuery(key, lowerValue, upperValue);
             } else {
                 String start = (null != filter.getStart()) ? filter.getStart().toString().toLowerCase() : "A";
                 String end = (null != filter.getEnd()) ? filter.getEnd().toString().toLowerCase() + "z" : null;
-                query = TermRangeQuery.newStringRange(key, start + relevance, (null != end) ? (end + relevance) : null, true, true);
+                query = TermRangeQuery.newStringRange(key, start + relevance, (null != end) ? (end + relevance) : null,
+                        true, true);
             }
             fieldQuery.add(query, BooleanClause.Occur.MUST);
         } else if (null != value) {
@@ -379,11 +391,14 @@ public class SearcherDAO implements ISolrSearcherDAO {
                         //bc = BooleanClause.Occur.MUST_NOT;
                     }
                     for (int i = 0; i < values.length; i++) {
-                        Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption(), relevance);
-                        if ((filter instanceof SolrSearchEngineFilter) && ((SolrSearchEngineFilter) filter).isIncludeAttachments()) {
+                        Query queryTerm = this.getTermQueryForTextSearch(key, values[i], filter.isLikeOption(),
+                                relevance);
+                        if ((filter instanceof SolrSearchEngineFilter)
+                                && ((SolrSearchEngineFilter) filter).isIncludeAttachments()) {
                             BooleanQuery.Builder compositeQuery = new BooleanQuery.Builder();
                             compositeQuery.add(queryTerm, BooleanClause.Occur.SHOULD);
-                            TermQuery termAttachment = new TermQuery(new Term(attachmentKey, values[i].toLowerCase() + relevance));
+                            TermQuery termAttachment = new TermQuery(
+                                    new Term(attachmentKey, values[i].toLowerCase() + relevance));
                             compositeQuery.add(termAttachment, BooleanClause.Occur.SHOULD);
                             fieldQuery.add(compositeQuery.build(), bc);
                         } else {
@@ -395,7 +410,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
                     for (int i = 0; i < values.length; i++) {
                         phraseQuery.add(new Term(key, values[i].toLowerCase() + relevance), i);
                     }
-                    if ((filter instanceof SolrSearchEngineFilter) && ((SolrSearchEngineFilter) filter).isIncludeAttachments()) {
+                    if ((filter instanceof SolrSearchEngineFilter)
+                            && ((SolrSearchEngineFilter) filter).isIncludeAttachments()) {
                         fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
                         PhraseQuery.Builder phraseQuery2 = new PhraseQuery.Builder();
                         for (int i = 0; i < values.length; i++) {
@@ -408,7 +424,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
                     }
                 }
             } else if (value instanceof Date) {
-                String toString = DateConverter.getFormattedDate((Date) value, SolrFields.SOLR_SEARCH_DATE_VALUE_FORMAT);
+                String toString = DateConverter.getFormattedDate((Date) value,
+                        SolrFields.SOLR_SEARCH_DATE_VALUE_FORMAT);
                 TermQuery term = new TermQuery(new Term(key, toString + relevance));
                 fieldQuery.add(term, BooleanClause.Occur.MUST);
             } else if (value instanceof Number) {
@@ -462,7 +479,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
             key = SolrFields.SOLR_FIELD_PREFIX + key;
         } else if (filter.isAttributeFilter()) {
             String insertedLangCode = filter.getLangCode();
-            String langCode = (StringUtils.isBlank(insertedLangCode)) ? this.getLangManager().getDefaultLang().getCode() : insertedLangCode;
+            String langCode = (StringUtils.isBlank(insertedLangCode)) ? this.getLangManager().getDefaultLang().getCode()
+                    : insertedLangCode;
             key = langCode.toLowerCase() + "_" + key;
         }
         return key;

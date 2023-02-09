@@ -17,19 +17,20 @@ import com.agiletec.apsadmin.system.BaseAction;
 import com.opensymphony.xwork2.Action;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrLastReloadInfo;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class SolrConfigAction extends BaseAction {
     
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(SolrConfigAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(SolrConfigAction.class);
     
     private String typeCode;
     
@@ -71,8 +72,8 @@ public class SolrConfigAction extends BaseAction {
             }
              this.getSolrSearchEngineManager().startReloadContentsReferencesByType(this.getTypeCode());
             logger.info("Reload contents index started for type " + this.getTypeCode());
-        } catch (Throwable t) {
-            logger.error("error in reloadContentsIndex", t);
+        } catch (EntException ex) {
+            logger.error("error in reloadContentsIndex", ex);
             return FAILURE;
         }
         return SUCCESS;

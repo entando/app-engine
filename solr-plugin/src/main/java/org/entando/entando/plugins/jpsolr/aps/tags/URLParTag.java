@@ -27,28 +27,29 @@ import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.Tag;
 
 /**
- * Sub tag of URLTag used for adding parameters to query string.
- * Is expected to attribute "name", while the value of the parameter must be specified in the body of the tag.
+ * Sub tag of URLTag used for adding parameters to query string. Is expected to attribute "name", while the value of the
+ * parameter must be specified in the body of the tag.
+ *
  * @author E.Santoboni
  */
 public class URLParTag extends com.agiletec.aps.tags.ParameterTag {
-	
-	@Override
-	public int doEndTag() throws JspException {
-		BodyContent body = this.getBodyContent();
-		String value = body.getString();
-		IParameterParentTag parentTag = null;
-		try {
-			Tag tag = this;
-			do {
-				tag = tag.getParent();
-			} while (!(tag instanceof IParameterParentTag));
-			parentTag = (IParameterParentTag) tag;
-		} catch (RuntimeException e) {
-			throw new JspException("Error nesting parameter in url tag.", e);
-		}
-		parentTag.addParameter(this.getName(), value);
-		return EVAL_PAGE;
-	}
-	
+
+    @Override
+    public int doEndTag() throws JspException {
+        BodyContent body = this.getBodyContent();
+        String value = body.getString();
+        IParameterParentTag parentTag = null;
+        try {
+            Tag tag = this;
+            do {
+                tag = tag.getParent();
+            } while (!(tag instanceof IParameterParentTag));
+            parentTag = (IParameterParentTag) tag;
+        } catch (RuntimeException e) {
+            throw new JspException("Error nesting parameter in url tag.", e);
+        }
+        parentTag.addParameter(this.getName(), value);
+        return EVAL_PAGE;
+    }
+
 }

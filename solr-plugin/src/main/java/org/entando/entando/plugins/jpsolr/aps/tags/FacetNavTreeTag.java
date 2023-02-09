@@ -28,6 +28,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
+import org.entando.entando.ent.exception.EntException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHel
  */
 public class FacetNavTreeTag extends AbstractFacetNavTag {
 
-	private static final Logger _logger = LoggerFactory.getLogger(FacetNavTreeTag.class);
+	private static final Logger logger = LoggerFactory.getLogger(FacetNavTreeTag.class);
 	
 	@Override
 	public int doStartTag() throws JspException {
@@ -60,9 +61,8 @@ public class FacetNavTreeTag extends AbstractFacetNavTag {
 			this.pageContext.setAttribute(this.getFacetsTreeParamName(), facetsForTree);
 			request.setAttribute(this.getOccurrencesParamName(), occurrences);
 			request.setAttribute(this.getRequiredFacetsParamName(), requiredFacets);
-		} catch (Throwable t) {
-			_logger.error("Error in doStartTag", t);
-			throw new JspException("Error initialization tag", t);
+		} catch (EntException | RuntimeException ex) {
+			throw new JspException("Error initialization tag", ex);
 		}
 		return super.doStartTag();
 	}
@@ -79,12 +79,12 @@ public class FacetNavTreeTag extends AbstractFacetNavTag {
 	}
 
 	public String getFacetsTreeParamName() {
-		return _facetsTreeParamName;
+		return facetsTreeParamName;
 	}
 	public void setFacetsTreeParamName(String facetsTreeParamName) {
-		this._facetsTreeParamName = facetsTreeParamName;
+		this.facetsTreeParamName = facetsTreeParamName;
 	}
 	
-	private String _facetsTreeParamName;
+	private String facetsTreeParamName;
 
 }

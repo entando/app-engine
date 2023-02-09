@@ -21,181 +21,192 @@
  */
 package org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget;
 
-import java.util.List;
-import java.util.Map;
-
-import org.entando.entando.aps.system.services.widgettype.WidgetType;
-import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
-
-import com.agiletec.aps.system.ApsSystemUtils;
 import com.agiletec.apsadmin.portal.specialwidget.SimpleWidgetConfigAction;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
+import java.util.List;
+import java.util.Map;
+import org.entando.entando.aps.system.services.widgettype.WidgetType;
+import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget.util.FacetNavWidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
 public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
-	
-	@Override
-	public void validate() {
-		super.validate();
-		try {
-			this.createValuedShowlet();
-			this.validateContentTypes();
-		} catch (Throwable t) {
-			ApsSystemUtils.logThrowable(t, this, "validate");
-		}
-	}
-	
-	protected void validateContentTypes() {
-		List<String> contentTypes = this.getContentTypeCodes();
-		Map<String, SmallContentType> smallContentTypes = this.getContentManager().getSmallContentTypesMap();
-		for (String contentTypeCode : contentTypes) {
-			if (!smallContentTypes.containsKey(contentTypeCode)) {
-				String[] args = { contentTypeCode };
-				String fieldName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
-				this.addFieldError(fieldName, this.getText("message.facetNavWidget.contentTypesFilter.notValid", args));
-			}
-		}
-	}
-	
-	@Override
-	public String init() {
-		String result = super.init();
-		try {
-			if (result.equals(SUCCESS)) {
-				this.initSpecialParams();
-			}
-		} catch (Throwable t) {
-			ApsSystemUtils.logThrowable(t, this, "init");
-			return FAILURE;
-		}
-		return result;
-	}
-	
-	/**
-	 * Add a content type to the associated content types
-	 * @return The code describing the result of the operation.
-	 */
-	public String joinContentType() {
-		try {
-			this.createValuedShowlet();
-			List<String> contentTypes = this.getContentTypeCodes();
-			String contentTypeCode = this.getContentTypeCode();
-			if (contentTypeCode != null && contentTypeCode.length()>0 && !contentTypes.contains(contentTypeCode) && this.getContentType(contentTypeCode)!=null) {
-				contentTypes.add(contentTypeCode);
-				String contentTypesFilter = FacetNavWidgetHelper.concatStrings(contentTypes, ",");
-				String configParamName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
-				this.getWidget().getConfig().setProperty(configParamName, contentTypesFilter);
-				this.setContentTypesFilter(contentTypesFilter);
-			}
-		} catch (Throwable t) {
-			ApsSystemUtils.logThrowable(t, this, "joinContentType");
-			return FAILURE;
-		}
-		return SUCCESS;
-	}
-	
-	/**
-	 * Remove a content type from the associated content types
-	 * @return The code describing the result of the operation.
-	 */
-	public String removeContentType() {
-		try {
-			this.createValuedShowlet();
-			List<String> contentTypes = this.getContentTypeCodes();
-			String contentTypeCode = this.getContentTypeCode();
-			if (contentTypeCode != null) {
-                contentTypes.remove(contentTypeCode);
-				String contentTypesFilter = FacetNavWidgetHelper.concatStrings(contentTypes, ",");
-				String configParamName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
-				this.getWidget().getConfig().setProperty(configParamName, contentTypesFilter);
-				this.setContentTypesFilter(contentTypesFilter);
-			}
-		} catch (Throwable t) {
-			ApsSystemUtils.logThrowable(t, this, "removeContentType");
-			return FAILURE;
-		}
-		return SUCCESS;
-	}
-	
-	/**
-	 * Prepare action with the parameters contained into widget.
-	 */
-	protected void initSpecialParams() {
-		if (null != this.getWidget().getConfig()) {
-			String paramName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
-			String configParamName = this.getWidget().getConfig().getProperty(paramName);
-			this.setContentTypesFilter(configParamName);
-		}
-	}
-	
-	/**
-	 * Returns widget type parameter
-	 * @param paramName
-	 * @return the Widget type parameter
-	 * @deprecated use getWidgetTypeParameter(String)
-	 */
-	public WidgetTypeParameter getShowletTypeParameter(String paramName) {
-		return this.getWidgetTypeParameter(paramName);
-	}
-	
-	/**
-	 * Returns widget type parameter
-	 * @param paramName
-	 * @return the Widget type parameter
-	 */
-	public WidgetTypeParameter getWidgetTypeParameter(String paramName) {
-		WidgetType widgetType = this.getWidgetTypeManager().getWidgetType(this.getWidget().getTypeCode());
-		List<WidgetTypeParameter> parameters = widgetType.getTypeParameters();
-		for (WidgetTypeParameter param : parameters) {
-			if (param.getName().equals(paramName)) {
-				return param;
-			}
-		}
-		return null;
-	}
-    
-	public List<SmallContentType> getContentTypes() {
-		return this.getContentManager().getSmallContentTypes();
-	}
 
-	public SmallContentType getContentType(String contentTypeCode) {
-		return this.getContentManager().getSmallContentTypesMap().get(contentTypeCode);
-	}
+    private static final Logger logger = LoggerFactory.getLogger(FacetNavResultWidgetAction.class);
 
-	public String getContentTypeCode() {
-		return contentTypeCode;
-	}
-	public void setContentTypeCode(String contentTypeCode) {
-		this.contentTypeCode = contentTypeCode;
-	}
+    @Override
+    public void validate() {
+        try {
+            super.validate();
+            this.createValuedShowlet();
+            this.validateContentTypes();
+        } catch (EntException | RuntimeException ex) {
+            logger.error("Exception in validate", ex);
+        }
+    }
 
-	public List<String> getContentTypeCodes() {
-		String contentTypesParam = this.getContentTypesFilter();
-		return FacetNavWidgetHelper.splitValues(contentTypesParam, ",");
-	}
+    protected void validateContentTypes() {
+        List<String> contentTypes = this.getContentTypeCodes();
+        Map<String, SmallContentType> smallContentTypes = this.getContentManager().getSmallContentTypesMap();
+        for (String typeCode : contentTypes) {
+            if (!smallContentTypes.containsKey(typeCode)) {
+                String[] args = {typeCode};
+                String fieldName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
+                this.addFieldError(fieldName, this.getText("message.facetNavWidget.contentTypesFilter.notValid", args));
+            }
+        }
+    }
 
-	public void setContentTypesFilter(String contentTypesFilter) {
-		this.contentTypesFilter = contentTypesFilter;
-	}
-	public String getContentTypesFilter() {
-		return contentTypesFilter;
-	}
-	
-	protected IContentManager getContentManager() {
-		return contentManager;
-	}
-	public void setContentManager(IContentManager contentManager) {
-		this.contentManager = contentManager;
-	}
+    @Override
+    public String init() {
+        String result = super.init();
+        try {
+            if (result.equals(SUCCESS)) {
+                this.initSpecialParams();
+            }
+        } catch (RuntimeException ex) {
+            logger.error("Exception in init", ex);
+            return FAILURE;
+        }
+        return result;
+    }
 
-	private String contentTypeCode;
-	private String contentTypesFilter;
+    /**
+     * Add a content type to the associated content types
+     *
+     * @return The code describing the result of the operation.
+     */
+    public String joinContentType() {
+        try {
+            this.createValuedShowlet();
+            List<String> contentTypes = this.getContentTypeCodes();
+            String typeCode = this.getContentTypeCode();
+            if (typeCode != null && typeCode.length() > 0 && !contentTypes.contains(typeCode)
+                    && this.getContentType(typeCode) != null) {
+                contentTypes.add(typeCode);
+                String typesFilter = FacetNavWidgetHelper.concatStrings(contentTypes, ",");
+                String configParamName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
+                this.getWidget().getConfig().setProperty(configParamName, typesFilter);
+                this.setContentTypesFilter(typesFilter);
+            }
+        } catch (EntException | RuntimeException ex) {
+            logger.error("Exception in joinContentType", ex);
+            return FAILURE;
+        }
+        return SUCCESS;
+    }
 
-	private IContentManager contentManager;
+    /**
+     * Remove a content type from the associated content types
+     *
+     * @return The code describing the result of the operation.
+     */
+    public String removeContentType() {
+        try {
+            this.createValuedShowlet();
+            List<String> contentTypes = this.getContentTypeCodes();
+            String typeCode = this.getContentTypeCode();
+            if (typeCode != null) {
+                contentTypes.remove(typeCode);
+                String typesFilter = FacetNavWidgetHelper.concatStrings(contentTypes, ",");
+                String configParamName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
+                this.getWidget().getConfig().setProperty(configParamName, typesFilter);
+                this.setContentTypesFilter(typesFilter);
+            }
+        } catch (EntException | RuntimeException ex) {
+            logger.error("Exception in removeContentType", ex);
+            return FAILURE;
+        }
+        return SUCCESS;
+    }
+
+    /**
+     * Prepare action with the parameters contained into widget.
+     */
+    protected void initSpecialParams() {
+        if (null != this.getWidget().getConfig()) {
+            String paramName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
+            String configParamName = this.getWidget().getConfig().getProperty(paramName);
+            this.setContentTypesFilter(configParamName);
+        }
+    }
+
+    /**
+     * Returns widget type parameter
+     *
+     * @param paramName
+     * @return the Widget type parameter
+     * @deprecated use getWidgetTypeParameter(String)
+     */
+    @Deprecated
+    public WidgetTypeParameter getShowletTypeParameter(String paramName) {
+        return this.getWidgetTypeParameter(paramName);
+    }
+
+    /**
+     * Returns widget type parameter
+     *
+     * @param paramName
+     * @return the Widget type parameter
+     */
+    public WidgetTypeParameter getWidgetTypeParameter(String paramName) {
+        WidgetType widgetType = this.getWidgetTypeManager().getWidgetType(this.getWidget().getTypeCode());
+        List<WidgetTypeParameter> parameters = widgetType.getTypeParameters();
+        for (WidgetTypeParameter param : parameters) {
+            if (param.getName().equals(paramName)) {
+                return param;
+            }
+        }
+        return null;
+    }
+
+    public List<SmallContentType> getContentTypes() {
+        return this.getContentManager().getSmallContentTypes();
+    }
+
+    public SmallContentType getContentType(String contentTypeCode) {
+        return this.getContentManager().getSmallContentTypesMap().get(contentTypeCode);
+    }
+
+    public String getContentTypeCode() {
+        return contentTypeCode;
+    }
+
+    public void setContentTypeCode(String contentTypeCode) {
+        this.contentTypeCode = contentTypeCode;
+    }
+
+    public List<String> getContentTypeCodes() {
+        String contentTypesParam = this.getContentTypesFilter();
+        return FacetNavWidgetHelper.splitValues(contentTypesParam, ",");
+    }
+
+    public void setContentTypesFilter(String contentTypesFilter) {
+        this.contentTypesFilter = contentTypesFilter;
+    }
+
+    public String getContentTypesFilter() {
+        return contentTypesFilter;
+    }
+
+    protected IContentManager getContentManager() {
+        return contentManager;
+    }
+
+    public void setContentManager(IContentManager contentManager) {
+        this.contentManager = contentManager;
+    }
+
+    private String contentTypeCode;
+    private String contentTypesFilter;
+
+    private IContentManager contentManager;
 
 }

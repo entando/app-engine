@@ -53,97 +53,106 @@ import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngine
  * @author E.Santoboni
  */
 public class FacetNavHelper implements IFacetNavHelper {
-    
+
     private static final int LIMIT = 10000;
-    
-	private ITreeNodeManager treeNodeManager;
-    
+
+    private ITreeNodeManager treeNodeManager;
+
     private IAdvContentFacetManager advContentFacetManager;
-    
+
     @Override
     public FacetedContentsResult getResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
         List<String> contentTypesFilter = this.getContentTypesFilter(reqCtx);
-		List<String> userGroupCodes = new ArrayList<>(this.getAllowedGroups(reqCtx));
-        SearchEngineFilter typeFilter = SearchEngineFilter.createAllowedValuesFilter(SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, false, contentTypesFilter, TextSearchOption.EXACT);
+        List<String> userGroupCodes = new ArrayList<>(this.getAllowedGroups(reqCtx));
+        SearchEngineFilter typeFilter = SearchEngineFilter.createAllowedValuesFilter(
+                SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, false, contentTypesFilter, TextSearchOption.EXACT);
         SolrSearchEngineFilter filterPagination = new SolrSearchEngineFilter(LIMIT, 0);
         SearchEngineFilter[] filters = new SearchEngineFilter[]{typeFilter, filterPagination};
         return this.getAdvContentFacetManager().getFacetResult(filters, selectedFacetNodes, null, userGroupCodes);
     }
-	
+
     @Deprecated
-	@Override
-	public List<String> getSearchResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
+    @Override
+    public List<String> getSearchResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
         FacetedContentsResult result = this.getResult(selectedFacetNodes, reqCtx);
         return result.getContentsId();
-	}
-	
-	/**
-	 * Returns Content types filter
-	 * @param reqCtx
-	 * @return content types filter
-	 * @throws EntException
-	 */
-	private List<String> getContentTypesFilter(RequestContext reqCtx) throws EntException {
-		List<String> contentTypes = new ArrayList<>();
-		Widget currentWidget = (Widget) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_WIDGET);
-		if (null == currentWidget.getConfig()) {
+    }
+
+    /**
+     * Returns Content types filter
+     *
+     * @param reqCtx
+     * @return content types filter
+     * @throws EntException
+     */
+    private List<String> getContentTypesFilter(RequestContext reqCtx) throws EntException {
+        List<String> contentTypes = new ArrayList<>();
+        Widget currentWidget = (Widget) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_WIDGET);
+        if (null == currentWidget.getConfig()) {
             return contentTypes;
         }
-		String paramName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
-		String contentTypesParamValue = currentWidget.getConfig().getProperty(paramName);
-		if (null != contentTypesParamValue) {
-			IContentManager contentManager = (IContentManager) ApsWebApplicationUtils.getBean(JacmsSystemConstants.CONTENT_MANAGER, reqCtx.getRequest());
+        String paramName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
+        String contentTypesParamValue = currentWidget.getConfig().getProperty(paramName);
+        if (null != contentTypesParamValue) {
+            IContentManager contentManager = (IContentManager) ApsWebApplicationUtils.getBean(
+                    JacmsSystemConstants.CONTENT_MANAGER, reqCtx.getRequest());
             Map<String, SmallContentType> types = contentManager.getSmallContentTypesMap();
-			String[] contentTypesArray = contentTypesParamValue.split(",");
-			for (int i=0; i<contentTypesArray.length; i++) {
-				String contentTypeCode = contentTypesArray[i].trim();
-				if (null != types.get(contentTypeCode)) {
-					contentTypes.add(contentTypeCode);
-				}
-			}
-		}
-		return contentTypes;
-	}
+            String[] contentTypesArray = contentTypesParamValue.split(",");
+            for (int i = 0; i < contentTypesArray.length; i++) {
+                String contentTypeCode = contentTypesArray[i].trim();
+                if (null != types.get(contentTypeCode)) {
+                    contentTypes.add(contentTypeCode);
+                }
+            }
+        }
+        return contentTypes;
+    }
 
     @Deprecated
-	@Override
-	public Map<String, Integer> getOccurences(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
-		FacetedContentsResult result = this.getResult(selectedFacetNodes, reqCtx);
+    @Override
+    public Map<String, Integer> getOccurences(List<String> selectedFacetNodes, RequestContext reqCtx)
+            throws EntException {
+        FacetedContentsResult result = this.getResult(selectedFacetNodes, reqCtx);
         return result.getOccurrences();
-	}
+    }
 
-	/**
-	 * Returns allowed groups
-	 * @param reqCtx The request context
-	 * @return allowed groups
-	 */
-	private Collection<String> getAllowedGroups(RequestContext reqCtx) {
-		IAuthorizationManager authManager = (IAuthorizationManager) ApsWebApplicationUtils.getBean(SystemConstants.AUTHORIZATION_SERVICE, reqCtx.getRequest());
-		UserDetails currentUser = (UserDetails) reqCtx.getRequest().getSession().getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
-		List<Group> groups = authManager.getUserGroups(currentUser);
-		Set<String> allowedGroup = new HashSet<>();
-		Iterator<Group> iter = groups.iterator();
-		while (iter.hasNext()) {
-			Group group = iter.next();
-			allowedGroup.add(group.getName());
-		}
-		allowedGroup.add(Group.FREE_GROUP_NAME);
-		return allowedGroup;
-	}
+    /**
+     * Returns allowed groups
+     *
+     * @param reqCtx The request context
+     * @return allowed groups
+     */
+    private Collection<String> getAllowedGroups(RequestContext reqCtx) {
+        IAuthorizationManager authManager = (IAuthorizationManager) ApsWebApplicationUtils.getBean(
+                SystemConstants.AUTHORIZATION_SERVICE, reqCtx.getRequest());
+        UserDetails currentUser = (UserDetails) reqCtx.getRequest().getSession()
+                .getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
+        List<Group> groups = authManager.getUserGroups(currentUser);
+        Set<String> allowedGroup = new HashSet<>();
+        Iterator<Group> iter = groups.iterator();
+        while (iter.hasNext()) {
+            Group group = iter.next();
+            allowedGroup.add(group.getName());
+        }
+        allowedGroup.add(Group.FREE_GROUP_NAME);
+        return allowedGroup;
+    }
 
-	@Override
-	public ITreeNodeManager getTreeNodeManager() {
-		return treeNodeManager;
-	}
-	public void setTreeNodeManager(ITreeNodeManager treeNodeManager) {
-		this.treeNodeManager = treeNodeManager;
-	}
+    @Override
+    public ITreeNodeManager getTreeNodeManager() {
+        return treeNodeManager;
+    }
+
+    public void setTreeNodeManager(ITreeNodeManager treeNodeManager) {
+        this.treeNodeManager = treeNodeManager;
+    }
 
     protected IAdvContentFacetManager getAdvContentFacetManager() {
         return advContentFacetManager;
     }
+
     public void setAdvContentFacetManager(IAdvContentFacetManager advContentFacetManager) {
         this.advContentFacetManager = advContentFacetManager;
     }
-    
+
 }
