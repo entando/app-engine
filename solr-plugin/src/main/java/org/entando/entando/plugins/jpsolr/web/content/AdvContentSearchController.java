@@ -18,7 +18,6 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import java.util.Arrays;
 import java.util.List;
-import javax.servlet.http.HttpSession;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
@@ -36,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,23 +48,10 @@ public class AdvContentSearchController {
 
     private static final Logger logger = LoggerFactory.getLogger(AdvContentSearchController.class);
 
-    public static final String ERRCODE_REFERENCED_ONLINE_CONTENT = "2";
-    public static final String ERRCODE_UNAUTHORIZED_CONTENT = "3";
-    public static final String ERRCODE_DELETE_PUBLIC_PAGE = "5";
-    public static final String ERRCODE_INVALID_MODEL = "6";
-    public static final String ERRCODE_INVALID_LANG_CODE = "7";
+    private final IAdvContentFacetManager advContentFacetManager;
 
     @Autowired
-    private HttpSession httpSession;
-
-    @Autowired
-    private IAdvContentFacetManager advContentFacetManager;
-
-    public IAdvContentFacetManager getAdvContentFacetManager() {
-        return advContentFacetManager;
-    }
-
-    public void setAdvContentFacetManager(IAdvContentFacetManager advContentFacetManager) {
+    public AdvContentSearchController(IAdvContentFacetManager advContentFacetManager) {
         this.advContentFacetManager = advContentFacetManager;
     }
 
@@ -97,11 +84,11 @@ public class AdvContentSearchController {
     }
 
     @GetMapping(value = "/contents", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<PagedRestResponse<String>> getContents(AdvRestContentListRequest requestList) {
+    public ResponseEntity<PagedRestResponse<String>> getContents(AdvRestContentListRequest requestList,
+            @RequestAttribute(value = "user", required = false) UserDetails currentUser) {
         logger.debug("getting contents with request {}", requestList);
-        UserDetails currentUser = this.extractCurrentUser();
         this.getPaginationValidator().validateRestListRequest(requestList, String.class);
-        SolrFacetedContentsResult facetedResult = this.getAdvContentFacetManager()
+        SolrFacetedContentsResult facetedResult = this.advContentFacetManager
                 .getFacetedContents(requestList, currentUser);
         List<String> result = facetedResult.getContentsId();
         PagedMetadata<String> pagedMetadata = new PagedMetadata<>(requestList, facetedResult.getTotalSize());
@@ -114,11 +101,11 @@ public class AdvContentSearchController {
 
     @GetMapping(value = "/facetedcontents", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestResponse<FacetedContentsResult, SolrFacetedPagedMetadata>> getFacetedContents(
-            AdvRestContentListRequest requestList) {
+            AdvRestContentListRequest requestList,
+            @RequestAttribute(value = "user", required = false) UserDetails currentUser) {
         logger.debug("getting contents with request {}", requestList);
         this.getPaginationValidator().validateRestListRequest(requestList, String.class);
-        UserDetails currentUser = this.extractCurrentUser();
-        SolrFacetedContentsResult result = this.getAdvContentFacetManager()
+        SolrFacetedContentsResult result = this.advContentFacetManager
                 .getFacetedContents(requestList, currentUser);
         boolean isGuest = (null == currentUser || currentUser.getUsername()
                 .equalsIgnoreCase(SystemConstants.GUEST_USER_NAME));
@@ -127,10 +114,6 @@ public class AdvContentSearchController {
         pagedMetadata.setBody(result);
         pagedMetadata.getAdditionalParams().put("guestUser", String.valueOf(isGuest));
         return new ResponseEntity<>(new RestResponse<>(result, pagedMetadata), HttpStatus.OK);
-    }
-
-    protected UserDetails extractCurrentUser() {
-        return (UserDetails) this.httpSession.getAttribute("user");
     }
 
 }

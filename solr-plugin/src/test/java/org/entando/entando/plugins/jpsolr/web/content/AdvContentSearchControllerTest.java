@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
@@ -45,6 +46,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -52,7 +54,8 @@ import org.springframework.test.web.servlet.ResultActions;
 /**
  * @author E.Santoboni
  */
-public class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
+@ExtendWith(SolrTestExtension.class)
+class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
 
     @Autowired
     private IContentManager contentManager;
@@ -85,7 +88,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
 
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -97,7 +100,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "EVN")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -106,7 +109,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
 
         ResultActions facetedResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/facetedcontents")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
@@ -120,7 +123,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "EVN")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
@@ -204,7 +207,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .accept(MediaType.APPLICATION_JSON_UTF8));
@@ -236,7 +239,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].value", "EVN")
                         .param("pageSize", "20")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -257,7 +260,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "EVN")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -287,7 +290,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].value", "EVN")
                         .param("page", "1")
                         .param("pageSize", "5")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
 
@@ -309,7 +312,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].value", "EVN")
                         .param("page", "2")
                         .param("pageSize", "6")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
 
@@ -339,7 +342,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].type", "date")
                         .param("filters[1].value", "2020-09-19 01:00:00")
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -375,7 +378,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[3].value", "Titolo")
                         .param("filters[3].operator", "eq")
                         .param("lang", "it")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -404,7 +407,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
                         .param("lang", "it")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult1 = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -421,7 +424,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
                         .param("lang", "it")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult2 = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -444,7 +447,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "like")
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
                         .param("lang", "it")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult3 = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -469,7 +472,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].value", "EVN")
                         .param("filters[1].attribute", IContentManager.CONTENT_DESCR_FILTER_KEY)
                         .param("filters[1].order", FieldSearchFilter.ASC_ORDER)
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -533,7 +536,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].value", "EVN")
                         .param("pageSize", "5")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -555,7 +558,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].value", "EVN")
                         .param("pageSize", "6")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -593,7 +596,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                             .param("filters[0].value", "EVN")
                             .param("filters[1].entityAttr", "DataInizio")
                             .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
-                            .sessionAttr("user", user)
+                            .requestAttr("user", user)
                             .header("Authorization", "Bearer " + accessToken));
             String bodyResult = result.andReturn().getResponse().getContentAsString();
 
@@ -659,7 +662,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "ART")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
@@ -676,7 +679,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
                         .param("filters[0].operator", "eq")
                         .param("filters[0].value", "ART")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
@@ -705,7 +708,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].allowedValues[1]", "ART")
                         .param("filters[1].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
@@ -729,7 +732,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].allowedValues[1]", "EVN")
                         .param("filters[1].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         facetedResult.andExpect(status().isOk());
 
@@ -761,7 +764,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].order", FieldSearchFilter.DESC_ORDER)
                         .param("page", "2")
                         .param("pageSize", "3")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         facetedResult.andExpect(jsonPath("$.payload.totalSize", is(21)));
         facetedResult.andExpect(jsonPath("$.payload.contentsId.size()", is(3)));
@@ -782,7 +785,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         ResultActions result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("csvCategories[0]", "evento")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -801,7 +804,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].operator", "lt")
                         .param("filters[0].type", "date")
                         .param("filters[0].value", "2005-02-13 01:00:00")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -819,7 +822,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("csvCategories[0]", "general_cat3")
                         .param("csvCategories[1]", "general_cat2")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -831,7 +834,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
                         .param("csvCategories[0]", "general_cat3,general_cat2")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
@@ -891,7 +894,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].allowedValues[0]", "ART")
                         .param("filters[1].allowedValues[1]", "EVN")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         String bodyResult = result.andReturn().getResponse().getContentAsString();
@@ -910,7 +913,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].operator", "eq")
                         .param("filters[1].allowedValues[0]", "ART")
                         .param("filters[1].allowedValues[1]", "EVN")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         bodyResult = result.andReturn().getResponse().getContentAsString();
         for (int i = 0; i < expectedFreeContentsId.size(); i++) {
@@ -938,7 +941,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].allowedValues[1]", "EVN")
                         .param("page", "1")
                         .param("pageSize", "5")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
 
@@ -961,7 +964,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[1].allowedValues[1]", "EVN")
                         .param("page", "2")
                         .param("pageSize", "6")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
 
         result.andExpect(status().isOk());
@@ -987,7 +990,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].operator", "eq")
                         .param("filters[0].allowedValues[0]", "EVN")
                         .param("filters[0].allowedValues[1]", "ART")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         result_1.andExpect(status().isOk());
         String bodyResult_1 = result_1.andReturn().getResponse().getContentAsString();
@@ -1009,7 +1012,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].allowedValues[0]", "ART")
                         .param("filters[0].allowedValues[1]", "EVN")
                         .param("filters[1].entityAttr", "jacms:title")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
         List<String> expectedContentsId_2 = Arrays.asList("ART1", "ART121",
@@ -1032,7 +1035,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].allowedValues[1]", "EVN")
                         .param("filters[1].entityAttr", "jacms:title")
                         .param("filters[1].order", "DESC")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
         String[] expectedContentsId_3 = {"EVN194", "ART122", "ART121", "ART120",
@@ -1054,7 +1057,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].allowedValues[1]", "EVN")
                         .param("filters[1].entityAttr", "jacms:title")
                         .param("filters[1].order", "ASC")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
         for (int i = 0; i < expectedContentsId_3.length; i++) {
@@ -1071,7 +1074,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("filters[0].allowedValues[1]", "EVN")
                         .param("filters[1].entityAttr", "jacms:title")
                         .param("filters[1].order", "ASC")
-                        .sessionAttr("user", user)
+                        .requestAttr("user", user)
                         .header("Authorization", "Bearer " + accessToken));
         String bodyResult_5_en = result_5_en.andReturn().getResponse().getContentAsString();
         String[] expectedContentsId_5_en = {"EVN41", "EVN24", "EVN103", "EVN23", "EVN21",
@@ -1100,7 +1103,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                         .param("text", "ciliegia").param("lang", "it")
                         .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
                         .param("filters[0].order", FieldSearchFilter.ASC_ORDER)
-                        .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+                        .requestAttr("user", user).header("Authorization", "Bearer " + accessToken));
         result_1.andExpect(status().isOk());
         String bodyResult_1 = result_1.andReturn().getResponse().getContentAsString();
         List<String> expectedContentsId = Arrays.asList("EVN41");
@@ -1151,7 +1154,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
                                 .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "one")
                                 .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
                                 .param("filters[0].order", order)
-                                .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+                                .requestAttr("user", user).header("Authorization", "Bearer " + accessToken));
                 result_2.andExpect(status().isOk());
                 String bodyResult_2 = result_2.andReturn().getResponse().getContentAsString();
                 List<String> expectedContentsId2 = Arrays.asList("EVN20", "EVN41", "EVN21", content1Id, content2Id);
@@ -1170,7 +1173,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             ResultActions result_3 = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "all")
-                            .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+                            .requestAttr("user", user).header("Authorization", "Bearer " + accessToken));
             result_3.andExpect(status().isOk());
             String bodyResult_3 = result_3.andReturn().getResponse().getContentAsString();
             int payloadSize3 = JsonPath.read(bodyResult_3, "$.payload.size()");
@@ -1181,7 +1184,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             ResultActions result_4 = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("text", "mostra ciliegia").param("lang", "it").param("searchOption", "exact")
-                            .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+                            .requestAttr("user", user).header("Authorization", "Bearer " + accessToken));
             result_4.andExpect(status().isOk());
             String bodyResult_4 = result_4.andReturn().getResponse().getContentAsString();
             int payloadSize4 = JsonPath.read(bodyResult_4, "$.payload.size()");
@@ -1190,7 +1193,7 @@ public class AdvContentSearchControllerTest extends AbstractControllerIntegratio
             ResultActions result_5 = mockMvc
                     .perform(get("/plugins/advcontentsearch/contents")
                             .param("text", "mostra della ciliegia").param("lang", "it").param("searchOption", "exact")
-                            .sessionAttr("user", user).header("Authorization", "Bearer " + accessToken));
+                            .requestAttr("user", user).header("Authorization", "Bearer " + accessToken));
             result_5.andExpect(status().isOk());
             String bodyResult_5 = result_5.andReturn().getResponse().getContentAsString();
             int payloadSize5 = JsonPath.read(bodyResult_5, "$.payload.size()");
