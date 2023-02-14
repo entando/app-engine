@@ -70,12 +70,12 @@
                     </label>
                     <span class="icon fa fa-puzzle-piece" title="<s:text name="name.widget" />"></span>
                     &#32;
-                    <s:property value="%{getTitle(showlet.type.code, showlet.type.titles)}" />
+                    <s:property value="%{getWidgetTypeTitle(showlet.typeCode)}" />
                 </h2>
                 <p class="sr-only">
                     <wpsf:hidden name="pageCode" />
                     <wpsf:hidden name="frame" />
-                    <wpsf:hidden name="widgetTypeCode" value="%{showlet.type.code}" />
+                    <wpsf:hidden name="widgetTypeCode" value="%{showlet.typeCode}" />
                 </p>
                 <div class="alert alert-info">
                   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">

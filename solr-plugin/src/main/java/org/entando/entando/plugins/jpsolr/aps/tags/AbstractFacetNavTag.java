@@ -29,7 +29,6 @@ import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import javax.servlet.ServletRequest;
@@ -68,16 +67,12 @@ public abstract class AbstractFacetNavTag extends TagSupport {
                 this.addFacet(requiredFacets, value);
                 index++;
             }
-            Enumeration<String> paramNames = request.getParameterNames();
-            while (paramNames.hasMoreElements()) {
-                String paramName = paramNames.nextElement();
-                if (paramName.equals(nodesParamName)) {
-                    String[] values = request.getParameterValues(paramName);
-                    for (int i = 0; i < values.length; i++) {
-                        String value = values[i];
-                        if (!StringUtils.isBlank(value)) {
-                            this.addFacet(requiredFacets, StringEscapeUtils.unescapeHtml4(value));
-                        }
+            String[] values = request.getParameterValues("nodesParamName");
+            if (values != null) {
+                for (int i = 0; i < values.length; i++) {
+                    String value = values[i];
+                    if (!StringUtils.isBlank(value)) {
+                        this.addFacet(requiredFacets, StringEscapeUtils.unescapeHtml4(value));
                     }
                 }
             }
