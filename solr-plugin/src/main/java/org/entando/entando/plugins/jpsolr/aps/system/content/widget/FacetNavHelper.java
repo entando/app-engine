@@ -21,14 +21,6 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.content.widget;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
@@ -39,7 +31,14 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
-import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;
@@ -88,14 +87,13 @@ public class FacetNavHelper implements IFacetNavHelper {
         if (null != contentTypesParamValue) {
             IContentManager contentManager = (IContentManager) ApsWebApplicationUtils.getBean(
                     JacmsSystemConstants.CONTENT_MANAGER, reqCtx.getRequest());
-            Map<String, SmallContentType> types = contentManager.getSmallContentTypesMap();
             String[] contentTypesArray = contentTypesParamValue.split(",");
-            for (int i = 0; i < contentTypesArray.length; i++) {
-                String contentTypeCode = contentTypesArray[i].trim();
-                if (null != types.get(contentTypeCode)) {
-                    contentTypes.add(contentTypeCode);
-                }
-            }
+            List<String> types = contentManager.getSmallEntityTypes()
+                    .stream().map(t -> t.getCode()).collect(Collectors.toList());
+            contentTypes = Arrays.stream(contentTypesArray)
+                    .map(contentTypeCode -> contentTypeCode.trim())
+                    .filter(contentTypeCode -> types.contains(contentTypeCode))
+                    .collect(Collectors.toList());
         }
         return contentTypes;
     }

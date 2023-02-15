@@ -18,12 +18,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.ToString;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 
 /**
  * @author E.Santoboni
  */
+@ToString
 public class SolrFacetedPagedMetadata {
 
     private int page;
@@ -219,22 +220,6 @@ public class SolrFacetedPagedMetadata {
 
     public void addAdditionalParams(String key, String value) {
         this.additionalParams.put(key, value);
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-                .append("page", page)
-                .append("pageSize", pageSize)
-                .append("lastPage", lastPage)
-                .append("totalItems", totalItems)
-                .append("sort", sort)
-                .append("direction", direction)
-                .append("filters", filters)
-                .append("additionalParams", additionalParams)
-                .append("actualSize", actualSize)
-                .append("body", body)
-                .toString();
     }
 
 }
