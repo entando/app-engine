@@ -37,8 +37,8 @@
                         <li>
                             <span class="label label-tag">
                                 <wpsa:set name="currentContentType" value="%{getContentType(#currentContentTypeCode)}" />
-                                <abbr title="<s:property value="#currentContentType.descr"/>">
-                                    <s:property value="#currentContentType.descr" />
+                                <abbr title="<s:property value="#currentContentType.description"/>">
+                                    <s:property value="#currentContentType.description" />
                                 </abbr>
                                 &#32; &#32;
                                 <wpsa:actionParam action="removeContentType" var="actionName">

@@ -15,7 +15,6 @@ import com.agiletec.apsadmin.system.TreeNodeWrapper;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.opensymphony.xwork2.Action;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
@@ -56,7 +55,7 @@ class FacetNavTreeWidgetActionTest {
         mockCreateValuedShowlet();
         Mockito.doNothing().when(action).addFieldError(any(), any());
         Mockito.doReturn("").when(action).getText(anyString(), any(String[].class));
-        Mockito.when(contentManager.getSmallContentTypesMap()).thenReturn(Map.of());
+        Mockito.when(contentManager.getSmallEntityTypes()).thenReturn(List.of());
 
         action.setFacetRootNodes(String.join(",", CATEGORY_1, CATEGORY_2));
         action.setWidgetTypeCode(WIDGET_TYPE);

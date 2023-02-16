@@ -21,11 +21,11 @@
  */
 package org.entando.entando.plugins.jpsolr.apsadmin.portal.specialwidget;
 
+import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.apsadmin.portal.specialwidget.SimpleWidgetConfigAction;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
-import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
 import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
@@ -53,9 +53,10 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
 
     protected void validateContentTypes() {
         List<String> contentTypes = this.getContentTypeCodes();
-        Map<String, SmallContentType> smallContentTypes = this.getContentManager().getSmallContentTypesMap();
+        List<String> allContentTypeCodes = this.getContentManager().getSmallEntityTypes()
+                .stream().map(SmallEntityType::getCode).collect(Collectors.toList());
         for (String typeCode : contentTypes) {
-            if (!smallContentTypes.containsKey(typeCode)) {
+            if (!allContentTypeCodes.contains(typeCode)) {
                 String[] args = {typeCode};
                 String fieldName = JpSolrSystemConstants.CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME;
                 this.addFieldError(fieldName, this.getText("message.facetNavWidget.contentTypesFilter.notValid", args));
@@ -154,12 +155,13 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
         return null;
     }
 
-    public List<SmallContentType> getContentTypes() {
-        return this.getContentManager().getSmallContentTypes();
+    public List<SmallEntityType> getContentTypes() {
+        return this.getContentManager().getSmallEntityTypes();
     }
 
-    public SmallContentType getContentType(String contentTypeCode) {
-        return this.getContentManager().getSmallContentTypesMap().get(contentTypeCode);
+    public SmallEntityType getContentType(String contentTypeCode) {
+        return this.getContentManager().getSmallEntityTypes().stream()
+                .filter(e -> contentTypeCode.equals(e.getCode())).findFirst().orElse(null);
     }
 
     public String getContentTypeCode() {

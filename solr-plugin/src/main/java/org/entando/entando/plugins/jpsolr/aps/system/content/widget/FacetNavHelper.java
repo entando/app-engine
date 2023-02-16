@@ -23,6 +23,7 @@ package org.entando.entando.plugins.jpsolr.aps.system.content.widget;
 
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
+import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.group.Group;
@@ -89,10 +90,10 @@ public class FacetNavHelper implements IFacetNavHelper {
                     JacmsSystemConstants.CONTENT_MANAGER, reqCtx.getRequest());
             String[] contentTypesArray = contentTypesParamValue.split(",");
             List<String> types = contentManager.getSmallEntityTypes()
-                    .stream().map(t -> t.getCode()).collect(Collectors.toList());
+                    .stream().map(SmallEntityType::getCode).collect(Collectors.toList());
             contentTypes = Arrays.stream(contentTypesArray)
-                    .map(contentTypeCode -> contentTypeCode.trim())
-                    .filter(contentTypeCode -> types.contains(contentTypeCode))
+                    .map(String::trim)
+                    .filter(types::contains)
                     .collect(Collectors.toList());
         }
         return contentTypes;

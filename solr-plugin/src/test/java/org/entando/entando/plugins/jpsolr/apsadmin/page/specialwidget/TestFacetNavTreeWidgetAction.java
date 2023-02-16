@@ -24,8 +24,8 @@ package org.entando.entando.plugins.jpsolr.apsadmin.page.specialwidget;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.services.page.Widget;
-import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
 import com.opensymphony.xwork2.Action;
 import java.util.HashMap;
 import java.util.List;
@@ -44,10 +44,13 @@ class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
         Widget widget = action.getWidget();
         assertNotNull(widget);
         assertEquals(0, widget.getConfig().size());
-        List<SmallContentType> contentTypes = action.getContentTypes();
-        contentTypes.stream().forEach(ct -> System.out.println(ct.getCode() + " - " + ct.getDescr()));
+        List<SmallEntityType> contentTypes = action.getContentTypes();
         assertNotNull(contentTypes);
         assertEquals(4, contentTypes.size());
+        assertEquals("Articolo rassegna stampa", contentTypes.get(0).getDescription());
+        assertEquals("Content type with all attribute types", contentTypes.get(1).getDescription());
+        assertEquals("Evento", contentTypes.get(2).getDescription());
+        assertEquals("Tipo_Semplice", contentTypes.get(3).getDescription());
     }
 
     @Test
@@ -62,7 +65,7 @@ class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
                 parameters);
         assertEquals(Action.SUCCESS, result);
         FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
-        List<SmallContentType> contentTypes = action.getContentTypes();
+        List<SmallEntityType> contentTypes = action.getContentTypes();
         assertNotNull(contentTypes);
         assertEquals(4, contentTypes.size());
         assertEquals("EVN", action.getContentTypesFilter());
@@ -97,7 +100,7 @@ class TestFacetNavTreeWidgetAction extends ApsAdminPluginBaseTestCase {
                 parameters);
         assertEquals(Action.SUCCESS, result);
         FacetNavTreeWidgetAction action = (FacetNavTreeWidgetAction) this.getAction();
-        List<SmallContentType> contentTypes = action.getContentTypes();
+        List<SmallEntityType> contentTypes = action.getContentTypes();
         assertNotNull(contentTypes);
         assertEquals(4, contentTypes.size());
         assertEquals("cat1", action.getFacetRootNodes());

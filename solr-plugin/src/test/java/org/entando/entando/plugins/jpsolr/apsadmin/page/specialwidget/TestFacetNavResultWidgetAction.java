@@ -24,8 +24,8 @@ package org.entando.entando.plugins.jpsolr.apsadmin.page.specialwidget;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.services.page.Widget;
-import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
 import com.opensymphony.xwork2.Action;
 import java.util.List;
 import org.entando.entando.plugins.jpsolr.apsadmin.ApsAdminPluginBaseTestCase;
@@ -42,7 +42,7 @@ class TestFacetNavResultWidgetAction extends ApsAdminPluginBaseTestCase {
         Widget widget = action.getWidget();
         assertNotNull(widget);
         assertEquals(0, widget.getConfig().size());
-        List<SmallContentType> contentTypes = action.getContentTypes();
+        List<SmallEntityType> contentTypes = action.getContentTypes();
         assertNotNull(contentTypes);
         assertEquals(4, contentTypes.size());
     }
