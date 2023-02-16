@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -113,9 +112,7 @@ public class IndexerDAO implements IIndexerDAO {
         document.addField(SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, entity.getTypeCode());
         document.addField(SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME, entity.getMainGroup());
         document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, entity.getMainGroup());
-        Iterator<String> iterGroups = entity.getGroups().iterator();
-        while (iterGroups.hasNext()) {
-            String groupName = iterGroups.next();
+        for (String groupName : entity.getGroups()) {
             document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, groupName);
         }
         if (entity instanceof Content) {
@@ -132,17 +129,13 @@ public class IndexerDAO implements IIndexerDAO {
                 document.addField(SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
             }
         }
-        List<AttributeInterface> attributes = entity.getAttributeList();
-        for (int j = 0; j < attributes.size(); j++) {
-            AttributeInterface currentAttribute = attributes.get(j);
+        for (AttributeInterface currentAttribute : entity.getAttributeList()) {
             Object value = currentAttribute.getValue();
             if (null == value) {
                 continue;
             }
-            List<Lang> langs = this.getLangManager().getLangs();
-            for (int i = 0; i < langs.size(); i++) {
-                Lang currentLang = langs.get(i);
-                this.indexAttribute(document, currentAttribute, currentLang);
+            for (Lang lang : this.getLangManager().getLangs()) {
+                this.indexAttribute(document, currentAttribute, lang);
             }
         }
         this.indexCategories(entity, document);
@@ -153,8 +146,7 @@ public class IndexerDAO implements IIndexerDAO {
         List<Category> categories = ((Content) entity).getCategories();
         if (null != categories && !categories.isEmpty()) {
             Set<String> codes = new HashSet<>();
-            for (int i = 0; i < categories.size(); i++) {
-                ITreeNode category = categories.get(i);
+            for (ITreeNode category : categories) {
                 this.extractCategoryCodes(category, codes);
             }
             codes.stream().forEach(c -> document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, c));
@@ -204,8 +196,8 @@ public class IndexerDAO implements IIndexerDAO {
             if (null == attribute.getRoles()) {
                 return;
             }
-            for (int i = 0; i < attribute.getRoles().length; i++) {
-                String roleFieldName = lang.getCode().toLowerCase() + "_" + attribute.getRoles()[i];
+            for (String role : attribute.getRoles()) {
+                String roleFieldName = lang.getCode().toLowerCase() + "_" + role;
                 this.indexValue(document, roleFieldName, valueToIndex);
             }
         }
@@ -213,9 +205,7 @@ public class IndexerDAO implements IIndexerDAO {
 
     private void indexComplexAttribute(SolrInputDocument document, AbstractComplexAttribute complexAttribute,
             Lang lang) {
-        List<AttributeInterface> elements = complexAttribute.getAttributes();
-        for (int i = 0; i < elements.size(); i++) {
-            AttributeInterface attribute = elements.get(i);
+        for (AttributeInterface attribute : complexAttribute.getAttributes()) {
             attribute.setRenderingLang(lang.getCode());
             if (!attribute.isSimple()) {
                 this.indexComplexAttribute(document, (AbstractComplexAttribute) attribute, lang);

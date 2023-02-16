@@ -58,9 +58,7 @@ public class HasToViewFacetNodeTag extends AbstractFacetNavTag {
      */
     private boolean isSelectedOneChild() {
         ITreeNodeManager facetManager = super.getFacetManager();
-        List<String> facets = this.getRequiredFacets();
-        for (int i = 0; i < facets.size(); i++) {
-            String requiredFacet = facets.get(i);
+        for (String requiredFacet : this.getRequiredFacets()) {
             ITreeNode facet = facetManager.getNode(requiredFacet);
             if (null != facet) {
                 boolean check = this.checkSelectChild(facet, this.getFacetNodeCode(), facetManager);

@@ -116,8 +116,7 @@ public abstract class AbstractControllerIntegrationTest {
     protected void waitThreads(String threadNamePrefix) throws InterruptedException {
         Thread[] threads = new Thread[Thread.activeCount()];
         Thread.enumerate(threads);
-        for (int i = 0; i < threads.length; i++) {
-            Thread currentThread = threads[i];
+        for (Thread currentThread : threads) {
             if (currentThread != null
                     && currentThread.getName().startsWith(threadNamePrefix)) {
                 currentThread.join();

@@ -98,8 +98,8 @@ class ReloadByTypesIntegrationTest {
         result = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters, allowedGroup);
         Assertions.assertNotNull(result);
         Assertions.assertFalse(result.getContentsId().isEmpty());
-        for (int i = 0; i < result.getContentsId().size(); i++) {
-            assertTrue(result.getContentsId().get(i).startsWith("ART"));
+        for (String contentId : result.getContentsId()) {
+            assertTrue(contentId.startsWith("ART"));
         }
         Assertions.assertNotNull(this.searchEngineManager.getLastReloadInfo());
         Assertions.assertNotNull(((SolrLastReloadInfo) this.searchEngineManager.getLastReloadInfo()).getDateByType("ART"));

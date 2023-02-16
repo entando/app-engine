@@ -38,18 +38,15 @@ import com.opensymphony.xwork2.ActionProxyFactory;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.inject.Container;
 import com.opensymphony.xwork2.inject.ContainerBuilder;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.HttpParameters;
@@ -146,8 +143,7 @@ public abstract class ApsAdminPluginBaseTestCase {
     protected static void waitThreads(String threadNamePrefix) throws InterruptedException {
         Thread[] threads = new Thread[20];
         Thread.enumerate(threads);
-        for (int i = 0; i < threads.length; i++) {
-            Thread currentThread = threads[i];
+        for (Thread currentThread : threads) {
             if (currentThread != null
                     && currentThread.getName().startsWith(threadNamePrefix)) {
                 currentThread.join();
@@ -192,9 +188,8 @@ public abstract class ApsAdminPluginBaseTestCase {
         this.action = (ActionSupport) this.proxy.getAction();
 
         //reset previsious params
-        List<String> paramNames = new ArrayList<String>(this.request.getParameterMap().keySet());
-        for (int i = 0; i < paramNames.size(); i++) {
-            String paramName = (String) paramNames.get(i);
+        List<String> paramNames = new ArrayList<>(this.request.getParameterMap().keySet());
+        for (String paramName : paramNames) {
             this.removeParameter(paramName);
         }
     }
@@ -258,10 +253,8 @@ public abstract class ApsAdminPluginBaseTestCase {
     }
 
     protected void addParameters(Map params) {
-        Iterator iter = params.keySet().iterator();
-        while (iter.hasNext()) {
-            String key = (String) iter.next();
-            this.addParameter(key, params.get(key).toString());
+        for (Object key : params.keySet()) {
+            this.addParameter((String) key, params.get(key).toString());
         }
     }
 
@@ -277,10 +270,8 @@ public abstract class ApsAdminPluginBaseTestCase {
             return;
         }
         String[] array = new String[value.size()];
-        Iterator<String> iter = value.iterator();
         int i = 0;
-        while (iter.hasNext()) {
-            String stringValue = iter.next();
+        for (String stringValue : value) {
             this.request.addParameter(name, stringValue);
             array[i++] = stringValue;
         }

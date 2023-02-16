@@ -58,9 +58,7 @@ public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
 	 */
 	private boolean isSelectedOneChild() {
 		ITreeNodeManager facetManager = this.getFacetManager();
-		List<String> facets = this.getRequiredFacets();
-		for (int i = 0; i < facets.size(); i++) {
-			String requiredFacet = facets.get(i);
+		for (String requiredFacet : this.getRequiredFacets()) {
 			ITreeNode facet = facetManager.getNode(requiredFacet);
 			if (null != facet) {
 				boolean check = this.checkSelectChild(facet, this.getFacetNodeCode(), facetManager);
@@ -98,8 +96,7 @@ public class HasToOpenFacetNodeTag extends AbstractFacetNavTag {
 	private boolean hasChildrenOccurrences() {
 		ITreeNodeManager facetManager = this.getFacetManager();
 		ITreeNode facet = facetManager.getNode(this.getFacetNodeCode());
-		for (int i = 0; i < facet.getChildrenCodes().length; i++) {
-			String code = facet.getChildrenCodes()[i];
+		for (String code : facet.getChildrenCodes()) {
 			ITreeNode child = facetManager.getNode(code);
 			Integer occurrence = this.getOccurrences().get(child.getCode());
 			if (null != occurrence && occurrence.intValue() > 0) {

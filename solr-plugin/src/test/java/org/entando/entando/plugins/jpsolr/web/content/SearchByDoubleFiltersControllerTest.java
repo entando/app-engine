@@ -494,8 +494,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
             throw e;
         } finally {
             if (null != ids) {
-                for (int i = 0; i < ids.size(); i++) {
-                    String id = ids.get(i);
+                for (String id : ids) {
                     Content content = this.contentManager.loadContent(id, false);
                     if (null != content) {
                         this.contentManager.removeOnLineContent(content);
@@ -525,8 +524,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
         testType.setTypeCode(typeCode);
         testType.setTypeDescription(typeCode + " Type");
         String[] attributeCodes = {"title", "subtitle", "textbody"};
-        for (int i = 0; i < attributeCodes.length; i++) {
-            String attributeCode = attributeCodes[i];
+        for (String attributeCode : attributeCodes) {
             TextAttribute attribute = (TextAttribute) this.contentManager.getEntityAttributePrototypes().get("Text");
             attribute.setName(attributeCode);
             attribute.setIndexingType(IndexableAttributeInterface.INDEXING_TYPE_TEXT);

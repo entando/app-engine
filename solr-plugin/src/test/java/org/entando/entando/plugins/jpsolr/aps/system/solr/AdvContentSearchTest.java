@@ -115,8 +115,7 @@ class AdvContentSearchTest {
         List<String> contentIds = result.getContentsId();
         String[] expected = {"EVN41"};
         assertEquals(expected.length, contentIds.size());
-        for (int i = 0; i < expected.length; i++) {
-            String contentId = expected[i];
+        for (String contentId : expected) {
             assertTrue(contentIds.contains(contentId));
         }
     }
@@ -131,8 +130,7 @@ class AdvContentSearchTest {
         List<String> contentIds = result.getContentsId();
         String[] expected = {"EVN103", "ART104", "ART111", "ART112", "EVN25", "EVN41"};
         assertEquals(expected.length, contentIds.size());
-        for (int i = 0; i < expected.length; i++) {
-            String contentId = expected[i];
+        for (String contentId : expected) {
             assertTrue(contentIds.contains(contentId));
         }
     }
@@ -147,8 +145,7 @@ class AdvContentSearchTest {
         List<String> contentIds = result.getContentsId();
         String[] expected = {"EVN41"};
         assertEquals(expected.length, contentIds.size());
-        for (int i = 0; i < expected.length; i++) {
-            String contentId = expected[i];
+        for (String contentId : expected) {
             assertTrue(contentIds.contains(contentId));
         }
     }
@@ -164,8 +161,7 @@ class AdvContentSearchTest {
         List<String> contentIds = result.getContentsId();
         String[] expected = {"EVN41"};
         assertEquals(expected.length, contentIds.size());
-        for (int i = 0; i < expected.length; i++) {
-            String contentId = expected[i];
+        for (String contentId : expected) {
             assertTrue(contentIds.contains(contentId));
         }
     }
@@ -196,8 +192,8 @@ class AdvContentSearchTest {
         String[] expectedFreeContentsId = {"EVN194", "EVN193",
             "EVN24", "EVN23", "EVN25", "EVN20", "EVN21", "EVN192", "EVN191"};
         assertEquals(expectedFreeContentsId.length, contentIds.size());
-        for (int i = 0; i < expectedFreeContentsId.length; i++) {
-            assertTrue(contentIds.contains(expectedFreeContentsId[i]));
+        for (String contentId : expectedFreeContentsId) {
+            assertTrue(contentIds.contains(contentId));
         }
         assertFalse(contentIds.contains("EVN103"));
 
@@ -206,8 +202,8 @@ class AdvContentSearchTest {
         result = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters, groups);
         contentIds = result.getContentsId();
         assertEquals(expectedFreeContentsId.length + 2, contentIds.size());
-        for (int i = 0; i < expectedFreeContentsId.length; i++) {
-            assertTrue(contentIds.contains(expectedFreeContentsId[i]));
+        for (String contentId : expectedFreeContentsId) {
+            assertTrue(contentIds.contains(contentId));
         }
         assertTrue(contentIds.contains("EVN103"));
         assertTrue(contentIds.contains("EVN41"));

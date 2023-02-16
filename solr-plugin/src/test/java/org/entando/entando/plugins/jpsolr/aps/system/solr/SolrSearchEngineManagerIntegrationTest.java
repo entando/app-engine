@@ -680,8 +680,7 @@ class SolrSearchEngineManagerIntegrationTest {
             ((IEntityTypesConfigurer) this.contentManager).updateEntityPrototype(artType);
             Content newArtType = this.contentManager.createContentType("ART");
             assertNull(newArtType.getAttribute("TestNum"));
-            for (int i = 0; i < ids.size(); i++) {
-                String newId = ids.get(i);
+            for (String newId : ids) {
                 Content newContent = this.contentManager.loadContent(newId, false);
                 this.contentManager.removeOnLineContent(newContent);
                 this.contentManager.deleteContent(newContent);
@@ -836,8 +835,8 @@ class SolrSearchEngineManagerIntegrationTest {
 
     private void verify(List<String> contentsId, String[] array) {
         assertEquals(array.length, contentsId.size());
-        for (int i = 0; i < array.length; i++) {
-            assertTrue(contentsId.contains(array[i]));
+        for (String id : array) {
+            assertTrue(contentsId.contains(id));
         }
     }
 

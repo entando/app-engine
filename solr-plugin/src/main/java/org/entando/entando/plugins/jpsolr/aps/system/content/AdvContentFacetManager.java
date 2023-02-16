@@ -75,8 +75,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
     protected SearchEngineFilter[] getFilters(SearchEngineFilter[] baseFilters, List<UserFilterOptionBean> beans) {
         SearchEngineFilter[] filters = (null != baseFilters) ? baseFilters : new SearchEngineFilter[0];
         if (null != beans) {
-            for (int i = 0; i < beans.size(); i++) {
-                UserFilterOptionBean bean = beans.get(i);
+            for (UserFilterOptionBean bean : beans) {
                 SearchEngineFilter<?> sf = bean.extractFilter();
                 if (null != sf) {
                     filters = ArrayUtils.add(filters, sf);
@@ -96,8 +95,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             SolrSearchEngineFilter[] searchFilters = requestList.extractFilters(langCode);
             SolrSearchEngineFilter[][] doubleFilters = requestList.extractDoubleFilters(langCode);
             if (null != searchFilters) {
-                for (int i = 0; i < searchFilters.length; i++) {
-                    SolrSearchEngineFilter[] filters = new SolrSearchEngineFilter[]{searchFilters[i]};
+                for (SolrSearchEngineFilter<?> searchFilter : searchFilters) {
+                    SolrSearchEngineFilter[] filters = new SolrSearchEngineFilter[]{searchFilter};
                     doubleFilters = ArrayUtils.add(doubleFilters, filters);
                 }
             }

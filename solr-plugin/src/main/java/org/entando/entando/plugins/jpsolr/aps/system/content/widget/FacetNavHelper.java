@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -112,9 +111,7 @@ public class FacetNavHelper implements IFacetNavHelper {
                 .getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
         List<Group> groups = authManager.getUserGroups(currentUser);
         Set<String> allowedGroup = new HashSet<>();
-        Iterator<Group> iter = groups.iterator();
-        while (iter.hasNext()) {
-            Group group = iter.next();
+        for (Group group : groups) {
             allowedGroup.add(group.getName());
         }
         allowedGroup.add(Group.FREE_GROUP_NAME);

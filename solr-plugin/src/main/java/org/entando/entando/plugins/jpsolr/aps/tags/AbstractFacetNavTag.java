@@ -29,7 +29,6 @@ import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -69,8 +68,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
             }
             String[] values = request.getParameterValues("nodesParamName");
             if (values != null) {
-                for (int i = 0; i < values.length; i++) {
-                    String value = values[i];
+                for (String value : values) {
                     if (!StringUtils.isBlank(value)) {
                         this.addFacet(requiredFacets, StringEscapeUtils.unescapeHtml4(value));
                     }
@@ -99,8 +97,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
         ServletRequest request = this.pageContext.getRequest();
         String[] values = request.getParameterValues(nodeToRemoveParamName);
         if (null != values) {
-            for (int i = 0; i < values.length; i++) {
-                String value = values[i];
+            for (String value : values) {
                 requiredFacets.remove(value);
             }
         }
@@ -121,18 +118,15 @@ public abstract class AbstractFacetNavTag extends TagSupport {
      */
     private void manageCurrentSelect(String selectedNode, List<String> requiredFacets) {
         List<String> nodesToRemove = new ArrayList<>();
-        Iterator<String> requredFacetIterator = requiredFacets.iterator();
         ITreeNodeManager facetManager = this.getFacetManager();
-        while (requredFacetIterator.hasNext()) {
-            String reqNode = requredFacetIterator.next();
+        for (String reqNode : requiredFacets) {
             ITreeNode currentNode = facetManager.getNode(reqNode);
             ITreeNode parent = facetManager.getNode(currentNode.getParentCode());
-			if (this.isChildOf(parent, selectedNode)) {
-				nodesToRemove.add(reqNode);
-			}
+            if (this.isChildOf(parent, selectedNode)) {
+                nodesToRemove.add(reqNode);
+            }
         }
-        for (int i = 0; i < nodesToRemove.size(); i++) {
-            String nodeToRemove = nodesToRemove.get(i);
+        for (String nodeToRemove : nodesToRemove) {
             requiredFacets.remove(nodeToRemove);
         }
     }
@@ -187,15 +181,13 @@ public abstract class AbstractFacetNavTag extends TagSupport {
      */
     protected List<FacetBreadCrumbs> getBreadCrumbs(List<String> requiredFacets, RequestContext reqCtx) {
         List<ITreeNode> roots = this.getFacetRoots(reqCtx);
-		if (roots.isEmpty()) {
-			return new ArrayList<>();
-		}
+        if (roots.isEmpty()) {
+            return new ArrayList<>();
+        }
         List<ITreeNode> finalNodes = this.getFinalNodes(requiredFacets);
         List<FacetBreadCrumbs> breadCrumbs = new ArrayList<>();
-        for (int i = 0; i < finalNodes.size(); i++) {
-            ITreeNode requiredNode = finalNodes.get(i);
-            for (int j = 0; j < roots.size(); j++) {
-                ITreeNode root = roots.get(j);
+        for (ITreeNode requiredNode : finalNodes) {
+            for (ITreeNode root : roots) {
                 if (this.isChildOf(requiredNode, root.getCode())) {
                     breadCrumbs.add(
                             new FacetBreadCrumbs(requiredNode.getCode(), root.getCode(), this.getFacetManager()));
@@ -214,13 +206,10 @@ public abstract class AbstractFacetNavTag extends TagSupport {
     private List<ITreeNode> getFinalNodes(List<String> requiredFacets) {
         List<ITreeNode> finalNodes = new ArrayList<>();
         List<String> requiredFacetsCopy = new ArrayList<>(requiredFacets);
-        for (int i = 0; i < requiredFacets.size(); i++) {
-            String nodeToAnalize = requiredFacets.get(i);
-            this.removeParentOf(nodeToAnalize, requiredFacetsCopy);
+        for (String nodeToAnalyze : requiredFacets) {
+            this.removeParentOf(nodeToAnalyze, requiredFacetsCopy);
         }
-        Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
-        while (requiredFacetIterator.hasNext()) {
-            String reqNode = requiredFacetIterator.next();
+        for (String reqNode : requiredFacetsCopy) {
             finalNodes.add(this.getFacetManager().getNode(reqNode));
         }
         return finalNodes;
@@ -229,21 +218,18 @@ public abstract class AbstractFacetNavTag extends TagSupport {
     /**
      * Remove node parent
      *
-     * @param nodeFromAnalize
+     * @param nodeFromAnalyze
      * @param requiredFacetsCopy
      */
-    private void removeParentOf(String nodeFromAnalize, List<String> requiredFacetsCopy) {
-        ITreeNode nodeFrom = this.getFacetManager().getNode(nodeFromAnalize);
+    private void removeParentOf(String nodeFromAnalyze, List<String> requiredFacetsCopy) {
+        ITreeNode nodeFrom = this.getFacetManager().getNode(nodeFromAnalyze);
         List<String> nodesToRemove = new ArrayList<>();
-        Iterator<String> requiredFacetIterator = requiredFacetsCopy.iterator();
-        while (requiredFacetIterator.hasNext()) {
-            String reqNode = requiredFacetIterator.next();
-            if (!nodeFromAnalize.equals(reqNode) && this.isChildOf(nodeFrom, reqNode)) {
+        for (String reqNode : requiredFacetsCopy) {
+            if (!nodeFromAnalyze.equals(reqNode) && this.isChildOf(nodeFrom, reqNode)) {
                 nodesToRemove.add(reqNode);
             }
         }
-        for (int i = 0; i < nodesToRemove.size(); i++) {
-            String nodeToRemove = nodesToRemove.get(i);
+        for (String nodeToRemove : nodesToRemove) {
             requiredFacetsCopy.remove(nodeToRemove);
         }
     }
@@ -283,9 +269,8 @@ public abstract class AbstractFacetNavTag extends TagSupport {
     protected List<ITreeNode> getFacetRoots(String facetRootNodesParam) {
         List<ITreeNode> nodes = new ArrayList<>();
         String[] facetCodes = facetRootNodesParam.split(",");
-        for (int j = 0; j < facetCodes.length; j++) {
-            String facetCode = facetCodes[j].trim();
-            ITreeNode node = this.getFacetManager().getNode(facetCode);
+        for (String facetCode : facetCodes) {
+            ITreeNode node = this.getFacetManager().getNode(facetCode.trim());
             if (null != node) {
                 nodes.add(node);
             }

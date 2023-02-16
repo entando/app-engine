@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
@@ -73,20 +72,14 @@ public class SolrSearchEngineManager extends SearchEngineManager
         List<ContentTypeSettings> list = new ArrayList<>();
         try {
             List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
-            List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
-            for (int i = 0; i < entityTypes.size(); i++) {
-                SmallEntityType entityType = entityTypes.get(i);
+            for (SmallEntityType entityType : this.getContentManager().getSmallEntityTypes()) {
                 ContentTypeSettings typeSettings = new ContentTypeSettings(entityType.getCode(),
                         entityType.getDescription());
                 list.add(typeSettings);
                 Content prototype = this.getContentManager().createContentType(entityType.getCode());
-                Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
-                while (iterAttribute.hasNext()) {
-                    AttributeInterface attribute = iterAttribute.next();
+                for (AttributeInterface attribute : prototype.getAttributeList()) {
                     Map<String, Map<String, Serializable>> currentConfig = new HashMap<>();
-                    List<Lang> langs = this.getLangManager().getLangs();
-                    for (int j = 0; j < langs.size(); j++) {
-                        Lang lang = langs.get(j);
+                    for (Lang lang : this.getLangManager().getLangs()) {
                         String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
                         Map<String, Serializable> currentField = fields.stream()
                                 .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
@@ -110,11 +103,9 @@ public class SolrSearchEngineManager extends SearchEngineManager
             List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
             this.checkLangFields(fields);
             this.refreshBaseFields(fields, null);
-            List<SmallEntityType> entityTypes = this.getContentManager().getSmallEntityTypes();
             Map<String, Map<String, Serializable>> checkedFields = new HashMap<>();
-            for (int i = 0; i < entityTypes.size(); i++) {
+            for (SmallEntityType entityType : this.getContentManager().getSmallEntityTypes()) {
                 fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
-                SmallEntityType entityType = entityTypes.get(i);
                 this.refreshEntityType(fields, checkedFields, entityType.getCode());
             }
         } catch (Exception ex) {
@@ -160,13 +151,9 @@ public class SolrSearchEngineManager extends SearchEngineManager
             logger.warn("Type '{}' does not exists", entityTypeCode);
             return;
         }
-        Iterator<AttributeInterface> iterAttribute = prototype.getAttributeList().iterator();
-        while (iterAttribute.hasNext()) {
-            AttributeInterface currentAttribute = iterAttribute.next();
-            List<Lang> langs = this.getLangManager().getLangs();
-            for (int j = 0; j < langs.size(); j++) {
-                Lang currentLang = langs.get(j);
-                this.checkAttribute(currentFields, checkedFields, currentAttribute, currentLang);
+        for (AttributeInterface currentAttribute : prototype.getAttributeList()) {
+            for (Lang lang : this.getLangManager().getLangs()) {
+                this.checkAttribute(currentFields, checkedFields, currentAttribute, lang);
             }
         }
     }
@@ -193,8 +180,8 @@ public class SolrSearchEngineManager extends SearchEngineManager
             if (null == attribute.getRoles()) {
                 return;
             }
-            for (int i = 0; i < attribute.getRoles().length; i++) {
-                String roleFieldName = lang.getCode().toLowerCase() + "_" + attribute.getRoles()[i];
+            for (String role : attribute.getRoles()) {
+                String roleFieldName = lang.getCode().toLowerCase() + "_" + role;
                 roleFieldName = roleFieldName.replace(":", "_");
                 this.checkField(currentFields, null, roleFieldName, type);
             }
@@ -258,10 +245,8 @@ public class SolrSearchEngineManager extends SearchEngineManager
     }
 
     private void checkLangFields(List<Map<String, Serializable>> fields) {
-        List<Lang> langs = this.getLangManager().getLangs();
-        for (int j = 0; j < langs.size(); j++) {
-            Lang currentLang = langs.get(j);
-            this.checkField(fields, null, currentLang.getCode(), SOLR_FIELD_TYPE_TEXT_GENERAL, true);
+        for (Lang lang : this.getLangManager().getLangs()) {
+            this.checkField(fields, null, lang.getCode(), SOLR_FIELD_TYPE_TEXT_GENERAL, true);
         }
     }
 

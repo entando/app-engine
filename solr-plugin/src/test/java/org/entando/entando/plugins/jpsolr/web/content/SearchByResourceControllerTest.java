@@ -99,8 +99,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
         try {
             List<BaseResourceDataBean> dataBeans = fileNames.stream().map(name -> this.createResourceDataBean(name)).collect(Collectors.toList());
             addedResource = this.resourceManager.addResources(dataBeans);
-            for (int i = 0; i < addedResource.size(); i++) {
-                ResourceInterface resource = addedResource.get(i);
+            for (ResourceInterface resource : addedResource) {
                 Content prototype = this.contentManager.createContentType("SLR");
                 prototype.setDescription(resource.getDescription());
                 prototype.setMainGroup(Group.FREE_GROUP_NAME);
@@ -128,8 +127,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
         try {
             List<BaseResourceDataBean> dataBeans = fileNames.stream().map(name -> this.createResourceDataBean(name)).collect(Collectors.toList());
             addedResource = this.resourceManager.addResources(dataBeans);
-            for (int i = 0; i < addedResource.size(); i++) {
-                ResourceInterface resource = addedResource.get(i);
+            for (ResourceInterface resource : addedResource) {
                 Content prototype = this.contentManager.createContentType("SLR");
                 prototype.setDescription(resource.getDescription());
                 prototype.setMainGroup(Group.FREE_GROUP_NAME);
@@ -253,8 +251,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
     }
 
     private void deleteResources(List<String> addedContentIds, List<ResourceInterface> addedResource) throws Exception {
-        for (int i = 0; i < addedContentIds.size(); i++) {
-            String id = addedContentIds.get(i);
+        for (String id : addedContentIds) {
             Content content = this.contentManager.loadContent(id, false);
             if (null != content) {
                 this.contentManager.removeOnLineContent(content);
@@ -262,8 +259,7 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
             }
         }
         if (null != addedResource) {
-            for (int i = 0; i < addedResource.size(); i++) {
-                ResourceInterface resource = addedResource.get(i);
+            for (ResourceInterface resource : addedResource) {
                 this.resourceManager.deleteResource(resource);
             }
         }

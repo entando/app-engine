@@ -96,8 +96,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
     public SolrSearchEngineFilter[] extractCategoryFilters() {
         SolrSearchEngineFilter[] categoryFilters = new SolrSearchEngineFilter[]{};
         if (null != this.getCsvCategories()) {
-            for (int i = 0; i < this.getCsvCategories().length; i++) {
-                String csv = this.getCsvCategories()[i];
+            for (String csv : this.getCsvCategories()) {
                 List<String> codes = Arrays.asList(csv.split(","));
                 SolrSearchEngineFilter<List<String>> searchFilter = new SolrSearchEngineFilter<>("category", false,
                         codes);
@@ -111,11 +110,9 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         SolrSearchEngineFilter[][] doubleSearchFilters = new SolrSearchEngineFilter[][]{};
         SolrFilter[][] df = this.getDoubleFilters();
         if (null != df) {
-            for (int i = 0; i < df.length; i++) {
-                SolrFilter[] internalFilters = df[i];
+            for (SolrFilter[] internalFilters : df) {
                 SolrSearchEngineFilter[] internalSearchFilters = new SolrSearchEngineFilter[]{};
-                for (int j = 0; j < internalFilters.length; j++) {
-                    SolrFilter internalFilter = internalFilters[j];
+                for (SolrFilter internalFilter : internalFilters) {
                     SolrSearchEngineFilter<?> searchFilter = this.buildSearchFilter(internalFilter, langCode);
                     internalSearchFilters = ArrayUtils.add(internalSearchFilters, searchFilter);
                 }
@@ -129,8 +126,7 @@ public class AdvRestContentListRequest extends RestEntityListRequest {
         SolrSearchEngineFilter[] searchFilters = new SolrSearchEngineFilter[]{};
         SolrFilter[] filters = this.getFilters();
         if (null != filters) {
-            for (int i = 0; i < filters.length; i++) {
-                SolrFilter filter = filters[i];
+            for (SolrFilter filter : filters) {
                 SolrSearchEngineFilter<?> searchFilter = this.buildSearchFilter(filter, langCode);
                 searchFilters = ArrayUtils.add(searchFilters, searchFilter);
             }

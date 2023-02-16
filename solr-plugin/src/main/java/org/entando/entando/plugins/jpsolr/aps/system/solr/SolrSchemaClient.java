@@ -18,7 +18,6 @@ import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrField
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.json.JSONArray;
@@ -51,9 +50,8 @@ public class SolrSchemaClient {
         String response = restTemplate.getForObject(url, String.class);
         JSONObject obj = new JSONObject(response);
         JSONArray jsonFields = obj.getJSONArray("fields");
-        Iterator<Object> iter = jsonFields.iterator();
-        while (iter.hasNext()) {
-            JSONObject item = (JSONObject) iter.next();
+        for(Object field : jsonFields) {
+            JSONObject item = (JSONObject) field;
             params.add(toSerializableMap(item.toMap()));
         }
         return params;
