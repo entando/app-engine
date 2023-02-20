@@ -145,8 +145,8 @@ public class FacetNavResultWidgetAction extends SimpleWidgetConfigAction {
      * @return the Widget type parameter
      */
     public WidgetTypeParameter getWidgetTypeParameter(String paramName) {
-        WidgetType widgetType = this.getWidgetTypeManager().getWidgetType(this.getWidget().getTypeCode());
-        List<WidgetTypeParameter> parameters = widgetType.getTypeParameters();
+        WidgetType type = this.getWidgetTypeManager().getWidgetType(this.getWidget().getTypeCode());
+        List<WidgetTypeParameter> parameters = type.getTypeParameters();
         for (WidgetTypeParameter param : parameters) {
             if (param.getName().equals(paramName)) {
                 return param;

@@ -26,6 +26,7 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
+import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.system.services.user.UserDetails;
@@ -47,17 +48,25 @@ import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * @author E.Santoboni
  */
+@Component
 public class FacetNavHelper implements IFacetNavHelper {
 
     private static final int LIMIT = 10000;
 
-    private ITreeNodeManager treeNodeManager;
+    private final ICategoryManager categoryManager;
+    private final IAdvContentFacetManager advContentFacetManager;
 
-    private IAdvContentFacetManager advContentFacetManager;
+    @Autowired
+    public FacetNavHelper(ICategoryManager categoryManager, IAdvContentFacetManager advContentFacetManager) {
+        this.categoryManager = categoryManager;
+        this.advContentFacetManager = advContentFacetManager;
+    }
 
     @Override
     public FacetedContentsResult getResult(List<String> selectedFacetNodes, RequestContext reqCtx) throws EntException {
@@ -67,7 +76,7 @@ public class FacetNavHelper implements IFacetNavHelper {
                 SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME, false, contentTypesFilter, TextSearchOption.EXACT);
         SolrSearchEngineFilter<?> filterPagination = new SolrSearchEngineFilter<>(LIMIT, 0);
         SearchEngineFilter[] filters = new SearchEngineFilter[]{typeFilter, filterPagination};
-        return this.getAdvContentFacetManager().getFacetResult(filters, selectedFacetNodes, null, userGroupCodes);
+        return this.advContentFacetManager.getFacetResult(filters, selectedFacetNodes, null, userGroupCodes);
     }
 
     /**
@@ -120,19 +129,7 @@ public class FacetNavHelper implements IFacetNavHelper {
 
     @Override
     public ITreeNodeManager getTreeNodeManager() {
-        return treeNodeManager;
-    }
-
-    public void setTreeNodeManager(ITreeNodeManager treeNodeManager) {
-        this.treeNodeManager = treeNodeManager;
-    }
-
-    protected IAdvContentFacetManager getAdvContentFacetManager() {
-        return advContentFacetManager;
-    }
-
-    public void setAdvContentFacetManager(IAdvContentFacetManager advContentFacetManager) {
-        this.advContentFacetManager = advContentFacetManager;
+        return categoryManager;
     }
 
 }

@@ -41,7 +41,7 @@
 
 			</c:forEach>
 			<span class="noscreen">|</span>&#32;<a class="jpsolrfilterremove" title="<wp:i18n key="jpsolr_REMOVE_FILTER" />:&#32;<c:out value="${currentNodeTitle}" />" href="<wp:url><c:forEach var="requiredFacet" items="${requiredFacets}" varStatus="statusInternal"><wpfp:urlPar name="facetNode_${statusInternal.count}" ><c:out value="${requiredFacet}" /></wpfp:urlPar></c:forEach><c:forEach var="breadCrumb" items="${item.breadCrumbs}" varStatus="status2"><wpfp:urlPar name="facetNodeToRemove_${status2.count}" ><c:out value="${breadCrumb}" /></wpfp:urlPar></c:forEach></wp:url>">
-			<img src="<wp:resourceURL />plugins/jpsolr/static/img/edit-delete.png" alt="<wp:i18n key="jpsolr_REMOVE_FILTER" />" /></a>
+			<img src="<wp:resourceURL ignoreTenant="true" />plugins/jpsolr/static/img/edit-delete.png" alt="<wp:i18n key="jpsolr_REMOVE_FILTER" />" /></a>
 			<%-- <c:if test="${!itemStatus.last}">&#32;|&#32;</c:if> --%>
 		</li>
 		</c:forEach>

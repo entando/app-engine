@@ -137,8 +137,7 @@ public abstract class AbstractFacetNavTag extends TagSupport {
      * @return Facet manager
      */
     protected ITreeNodeManager getFacetManager() {
-        IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(
-                JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
+        IFacetNavHelper facetNavHelper = ApsWebApplicationUtils.getBean(IFacetNavHelper.class, this.pageContext);
         return facetNavHelper.getTreeNodeManager();
     }
 

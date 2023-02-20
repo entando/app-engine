@@ -8,9 +8,9 @@ import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.CategoryManager;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.UserFilterOptionBean;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineManager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ class AdvContentFacetManagerTest {
     @Mock
     private CategoryManager categoryManager;
     @Mock
-    private ICmsSearchEngineManager searchEngineManager;
+    private SolrSearchEngineManager searchEngineManager;
 
     @InjectMocks
     private AdvContentFacetManager facetManager;
@@ -78,6 +78,7 @@ class AdvContentFacetManagerTest {
     void shouldGetFacetResultWithNodeCodesAsFilter() throws Exception {
         SearchEngineFilter[] nodeCodesFilter = new SearchEngineFilter[]{};
         facetManager.getFacetResult(null, nodeCodesFilter, null, null);
-        Mockito.verify(searchEngineManager).searchFacetedEntities(any(), eq(nodeCodesFilter), isNull());
+        Mockito.verify(searchEngineManager).searchFacetedEntities(
+                any(SearchEngineFilter[].class), eq(nodeCodesFilter), isNull());
     }
 }

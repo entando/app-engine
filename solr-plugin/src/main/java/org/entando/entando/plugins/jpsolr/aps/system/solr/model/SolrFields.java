@@ -13,6 +13,9 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
+import com.agiletec.aps.system.common.entity.IEntityManager;
+import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
+
 /**
  * @author E.Santoboni
  */
@@ -29,13 +32,13 @@ public final class SolrFields {
 
     public static final String SOLR_FIELD_PREFIX = "entity_";
     public static final String SOLR_CONTENT_ID_FIELD_NAME = "id";
-    public static final String SOLR_CONTENT_GROUP_FIELD_NAME = "entity_group";
-    public static final String SOLR_CONTENT_CATEGORY_FIELD_NAME = "entity_category";
-    public static final String SOLR_CONTENT_DESCRIPTION_FIELD_NAME = "entity_descr";
-    public static final String SOLR_CONTENT_LAST_MODIFY_FIELD_NAME = "entity_modified";
-    public static final String SOLR_CONTENT_CREATION_FIELD_NAME = "entity_created";
-    public static final String SOLR_CONTENT_TYPE_CODE_FIELD_NAME = "entity_typeCode";
-    public static final String SOLR_CONTENT_MAIN_GROUP_FIELD_NAME = "entity_maingroup";
+    public static final String SOLR_CONTENT_GROUP_FIELD_NAME = SOLR_FIELD_PREFIX + IContentManager.CONTENT_GROUP_FILTER_KEY;
+    public static final String SOLR_CONTENT_CATEGORY_FIELD_NAME = SOLR_FIELD_PREFIX + "category";
+    public static final String SOLR_CONTENT_DESCRIPTION_FIELD_NAME = SOLR_FIELD_PREFIX + IContentManager.CONTENT_DESCR_FILTER_KEY;
+    public static final String SOLR_CONTENT_LAST_MODIFY_FIELD_NAME = SOLR_FIELD_PREFIX + IContentManager.CONTENT_MODIFY_DATE_FILTER_KEY;
+    public static final String SOLR_CONTENT_CREATION_FIELD_NAME = SOLR_FIELD_PREFIX + IContentManager.CONTENT_CREATION_DATE_FILTER_KEY;
+    public static final String SOLR_CONTENT_TYPE_CODE_FIELD_NAME = SOLR_FIELD_PREFIX + IEntityManager.ENTITY_TYPE_CODE_FILTER_KEY;
+    public static final String SOLR_CONTENT_MAIN_GROUP_FIELD_NAME = SOLR_FIELD_PREFIX + IContentManager.CONTENT_MAIN_GROUP_FILTER_KEY;
 
     public static final String ATTACHMENT_FIELD_SUFFIX = "_attachment";
 
@@ -43,12 +46,12 @@ public final class SolrFields {
     public static final String SOLR_FIELD_TYPE = "type";
     public static final String SOLR_FIELD_NAME = "name";
 
-    public static final String SOLR_FIELD_TYPE_TEXT_GENERAL = "text_general";
-    public static final String SOLR_FIELD_TYPE_TEXT_GEN_SORT = "text_gen_sort";
-    public static final String SOLR_FIELD_TYPE_BOOLEAN = "boolean";
-    public static final String SOLR_FIELD_TYPE_PLONG = "plong";
-    public static final String SOLR_FIELD_TYPE_PLONGS = "plongs";
-    public static final String SOLR_FIELD_TYPE_STRING = "string";
-    public static final String SOLR_FIELD_TYPE_PDATE = "pdate";
-    public static final String SOLR_FIELD_TYPE_PDATES = "pdates";
+    public static final String TYPE_STRING = "string";
+    public static final String TYPE_TEXT_GENERAL = "text_general";
+    public static final String TYPE_TEXT_GEN_SORT = "text_gen_sort";
+    public static final String TYPE_BOOLEAN = "boolean";
+    public static final String TYPE_PLONG = "plong";
+    public static final String TYPE_PLONGS = "plongs";
+    public static final String TYPE_PDATE = "pdate";
+    public static final String TYPE_PDATES = "pdates";
 }

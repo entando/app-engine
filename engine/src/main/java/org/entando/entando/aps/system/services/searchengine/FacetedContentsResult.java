@@ -21,29 +21,31 @@
  */
 package org.entando.entando.aps.system.services.searchengine;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 /**
  * @author E.Santoboni
  */
-public class FacetedContentsResult {
-	
-	public List<String> getContentsId() {
-		return _contentsId;
-	}
-	public void setContentsId(List<String> contentsId) {
-		this._contentsId = contentsId;
-	}
-	
-	public Map<String, Integer> getOccurrences() {
-		return _occurrences;
-	}
-	public void setOccurrences(Map<String, Integer> occurrences) {
-		this._occurrences = occurrences;
-	}
-	
-	private List<String> _contentsId;
-	private Map<String, Integer> _occurrences;
-	
+public class FacetedContentsResult implements Serializable {
+
+    private List<String> contentsId;
+    private Map<String, Integer> occurrences;
+
+    public List<String> getContentsId() {
+        return contentsId;
+    }
+
+    public void setContentsId(List<String> contentsId) {
+        this.contentsId = contentsId;
+    }
+
+    public Map<String, Integer> getOccurrences() {
+        return occurrences;
+    }
+
+    public void setOccurrences(Map<String, Integer> occurrences) {
+        this.occurrences = occurrences;
+    }
 }

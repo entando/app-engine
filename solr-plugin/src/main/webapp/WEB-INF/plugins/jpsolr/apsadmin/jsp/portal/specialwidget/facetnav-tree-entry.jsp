@@ -70,7 +70,7 @@
                     </label>
                     <span class="icon fa fa-puzzle-piece" title="<s:text name="name.widget" />"></span>
                     &#32;
-                    <s:property value="%{getWidgetTypeTitle(showlet.typeCode)}" />
+                    <s:property value="%{getWidgetTypeTitle(widget.typeCode)}" />
                 </h2>
                 <p class="sr-only">
                     <wpsf:hidden name="pageCode" />

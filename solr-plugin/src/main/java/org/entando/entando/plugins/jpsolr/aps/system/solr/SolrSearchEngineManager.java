@@ -16,13 +16,6 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr;
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_MULTIVALUED;
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_BOOLEAN;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PDATE;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PDATES;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PLONGS;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_STRING;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GENERAL;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GEN_SORT;
 
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingEvent;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingObserver;
@@ -34,11 +27,15 @@ import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.IIndexerDAO;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearchEngineDAOFactory;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearcherDAO;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.LastReloadInfo;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -47,31 +44,73 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import org.entando.entando.aps.system.services.cache.ICacheInfoManager;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
 
 /**
  * @author E.Santoboni
  */
+@Service
+@Primary
 public class SolrSearchEngineManager extends SearchEngineManager
         implements ISolrSearchEngineManager, PublicContentChangedObserver, EntityTypesChangingObserver {
+
+    private static final String LAST_RELOAD_CACHE_PARAM_NAME = "SolrSearchEngine_lastReloadInfo";
 
     private static final Logger logger = LoggerFactory.getLogger(SolrSearchEngineManager.class);
 
     @Autowired
     private transient ILangManager langManager;
+    @Autowired
+    private transient ICacheInfoManager cacheInfoManager;
+    @Autowired
+    private transient ISolrSearchEngineDAOFactory factory;
+
+    @Override
+    @PostConstruct
+    public void init() throws Exception {
+        logger.debug("{} ready. Initialized", this.getClass().getName());
+    }
+
+    @Override
+    protected ISearcherDAO getSearcherDao() {
+        try {
+            return this.factory.getSearcher();
+        } catch (Exception e) {
+            throw new EntRuntimeException("Error extracting searcher", e);
+        }
+    }
+
+    @Override
+    protected IIndexerDAO getIndexerDao() {
+        try {
+            return this.factory.getIndexer();
+        } catch (Exception e) {
+            throw new EntRuntimeException("Error extracting indexer", e);
+        }
+    }
+
+    @Override
+    protected ISearchEngineDAOFactory getFactory() {
+        return this.factory;
+    }
 
     @Override
     public List<ContentTypeSettings> getContentTypesSettings() throws EntException {
         List<ContentTypeSettings> list = new ArrayList<>();
         try {
-            List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            List<Map<String, Serializable>> fields = this.factory.getFields();
             for (SmallEntityType entityType : this.getContentManager().getSmallEntityTypes()) {
                 ContentTypeSettings typeSettings = new ContentTypeSettings(entityType.getCode(),
                         entityType.getDescription());
@@ -79,7 +118,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
                 Content prototype = this.getContentManager().createContentType(entityType.getCode());
                 for (AttributeInterface attribute : prototype.getAttributeList()) {
                     Map<String, Map<String, Serializable>> currentConfig = new HashMap<>();
-                    for (Lang lang : this.getLangManager().getLangs()) {
+                    for (Lang lang : this.langManager.getLangs()) {
                         String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
                         Map<String, Serializable> currentField = fields.stream()
                                 .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
@@ -100,12 +139,12 @@ public class SolrSearchEngineManager extends SearchEngineManager
     @Override
     public void refreshCmsFields() throws EntException {
         try {
-            List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            List<Map<String, Serializable>> fields = this.factory.getFields();
             this.checkLangFields(fields);
             this.refreshBaseFields(fields, null);
             Map<String, Map<String, Serializable>> checkedFields = new HashMap<>();
             for (SmallEntityType entityType : this.getContentManager().getSmallEntityTypes()) {
-                fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+                fields = this.factory.getFields();
                 this.refreshEntityType(fields, checkedFields, entityType.getCode());
             }
         } catch (Exception ex) {
@@ -116,7 +155,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
     @Override
     public void refreshContentType(String typeCode) throws EntException {
         try {
-            List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+            List<Map<String, Serializable>> fields = this.factory.getFields();
             this.checkLangFields(fields);
             this.refreshBaseFields(fields, null);
             this.refreshEntityType(fields, null, typeCode);
@@ -127,20 +166,20 @@ public class SolrSearchEngineManager extends SearchEngineManager
 
     private void refreshBaseFields(List<Map<String, Serializable>> fields,
             Map<String, Map<String, Serializable>> checkedFields) {
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, SOLR_FIELD_TYPE_STRING);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_ID_FIELD_NAME, SolrFields.TYPE_STRING);
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_TYPE_CODE_FIELD_NAME,
-                SOLR_FIELD_TYPE_TEXT_GENERAL);
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, SOLR_FIELD_TYPE_TEXT_GENERAL,
+                SolrFields.TYPE_TEXT_GENERAL);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, SolrFields.TYPE_TEXT_GENERAL,
                 true);
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME,
-                SOLR_FIELD_TYPE_TEXT_GEN_SORT);
+                SolrFields.TYPE_TEXT_GEN_SORT);
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_MAIN_GROUP_FIELD_NAME,
-                SOLR_FIELD_TYPE_TEXT_GENERAL);
+                SolrFields.TYPE_TEXT_GENERAL);
         this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME,
-                SOLR_FIELD_TYPE_TEXT_GENERAL, true);
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, SOLR_FIELD_TYPE_PDATE,
+                SolrFields.TYPE_TEXT_GENERAL, true);
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, SolrFields.TYPE_PDATES,
                 false);
-        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, SOLR_FIELD_TYPE_PDATE,
+        this.checkField(fields, checkedFields, SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, SolrFields.TYPE_PDATES,
                 false);
     }
 
@@ -152,7 +191,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
             return;
         }
         for (AttributeInterface currentAttribute : prototype.getAttributeList()) {
-            for (Lang lang : this.getLangManager().getLangs()) {
+            for (Lang lang : this.langManager.getLangs()) {
                 this.checkAttribute(currentFields, checkedFields, currentAttribute, lang);
             }
         }
@@ -164,15 +203,15 @@ public class SolrSearchEngineManager extends SearchEngineManager
         if (attribute instanceof IndexableAttributeInterface
                 || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
                 && attribute.isSearchable())) {
-            String type = null;
+            String type;
             if (attribute instanceof DateAttribute) {
-                type = SOLR_FIELD_TYPE_PDATES;
+                type = SolrFields.TYPE_PDATES;
             } else if (attribute instanceof NumberAttribute) {
-                type = SOLR_FIELD_TYPE_PLONGS;
+                type = SolrFields.TYPE_PLONGS;
             } else if (attribute instanceof BooleanAttribute) {
-                type = SOLR_FIELD_TYPE_BOOLEAN;
+                type = SolrFields.TYPE_BOOLEAN;
             } else {
-                type = SOLR_FIELD_TYPE_TEXT_GEN_SORT;
+                type = SolrFields.TYPE_TEXT_GEN_SORT;
             }
             String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
             fieldName = fieldName.replace(":", "_");
@@ -216,10 +255,10 @@ public class SolrSearchEngineManager extends SearchEngineManager
         newField.put(SOLR_FIELD_TYPE, type);
         newField.put(SOLR_FIELD_MULTIVALUED, multiValue);
         if (null == currentField) {
-            ((ISolrSearchEngineDAOFactory) this.getFactory()).addField(newField);
+            this.factory.addField(newField);
         } else if (!type.equals(currentField.get(SOLR_FIELD_TYPE)) || !Boolean.valueOf(multiValue)
                 .equals(currentField.get(SOLR_FIELD_MULTIVALUED))) {
-            ((ISolrSearchEngineDAOFactory) this.getFactory()).replaceField(newField);
+            this.factory.replaceField(newField);
         }
         if (null != checkedFields) {
             checkedFields.put(fieldName, newField);
@@ -234,7 +273,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
     @Override
     public void updateFromEntityTypesChanging(EntityTypesChangingEvent event) {
         super.updateFromEntityTypesChanging(event);
-        List<Map<String, Serializable>> fields = ((ISolrSearchEngineDAOFactory) this.getFactory()).getFields();
+        List<Map<String, Serializable>> fields = this.factory.getFields();
         this.checkLangFields(fields);
         this.refreshBaseFields(fields, null);
         if (this.getContentManager().getName().equals(event.getEntityManagerName())
@@ -245,8 +284,8 @@ public class SolrSearchEngineManager extends SearchEngineManager
     }
 
     private void checkLangFields(List<Map<String, Serializable>> fields) {
-        for (Lang lang : this.getLangManager().getLangs()) {
-            this.checkField(fields, null, lang.getCode(), SOLR_FIELD_TYPE_TEXT_GENERAL, true);
+        for (Lang lang : this.langManager.getLangs()) {
+            this.checkField(fields, null, lang.getCode(), SolrFields.TYPE_TEXT_GENERAL, true);
         }
     }
 
@@ -257,7 +296,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
 
     @Override
     public Thread startReloadContentsReferences() throws EntException {
-        ((ISolrSearchEngineDAOFactory) this.getFactory()).deleteAllDocuments();
+        ((ISolrSearchEngineDAOFactory) this.factory).deleteAllDocuments();
         return this.startReloadContentsReferencesPrivate(null);
     }
 
@@ -265,7 +304,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
         SolrIndexLoaderThread loaderThread = null;
         if (this.getStatus() == STATUS_READY || this.getStatus() == STATUS_NEED_TO_RELOAD_INDEXES) {
             try {
-                IIndexerDAO newIndexer = this.getFactory().getIndexer();
+                IIndexerDAO newIndexer = this.factory.getIndexer();
                 loaderThread = new SolrIndexLoaderThread(typeCode, this, this.getContentManager(), newIndexer);
                 String threadName = ICmsSearchEngineManager.RELOAD_THREAD_NAME_PREFIX
                         + DateConverter.getFormattedDate(new Date(), "yyyyMMddHHmmss")
@@ -289,12 +328,21 @@ public class SolrSearchEngineManager extends SearchEngineManager
         return ((ISolrSearcherDAO) this.getSearcherDao()).searchFacetedContents(filters, categories, allowedGroups);
     }
 
-    protected ILangManager getLangManager() {
-        return langManager;
+    @Override
+    public void notifyEndingIndexLoading(LastReloadInfo info, IIndexerDAO newIndexerDAO) {
+        this.cacheInfoManager.putInCache(ICacheInfoManager.DEFAULT_CACHE_NAME, this.getLastReloadCacheKey(), info);
+        if (this.getStatus() != STATUS_NEED_TO_RELOAD_INDEXES) {
+            this.setStatus(STATUS_READY);
+        }
     }
 
-    public void setLangManager(ILangManager langManager) {
-        this.langManager = langManager;
+    @Override
+    public LastReloadInfo getLastReloadInfo() {
+        return (SolrLastReloadInfo) this.cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, this.getLastReloadCacheKey());
     }
 
+    private String getLastReloadCacheKey() {
+        String suffix = ApsTenantApplicationUtils.getTenant().orElse("_primary_");
+        return LAST_RELOAD_CACHE_PARAM_NAME + "_" + suffix;
+    }
 }

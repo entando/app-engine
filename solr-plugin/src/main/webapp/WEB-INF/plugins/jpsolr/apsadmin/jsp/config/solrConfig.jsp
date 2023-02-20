@@ -34,7 +34,7 @@
     <h3 class="page-title-container">
     <div>
         <s:property value="#contentTypeSettingsVar.typeCode" />&#32;&ndash;&#32;<s:property value="#contentTypeSettingsVar.typeDescription" />
-        <s:if test="%{#searcherManagerStatusVar == 0}" >
+        <s:if test="%{#searcherManagerStatusVar != 1}" >
         <s:if test="!#contentTypeSettingsVar.valid">
             <span class="pull-right"> 
             <a class="btn btn-primary pull-right"

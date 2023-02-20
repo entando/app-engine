@@ -78,7 +78,7 @@ class SolrSearchEngineManagerIntegrationTest {
 
     private IContentManager contentManager = null;
     private IResourceManager resourceManager = null;
-    private ICmsSearchEngineManager searchEngineManager = null;
+    private ISolrSearchEngineManager searchEngineManager = null;
     private ICategoryManager categoryManager;
 
     private static ApplicationContext applicationContext;
@@ -136,7 +136,7 @@ class SolrSearchEngineManagerIntegrationTest {
     protected void init() {
         this.contentManager = getApplicationContext().getBean(IContentManager.class);
         this.resourceManager = getApplicationContext().getBean(IResourceManager.class);
-        this.searchEngineManager = getApplicationContext().getBean(ICmsSearchEngineManager.class);
+        this.searchEngineManager = getApplicationContext().getBean(ISolrSearchEngineManager.class);
         this.categoryManager = getApplicationContext().getBean(ICategoryManager.class);
     }
 
@@ -633,9 +633,7 @@ class SolrSearchEngineManagerIntegrationTest {
             newNumberAttribute.setIndexingType(IndexableAttributeInterface.INDEXING_TYPE_TEXT);
             artType.addAttribute(newNumberAttribute);
             ((IEntityTypesConfigurer) this.contentManager).updateEntityPrototype(artType);
-            synchronized (this) {
-                this.wait(1000);
-            }
+            this.waitForSearchEngine();
 
             for (int i = 0; i < 30; i++) {
                 Content content = this.contentManager.loadContent("ART104", true);

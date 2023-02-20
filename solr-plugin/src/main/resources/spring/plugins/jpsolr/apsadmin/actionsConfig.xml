@@ -13,7 +13,7 @@
     
     <bean id="jpsolrConfigAction" 
           class="org.entando.entando.plugins.jpsolr.apsadmin.config.SolrConfigAction" parent="abstractBaseAction" >
-        <property name="solrSearchEngineManager" ref="jacmsSearchEngineManager" />
+        <property name="solrSearchEngineManager" ref="solrSearchEngineManager" />
     </bean>
 
     <bean id="jpsolrFacetNavResultWidgetAction" scope="prototype"

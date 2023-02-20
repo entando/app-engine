@@ -15,10 +15,6 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_MULTIVALUED;
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_BOOLEAN;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PDATES;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PLONGS;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GEN_SORT;
 
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
@@ -76,15 +72,15 @@ public class ContentTypeSettings implements Serializable {
         if (attribute instanceof IndexableAttributeInterface
                 || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
                 && attribute.isSearchable())) {
-            String type = null;
+            String type;
             if (attribute instanceof DateAttribute) {
-                type = SOLR_FIELD_TYPE_PDATES;
+                type = SolrFields.TYPE_PDATES;
             } else if (attribute instanceof NumberAttribute) {
-                type = SOLR_FIELD_TYPE_PLONGS;
+                type = SolrFields.TYPE_PLONGS;
             } else if (attribute instanceof BooleanAttribute) {
-                type = SOLR_FIELD_TYPE_BOOLEAN;
+                type = SolrFields.TYPE_BOOLEAN;
             } else {
-                type = SOLR_FIELD_TYPE_TEXT_GEN_SORT;
+                type = SolrFields.TYPE_TEXT_GEN_SORT;
             }
             Map<String, Serializable> newField = new HashMap<>();
             newField.put(SOLR_FIELD_TYPE, type);

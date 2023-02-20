@@ -29,7 +29,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 
 /**
@@ -52,8 +51,7 @@ public class FacetNavResultTag extends AbstractFacetNavTag {
                     requiredFacets = new ArrayList<>();
                 }
             }
-            IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(
-                    JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
+            IFacetNavHelper facetNavHelper = ApsWebApplicationUtils.getBean(IFacetNavHelper.class, this.pageContext);
             FacetedContentsResult result = (FacetedContentsResult) reqCtx.getExtraParam(SOLR_RESULT_REQUEST_PARAM);
             if (null == result) {
                 result = facetNavHelper.getResult(requiredFacets, reqCtx);

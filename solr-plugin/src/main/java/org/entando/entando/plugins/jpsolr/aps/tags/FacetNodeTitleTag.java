@@ -32,7 +32,6 @@ import java.io.IOException;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 import org.entando.entando.aps.tags.ExtendedTagSupport;
-import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 
 /**
@@ -45,8 +44,7 @@ public class FacetNodeTitleTag extends ExtendedTagSupport {
         ServletRequest request = this.pageContext.getRequest();
         RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
         try {
-            IFacetNavHelper facetNavHelper = (IFacetNavHelper) ApsWebApplicationUtils.getBean(
-                    JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER, this.pageContext);
+            IFacetNavHelper facetNavHelper = ApsWebApplicationUtils.getBean(IFacetNavHelper.class, this.pageContext);
             ITreeNodeManager facetManager = facetNavHelper.getTreeNodeManager();
             ITreeNode facetNode = facetManager.getNode(this.getFacetNodeCode());
             String sep = (this.getSeparator() == null) ? " / " : this.getSeparator();

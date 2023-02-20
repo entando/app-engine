@@ -61,7 +61,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
     private IContentManager contentManager;
 
     @Autowired
-    private ICmsSearchEngineManager searchEngineManager;
+    private ISolrSearchEngineManager searchEngineManager;
 
     @BeforeAll
     public static void setup() throws Exception {

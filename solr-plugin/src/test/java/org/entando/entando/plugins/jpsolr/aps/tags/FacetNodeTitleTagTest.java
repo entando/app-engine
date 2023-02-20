@@ -10,7 +10,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
-import org.entando.entando.plugins.jpsolr.aps.system.JpSolrSystemConstants;
 import org.entando.entando.plugins.jpsolr.aps.system.content.widget.IFacetNavHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,8 +52,7 @@ class FacetNodeTitleTagTest {
         Mockito.when(pageContext.getServletContext()).thenReturn(servletContext);
         Mockito.when(pageContext.getRequest()).thenReturn(servletRequest);
         Mockito.when(servletRequest.getAttribute(RequestContext.REQCTX)).thenReturn(requestContext);
-        Mockito.when(webApplicationContext.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER))
-                .thenReturn(facetNavHelper);
+        Mockito.when(webApplicationContext.getBean(IFacetNavHelper.class)).thenReturn(facetNavHelper);
         Mockito.when(facetNavHelper.getTreeNodeManager()).thenReturn(facetManager);
         Mockito.when(pageContext.getOut()).thenReturn(jspWriter);
     }

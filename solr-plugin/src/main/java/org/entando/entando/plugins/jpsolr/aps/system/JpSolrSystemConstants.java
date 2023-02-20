@@ -29,10 +29,6 @@ public final class JpSolrSystemConstants {
     private JpSolrSystemConstants() {
     }
 
-    public static final String CONTENT_FACET_MANAGER = "jpsolrContentFacetManager";
-
-    public static final String CONTENT_FACET_NAV_HELPER = "jpsolrContentFacetNavHelper";
-
     public static final String CONTENT_TYPES_FILTER_WIDGET_PARAM_NAME = "contentTypesFilter";
     public static final String FACET_ROOTS_WIDGET_PARAM_NAME = "facetRootNodes";
 

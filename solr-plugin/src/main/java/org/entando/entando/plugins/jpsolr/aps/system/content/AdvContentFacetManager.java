@@ -19,7 +19,6 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.UserFilterOptionBean;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,20 +28,32 @@ import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * @author E.Santoboni
  */
+@Service
 public class AdvContentFacetManager implements IAdvContentFacetManager {
 
-    private ICategoryManager categoryManager;
-    private ICmsSearchEngineManager searchEngineManager;
-    private IAuthorizationManager authorizationManager;
-    private ILangManager langManager;
+    private final ICategoryManager categoryManager;
+    private final SolrSearchEngineManager searchEngineManager;
+    private final IAuthorizationManager authorizationManager;
+    private final ILangManager langManager;
+
+    @Autowired
+    public AdvContentFacetManager(ICategoryManager categoryManager, SolrSearchEngineManager searchEngineManager,
+            IAuthorizationManager authorizationManager, ILangManager langManager) {
+        this.categoryManager = categoryManager;
+        this.searchEngineManager = searchEngineManager;
+        this.authorizationManager = authorizationManager;
+        this.langManager = langManager;
+    }
 
     @Override
     public SolrFacetedContentsResult getFacetResult(SearchEngineFilter[] baseFilters,
@@ -53,11 +64,11 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             SearchEngineFilter[] categoryFilters = null;
             if (null != facetNodeCodes && !facetNodeCodes.isEmpty()) {
                 List<SearchEngineFilter<String>> categoryFiltersList = facetNodeCodes.stream()
-                        .filter(c -> this.getCategoryManager().getCategory(c) != null)
+                        .filter(c -> this.categoryManager.getCategory(c) != null)
                         .map(c -> new SearchEngineFilter<>("category", false, c)).collect(Collectors.toList());
                 categoryFilters = categoryFiltersList.toArray(new SearchEngineFilter[categoryFiltersList.size()]);
             }
-            return (SolrFacetedContentsResult) this.getSearchEngineManager()
+            return (SolrFacetedContentsResult) this.searchEngineManager
                     .searchFacetedEntities(filters, categoryFilters, groupCodes);
         } catch (Exception ex) {
             throw new EntException("Error loading facet result", ex);
@@ -69,7 +80,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             SearchEngineFilter[] facetNodeCodes, List<UserFilterOptionBean> beans, List<String> groupCodes)
             throws EntException {
         SearchEngineFilter[] filters = this.getFilters(baseFilters, beans);
-        return this.getSearchEngineManager().searchFacetedEntities(filters, facetNodeCodes, groupCodes);
+        return this.searchEngineManager.searchFacetedEntities(filters, facetNodeCodes, groupCodes);
     }
 
     protected SearchEngineFilter[] getFilters(SearchEngineFilter[] baseFilters, List<UserFilterOptionBean> beans) {
@@ -87,10 +98,10 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     @Override
     public SolrFacetedContentsResult getFacetedContents(AdvRestContentListRequest requestList, UserDetails user) {
-        SolrFacetedContentsResult facetedResult = null;
+        SolrFacetedContentsResult facetedResult;
         try {
             String langCode =
-                    (StringUtils.isBlank(requestList.getLang())) ? this.getLangManager().getDefaultLang().getCode()
+                    (StringUtils.isBlank(requestList.getLang())) ? this.langManager.getDefaultLang().getCode()
                             : requestList.getLang();
             SolrSearchEngineFilter[] searchFilters = requestList.extractFilters(langCode);
             SolrSearchEngineFilter[][] doubleFilters = requestList.extractDoubleFilters(langCode);
@@ -102,7 +113,7 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             }
             SolrSearchEngineFilter[] categorySearchFilters = requestList.extractCategoryFilters();
             List<String> userGroupCodes = this.getAllowedGroups(user);
-            facetedResult = ((ISolrSearchEngineManager) this.getSearchEngineManager()).searchFacetedEntities(
+            facetedResult = this.searchEngineManager.searchFacetedEntities(
                     doubleFilters, categorySearchFilters, userGroupCodes);
         } catch (EntException ex) {
             throw new RestServerError("error in search contents", ex);
@@ -113,43 +124,11 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
     protected List<String> getAllowedGroups(UserDetails currentUser) {
         List<String> groupCodes = new ArrayList<>();
         if (null != currentUser) {
-            List<Group> groups = this.getAuthorizationManager().getUserGroups(currentUser);
+            List<Group> groups = this.authorizationManager.getUserGroups(currentUser);
             groupCodes.addAll(groups.stream().map(Group::getName).collect(Collectors.toList()));
         }
         groupCodes.add(Group.FREE_GROUP_NAME);
         return groupCodes;
-    }
-
-    protected ICategoryManager getCategoryManager() {
-        return categoryManager;
-    }
-
-    public void setCategoryManager(ICategoryManager categoryManager) {
-        this.categoryManager = categoryManager;
-    }
-
-    protected ICmsSearchEngineManager getSearchEngineManager() {
-        return searchEngineManager;
-    }
-
-    public void setSearchEngineManager(ICmsSearchEngineManager searchEngineManager) {
-        this.searchEngineManager = searchEngineManager;
-    }
-
-    protected IAuthorizationManager getAuthorizationManager() {
-        return authorizationManager;
-    }
-
-    public void setAuthorizationManager(IAuthorizationManager authorizationManager) {
-        this.authorizationManager = authorizationManager;
-    }
-
-    protected ILangManager getLangManager() {
-        return langManager;
-    }
-
-    public void setLangManager(ILangManager langManager) {
-        this.langManager = langManager;
     }
 
 }

@@ -22,8 +22,8 @@ import org.entando.entando.aps.system.services.searchengine.FacetedContentsResul
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
+import org.entando.entando.plugins.jpsolr.web.content.model.SolrContentPagedMetadata;
 import org.entando.entando.plugins.jpsolr.web.content.model.SolrFacetedPagedMetadata;
-import org.entando.entando.web.common.model.PagedMetadata;
 import org.entando.entando.web.common.model.PagedRestResponse;
 import org.entando.entando.web.common.model.RestResponse;
 import org.entando.entando.web.common.validator.AbstractPaginationValidator;
@@ -91,7 +91,7 @@ public class AdvContentSearchController {
         SolrFacetedContentsResult facetedResult = this.advContentFacetManager
                 .getFacetedContents(requestList, currentUser);
         List<String> result = facetedResult.getContentsId();
-        PagedMetadata<String> pagedMetadata = new PagedMetadata<>(requestList, facetedResult.getTotalSize());
+        SolrContentPagedMetadata<String> pagedMetadata = new SolrContentPagedMetadata<>(requestList, facetedResult.getTotalSize());
         pagedMetadata.setBody(result);
         boolean isGuest = (null == currentUser || currentUser.getUsername()
                 .equalsIgnoreCase(SystemConstants.GUEST_USER_NAME));

@@ -55,8 +55,7 @@ abstract class BaseFacetNavTest {
         Mockito.when(servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE))
                 .thenReturn(webApplicationContext);
         Mockito.when(pageContext.getServletContext()).thenReturn(servletContext);
-        Mockito.when(webApplicationContext.getBean(JpSolrSystemConstants.CONTENT_FACET_NAV_HELPER))
-                .thenReturn(facetNavHelper);
+        Mockito.when(webApplicationContext.getBean(IFacetNavHelper.class)).thenReturn(facetNavHelper);
         Mockito.when(facetNavHelper.getTreeNodeManager()).thenReturn(facetManager);
         Mockito.lenient().when(facetManager.getNode(null)).thenReturn(null);
         Mockito.lenient().when(servletRequest.getParameter(any())).thenReturn(null);

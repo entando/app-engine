@@ -58,7 +58,7 @@ class ReloadByTypesIntegrationTest {
     @BeforeAll
     public static void startUp() throws Exception {
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
-        applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
+        ApplicationContext applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
     }
     

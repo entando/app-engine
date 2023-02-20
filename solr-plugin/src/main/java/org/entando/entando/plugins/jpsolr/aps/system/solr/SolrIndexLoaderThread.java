@@ -1,6 +1,15 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
@@ -18,8 +27,9 @@ import org.entando.entando.ent.exception.EntRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
- * @author eu
+ * @author E.Santoboni
  */
 public class SolrIndexLoaderThread extends Thread {
 
@@ -43,9 +53,10 @@ public class SolrIndexLoaderThread extends Thread {
 
     @Override
     public void run() {
-        SolrLastReloadInfo reloadInfo =
-                (StringUtils.isBlank(this.getTypeCode()) || (null == this.searchEngineManager.getLastReloadInfo())) ?
-                        new SolrLastReloadInfo() : (SolrLastReloadInfo) this.searchEngineManager.getLastReloadInfo();
+        SolrLastReloadInfo reloadInfo = (SolrLastReloadInfo) this.searchEngineManager.getLastReloadInfo();
+        if (null == reloadInfo) {
+            reloadInfo = new SolrLastReloadInfo();
+        }
         try {
             this.loadNewIndex();
             reloadInfo.setResult(LastReloadInfo.ID_SUCCESS_RESULT);
@@ -54,7 +65,7 @@ public class SolrIndexLoaderThread extends Thread {
             logger.error("error in run", t);
         } finally {
             if (!StringUtils.isBlank(this.getTypeCode())) {
-                reloadInfo.getDatesByType().put(typeCode, new Date());
+                reloadInfo.getDatesByType().put(this.getTypeCode(), new Date());
             } else {
                 reloadInfo.setDate(new Date());
             }

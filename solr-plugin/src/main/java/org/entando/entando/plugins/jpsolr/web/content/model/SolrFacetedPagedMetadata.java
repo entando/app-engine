@@ -31,7 +31,10 @@ public class SolrFacetedPagedMetadata {
     private int pageSize;
     private int lastPage;
     private int totalItems;
+
+    @JsonIgnore
     private String sort;
+    @JsonIgnore
     private String direction;
 
     @JsonInclude(Include.NON_NULL)
@@ -85,9 +88,6 @@ public class SolrFacetedPagedMetadata {
         this.setText(req.getText());
         this.setSearchOption(req.getSearchOption());
         this.setIncludeAttachments(req.isIncludeAttachments());
-        this.setLang(req.getLang());
-        this.setLang(req.getLang());
-        this.setLang(req.getLang());
     }
 
     public int getPage() {

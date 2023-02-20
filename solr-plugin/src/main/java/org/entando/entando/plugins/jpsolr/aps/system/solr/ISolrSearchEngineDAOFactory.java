@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.ISearchEngineDAOFactory;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.Map;
 /**
  * @author E.Santoboni
  */
-public interface ISolrSearchEngineDAOFactory {
+public interface ISolrSearchEngineDAOFactory extends ISearchEngineDAOFactory {
     
     public List<Map<String, Serializable>> getFields();
 

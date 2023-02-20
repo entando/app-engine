@@ -58,7 +58,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
     private IContentManager contentManager;
 
     @Autowired
-    private ICmsSearchEngineManager searchEngineManager;
+    private ISolrSearchEngineManager searchEngineManager;
 
     @BeforeAll
     public static void setup() throws Exception {

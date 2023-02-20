@@ -13,14 +13,15 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
-import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
 import java.io.File;
 import java.io.IOException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,13 +85,13 @@ public class SearcherDAO implements ISolrSearcherDAO {
     @Override
     public List<String> searchContentsId(SearchEngineFilter[] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
-        return this.searchContents(filters, categories, allowedGroups, false).getContentsId();
+        return this.searchFacetedContents(filters, categories, allowedGroups, false).getContentsId();
     }
 
     @Override
     public SolrFacetedContentsResult searchFacetedContents(SearchEngineFilter[] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups) throws EntException {
-        return this.searchContents(filters, categories, allowedGroups, true);
+        return this.searchFacetedContents(filters, categories, allowedGroups, true);
     }
 
     @Override
@@ -113,24 +114,31 @@ public class SearcherDAO implements ISolrSearcherDAO {
         } else {
             query = this.createDoubleQuery(filters, categories, allowedGroups);
         }
-        return this.executeQuery(query, singleFilters, true);
+        return this.executeQuery(query, singleFilters, filterForPagination, true);
     }
 
+    @Deprecated
     protected SolrFacetedContentsResult searchContents(SearchEngineFilter[] filters,
             SearchEngineFilter[] categories, Collection<String> allowedGroups, boolean faceted) throws EntException {
-        Query query = null;
-        if ((null == filters || filters.length == 0)
+        return this.searchFacetedContents(filters, categories, allowedGroups, faceted);
+    }
+
+    protected SolrFacetedContentsResult searchFacetedContents(SearchEngineFilter[] filters,
+            SearchEngineFilter[] categories, Collection<String> allowedGroups, boolean faceted) throws EntException {
+        Query query;
+        SearchEngineFilter<?> filterForPagination = this.extractPaginationFilter(filters);
+        if ((null == filters || filters.length == 0 || (filters.length == 1 && null != filterForPagination))
                 && (null == categories || categories.length == 0)
                 && (allowedGroups != null && allowedGroups.contains(Group.ADMINS_GROUP_NAME))) {
             query = new MatchAllDocsQuery();
         } else {
             query = this.createQuery(filters, categories, allowedGroups);
         }
-        return this.executeQuery(query, filters, faceted);
+        return this.executeQuery(query, filters, filterForPagination, faceted);
     }
 
-    protected SolrFacetedContentsResult executeQuery(Query query,
-            SearchEngineFilter[] filters, boolean faceted) throws EntException {
+    protected SolrFacetedContentsResult executeQuery(Query query, SearchEngineFilter[] filters,
+            SearchEngineFilter<?> filterForPagination, boolean faceted) throws EntException {
         SolrFacetedContentsResult result = new SolrFacetedContentsResult();
         List<String> contentsId = new ArrayList<>();
         Map<String, Integer> occurrences = new HashMap<>();
@@ -139,7 +147,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
         try {
             SolrQuery solrQuery = new SolrQuery(query.toString());
             solrQuery.addField(SolrFields.SOLR_CONTENT_ID_FIELD_NAME);
-            SearchEngineFilter<?> filterForPagination = this.extractPaginationFilter(filters);
+            filterForPagination = (null != filterForPagination) ?
+                    filterForPagination : this.extractPaginationFilter(filters);
             if (null != filterForPagination) {
                 solrQuery.setStart(filterForPagination.getOffset());
                 solrQuery.setRows(filterForPagination.getLimit());
@@ -269,21 +278,23 @@ public class SearcherDAO implements ISolrSearcherDAO {
                 if (null != allowedValues && !allowedValues.isEmpty()) {
                     BooleanQuery.Builder singleCategoriesQuery = new BooleanQuery.Builder();
                     for (String singleCategory : allowedValues) {
-                        ITreeNode treeNode = this.getTreeNodeManager().getNode(singleCategory);
-                        if (null != treeNode) {
-                            TermQuery categoryQuery = new TermQuery(
-                                    new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, treeNode.getCode()));
-                            singleCategoriesQuery.add(categoryQuery, BooleanClause.Occur.SHOULD);
+                        singleCategory = singleCategory.toLowerCase();
+                        if (null == this.getTreeNodeManager().getNode(singleCategory)) {
+                            logger.warn("Search for null category - code '{}'", singleCategory);
                         }
+                        TermQuery categoryQuery = new TermQuery(
+                                new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, singleCategory));
+                        singleCategoriesQuery.add(categoryQuery, BooleanClause.Occur.SHOULD);
                     }
                     categoriesQuery.add(singleCategoriesQuery.build(), BooleanClause.Occur.MUST);
                 } else if (null != categoryFilter.getValue()) {
-                    ITreeNode treeNode = this.getTreeNodeManager().getNode(categoryFilter.getValue());
-                    if (null != treeNode) {
-                        TermQuery categoryQuery = new TermQuery(
-                                new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, treeNode.getCode()));
-                        categoriesQuery.add(categoryQuery, BooleanClause.Occur.MUST);
+                    String categoryCode = categoryFilter.getValue().toLowerCase();
+                    if (null == this.getTreeNodeManager().getNode(categoryCode)) {
+                        logger.warn("Search for null category - code '{}'", categoryCode);
                     }
+                    TermQuery categoryQuery = new TermQuery(
+                            new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, categoryCode));
+                    categoriesQuery.add(categoryQuery, BooleanClause.Occur.MUST);
                 }
             }
             mainQuery.add(categoriesQuery.build(), BooleanClause.Occur.MUST);
@@ -340,14 +351,10 @@ public class SearcherDAO implements ISolrSearcherDAO {
             }
         } else if (null != filter.getStart() || null != filter.getEnd()) {
             fieldQuery = new BooleanQuery.Builder();
-            Query query = null;
+            Query query;
             if (filter.getStart() instanceof Date || filter.getEnd() instanceof Date) {
-                String format = SolrFields.SOLR_SEARCH_DATE_RANGE_FORMAT;
-                String start =
-                        (null != filter.getStart()) ? DateConverter.getFormattedDate((Date) filter.getStart(), format)
-                                : SolrFields.SOLR_DATE_MIN;
-                String end = (null != filter.getEnd()) ? DateConverter.getFormattedDate((Date) filter.getEnd(), format)
-                        : SolrFields.SOLR_DATE_MAX;
+                String start = this.getFormattedDate((Date) filter.getStart(), SolrFields.SOLR_DATE_MIN);
+                String end = this.getFormattedDate((Date) filter.getEnd(), SolrFields.SOLR_DATE_MAX);
                 query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
             } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
                 Long lowerValue =
@@ -412,8 +419,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
                     }
                 }
             } else if (value instanceof Date) {
-                String toString = DateConverter.getFormattedDate((Date) value,
-                        SolrFields.SOLR_SEARCH_DATE_VALUE_FORMAT);
+                String toString = this.getFormattedDate((Date) value, null);
                 TermQuery term = new TermQuery(new Term(key, toString + relevance));
                 fieldQuery.add(term, BooleanClause.Occur.MUST);
             } else if (value instanceof Number) {
@@ -427,6 +433,14 @@ public class SearcherDAO implements ISolrSearcherDAO {
             fieldQuery.add(queryTerm, BooleanClause.Occur.MUST);
         }
         return fieldQuery.build();
+    }
+
+    private String getFormattedDate(Date date, String defaultValue) {
+        if (null != date) {
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+            return zdt.format(DateTimeFormatter.ISO_INSTANT);
+        }
+        return defaultValue;
     }
 
     private boolean isPaginationFilter(SearchEngineFilter<?> filter) {

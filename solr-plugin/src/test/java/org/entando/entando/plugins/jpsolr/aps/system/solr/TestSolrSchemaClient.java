@@ -1,14 +1,22 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2022-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_PLONG;
-import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE_TEXT_GENERAL;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.TYPE_PLONG;
+import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.TYPE_TEXT_GENERAL;
 
 import com.agiletec.aps.BaseTestCase;
 import java.io.Serializable;
@@ -79,7 +87,7 @@ class TestSolrSchemaClient {
 
             Map<String, Serializable> properties = new HashMap<>();
             properties.put(SOLR_FIELD_NAME, fieldName);
-            properties.put(SOLR_FIELD_TYPE, SOLR_FIELD_TYPE_TEXT_GENERAL);
+            properties.put(SOLR_FIELD_TYPE, TYPE_TEXT_GENERAL);
             boolean result = SolrSchemaClient.addField(solrAddress, solrCore, properties);
             Assertions.assertTrue(result);
 
@@ -87,9 +95,9 @@ class TestSolrSchemaClient {
             Assertions.assertNotNull(fields);
             addedFiled = fields.stream().filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNotNull(addedFiled);
-            Assertions.assertEquals(SOLR_FIELD_TYPE_TEXT_GENERAL, addedFiled.get(SOLR_FIELD_TYPE));
+            Assertions.assertEquals("text_general", addedFiled.get(SOLR_FIELD_TYPE));
 
-            properties.put(SOLR_FIELD_TYPE, SOLR_FIELD_TYPE_PLONG);
+            properties.put(SOLR_FIELD_TYPE, TYPE_PLONG);
             result = SolrSchemaClient.replaceField(solrAddress, solrCore, properties);
             Assertions.assertTrue(result);
 
@@ -97,7 +105,7 @@ class TestSolrSchemaClient {
             Assertions.assertNotNull(fields);
             addedFiled = fields.stream().filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName)).findFirst().orElse(null);
             Assertions.assertNotNull(addedFiled);
-            Assertions.assertEquals(SOLR_FIELD_TYPE_PLONG, addedFiled.get(SOLR_FIELD_TYPE));
+            Assertions.assertEquals("plong", addedFiled.get(SOLR_FIELD_TYPE));
         } finally {
             boolean result = SolrSchemaClient.deleteField(solrAddress, solrCore, fieldName);
             Assertions.assertTrue(result);
