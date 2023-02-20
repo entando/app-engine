@@ -1,0 +1,4 @@
+<config>
+    <parameter name="contentTypesFilter">Content Type (optional)</parameter>
+    <action name="facetNavResultConfig"/>
+</config>

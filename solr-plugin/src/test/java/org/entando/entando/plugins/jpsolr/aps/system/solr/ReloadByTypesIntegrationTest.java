@@ -16,6 +16,7 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.EntThreadLocal;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import java.util.ArrayList;
@@ -35,12 +36,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
 /**
  * Rewriting of some default test for content manager
  * @author E.Santoboni
  */
 @ExtendWith(SolrTestExtension.class)
+@DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 class ReloadByTypesIntegrationTest {
 
     private ISolrSearchEngineManager searchEngineManager = null;
@@ -56,7 +60,8 @@ class ReloadByTypesIntegrationTest {
     }
     
     @BeforeAll
-    public static void startUp() throws Exception {
+    public static void startUp() {
+        EntThreadLocal.clear();
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         ApplicationContext applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);

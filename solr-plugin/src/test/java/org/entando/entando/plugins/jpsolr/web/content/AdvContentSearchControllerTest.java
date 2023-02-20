@@ -73,7 +73,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
     public void setUp() throws Exception {
         super.setUp();
         try {
-            ((ISolrSearchEngineManager) this.searchEngineManager).refreshCmsFields();
+            this.searchEngineManager.refreshCmsFields();
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
         } catch (Exception e) {

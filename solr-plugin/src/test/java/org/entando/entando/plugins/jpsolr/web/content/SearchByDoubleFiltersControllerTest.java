@@ -29,7 +29,6 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import com.jayway.jsonpath.JsonPath;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +36,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
@@ -44,12 +44,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
  * @author E.Santoboni
  */
+@ExtendWith(SolrTestExtension.class)
 public class SearchByDoubleFiltersControllerTest extends AbstractControllerIntegrationTest {
 
     private static final String TEXT_FOR_TEST = "Entando is the leading modular application platform for building enterprise applications on Kubernetes";
@@ -70,7 +72,7 @@ public class SearchByDoubleFiltersControllerTest extends AbstractControllerInteg
     public void setUp() throws Exception {
         super.setUp();
         try {
-            ((ISolrSearchEngineManager) this.searchEngineManager).refreshCmsFields();
+            this.searchEngineManager.refreshCmsFields();
             Thread thread = this.searchEngineManager.startReloadContentsReferences();
             thread.join();
         } catch (Exception e) {

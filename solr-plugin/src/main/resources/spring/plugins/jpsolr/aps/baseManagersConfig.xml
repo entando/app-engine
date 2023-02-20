@@ -5,32 +5,6 @@
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:component-scan base-package="org.entando.entando.plugins.jpsolr" />
+    <context:component-scan base-package="org.entando.entando.plugins.jpsolr"/>
 
-    <!--
-    <bean id="jacmsSearchEngineManager" class="org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineManager"
-          parent="abstractService" primary="true" >
-        <property name="factory">
-            <bean class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineDAOFactory" init-method="init">
-                <property name="configManager" ref="BaseConfigManager"/>
-                <property name="langManager" ref="LangManager" />
-                <property name="categoryManager" ref="CategoryManager" />
-                <property name="tenantManager" ref="TenantManager" />
-            </bean>
-        </property>
-        <property name="contentManager" ref="jacmsContentManager" />
-    </bean>
-    
-    <bean id="jpsolrAdvContentFacetManager" class="org.entando.entando.plugins.jpsolr.aps.system.content.AdvContentFacetManager">
-        <property name="categoryManager" ref="CategoryManager" />
-        <property name="authorizationManager" ref="AuthorizationManager" />
-        <property name="langManager" ref="LangManager" />
-        <property name="searchEngineManager" ref="jacmsSearchEngineManager" />
-    </bean>
-
-    <bean id="jpsolrContentFacetNavHelper" class="org.entando.entando.plugins.jpsolr.aps.system.content.widget.FacetNavHelper" >
-        <property name="treeNodeManager" ref="CategoryManager" />
-        <property name="advContentFacetManager" ref="jpsolrAdvContentFacetManager" />
-    </bean>
-    -->
 </beans>

@@ -13,7 +13,6 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
-import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
@@ -40,7 +39,7 @@ import org.springframework.stereotype.Component;
  * @author E.Santoboni
  */
 @Component
-public class SearchEngineDAOFactory implements ISolrSearchEngineDAOFactory {
+public class SolrSearchEngineDAOFactory implements ISolrSearchEngineDAOFactory {
 
     private static final String SOLR_ADDRESS_TENANT_PARAM = "solrAddress";
     private static final String SOLR_CORE_TENANT_PARAM = "solrCore";
@@ -51,15 +50,13 @@ public class SearchEngineDAOFactory implements ISolrSearchEngineDAOFactory {
     @Value("${SOLR_CORE:entando}")
     private String solrCore;
 
-    private final ConfigInterface configManager;
     private final ILangManager langManager;
     private final ICategoryManager categoryManager;
     private final ITenantManager tenantManager;
 
     @Autowired
-    public SearchEngineDAOFactory(ConfigInterface configManager, ILangManager langManager,
-            ICategoryManager categoryManager, ITenantManager tenantManager) {
-        this.configManager = configManager;
+    public SolrSearchEngineDAOFactory(ILangManager langManager, ICategoryManager categoryManager,
+            ITenantManager tenantManager) {
         this.langManager = langManager;
         this.categoryManager = categoryManager;
         this.tenantManager = tenantManager;
