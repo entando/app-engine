@@ -1,5 +1,6 @@
 package org.entando.entando.plugins.jpredis.aps.system.notify;
 
+import com.agiletec.aps.system.EntThreadLocal;
 import com.agiletec.aps.system.services.lang.events.LangsChangedEvent;
 import io.lettuce.core.internal.LettuceFactories;
 import java.util.HashMap;
@@ -12,8 +13,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -28,11 +27,11 @@ import org.springframework.test.context.web.WebAppConfiguration;
         "classpath*:spring/web/**.xml"
 })
 @WebAppConfiguration(value = "")
-@DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 class RedisNotifyManagerIntegrationTest {
 
     @BeforeAll
     static void setUp() {
+        EntThreadLocal.clear();
         TestEntandoJndiUtils.setupJndi();
     }
 
