@@ -10,16 +10,4 @@
         <put-attribute name="body" value="/WEB-INF/plugins/jpsolr/apsadmin/jsp/config/solrConfig.jsp" />
     </definition>
     
-    <definition extends="main.layout" name="admin.Page.Widget.jpsolrFacetNavResult.config">
-        <put-attribute name="title" value="title.pageManagement" />
-        <put-attribute name="extraResources" value="/WEB-INF/plugins/jpsolr/apsadmin/jsp/common/template/extraresources/facet.jsp" />
-        <put-attribute name="body" value="/WEB-INF/plugins/jpsolr/apsadmin/jsp/portal/specialwidget/facetnav-result-entry.jsp" />
-    </definition>
-	
-    <definition extends="main.layout" name="admin.Page.Widget.jpsolrFacetNavTree.config">
-        <put-attribute name="title" value="title.pageManagement" />
-        <put-attribute name="extraResources" value="/WEB-INF/plugins/jpsolr/apsadmin/jsp/common/template/extraresources/facet.jsp" />
-        <put-attribute name="body" value="/WEB-INF/plugins/jpsolr/apsadmin/jsp/portal/specialwidget/facetnav-tree-entry.jsp" />
-    </definition>
-    
 </tiles-definitions>

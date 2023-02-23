@@ -1,5 +1,0 @@
-<config>
-    <parameter name="facetRootNodes">Facet Category Root</parameter>
-    <parameter name="contentTypesFilter">Content Type (optional)</parameter>
-    <action name="solrFacetNavTreeConfig"/>
-</config>

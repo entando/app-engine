@@ -10,9 +10,4 @@
     <dependencies>
         <code>jacms</code>
     </dependencies>
-    <installation>
-        <liquibase>
-            <changeSet datasource="portDataSource" changeLogFile="classpath:liquibase/jpsolr/changeSetPort.xml" />
-        </liquibase>
-    </installation>
 </component>
