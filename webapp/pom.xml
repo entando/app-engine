@@ -121,6 +121,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.entando.entando.plugins</groupId>
+            <artifactId>entando-plugin-jpsolr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet.jsp</groupId>
             <artifactId>jsp-api</artifactId>
             <scope>provided</scope>
@@ -375,40 +380,6 @@
                                     <resources>
                                         <resource>
                                             <directory>${basedir}/../contentscheduler-plugin/src/main/webapp</directory>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>solr</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.entando.entando.plugins</groupId>
-                    <artifactId>entando-plugin-jpsolr</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-solr-resources</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${basedir}/target/${project.build.finalName}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/../solr-plugin/src/main/webapp</directory>
                                         </resource>
                                     </resources>
                                 </configuration>
@@ -882,6 +853,9 @@
                                 </resource>
                                 <resource>
                                     <directory>${basedir}/../versioning-plugin/src/main/webapp</directory>
+                                </resource>
+                                <resource>
+                                    <directory>${basedir}/../solr-plugin/src/main/webapp</directory>
                                 </resource>
                             </resources>
                         </configuration>
