@@ -21,6 +21,7 @@ import java.util.List;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.content.IAdvContentFacetManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
+import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.entando.entando.plugins.jpsolr.web.content.model.SolrContentPagedMetadata;
 import org.entando.entando.plugins.jpsolr.web.content.model.SolrFacetedPagedMetadata;
@@ -43,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author E.Santoboni
  */
 @RestController
+@SolrActive(true)
 @RequestMapping(value = "/plugins/advcontentsearch")
 public class AdvContentSearchController {
 

@@ -28,6 +28,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedEvent;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
+import com.agiletec.plugins.jacms.aps.system.services.searchengine.conditions.DefaultSearchEngineActive;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
@@ -43,6 +46,7 @@ import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * Servizio detentore delle operazioni di indicizzazione di oggetti ricercabili
@@ -50,6 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author M.Diana - E.Santoboni
  */
+@DefaultSearchEngineActive(true)
+@Service("jacmsSearchEngineManager")
 public class SearchEngineManager extends AbstractService
         implements ICmsSearchEngineManager, PublicContentChangedObserver, EntityTypesChangingObserver {
 
@@ -71,12 +77,14 @@ public class SearchEngineManager extends AbstractService
     private IContentManager contentManager;
 
     @Override
+    @PostConstruct
     public void init() throws Exception {
         this.setIndexerDao(this.getFactory().getIndexer());
         this.setSearcherDao(this.getFactory().getSearcher());
     }
 
     @Override
+    @PreDestroy
     public void refresh() throws Throwable {
         this.release();
         this.lastReloadInfo = null;
@@ -369,6 +377,7 @@ public class SearchEngineManager extends AbstractService
         return factory;
     }
 
+    @Autowired
     public void setFactory(ISearchEngineDAOFactory factory) {
         this.factory = factory;
     }

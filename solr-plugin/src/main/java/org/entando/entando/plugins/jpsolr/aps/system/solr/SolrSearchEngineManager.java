@@ -52,17 +52,18 @@ import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
+import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 /**
  * @author E.Santoboni
  */
-@Service
-@Primary
+@SolrActive(true)
+//@Primary
+@Service("jacmsSearchEngineManager")
 public class SolrSearchEngineManager extends SearchEngineManager
         implements ISolrSearchEngineManager, PublicContentChangedObserver, EntityTypesChangingObserver {
 
@@ -74,7 +75,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
     private transient ILangManager langManager;
     @Autowired
     private transient ICacheInfoManager cacheInfoManager;
-    @Autowired
+    //@Autowired
     private transient ISolrSearchEngineDAOFactory factory;
 
     @Override

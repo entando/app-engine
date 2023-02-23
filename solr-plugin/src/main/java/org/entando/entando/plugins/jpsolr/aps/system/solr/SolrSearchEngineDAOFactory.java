@@ -29,6 +29,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,8 @@ import org.springframework.stereotype.Component;
  *
  * @author E.Santoboni
  */
-@Component
+@Component("solrSearchEngineDAOFactory")
+@SolrActive(true)
 public class SolrSearchEngineDAOFactory implements ISolrSearchEngineDAOFactory {
 
     private static final String SOLR_ADDRESS_TENANT_PARAM = "solrAddress";

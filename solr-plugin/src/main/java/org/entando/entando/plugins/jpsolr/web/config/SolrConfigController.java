@@ -19,6 +19,7 @@ import java.util.Map;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
+import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.entando.entando.web.common.annotation.RestAccessControl;
 import org.entando.entando.web.common.model.SimpleRestResponse;
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author E.Santoboni
  */
 @RestController
+@SolrActive(true)
 @RequestMapping(value = "/plugins/solr")
 public class SolrConfigController {
 

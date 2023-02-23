@@ -5,6 +5,8 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <context:component-scan base-package="org.entando.entando.plugins.jacms"  />
+
     <bean id="jacmsContentViewerWidgetValidator" class="org.entando.entando.plugins.jacms.aps.system.services.widgettype.validators.ContentViewerWidgetValidator">
         <property name="contentManager" ref="jacmsContentManager" />
         <property name="contentModelManager" ref="jacmsContentModelManager" />
@@ -49,7 +51,5 @@
 
     <bean id="jacmPageServiceWrapper"
           class="org.entando.entando.plugins.jacms.aps.system.services.page.CmsPageServiceWrapper" />
-
-    <context:component-scan base-package="org.entando.entando.plugins.jacms"  />
 
 </beans>

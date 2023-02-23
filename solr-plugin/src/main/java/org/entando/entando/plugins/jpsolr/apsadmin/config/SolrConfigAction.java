@@ -13,10 +13,12 @@
  */
 package org.entando.entando.plugins.jpsolr.apsadmin.config;
 
+import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import com.opensymphony.xwork2.Action;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
@@ -25,10 +27,12 @@ import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrLastReloadInfo;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author E.Santoboni
  */
+//@Service("jpsolrConfigAction")
 public class SolrConfigAction extends BaseAction {
     
     private static final Logger logger = LoggerFactory.getLogger(SolrConfigAction.class);
@@ -36,8 +40,12 @@ public class SolrConfigAction extends BaseAction {
     private String typeCode;
     
     private int refreshResult = -1;
-    
-    private transient ISolrSearchEngineManager solrSearchEngineManager;
+
+    @Autowired
+    private HttpServletRequest request;
+
+    //@Autowired(required = false)
+    //private transient ISolrSearchEngineManager solrSearchEngineManager;
 
     public List<ContentTypeSettings> getContentTypesSettings() {
         try {
@@ -102,11 +110,11 @@ public class SolrConfigAction extends BaseAction {
     }
     
     protected ISolrSearchEngineManager getSolrSearchEngineManager() {
-        return solrSearchEngineManager;
+        return ApsWebApplicationUtils.getBean(ISolrSearchEngineManager.class, request);
     }
 
-    public void setSolrSearchEngineManager(ISolrSearchEngineManager solrSearchEngineManager) {
+    /*public void setSolrSearchEngineManager(ISolrSearchEngineManager solrSearchEngineManager) {
         this.solrSearchEngineManager = solrSearchEngineManager;
-    }
-    
+    }*/
+
 }

@@ -31,6 +31,7 @@ import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
  * @author E.Santoboni
  */
 @Service
+@SolrActive(true)
 public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     private final ICategoryManager categoryManager;

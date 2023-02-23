@@ -121,7 +121,8 @@
         <property name="linkResolver" ref="jacmsLinkResolverManager" />
         <property name="authorizationManager" ref="AuthorizationManager" />
     </bean>
-    
+
+    <!--
     <bean id="jacmsSearchEngineManager" class="com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineManager" 
           parent="abstractService" >
         <property name="factory">
@@ -143,7 +144,24 @@
         </property>
         <property name="contentManager" ref="jacmsContentManager" />
     </bean>
-    
+    -->
+
+    <bean class="com.agiletec.plugins.jacms.aps.system.services.searchengine.SearchEngineDAOFactory"
+            init-method="init">
+        <property name="indexDiskRootFolder">
+            <value>${indexDiskRootFolder}</value>
+        </property>
+        <property name="configManager" ref="BaseConfigManager"/>
+        <property name="langManager" ref="LangManager" />
+        <property name="indexerClassName">
+            <value>com.agiletec.plugins.jacms.aps.system.services.searchengine.IndexerDAO</value>
+        </property>
+        <property name="searcherClassName">
+            <value>com.agiletec.plugins.jacms.aps.system.services.searchengine.SearcherDAO</value>
+        </property>
+        <property name="categoryManager" ref="CategoryManager" />
+    </bean>
+
     <bean id="jacmsContentHelper" class="org.entando.entando.plugins.jacms.aps.system.services.content.helper.ContentHelper" />
 	
     <bean id="jacmsBaseContentListHelper" class="com.agiletec.plugins.jacms.aps.system.services.content.helper.BaseContentListHelper" >
