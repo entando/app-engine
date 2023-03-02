@@ -14,6 +14,7 @@
 package com.agiletec.aps.system.services.i18n;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
 import com.agiletec.aps.util.ApsProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -83,7 +84,11 @@ class I18nManagerWrapperIntegrationTest extends BaseTestCase {
     @Test
     void testLabelWithParam() throws Throwable {
         I18nManagerWrapper wrapper = new I18nManagerWrapper("en", i18nManager);
-        Assertions.assertEquals("Welcome ${surname} ${name} (${username} - ${name}.${surname})", wrapper.getLabel("LABEL_WITH_PARAMS"));
+        I18nLabelBuilder builder = wrapper.getLabelWithParams("LABEL_WITH_PARAMS");
+        builder.addParam("surname", "Black");
+        builder.addParam("name", "Joe");
+        builder.addParam("username", "joeblack");
+        Assertions.assertEquals("Welcome Black Joe (joeblack - Joe.Black)", builder.toString());
     }
 
 }
