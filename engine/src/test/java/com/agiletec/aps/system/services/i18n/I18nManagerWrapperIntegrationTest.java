@@ -74,6 +74,7 @@ class I18nManagerWrapperIntegrationTest extends BaseTestCase {
         Assertions.assertEquals("Testo1 Italiano (test 1)", wrapper.getLabel(KEY_1));
         Assertions.assertEquals("Testo2 Italiano (test 2)", wrapper.getLabel(KEY_2));
         Assertions.assertEquals(KEY_3, wrapper.getLabel(KEY_3));
+        Assertions.assertNull(wrapper.getLabel(null));
 
         wrapper = new I18nManagerWrapper("en", i18nManager, this.getRequestContext());
         Assertions.assertEquals("English text1 (test 1)", wrapper.getLabel(KEY_1));
