@@ -20,8 +20,6 @@ import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
  * Wrapper del Servizio I18N utilizzato nel contesto di Velocity per il parsing dei modelli.
@@ -31,8 +29,6 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
  * @author S.Didaci
  */
 public class I18nManagerWrapper {
-    
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(I18nManagerWrapper.class);
     
     private String currentLangCode;
     private Lang defaultLang;

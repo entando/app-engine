@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class BaseContentRendererIntegrationTest extends BaseTestCase {
+class BaseContentRendererIntegrationTest extends BaseTestCase {
     
     @Test
     void testRenderLabel() throws Throwable {
@@ -74,7 +74,7 @@ public class BaseContentRendererIntegrationTest extends BaseTestCase {
         }
     }
     
-    public void addNewContentModel(int id, String shape, String contentTypeCode) throws Throwable {
+    private void addNewContentModel(int id, String shape, String contentTypeCode) throws Throwable {
         ContentModel model = new ContentModel();
         model.setContentType(contentTypeCode);
         model.setDescription("test");
