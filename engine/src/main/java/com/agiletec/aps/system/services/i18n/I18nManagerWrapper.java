@@ -14,6 +14,7 @@
 package com.agiletec.aps.system.services.i18n;
 
 import com.agiletec.aps.system.RequestContext;
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
@@ -84,7 +85,7 @@ public class I18nManagerWrapper {
     
     private Lang getDefaultLang() {
         if (null == this.defaultLang) {
-            ILangManager langManager = ApsWebApplicationUtils.getBean(ILangManager.class, this.reqCtx.getRequest());
+            ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(SystemConstants.LANGUAGE_MANAGER, this.reqCtx.getRequest());
             this.defaultLang = langManager.getDefaultLang();
         }
         return this.defaultLang;
