@@ -13,8 +13,15 @@
  */
 package com.agiletec.aps.system.services.i18n;
 
-import org.entando.entando.ent.exception.EntException;
+import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
+import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.ApsWebApplicationUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
  * Wrapper del Servizio I18N utilizzato nel contesto di Velocity per il parsing dei modelli.
@@ -24,15 +31,28 @@ import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
  * @author S.Didaci
  */
 public class I18nManagerWrapper {
+    
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(I18nManagerWrapper.class);
+    
+    private String currentLangCode;
+    private Lang defaultLang;
+    
+    private II18nManager i18nManager;
+    private RequestContext reqCtx;
 
 	/**
 	 * Inizializzazione del Wrapper.
-	 * @param langCode La lingua tramite il quale restituire la label.
+	 * @param currentLangCode La lingua tramite il quale restituire la label.
 	 * @param i18nManager Il manager gestore delle etichette.
 	 */
-	public I18nManagerWrapper(String langCode, II18nManager i18nManager) {
-		this._lang = langCode;
-		this._i18nManager = i18nManager;
+	public I18nManagerWrapper(String currentLangCode, II18nManager i18nManager) {
+		this.currentLangCode = currentLangCode;
+		this.i18nManager = i18nManager;
+	}
+
+	public I18nManagerWrapper(String currentLangCode, II18nManager i18nManager, RequestContext reqCtx) {
+		this(currentLangCode, i18nManager);
+        this.reqCtx = reqCtx;
 	}
 
 	/**
@@ -43,9 +63,15 @@ public class I18nManagerWrapper {
 	 */
 	public String getLabel(String key) throws EntException {
 		String label = null;
-		if (key != null) {
-			label = this._i18nManager.getLabel(key, this._lang);
+		if (null != key) {
+			label = this.i18nManager.getLabel(key, this.currentLangCode);
+            if (StringUtils.isBlank(label) && null != reqCtx) {
+                label = this.i18nManager.getLabel(key, this.getDefaultLang().getCode());
+            }
 		}
+        if (StringUtils.isBlank(label)) {
+            return key;
+        }
 		return label;
 	}
 
@@ -56,15 +82,16 @@ public class I18nManagerWrapper {
 	 * @throws EntException in case of parsing errors.
 	 */
 	public I18nLabelBuilder getLabelWithParams(String key) throws EntException {
-		String label = null;
-		if (key != null) {
-			label = this._i18nManager.getLabel(key, this._lang);
-		}
+		String label = this.getLabel(key);
 		return new I18nLabelBuilder(label);
 	}
-
-	private String _lang = null;
-
-	private II18nManager _i18nManager;
+    
+    private Lang getDefaultLang() {
+        if (null == this.defaultLang) {
+            ILangManager langManager = ApsWebApplicationUtils.getBean(ILangManager.class, this.reqCtx.getRequest());
+            this.defaultLang = langManager.getDefaultLang();
+        }
+        return this.defaultLang;
+    }
 
 }
