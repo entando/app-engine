@@ -13,8 +13,6 @@
  */
 package com.agiletec.aps.system.services.i18n;
 
-import static java.lang.Math.log;
-
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
