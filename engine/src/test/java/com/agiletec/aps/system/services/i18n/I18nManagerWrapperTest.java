@@ -14,6 +14,7 @@
 package com.agiletec.aps.system.services.i18n;
 
 import com.agiletec.aps.system.RequestContext;
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
@@ -52,7 +53,7 @@ class I18nManagerWrapperTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         Mockito.lenient().when(reqCtx.getRequest()).thenReturn(request);
         request.getServletContext().setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, wac);
-        Mockito.lenient().when(wac.getBean(ILangManager.class)).thenReturn(langManager);
+        Mockito.lenient().when(wac.getBean(SystemConstants.LANGUAGE_MANAGER)).thenReturn(langManager);
         Mockito.lenient().when(i18nManager.getLabel(KEY_1, "it")).thenReturn("Testo1 Italiano (test 1)");
         Mockito.lenient().when(i18nManager.getLabel(KEY_1, "en")).thenReturn("English text1 (test 1)");
         Mockito.lenient().when(i18nManager.getLabel(KEY_2, "it")).thenReturn("Testo2 Italiano (test 2)");
