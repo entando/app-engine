@@ -19,6 +19,8 @@ import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 
@@ -29,6 +31,7 @@ import org.entando.entando.ent.exception.EntException;
  * Il servizio base richiede invece la specificazione della lingua ad ogni richiesta.
  * @author S.Didaci
  */
+@Slf4j
 public class I18nManagerWrapper {
 
     private String currentLangCode;
@@ -51,20 +54,28 @@ public class I18nManagerWrapper {
         this(currentLangCode, i18nManager);
         this.reqCtx = reqCtx;
     }
+    
+    private Optional<String> getLabel(String key, String langCode) {
+        try {
+            return Optional.ofNullable(this.i18nManager.getLabel(key, langCode));
+        } catch (EntException ex) {
+            log.error("Error extracting label for key {} anc lang {}", key, langCode, ex);
+            return Optional.empty();
+        }
+    }
 
     /**
      * Restituisce la label data la chiave.
      * @param key La chiave tramite il quele estrarre la label.
      * @return La label cercata.
-     * @throws EntException in caso di errori di parsing.
+     * @throws EntException in caso di errore.
      */
     public String getLabel(String key) throws EntException {
         String label = null;
         if (null != key) {
-            label = this.i18nManager.getLabel(key, this.currentLangCode);
-            if (StringUtils.isBlank(label) && null != reqCtx) {
-                label = this.i18nManager.getLabel(key, this.getDefaultLang().getCode());
-            }
+            label = this.getLabel(key, this.currentLangCode).filter(StringUtils::isNotBlank)
+                    .orElseGet(() -> Optional.ofNullable(this.getDefaultLang())
+                        .flatMap(df -> this.getLabel(key, df.getCode())).orElse(null));
         }
         if (StringUtils.isBlank(label)) {
             return key;
