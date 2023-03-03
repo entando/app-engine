@@ -99,7 +99,7 @@ public class I18nManagerWrapper {
     }
 
     private Lang getDefaultLang() {
-        if (null == this.defaultLang) {
+        if (null == this.defaultLang && null != this.reqCtx) {
             ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(SystemConstants.LANGUAGE_MANAGER, this.reqCtx.getRequest());
             this.defaultLang = langManager.getDefaultLang();
         }
