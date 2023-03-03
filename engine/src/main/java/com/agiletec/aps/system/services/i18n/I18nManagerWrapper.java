@@ -30,59 +30,59 @@ import org.entando.entando.ent.exception.EntException;
  * @author S.Didaci
  */
 public class I18nManagerWrapper {
-    
+
     private String currentLangCode;
     private Lang defaultLang;
-    
+
     private II18nManager i18nManager;
     private RequestContext reqCtx;
 
-	/**
-	 * Inizializzazione del Wrapper.
-	 * @param currentLangCode La lingua tramite il quale restituire la label.
-	 * @param i18nManager Il manager gestore delle etichette.
-	 */
-	public I18nManagerWrapper(String currentLangCode, II18nManager i18nManager) {
-		this.currentLangCode = currentLangCode;
-		this.i18nManager = i18nManager;
-	}
+    /**
+     * Inizializzazione del Wrapper.
+     * @param currentLangCode La lingua tramite il quale restituire la label.
+     * @param i18nManager Il manager gestore delle etichette.
+     */
+    public I18nManagerWrapper(String currentLangCode, II18nManager i18nManager) {
+        this.currentLangCode = currentLangCode;
+        this.i18nManager = i18nManager;
+    }
 
-	public I18nManagerWrapper(String currentLangCode, II18nManager i18nManager, RequestContext reqCtx) {
-		this(currentLangCode, i18nManager);
+    public I18nManagerWrapper(String currentLangCode, II18nManager i18nManager, RequestContext reqCtx) {
+        this(currentLangCode, i18nManager);
         this.reqCtx = reqCtx;
-	}
+    }
 
-	/**
-	 * Restituisce la label data la chiave. 
-	 * @param key La chiave tramite il quele estrarre la label.
-	 * @return La label cercata.
-	 * @throws EntException in caso di errori di parsing.
-	 */
-	public String getLabel(String key) throws EntException {
-		String label = null;
-		if (null != key) {
-			label = this.i18nManager.getLabel(key, this.currentLangCode);
+    /**
+     * Restituisce la label data la chiave.
+     * @param key La chiave tramite il quele estrarre la label.
+     * @return La label cercata.
+     * @throws EntException in caso di errori di parsing.
+     */
+    public String getLabel(String key) throws EntException {
+        String label = null;
+        if (null != key) {
+            label = this.i18nManager.getLabel(key, this.currentLangCode);
             if (StringUtils.isBlank(label) && null != reqCtx) {
                 label = this.i18nManager.getLabel(key, this.getDefaultLang().getCode());
             }
-		}
+        }
         if (StringUtils.isBlank(label)) {
             return key;
         }
-		return label;
-	}
+        return label;
+    }
 
-	/**
-	 * Returns a {@link I18nLabelBuilder} from a given key, that allows to translate a label containing parameters. 
-	 * @param key The key of the desired label.
-	 * @return A {@link I18nLabelBuilder} that allows you to replace the params of the label.
-	 * @throws EntException in case of parsing errors.
-	 */
-	public I18nLabelBuilder getLabelWithParams(String key) throws EntException {
-		String label = this.getLabel(key);
-		return new I18nLabelBuilder(label);
-	}
-    
+    /**
+     * Returns a {@link I18nLabelBuilder} from a given key, that allows to translate a label containing parameters.
+     * @param key The key of the desired label.
+     * @return A {@link I18nLabelBuilder} that allows you to replace the params of the label.
+     * @throws EntException in case of parsing errors.
+     */
+    public I18nLabelBuilder getLabelWithParams(String key) throws EntException {
+        String label = this.getLabel(key);
+        return new I18nLabelBuilder(label);
+    }
+
     private Lang getDefaultLang() {
         if (null == this.defaultLang) {
             ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(SystemConstants.LANGUAGE_MANAGER, this.reqCtx.getRequest());
