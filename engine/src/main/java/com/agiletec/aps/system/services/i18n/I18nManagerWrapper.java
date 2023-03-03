@@ -13,6 +13,8 @@
  */
 package com.agiletec.aps.system.services.i18n;
 
+import static java.lang.Math.log;
+
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.i18n.wrapper.I18nLabelBuilder;
@@ -20,9 +22,10 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
  * Wrapper del Servizio I18N utilizzato nel contesto di Velocity per il parsing dei modelli.
@@ -31,8 +34,9 @@ import org.entando.entando.ent.exception.EntException;
  * Il servizio base richiede invece la specificazione della lingua ad ogni richiesta.
  * @author S.Didaci
  */
-@Slf4j
 public class I18nManagerWrapper {
+    
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(I18nManagerWrapper.class);
 
     private String currentLangCode;
     private Lang defaultLang;
@@ -59,7 +63,7 @@ public class I18nManagerWrapper {
         try {
             return Optional.ofNullable(this.i18nManager.getLabel(key, langCode));
         } catch (EntException ex) {
-            log.error("Error extracting label for key {} anc lang {}", key, langCode, ex);
+            logger.error("Error extracting label for key {} anc lang {}", key, langCode, ex);
             return Optional.empty();
         }
     }
