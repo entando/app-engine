@@ -15,7 +15,7 @@
             </span> &nbsp;&nbsp;
 
             <span>
-                <s:if test="#attribute.type == 'Monotext'">
+                <s:if test="#attribute.type == 'Monotext' || #attribute.type == 'Email'">
                     <s:include value="/WEB-INF/apsadmin/jsp/entity/view/monotextAttribute.jsp" />
                 </s:if>
                 <s:elseif test="#attribute.type == 'Text'">

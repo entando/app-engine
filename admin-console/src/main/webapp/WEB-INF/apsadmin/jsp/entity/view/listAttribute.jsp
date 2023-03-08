@@ -27,7 +27,7 @@
                     <s:elseif test="#attribute.type == 'EnumeratorMap'">
                         <s:include value="/WEB-INF/apsadmin/jsp/entity/view/enumeratorMapAttribute.jsp" />
                     </s:elseif>
-                    <s:elseif test="#attribute.type == 'Monotext'">
+                    <s:elseif test="#attribute.type == 'Monotext' || #attribute.type == 'Email'">
                         <s:include value="/WEB-INF/apsadmin/jsp/entity/view/monotextAttribute.jsp" />
                     </s:elseif>
                     <s:elseif test="#attribute.type == 'Number'">
