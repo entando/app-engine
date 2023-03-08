@@ -106,7 +106,7 @@
 					<s:elseif test="#attribute.type == 'Number'">
 						<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/numberAttribute.jsp" />
 					</s:elseif>
-					<s:elseif test="#attribute.type == 'Monotext'">
+					<s:elseif test="#attribute.type == 'Monotext' || #attribute.type == 'Email'">
 						<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/monotextAttribute.jsp" />
 					</s:elseif>
 					<s:elseif test="#attribute.type == 'Text'">
@@ -117,9 +117,6 @@
 					</s:elseif>
 					<s:elseif test="#attribute.type == 'Timestamp'">
 						<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/timestampAttribute.jsp" />
-					</s:elseif>
-					<s:elseif test="#attribute.type == 'Email'">
-						<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/monotextAttribute.jsp" />
 					</s:elseif>
 					<wpsa:hookPoint key="jacms.entryContent.attributeExtra" objectName="hookPointElements_jacms_entryContent_attributeExtra">
 						<s:iterator value="#hookPointElements_jacms_entryContent_attributeExtra" var="hookPointElement">

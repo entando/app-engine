@@ -56,7 +56,7 @@
 			<s:elseif test="#attribute.type == 'Longtext'">
 				<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_hypertextAttribute.jsp" />
 			</s:elseif>
-			<s:elseif test="#attribute.type == 'Monotext'">
+			<s:elseif test="#attribute.type == 'Monotext' || #attribute.type == 'Email'">
 				<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
 			</s:elseif>
 			<s:elseif test="#attribute.type == 'Number'">
@@ -69,61 +69,11 @@
 				<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
 			</s:elseif>
 			<s:else>
-				else?<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
+				<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
 			</s:else>
 			<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_attributeInfo-help-block.jsp" />
 		</div>
 	</li>
-<%--
-		<li class="contentAttributeBox">
-		<p>
-			<span class="important">
-				<s:property value="#elementStatus.count" />&#32;<s:text name="label.compositeAttribute.element" />
-			</span>
-			<s:if test="#lang.default">
-				<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/include/listAttributes/allList_operationModule.jsp" />
-			</s:if>
-		</p>
-	</s:if>
-	<s:else>
-		<li>
-			<label for="<s:property value="#attribute_id" />"><s:property value="#elementStatus.index + 1" /></label>
-	</s:else>
-		
-		<s:if test="#attribute.type == 'Boolean'">
-			<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_booleanAttribute.jsp" />
-		</s:if>
-
-		<s:elseif test="#attribute.type == 'Monotext'">
-			<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
-		</s:elseif>
-		<s:elseif test="#attribute.type == 'Text'">
-			<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
-		</s:elseif>
-		<s:elseif test="#attribute.type == 'Longtext'"> 
-			<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_monotextAttribute.jsp" />
-		</s:elseif>
-		<s:elseif test="#attribute.type == 'Date'">
-		 	<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_dateAttribute.jsp" />
-		</s:elseif>
-		<s:elseif test="#attribute.type == 'Hypertext'">
-			<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/front_hypertextAttribute.jsp" />
-		</s:elseif>
-		<s:elseif test="#attribute.type == 'Composite'">
-			<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/compositeAttribute.jsp" />
-		</s:elseif>
-		
-
-		&#32;
-		
-		<s:if test="#attribute.type != 'Composite'">	
-			<s:if test="#lang.default">
-				<s:include value="/WEB-INF/aps/jsp/internalservlet/user/inc/attributes/listAttributes/front_allList_operationModule.jsp" />
-			</s:if>
-		</s:if> 
-	</li>
-
-	--%>
 </s:iterator>
 
 <s:set var="attributeTracer" value="#masterListAttributeTracer" />

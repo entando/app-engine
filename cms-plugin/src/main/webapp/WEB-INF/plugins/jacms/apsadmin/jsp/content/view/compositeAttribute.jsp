@@ -20,7 +20,7 @@
 					<s:if test="#attribute.type == 'Text'">
 						<s:include value="/WEB-INF/apsadmin/jsp/entity/view/textAttribute.jsp" />
 					</s:if>
-					<s:elseif test="#attribute.type == 'Monotext'">
+					<s:elseif test="#attribute.type == 'Monotext' || #attribute.type == 'Email'">
 						<s:include value="/WEB-INF/apsadmin/jsp/entity/view/monotextAttribute.jsp" />
 					</s:elseif>
 					<s:elseif test="#attribute.type == 'Longtext'">

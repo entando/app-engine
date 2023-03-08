@@ -74,7 +74,7 @@
 			<s:elseif test="#attribute.type == 'Longtext'">
 				<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/longtextAttribute.jsp" />
 			</s:elseif>
-			<s:elseif test="#attribute.type == 'Monotext'">
+			<s:elseif test="#attribute.type == 'Monotext' || #attribute.type == 'Email'">
 				<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/monotextAttribute.jsp" />
 			</s:elseif>
 			<s:elseif test="#attribute.type == 'Number'">
@@ -88,9 +88,6 @@
 			</s:elseif>
 			<s:elseif test="#attribute.type == 'Timestamp'">
 				<s:include value="/WEB-INF/apsadmin/jsp/entity/modules/timestampAttribute.jsp" />
-			</s:elseif>
-			<s:elseif test="#attribute.type == 'Email'">
-                                <s:include value="/WEB-INF/apsadmin/jsp/entity/modules/monotextAttribute.jsp" />
 			</s:elseif>
 
 			<%-- jacms attribute types --%>

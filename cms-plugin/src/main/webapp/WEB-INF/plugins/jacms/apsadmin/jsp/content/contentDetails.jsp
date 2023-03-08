@@ -314,7 +314,7 @@
                                                             </label>
                                                             <%--input-group --%>
                                                             <div class="input-group">
-                                                                <s:if test="#attribute.type == 'Monotext' || #attribute.type == 'Text' || #attribute.type == 'Longtext' || #attribute.type == 'Enumerator' || #attribute.type == 'EnumeratorMap'">
+                                                                <s:if test="#attribute.type == 'Monotext' || #attribute.type == 'Email' || #attribute.type == 'Text' || #attribute.type == 'Longtext' || #attribute.type == 'Enumerator' || #attribute.type == 'EnumeratorMap'">
                                                                     <s:if test="#lang.default">
                                                                         <div>
                                                                             <s:include value="/WEB-INF/apsadmin/jsp/entity/view/textAttribute.jsp" />
