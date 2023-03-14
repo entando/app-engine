@@ -43,7 +43,6 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -213,7 +212,7 @@ class WidgetControllerIntegrationTest extends AbstractControllerIntegrationTest 
         String response = result.andReturn().getResponse().getContentAsString();
         assertNotNull(response);
     }
-
+    
     @Test
     void testAddUpdateWidget_1() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
@@ -229,10 +228,17 @@ class WidgetControllerIntegrationTest extends AbstractControllerIntegrationTest 
             titles.put("en", "Title EN");
             request.setTitles(titles);
             request.setCustomUi("<h1>Custom UI</h1>");
+            Map<String, Object> configUi = Map.of("resources", Arrays.asList("bundles/simple-mfe/widgets/simple-mfe-config/static/js/main.abc1.js", 
+                    "bundles/simple-mfe/widgets/simple-mfe-config/static/css/main.abc1.css"), "customElement", "simple-mfe-config");
+            request.setConfigUi(configUi);
             request.setGroup(Group.FREE_GROUP_NAME);
             request.setReadonlyPageWidgetConfig(true);
             ResultActions result = this.executeWidgetPost(request, accessToken, status().isOk());
+            
             result.andExpect(jsonPath("$.payload.code", is(newCode)));
+            result.andExpect(jsonPath("$.payload.configUi.resources[0]", is("bundles/simple-mfe/widgets/simple-mfe-config/static/js/main.abc1.js")));
+            result.andExpect(jsonPath("$.payload.configUi.resources[1]", is("bundles/simple-mfe/widgets/simple-mfe-config/static/css/main.abc1.css")));
+            result.andExpect(jsonPath("$.payload.configUi.customElement", is("simple-mfe-config")));
             WidgetType widgetType = this.widgetTypeManager.getWidgetType(newCode);
             Assertions.assertNotNull(widgetType);
             Assertions.assertEquals("Title EN", widgetType.getTitles().getProperty("en"));
@@ -246,6 +252,11 @@ class WidgetControllerIntegrationTest extends AbstractControllerIntegrationTest 
             request.setCustomUi("");
             result = this.executeWidgetPut(request, newCode, accessToken, status().isBadRequest());
             result.andExpect(jsonPath("$.errors[0].code", is(WidgetValidator.ERRCODE_NOT_BLANK)));
+            
+            ResultActions getResult = this.executeWidgetGet(newCode, accessToken, status().isOk());
+            getResult.andExpect(jsonPath("$.payload.configUi.resources[0]", is("bundles/simple-mfe/widgets/simple-mfe-config/static/js/main.abc1.js")));
+            getResult.andExpect(jsonPath("$.payload.configUi.resources[1]", is("bundles/simple-mfe/widgets/simple-mfe-config/static/css/main.abc1.css")));
+            getResult.andExpect(jsonPath("$.payload.configUi.customElement", is("simple-mfe-config")));
             
             titles.put("en", "Title EN modified");
             request.setCustomUi("New Custom Ui");
@@ -459,6 +470,7 @@ class WidgetControllerIntegrationTest extends AbstractControllerIntegrationTest 
             this.widgetTypeManager.deleteWidgetType(newCode);
         }
     }
+    
     @Test
     void testAddUpdateWidgetWithParentAndParameters() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
@@ -915,7 +927,7 @@ class WidgetControllerIntegrationTest extends AbstractControllerIntegrationTest 
                 new ContextOfControllerTests(mockMvc, mapper)
         );
     }
-
+    
     /**
      * Non-logical widgets having a default UI can be saved without custom UI.
      * When the custom UI is null in the database, the API populates it using the value of default UI.
