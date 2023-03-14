@@ -178,16 +178,26 @@ public class DatabaseManager extends AbstractInitializerManager
 
     private void initComponents(SystemInstallationReport report, DatabaseMigrationStrategy migrationStrategy) throws DatabaseMigrationException, EntException {
         List<Component> components = this.getComponentManager().getCurrentComponents();
-        Map<String, List<ChangeSetStatus>> pendingChangeSetMap = new HashMap<>();
-        for (Component entandoComponentConfiguration : components) {
-            List<ChangeSetStatus> pendingChangeSet = this.initLiquiBaseResources(entandoComponentConfiguration,
-                    report, migrationStrategy);
-            if (!pendingChangeSet.isEmpty()) {
-                pendingChangeSetMap.put(entandoComponentConfiguration.getCode(), pendingChangeSet);
+        String[] dataSourceNames = this.extractBeanNames(DataSource.class);
+        Map<String, List<String>> changeSetMapFiles = new HashMap<>();
+        Map<String, String> componentsForChangeLog = new HashMap<>();
+        for (Component componentConfiguration : components) {
+            for (String dataSourceName : dataSourceNames) {
+                String changeLogFile = (null != componentConfiguration.getLiquibaseChangeSets()) ? componentConfiguration.getLiquibaseChangeSets().get(dataSourceName) : null;
+                if (null != changeLogFile) {
+                    List<String> changeSetFiles = changeSetMapFiles.get(dataSourceName);
+                    if (null == changeSetFiles) {
+                        changeSetFiles = new ArrayList<>();
+                        changeSetMapFiles.put(dataSourceName, changeSetFiles);
+                    }
+                    changeSetFiles.add(changeLogFile);
+                    componentsForChangeLog.put(changeLogFile, componentConfiguration.getCode());
+                }
             }
         }
-        if (!pendingChangeSetMap.isEmpty()) {
-            throw new DatabaseMigrationException(pendingChangeSetMap);
+        List<ChangeSetStatus> pendingChangeSet = this.initLiquiBaseResources(changeSetMapFiles, componentsForChangeLog, report, migrationStrategy);
+        if (!pendingChangeSet.isEmpty()) {
+            throw new DatabaseMigrationException(pendingChangeSet);
         }
     }
 
@@ -236,59 +246,67 @@ public class DatabaseManager extends AbstractInitializerManager
     }
 
     //---------------- DATA ------------------- START
-
-    public List<ChangeSetStatus> initLiquiBaseResources(Component componentConfiguration, SystemInstallationReport report, DatabaseMigrationStrategy migrationStrategy) throws EntException {
+    
+    public List<ChangeSetStatus> initLiquiBaseResources(Map<String, List<String>> changeSetMapFiles, 
+            Map<String, String> componentsForChangeLog, SystemInstallationReport report, DatabaseMigrationStrategy migrationStrategy) throws EntException {
         List<ChangeSetStatus> pendingChangeSet = new ArrayList<>();
-        logger.info(INIT_MSG_L, componentConfiguration.getCode(), LOG_PREFIX);
-        ComponentInstallationReport componentReport = report.getComponentReport(componentConfiguration.getCode(), true);
-        LiquibaseInstallationReport liquibaseReport = componentReport.getLiquibaseReport();
         try {
-            ApsSystemUtils.directStdoutTrace(LOG_PREFIX + "Starting installation\n" + LOG_PREFIX);
             String[] dataSourceNames = this.extractBeanNames(DataSource.class);
             for (String dataSourceName : dataSourceNames) {
-                String changeLogFile = (null != componentConfiguration.getLiquibaseChangeSets()) ? componentConfiguration.getLiquibaseChangeSets().get(dataSourceName) : null;
-                if (null != changeLogFile) {
-                    liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.INCOMPLETE);
-                    List<ChangeSetStatus> changeSetToExecute = this.executeLiquibaseUpdate(report.getCreation(), 
-                            componentConfiguration.getCode(), changeLogFile, dataSourceName, report.getStatus(), migrationStrategy);
-                    pendingChangeSet.addAll(changeSetToExecute);
-                    ApsSystemUtils.directStdoutTrace("|   ( ok )  " + dataSourceName);
-                    if (!DatabaseMigrationStrategy.DISABLED.equals(migrationStrategy)) {
-                        liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.OK);
-                    } else {
-                        liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.SKIPPED);
-                    }
-                }
+                List<String> changeSetFiles = changeSetMapFiles.get(dataSourceName);
+                List<ChangeSetStatus> changeSetToExecute = this.executeLiquibaseUpdate(changeSetFiles, 
+                        componentsForChangeLog, dataSourceName, report, migrationStrategy);
+                pendingChangeSet.addAll(changeSetToExecute);
             }
-            if (report.getStatus().equals(SystemInstallationReport.Status.RESTORE) || report.getStatus().equals(SystemInstallationReport.Status.PORTING)) {
-                componentReport.setPostProcessStatus(report.getStatus());
-            }
-            ApsSystemUtils.directStdoutTrace(LOG_PREFIX + "\n" + LOG_PREFIX + "Installation complete\n" + LOG_PREFIX);
-            logger.debug(LOG_PREFIX + "\n" + LOG_PREFIX + "Installation complete\n" + LOG_PREFIX);
-        } catch (Throwable t) {
-            logger.error("Error executing liquibase initialization for component {}", componentConfiguration.getCode(), t);
-            throw new EntException("Error executing liquibase initialization for component " + componentConfiguration.getCode(), t);
+        } catch (Exception e) {
+            logger.error("Error executing liquibase initialization", e);
+            throw new EntException("Error executing liquibase initialization", e);
         }
         return pendingChangeSet;
     }
-
-    private List<ChangeSetStatus> executeLiquibaseUpdate(Date timestamp, String componentCode,
-            String changeLogFile, String dataSourceName, Status status, DatabaseMigrationStrategy migrationStrategy)
-            throws LiquibaseException, IOException, SQLException {
+    
+    
+    private List<ChangeSetStatus> executeLiquibaseUpdate(List<String> changeSetFiles, Map<String, String> componentsForChangeLog, 
+            String dataSourceName, SystemInstallationReport report, DatabaseMigrationStrategy migrationStrategy) throws LiquibaseException, IOException, SQLException {
         List<ChangeSetStatus> changeSetToExecute = new ArrayList<>();
         Connection connection = null;
-        Liquibase liquibase = null;
-        Writer writer = null;
         try {
             DataSource dataSource = this.getRightDatasource(dataSourceName);
             connection = dataSource.getConnection();
             JdbcConnection liquibaseConnection = new JdbcConnection(connection);
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(liquibaseConnection);
-            liquibase = new Liquibase(changeLogFile, new ClassLoaderResourceAccessor(), database); // NOSONAR
+            for (String changeSetFile : changeSetFiles) {
+                List<ChangeSetStatus> singleChangesetToExecute = 
+                        this.executeSingleLiquibaseUpdate(database, changeSetFile, componentsForChangeLog, dataSourceName, report, migrationStrategy);
+                changeSetToExecute.addAll(singleChangesetToExecute);
+            }
+        } catch (Exception e) {
+            logger.error("Error executing liquibase update", e);
+            throw e;
+        } finally {
+            if (null != connection) {
+                connection.close();
+            }
+        }
+        return changeSetToExecute;
+    }
+    
+    private List<ChangeSetStatus> executeSingleLiquibaseUpdate(Database database, String changeSetFile, Map<String, String> componentsForChangeLog, 
+            String dataSourceName, SystemInstallationReport report, DatabaseMigrationStrategy migrationStrategy) throws LiquibaseException, IOException {
+        String componentCode = componentsForChangeLog.get(changeSetFile);
+        ComponentInstallationReport componentReport = report.getComponentReport(componentCode, true);
+        LiquibaseInstallationReport liquibaseReport = componentReport.getLiquibaseReport();
+        List<ChangeSetStatus> changeSetToExecute = new ArrayList<>();
+        Liquibase liquibase = null;
+        Writer writer = null;
+        try {
+            liquibase = new Liquibase(changeSetFile, new ClassLoaderResourceAccessor(), database); // NOSONAR
             this.releaseLockIfNeeded(liquibase);
-            Contexts contexts = getContexts(status);
+            liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.INIT);
+            Contexts contexts = getContexts(report.getStatus());
             if (DatabaseMigrationStrategy.AUTO.equals(migrationStrategy)) {
                 liquibase.update(contexts, new LabelExpression());
+                liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.OK);
             } else {
                 List<ChangeSetStatus> statusList = liquibase.getChangeSetStatuses(contexts, new LabelExpression());
                 changeSetToExecute = statusList.stream().filter(ChangeSetStatus::getWillRun).collect(Collectors.toList());
@@ -299,25 +317,25 @@ public class DatabaseManager extends AbstractInitializerManager
                     liquibase.update(contexts, new LabelExpression(), writer);
                     if (DatabaseMigrationStrategy.GENERATE_SQL.equals(migrationStrategy)) {
                         ByteArrayInputStream stream = new ByteArrayInputStream(writer.toString().getBytes(StandardCharsets.UTF_8));
-                        String path = "liquibase" + File.separator + DateConverter.getFormattedDate(timestamp, "yyyyMMddHHmmss") + File.separator + componentCode + "_" + dataSourceName + ".sql";
+                        String path = "liquibase" + File.separator + DateConverter.getFormattedDate(report.getCreation(), "yyyyMMddHHmmss") + File.separator + componentCode + "_" + dataSourceName + ".sql";
                         this.getStorageManager().saveFile(path, true, stream);
                         logger.warn("{}, Please find the update SQL script under \"<PROTECTED_ENTANDO_DATA>{}{}\"", messagePrefix, File.separator, path);
                     } else {
                         logger.warn("{}, Please update the DB manually", messagePrefix);
                     }
+                    liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.SKIPPED);
+                } else {
+                    liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.INCOMPLETE);
                 }
             }
         } catch (Exception e) {
-            logger.error("Error executing liquibase update - " + changeLogFile, e);
+            logger.error("Error executing liquibase update - " + changeSetFile, e);
         } finally {
             if (null != writer) {
                 writer.close();
             }
             if (null != liquibase) {
                 handleLiquibaseClose(liquibase);
-            }
-            if (null != connection) {
-                connection.close();
             }
         }
         return changeSetToExecute;

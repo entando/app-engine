@@ -31,4 +31,9 @@ public class DatabaseMigrationException extends Exception {
 				+ " need to be upgraded manually ");
 	}
 
+	public DatabaseMigrationException(List<ChangeSetStatus> pendingChangeSet) {
+		super("Error on database migration - changesets " + pendingChangeSet.size()
+				+ " need to be upgraded manually ");
+	}
+
 }

@@ -66,6 +66,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.verification.VerificationMode;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -87,6 +88,9 @@ class DatabaseManagerTest {
 
     @Mock
     private LiquibaseInstallationReport liquibaseInstallationReport;
+    
+    @Mock
+    private ListableBeanFactory beanFactory;
 
     @InjectMocks
     @Spy
@@ -122,19 +126,20 @@ class DatabaseManagerTest {
         }
         return component;
     }
-
+    
     @Test
     void testDisabledDatabaseMigrationStrategy() throws Exception {
         List<ChangeSetStatus> changeSetToExecute = new ArrayList<>();
         changeSetToExecute.add(Mockito.mock(ChangeSetStatus.class));
+        Mockito.when(this.beanFactory.getBeanNamesForType(DataSource.class)).thenReturn(new String[]{"portDataSource", "servDataSource"});
         Mockito.lenient().doReturn(changeSetToExecute).when(databaseManager)
-                .initLiquiBaseResources(Mockito.any(), Mockito.any(), Mockito.any());
+                .initLiquiBaseResources(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         DatabaseMigrationStrategy migrationStrategyEnum = DatabaseMigrationStrategy.DISABLED;
         Assertions.assertThrows(DatabaseMigrationException.class, () -> {
             databaseManager.installDatabase(new SystemInstallationReport(null), migrationStrategyEnum);
         });
     }
-
+    
     @Test
     void testInstallDatabaseRestoreLastDump() throws Exception {
 
@@ -184,7 +189,7 @@ class DatabaseManagerTest {
             Mockito.verify(databaseRestorer).initOracleSchema(ArgumentMatchers.any());
         }
     }
-
+    
     @Test
     void testGenerateSqlStrategy() throws Exception {
 
@@ -248,7 +253,7 @@ class DatabaseManagerTest {
             Mockito.verify(construction.constructed().get(0), mode).forceReleaseLocks();
         }
     }
-
+    
     @Test
     void testDerbyErrorOnLiquibaseClose() throws Throwable {
         testLiquibaseCloseException(new DatabaseException("Error closing derby cleanly"));
@@ -260,21 +265,19 @@ class DatabaseManagerTest {
     }
 
     private void testLiquibaseCloseException(DatabaseException ex) throws Throwable {
-
         getMockedBeanFactory();
-
         Map<String, String> liquibaseChangeSets = new HashMap<>();
         liquibaseChangeSets.put("portDataSource", "changeSetPort.xml");
         Component componentConfiguration = Mockito.mock(Component.class);
         Mockito.when(componentConfiguration.getLiquibaseChangeSets()).thenReturn(liquibaseChangeSets);
-
         Mockito.when(componentManager.getCurrentComponents()).thenReturn(Arrays.asList(componentConfiguration));
-
         Map<String, Status> databaseStatus = new HashMap<>();
         Mockito.when(liquibaseInstallationReport.getDatabaseStatus()).thenReturn(databaseStatus);
-
         try (MockedConstruction<Liquibase> construction = Mockito.mockConstruction(Liquibase.class,
-                (liquibase, context) -> Mockito.doThrow(ex).when(liquibase).close());
+                (liquibase, context) -> {
+                    Mockito.when(liquibase.listLocks()).thenReturn(new DatabaseChangeLogLock[0]);
+                    Mockito.doThrow(ex).when(liquibase).close();
+                });
                 MockedStatic<DatabaseFactory> dbFactory = Mockito.mockStatic(DatabaseFactory.class)) {
             dbFactory.when(DatabaseFactory::getInstance).thenReturn(Mockito.mock(DatabaseFactory.class));
             databaseManager.installDatabase(getMockedReport(), DatabaseMigrationStrategy.AUTO);
