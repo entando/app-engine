@@ -434,7 +434,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         type.setReadonlyPageWidgetConfig(false);
         return type;
     }
-/*
+    
     @Test
     void testWidgetEvent() throws Throwable {
         String widgetTypeCode = "test_widgetType";
@@ -492,7 +492,7 @@ class TestWidgetTypeManager extends BaseTestCase {
             this.widgetTypeManager.deleteWidgetType(widgetTypeCode);
         }
     }
-*/
+    
     private IPage createPageForTest(String code, String parentCode) throws Throwable {
         IPage prototype = this.pageManager.getDraftPage("service");
         PageModel pageModel = this.pageModelManager.getPageModel(prototype.getMetadata().getModelCode());
