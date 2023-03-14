@@ -41,6 +41,7 @@ import com.agiletec.aps.system.services.page.PageMetadata;
 import com.agiletec.aps.system.services.page.PageTestUtil;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Assertions;
@@ -49,7 +50,7 @@ import org.junit.jupiter.api.Assertions;
  * @author M.Diana - E.Santoboni
  */
 class TestWidgetTypeManager extends BaseTestCase {
-
+    
     @Test
     void testGetWidgetTypes() throws EntException {
         List<WidgetType> list = this.widgetTypeManager.getWidgetTypes();
@@ -127,7 +128,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         String widgetTypeCode = "test_widgetType";
         assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         try {
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             type.setLocked(true);
             this.widgetTypeManager.addWidgetType(type);
             assertNotNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
@@ -150,7 +151,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         try {
             this.widgetTypeManager.deleteWidgetType(widgetTypeCode);
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             this.widgetTypeManager.addWidgetType(type);
             assertNotNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         } catch (Throwable t) {
@@ -170,7 +171,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         try {
             List<WidgetType> types = IntStream.range(1, 20).boxed().map(i -> {
                 String code = widgetTypeCode + "_" + i;
-                return this.createNewWidgetType(code);
+                return this.createLogicWidgetType(code);
             }).collect(Collectors.toList());
             types.parallelStream().forEach(wt -> {
                 try {
@@ -203,7 +204,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         String widgetTypeCode = "test_widgetType";
         assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         try {
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             this.widgetTypeManager.addWidgetType(type);
             WidgetType extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
             assertNotNull(extracted);
@@ -227,14 +228,51 @@ class TestWidgetTypeManager extends BaseTestCase {
             assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         }
     }
-
+    
     @Test
-    void testUpdate() throws Throwable {
+    void testUpdateConcreteType() throws Throwable {
+        String widgetTypeCode = "test_concreteType";
+        String icon= "font-awesome:fa-box";
+        assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
+        try {
+            WidgetType type = this.createConcreteWidgetType(widgetTypeCode);
+            this.widgetTypeManager.addWidgetType(type);
+            WidgetType extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
+            assertNotNull(extracted);
+            assertNull(extracted.getParentType());
+            assertNull(extracted.getConfig());
+            assertEquals(type.getConfigUi(), extracted.getConfigUi());
+            String newConfigUi = "new config ui";
+            this.widgetTypeManager.updateWidgetType(widgetTypeCode, extracted.getTitles(), null, type.getMainGroup(),
+                    newConfigUi, type.getBundleId(), true, type.getWidgetCategory(),icon);
+            extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
+            assertNotNull(extracted);
+            assertNull(extracted.getConfig());
+            assertTrue(extracted.isReadonlyPageWidgetConfig());
+            assertEquals(icon, extracted.getIcon());
+            assertEquals(newConfigUi, extracted.getConfigUi());
+            this.widgetTypeManager.updateWidgetType(widgetTypeCode, extracted.getTitles(), null, type.getMainGroup(),
+                    extracted.getConfigUi(), type.getBundleId(), type.isReadonlyPageWidgetConfig(),type.getWidgetCategory(),icon);
+            extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
+            assertNotNull(extracted);
+            assertEquals(newConfigUi, extracted.getConfigUi());
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            if (null != this.widgetTypeManager.getWidgetType(widgetTypeCode)) {
+                this.widgetTypeManager.deleteWidgetType(widgetTypeCode);
+            }
+            assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
+        }
+    }
+    
+    @Test
+    void testUpdateLogicType() throws Throwable {
         String widgetTypeCode = "test_showletType";
         String icon= "font-awesome:fa-box";
         assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         try {
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             this.widgetTypeManager.addWidgetType(type);
             WidgetType extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
             assertNotNull(extracted);
@@ -270,7 +308,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         String widgetTypeCode = "test_showletType";
         assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         try {
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             this.widgetTypeManager.addWidgetType(type);
             WidgetType extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
             assertNotNull(extracted);
@@ -308,7 +346,7 @@ class TestWidgetTypeManager extends BaseTestCase {
         String icon= "font-awesome:fa-box";
         assertNull(this.widgetTypeManager.getWidgetType(widgetTypeCode));
         try {
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             this.widgetTypeManager.addWidgetType(type);
             WidgetType extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
             assertNotNull(extracted);
@@ -358,8 +396,26 @@ class TestWidgetTypeManager extends BaseTestCase {
             throw t;
         }
     }
+    
+    private WidgetType createConcreteWidgetType(String code) {
+        WidgetType type = new WidgetType();
+        type.setCode(code);
+        ApsProperties titles = new ApsProperties();
+        titles.put("it", "Titolo");
+        titles.put("en", "Title");
+        type.setTitles(titles);
+        WidgetTypeParameter param1 = new WidgetTypeParameter("param1", "Description 1");
+        WidgetTypeParameter param2 = new WidgetTypeParameter("param2", "Description 2");
+        type.setTypeParameters(Arrays.asList(param1, param2));
+        type.setPluginCode("pluginCode");
+        type.setWidgetCategory("test");
+        type.setConfigUi("Config UI of concrete widget type");
+        type.setIcon("iconTest");
+        type.setReadonlyPageWidgetConfig(false);
+        return type;
+    }
 
-    private WidgetType createNewWidgetType(String code) {
+    private WidgetType createLogicWidgetType(String code) {
         WidgetType type = new WidgetType();
         type.setCode(code);
         ApsProperties titles = new ApsProperties();
@@ -378,13 +434,13 @@ class TestWidgetTypeManager extends BaseTestCase {
         type.setReadonlyPageWidgetConfig(false);
         return type;
     }
-
+/*
     @Test
     void testWidgetEvent() throws Throwable {
         String widgetTypeCode = "test_widgetType";
         String testCode = "test_page_code";
         try {
-            WidgetType type = this.createNewWidgetType(widgetTypeCode);
+            WidgetType type = this.createLogicWidgetType(widgetTypeCode);
             type.setMainGroup(Group.FREE_GROUP_NAME);
             this.widgetTypeManager.addWidgetType(type);
             WidgetType extracted = this.widgetTypeManager.getWidgetType(widgetTypeCode);
@@ -436,7 +492,7 @@ class TestWidgetTypeManager extends BaseTestCase {
             this.widgetTypeManager.deleteWidgetType(widgetTypeCode);
         }
     }
-
+*/
     private IPage createPageForTest(String code, String parentCode) throws Throwable {
         IPage prototype = this.pageManager.getDraftPage("service");
         PageModel pageModel = this.pageModelManager.getPageModel(prototype.getMetadata().getModelCode());

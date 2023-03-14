@@ -114,6 +114,7 @@ public class WidgetType implements Serializable {
             }
             clone.setTypeParameters(params);
         }
+        clone.setConfigUi(this.getConfigUi());
         clone.setMainGroup(this.getMainGroup());
         if (this.isReadonlyPageWidgetConfig()){
             clone.setReadonlyPageWidgetConfig(this.readonlyPageWidgetConfig);
