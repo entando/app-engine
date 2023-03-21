@@ -14,7 +14,6 @@ import org.entando.entando.plugins.jpredis.aps.system.redis.conditions.RedisActi
 import org.entando.entando.plugins.jpredis.aps.system.redis.conditions.RedisSentinel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +42,7 @@ public class SentinelConfig extends BaseRedisCacheConfig {
     }
 
     @Bean
-    public Executor sentinelSchedulerExecutor(RedisClient redisClient, CacheManager cacheManager,
+    public Executor sentinelSchedulerExecutor(RedisClient redisClient, LettuceCacheManager cacheManager,
             CacheFrontendManager cacheFrontendManager) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         SentinelScheduler sentinelScheduler = new SentinelScheduler(redisClient, cacheManager, cacheFrontendManager);

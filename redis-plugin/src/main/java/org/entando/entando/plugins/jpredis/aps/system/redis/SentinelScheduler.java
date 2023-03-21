@@ -26,7 +26,6 @@ import org.entando.entando.ent.exception.EntRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 
 /**
  * @author E.Santoboni
@@ -36,14 +35,14 @@ public class SentinelScheduler extends TimerTask {
     private static final Logger logger = LoggerFactory.getLogger(SentinelScheduler.class);
 
     private final RedisClient redisClient;
-    private final CacheManager cacheManager;
+    private final LettuceCacheManager cacheManager;
     private final CacheFrontendManager cacheFrontendManager;
 
     private String currentMasterIp;
 
     private int masterCheckLogCount = 0;
 
-    public SentinelScheduler(RedisClient redisClient, CacheManager cacheManager,
+    public SentinelScheduler(RedisClient redisClient, LettuceCacheManager cacheManager,
             CacheFrontendManager cacheFrontendManager) {
         this.redisClient = redisClient;
         this.cacheManager = cacheManager;
@@ -72,6 +71,7 @@ public class SentinelScheduler extends TimerTask {
 
     private void rebuildCacheFrontend() {
         CacheFrontend<String, Object> cacheFrontend = this.cacheFrontendManager.rebuildCacheFrontend();
+        this.cacheManager.updateCacheFrontend(cacheFrontend);
         Collection<String> cacheNames = this.cacheManager.getCacheNames();
         for (String cacheName : cacheNames) {
             Cache cache = this.cacheManager.getCache(cacheName);

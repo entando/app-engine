@@ -89,71 +89,6 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	 * @param cacheWriter must not be {@literal null}.
 	 * @param defaultCacheConfiguration must not be {@literal null}. Maybe just use
 	 *          {@link RedisCacheConfiguration#defaultCacheConfig()}.
-	 */
-	public LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration) {
-		this(cacheWriter, defaultCacheConfiguration, true, null);
-	}
-
-	/**
-	 * Creates new {@link RedisCacheManager} using given {@link RedisCacheWriter} and default
-	 * {@link RedisCacheConfiguration}.
-	 *
-	 * @param cacheWriter must not be {@literal null}.
-	 * @param defaultCacheConfiguration must not be {@literal null}. Maybe just use
-	 *          {@link RedisCacheConfiguration#defaultCacheConfig()}.
-	 * @param initialCacheNames optional set of known cache names that will be created with given
-	 *          {@literal defaultCacheConfiguration}.
-	 */
-	public LettuceCacheManager(RedisCacheWriter cacheWriter, 
-            RedisCacheConfiguration defaultCacheConfiguration, String... initialCacheNames) {
-		this(cacheWriter, defaultCacheConfiguration, true, null, initialCacheNames);
-	}
-
-	/**
-	 * Creates new {@link RedisCacheManager} using given {@link RedisCacheWriter} and default
-	 * {@link RedisCacheConfiguration}.
-	 *
-	 * @param cacheWriter must not be {@literal null}.
-	 * @param defaultCacheConfiguration must not be {@literal null}. Maybe just use
-	 *          {@link RedisCacheConfiguration#defaultCacheConfig()}.
-	 * @param allowInFlightCacheCreation if set to {@literal true} no new caches can be acquire at runtime but limited to
-	 *          the given list of initial cache names.
-     * @param cacheFrontend Allow to add Client-side caching support
-	 * @param initialCacheNames optional set of known cache names that will be created with given
-	 *          {@literal defaultCacheConfiguration}.
-	 * @since 2.0.4
-	 */
-	public LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
-			boolean allowInFlightCacheCreation, CacheFrontend<String, Object> cacheFrontend, String... initialCacheNames) {
-		this(cacheWriter, defaultCacheConfiguration, allowInFlightCacheCreation, cacheFrontend);
-		for (String cacheName : initialCacheNames) {
-			this.initialCacheConfiguration.put(cacheName, defaultCacheConfiguration);
-		}
-	}
-    
-	/**
-	 * Creates new {@link RedisCacheManager} using given {@link RedisCacheWriter} and default
-	 * {@link RedisCacheConfiguration}.
-	 *
-	 * @param cacheWriter must not be {@literal null}.
-	 * @param defaultCacheConfiguration must not be {@literal null}. Maybe just use
-	 *          {@link RedisCacheConfiguration#defaultCacheConfig()}.
-	 * @param initialCacheConfigurations Map of known cache names along with the configuration to use for those caches.
-	 *          Must not be {@literal null}.
-     * @param cacheFrontend Allow to add Client-side caching support
-	 */
-	public LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
-			Map<String, RedisCacheConfiguration> initialCacheConfigurations, CacheFrontend<String, Object> cacheFrontend) {
-		this(cacheWriter, defaultCacheConfiguration, initialCacheConfigurations, true, cacheFrontend);
-	}
-
-	/**
-	 * Creates new {@link RedisCacheManager} using given {@link RedisCacheWriter} and default
-	 * {@link RedisCacheConfiguration}.
-	 *
-	 * @param cacheWriter must not be {@literal null}.
-	 * @param defaultCacheConfiguration must not be {@literal null}. Maybe just use
-	 *          {@link RedisCacheConfiguration#defaultCacheConfig()}.
 	 * @param initialCacheConfigurations Map of known cache names along with the configuration to use for those caches.
 	 *          Must not be {@literal null}.
 	 * @param allowInFlightCacheCreation if set to {@literal false} this cache manager is limited to the initial cache
@@ -166,30 +101,6 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 		this(cacheWriter, defaultCacheConfiguration, allowInFlightCacheCreation, cacheFrontend);
 		Assert.notNull(initialCacheConfigurations, "InitialCacheConfigurations must not be null!");
 		this.initialCacheConfiguration.putAll(initialCacheConfigurations);
-	}
-
-	/**
-	 * Create a new {@link RedisCacheManager} with defaults applied.
-	 * <dl>
-	 * <dt>locking</dt>
-	 * <dd>disabled</dd>
-	 * <dt>cache configuration</dt>
-	 * <dd>{@link RedisCacheConfiguration#defaultCacheConfig()}</dd>
-	 * <dt>initial caches</dt>
-	 * <dd>none</dd>
-	 * <dt>transaction aware</dt>
-	 * <dd>no</dd>
-	 * <dt>in-flight cache creation</dt>
-	 * <dd>enabled</dd>
-	 * </dl>
-	 *
-	 * @param connectionFactory must not be {@literal null}.
-	 * @return new instance of {@link RedisCacheManager}.
-	 */
-	public static LettuceCacheManager create(RedisConnectionFactory connectionFactory) {
-		Assert.notNull(connectionFactory, "ConnectionFactory must not be null!");
-        DefaultLettuceCacheWriter writer = new DefaultLettuceCacheWriter(connectionFactory);
-		return new LettuceCacheManager(writer, RedisCacheConfiguration.defaultCacheConfig());
 	}
 
 	/**
@@ -265,6 +176,10 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 				.map(tenantCode -> tenantCode + "_")
 				.orElse("");
 		return super.getCache(prefix + name);
+	}
+
+	public void updateCacheFrontend(CacheFrontend<String, Object> cacheFrontend) {
+		this.cacheFrontend = cacheFrontend;
 	}
 
 	/**

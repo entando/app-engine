@@ -31,7 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cache.CacheManager;
 
 /**
  * @author E.Santoboni
@@ -49,7 +48,7 @@ class SentinelSchedulerTest {
     private RedisClient lettuceClient;
 
     @Mock
-    private CacheManager cacheManager;
+    private LettuceCacheManager cacheManager;
 
     @Mock
     private CacheFrontendManager cacheFrontendManager;
@@ -76,7 +75,7 @@ class SentinelSchedulerTest {
         SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
         scheduler.run();
         Mockito.verify(master, Mockito.times(2)).get("ip");
-        Mockito.verify(cacheFrontendManager, Mockito.times(0)).rebuildCacheFrontend();
+        Mockito.verify(cacheFrontendManager, Mockito.never()).rebuildCacheFrontend();
         scheduler.cancel();
     }
 
@@ -86,6 +85,7 @@ class SentinelSchedulerTest {
         scheduler.run();
         Mockito.verify(master, Mockito.times(2)).get("ip");
         Mockito.verify(cacheFrontendManager, Mockito.times(1)).rebuildCacheFrontend();
+        Mockito.verify(cacheManager, Mockito.times(1)).updateCacheFrontend(Mockito.any());
         scheduler.cancel();
     }
 
@@ -94,8 +94,8 @@ class SentinelSchedulerTest {
         when(commands.masters()).thenReturn(new ArrayList<>());
         SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
         scheduler.run();
-        Mockito.verify(master, Mockito.times(0)).get("ip");
-        Mockito.verify(cacheFrontendManager, Mockito.times(0)).rebuildCacheFrontend();
+        Mockito.verify(master, Mockito.never()).get("ip");
+        Mockito.verify(cacheFrontendManager, Mockito.never()).rebuildCacheFrontend();
         scheduler.cancel();
     }
 
