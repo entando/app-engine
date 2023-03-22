@@ -55,11 +55,6 @@ public class BaseConfigManager extends AbstractService implements ConfigInterfac
     public void init() throws Exception {
         String version = this.getSystemParams().get(SystemConstants.INIT_PROP_CONFIG_VERSION);
         this.getCacheWrapper().initCache(this.getConfigDAO(), version);
-        boolean legacyPasswordsUpdated = (this.getParam(LEGACY_PASSWORDS_UPDATED) != null
-                && this.getParam(LEGACY_PASSWORDS_UPDATED).equalsIgnoreCase("true"));
-        if (legacyPasswordsUpdated) {
-            logger.warn("legacyPasswordsUpdated system parameter ignored as legacy password update is no more supported");
-        }
         logger.debug("{} ready. Initialized", this.getClass().getName());
     }
     
