@@ -109,7 +109,7 @@ public abstract class ApsEntityManager extends AbstractService
         this.entityDom.setRootElementName(this.getXmlAttributeRootElementName());
         this.getCacheWrapper().initCache(super.getName());
         this.initAttributeRoles();
-        logger.info("{} : inizializated", this.getName());
+        logger.debug("{} : inizializated", this.getName());
     }
     
     protected void initAttributeRoles() {
