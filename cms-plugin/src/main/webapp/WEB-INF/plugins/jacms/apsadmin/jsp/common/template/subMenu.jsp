@@ -46,14 +46,6 @@
             </a>
         </li>
     </c:if>
-    <s:text name="jpcontentscheduler.admin.menu" var="jpcontentschedulerMenuLabel" />
-    <c:if test="${(isSuperUser || isValidateContents) && jpcontentschedulerMenuLabel != 'jpcontentscheduler.admin.menu'}">
-        <li class="list-group-item">
-            <a href="<s:url action="viewItem" namespace="/do/jpcontentscheduler/config" />">
-                <span class="list-group-item-value"><s:text name="jpcontentscheduler.admin.menu" /></span>
-            </a>
-        </li>
-    </c:if>
     <c:if test="${isSuperUser}">
         <li class="list-group-item">
             <a href="<s:url action="initViewEntityTypes" namespace="/do/Entity"><s:param name="entityManagerName">jacmsContentManager</s:param></s:url>">
