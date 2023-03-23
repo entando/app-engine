@@ -13,14 +13,12 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.content;
 
-import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import java.util.Date;
 
 /**
  * Action gestore delle operazioni di creazione nuovo contenuto.
@@ -68,31 +66,23 @@ public class IntroNewContentAction extends AbstractContentAction {
 		return SUCCESS;
 	}
 	
-	public String createNew() {
-		try {
-                        _logger.debug("Create new content");
-			Content prototype = this.getContentManager().createContentType(this.getContentTypeCode());
-			if (null == prototype) {
-				this.addFieldError("contentTypeCode", this.getText("error.content.type.invalid"));
-                                _logger.debug("Invalid content type");
-				return INPUT;
-			}
-			prototype.setFirstEditor(this.getCurrentUser().getUsername());
-                        prototype.getAttributeList().forEach(attr -> {
-                                
-                            if (attr instanceof DateAttribute) {
-                                _logger.debug("Assigning default value to date attribute {}", attr.getName());
-                                ((DateAttribute)attr).setDate(new Date());                                
-                            }
-                            
-                        });
-			this.fillSessionAttribute(prototype);
-		} catch (Throwable t) {
-			_logger.error("error in createNew", t);
-			return FAILURE;
-		}
-		return SUCCESS;
-	}
+    public String createNew() {
+        try {
+            _logger.debug("Create new content");
+            Content prototype = this.getContentManager().createContentType(this.getContentTypeCode());
+            if (null == prototype) {
+                this.addFieldError("contentTypeCode", this.getText("error.content.type.invalid"));
+                _logger.debug("Invalid content type");
+                return INPUT;
+            }
+            prototype.setFirstEditor(this.getCurrentUser().getUsername());
+            this.fillSessionAttribute(prototype);
+        } catch (Throwable t) {
+            _logger.error("error in createNew", t);
+            return FAILURE;
+        }
+        return SUCCESS;
+    }
 	
 	protected void fillSessionAttribute(Content prototype) {
 		if (this.getAuthorizationManager().isAuthOnGroup(this.getCurrentUser(), Group.FREE_GROUP_NAME)) {

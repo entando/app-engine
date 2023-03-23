@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.apsadmin.content.util.AbstractBaseTestContentAction;
 import com.opensymphony.xwork2.Action;
 import com.opensymphony.xwork2.ActionSupport;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -78,6 +80,12 @@ class TestIntroNewContentAction extends AbstractBaseTestContentAction {
 		content = super.getContentOnEdit(contentOnSessionMarker);
 		assertNotNull(content);
 		assertEquals(contentTypeCode, content.getTypeCode());
+        
+        AttributeInterface dateAttribute = content.getAttributeList().stream()
+                .filter(a -> "Date".equalsIgnoreCase(a.getType())).findAny().orElse(null);
+        if (null == dateAttribute || (null != dateAttribute.getValue())) {
+            Assertions.fail();
+        }
 	}
 
 	@Test
