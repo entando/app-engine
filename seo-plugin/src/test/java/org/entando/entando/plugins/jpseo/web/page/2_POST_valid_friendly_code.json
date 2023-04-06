@@ -13,7 +13,7 @@
             "en": {
                 "description": "test",
                 "keywords": "keyword1, keyword 2",
-                "friendlyCode": "test_page_2_fc_en",
+                "friendlyCode": "test-page_2_fc_en",
                 "metaTags": [
                     {
                         "key": "copyright",
@@ -40,7 +40,7 @@
             "it": {
                 "description": "",
                 "keywords": "",
-                "friendlyCode": "test_page_2_fc_it",
+                "friendlyCode": "test-page_2_fc_it",
                 "metaTags": [
                     {
                         "key": "copyright",

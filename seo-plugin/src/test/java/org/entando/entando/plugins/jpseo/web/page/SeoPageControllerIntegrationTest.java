@@ -544,7 +544,7 @@ class SeoPageControllerIntegrationTest extends AbstractControllerIntegrationTest
             this.waitNotifyingThread();
             
             assertNull(this.seoMappingManager.getReference("test_page_2_fc_it"));
-            reference = this.seoMappingManager.getDraftPageReference("test_page_2_fc_it");
+            reference = this.seoMappingManager.getDraftPageReference("test-page_2_fc_it");
             assertEquals(SEO_TEST_2_FC, reference);
             assertNotNull(this.pageService.getPage(SEO_TEST_2_FC, IPageService.STATUS_DRAFT));
 
@@ -553,6 +553,9 @@ class SeoPageControllerIntegrationTest extends AbstractControllerIntegrationTest
             this.pageManager.setPageOnline(SEO_TEST_2_FC);
             this.waitNotifyingThread();
             this.executePutSeoPage("2_PUT_invalid_friendly_code.json", SEO_TEST_2, accessToken, status().isConflict());
+            
+            this.executePutSeoPage("2_PUT_friendly_with_invalid_chart.json", SEO_TEST_2, accessToken, status().isConflict());
+            
         } finally {
             IPage page1 = this.pageManager.getDraftPage(SEO_TEST_2);
             IPage page2 = this.pageManager.getDraftPage(SEO_TEST_2_FC);
@@ -1247,7 +1250,7 @@ class SeoPageControllerIntegrationTest extends AbstractControllerIntegrationTest
                 .perform(put(path, pageCode)
                         .content(jsonPutValid)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .header("Authorization", "Bearer " + accessToken));
+                        .header("Authorization", "Bearer " + accessToken));        
         result1.andDo(resultPrint());
         result1.andExpect(expected);
         return result1;
