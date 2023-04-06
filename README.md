@@ -34,3 +34,4 @@ mvn clean test -Ppre-deployment-verification -pl <module-name> -Dtest=<test-clas
 
 By default the logging output in tests is minimized.
 The general log level is controlled by the variable `ROOT_LOG_LEVEL`, that in tests is set to `WARN` by default.
+
