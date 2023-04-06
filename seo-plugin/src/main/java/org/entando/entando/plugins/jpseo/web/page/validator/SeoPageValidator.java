@@ -30,10 +30,10 @@ import org.springframework.validation.Errors;
 
 @Component
 public class SeoPageValidator extends PageValidator {
+    
     private static final EntLogger logger =  EntLogFactory.getSanitizedLogger(SeoPageValidator.class);
     public static final String ERRCODE_PAGE_INVALID_FRIENDLY_CODE = "10";
     public static final String ERRCODE_PAGE_DUPLICATED_FRIENDLY_CODE = "11";
-    public static final String ERRCODE_PAGE_INVALID_TITLE = "12";
 
     @Autowired
     private ISeoMappingManager seoMappingManager;
@@ -44,7 +44,7 @@ public class SeoPageValidator extends PageValidator {
             return false;
         }
         if (null != friendlyCode && friendlyCode.trim().length() > 0) {
-            Pattern pattern = Pattern.compile("([a-z0-9_])+");
+            Pattern pattern = Pattern.compile("([a-z0-9_-])+");
             Matcher matcher = pattern.matcher(friendlyCode);
             if (!matcher.matches()) {
                 logger.error("Invalid friendly Code {}", friendlyCode);

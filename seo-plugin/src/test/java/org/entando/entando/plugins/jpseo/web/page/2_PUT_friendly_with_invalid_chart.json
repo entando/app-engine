@@ -15,7 +15,7 @@
             "en": {
                 "description": "test page",
                 "keywords": "keyword number 1, keyword number 2",
-                "friendlyCode": "test-page_2_fc_en",
+                "friendlyCode": "test@page_2_fc_en",
                 "metaTags": [
                     {
                         "key": "author",
@@ -36,7 +36,7 @@
             "it": {
                 "description": "",
                 "keywords": "",
-                "friendlyCode": "test-page_2_fc_it",
+                "friendlyCode": "test%page_2_fc_it",
                 "metaTags": [
                     {
                         "key": "author",
