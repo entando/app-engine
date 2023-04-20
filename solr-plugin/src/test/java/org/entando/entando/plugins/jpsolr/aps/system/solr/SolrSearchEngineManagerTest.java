@@ -4,12 +4,16 @@ import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSe
 import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_READY;
 import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
+import java.util.List;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.common.util.NamedList;
 import org.entando.entando.aps.system.services.cache.ICacheInfoManager;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.ent.exception.EntException;
@@ -43,12 +47,13 @@ class SolrSearchEngineManagerTest {
     private SolrSearchEngineManager solrSearchEngineManager;
 
     private MockedConstruction<HttpSolrClient.Builder> mockedConstructionSolrClientBuilder;
+    private HttpSolrClient solrClient;
 
     @BeforeEach
     void setUp() throws Exception {
         mockedConstructionSolrClientBuilder = Mockito.mockConstruction(HttpSolrClient.Builder.class,
                 (builder, context) -> {
-                    HttpSolrClient solrClient = Mockito.mock(HttpSolrClient.class);
+                    solrClient = Mockito.mock(HttpSolrClient.class);
                     Mockito.when(builder.withHttpClient(any())).thenReturn(builder);
                     Mockito.when(builder.build()).thenReturn(solrClient);
                 });
@@ -93,5 +98,30 @@ class SolrSearchEngineManagerTest {
         solrProxy.getIndexStatus().setValue(STATUS_RELOADING_INDEXES_IN_PROGRESS);
         Assertions.assertNull(solrSearchEngineManager.startReloadContentsReferences());
         Assertions.assertEquals(STATUS_RELOADING_INDEXES_IN_PROGRESS, solrProxy.getIndexStatus().getValue());
+    }
+
+    @Test
+    void shouldReloadByType() throws Exception {
+        solrProxy.getIndexStatus().setValue(STATUS_READY);
+        try (MockedConstruction<SolrIndexLoaderThread> c = Mockito.mockConstruction(SolrIndexLoaderThread.class,
+                (thread, context) -> Mockito.doNothing().when(thread).start())) {
+            solrSearchEngineManager.startReloadContentsReferencesByType("ART");
+        }
+        Assertions.assertEquals(STATUS_RELOADING_INDEXES_IN_PROGRESS, solrProxy.getIndexStatus().getValue());
+    }
+
+    @Test
+    void shouldRefreshCmsFields() throws Exception {
+        solrProxy.getIndexStatus().setValue(STATUS_READY);
+        NamedList<Object> solrClientResponse = new NamedList<>();
+        solrClientResponse.add("fields", List.of());
+        Mockito.when(solrClient.request(Mockito.any(SchemaRequest.Fields.class), eq("entando")))
+                .thenReturn(solrClientResponse);
+        try (MockedConstruction<SolrIndexLoaderThread> c = Mockito.mockConstruction(SolrIndexLoaderThread.class,
+                (thread, context) -> Mockito.doNothing().when(thread).start())) {
+            solrSearchEngineManager.refreshCmsFields();
+        }
+        Mockito.verify(solrClient, Mockito.times(1))
+                .request(Mockito.any(SchemaRequest.MultiUpdate.class), eq("entando"));
     }
 }
