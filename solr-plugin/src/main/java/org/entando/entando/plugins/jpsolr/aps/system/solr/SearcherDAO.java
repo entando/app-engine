@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.LongPoint;
@@ -56,15 +57,12 @@ import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author E.Santoboni
  */
+@Slf4j
 public class SearcherDAO implements ISolrSearcherDAO {
-
-    private static final Logger logger = LoggerFactory.getLogger(SearcherDAO.class);
 
     private ITreeNodeManager treeNodeManager;
     private ILangManager langManager;
@@ -156,17 +154,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
                 solrQuery.setRows(100);
             }
             solrQuery.addFacetField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME);
-            if (null != filters) {
-                for (SearchEngineFilter<?> filter : filters) {
-                    if (null != this.getRelevance(filter)) {
-                        solrQuery.addSort("score", ORDER.desc);
-                    } else if (null != filter.getOrder()) {
-                        String fieldKey = this.getFilterKey(filter);
-                        boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
-                        solrQuery.addSort(fieldKey, (revert) ? ORDER.desc : ORDER.asc);
-                    }
-                }
-            }
+            this.addFilters(solrQuery, filters);
             QueryResponse response = this.solrClient.query(this.solrCore, solrQuery);
             SolrDocumentList documents = response.getResults();
             result.setTotalSize(Math.toIntExact(documents.getNumFound()));
@@ -175,21 +163,39 @@ public class SearcherDAO implements ISolrSearcherDAO {
                 contentsId.add(id);
             }
             if (faceted) {
-                for (FacetField facetField : response.getFacetFields()) {
-                    List<FacetField.Count> facetInfo = facetField.getValues();
-                    for (FacetField.Count facetInstance : facetInfo) {
-                        if (facetInstance.getCount() != 0l) {
-                            occurrences.put(facetInstance.getName(), Math.toIntExact(facetInstance.getCount()));
-                        }
-                    }
-                }
+                this.addFacetedFields(response, occurrences);
             }
         } catch (SolrException inf) {
-            logger.error("Solr exception", inf);
+            log.error("Solr exception", inf);
         } catch (IOException | SolrServerException | RuntimeException ex) {
             throw new EntException("Error extracting documents", ex);
         }
         return result;
+    }
+
+    private void addFilters(SolrQuery solrQuery, SearchEngineFilter[] filters) {
+        if (null != filters) {
+            for (SearchEngineFilter<?> filter : filters) {
+                if (null != this.getRelevance(filter)) {
+                    solrQuery.addSort("score", ORDER.desc);
+                } else if (null != filter.getOrder()) {
+                    String fieldKey = this.getFilterKey(filter);
+                    boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
+                    solrQuery.addSort(fieldKey, (revert) ? ORDER.desc : ORDER.asc);
+                }
+            }
+        }
+    }
+
+    private void addFacetedFields(QueryResponse response, Map<String, Integer> occurrences) {
+        for (FacetField facetField : response.getFacetFields()) {
+            List<FacetField.Count> facetInfo = facetField.getValues();
+            for (FacetField.Count facetInstance : facetInfo) {
+                if (facetInstance.getCount() != 0l) {
+                    occurrences.put(facetInstance.getName(), Math.toIntExact(facetInstance.getCount()));
+                }
+            }
+        }
     }
 
     private SearchEngineFilter<?> extractPaginationFilter(SearchEngineFilter[] filters) {
@@ -208,24 +214,28 @@ public class SearcherDAO implements ISolrSearcherDAO {
                             (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT : BooleanClause.Occur.MUST;
                     this.createAndAddQuery(mainQuery, internalFilter, occur);
                 } else {
-                    BooleanQuery.Builder internalMainQuery = new BooleanQuery.Builder();
-                    boolean addedFilter = false;
-                    for (SearchEngineFilter<?> internalFilter : internalFilters) {
-                        BooleanClause.Occur occur = (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT
-                                : BooleanClause.Occur.SHOULD;
-                        if (this.createAndAddQuery(internalMainQuery, internalFilter, occur)) {
-                            addedFilter = true;
-                        }
-                    }
-                    if (addedFilter) {
-                        mainQuery.add(internalMainQuery.build(), BooleanClause.Occur.MUST);
-                    }
+                    this.addDoubleQueryMultipleFilters(mainQuery, internalFilters);
                 }
             }
         }
         this.addGroupsQueryBlock(mainQuery, allowedGroups);
         this.addCategoriesQueryBlock(mainQuery, categories);
         return mainQuery.build();
+    }
+
+    private void addDoubleQueryMultipleFilters(BooleanQuery.Builder mainQuery, SearchEngineFilter[] internalFilters) {
+        BooleanQuery.Builder internalMainQuery = new BooleanQuery.Builder();
+        boolean addedFilter = false;
+        for (SearchEngineFilter<?> internalFilter : internalFilters) {
+            BooleanClause.Occur occur = (internalFilter.isNotOption()) ? BooleanClause.Occur.MUST_NOT
+                    : BooleanClause.Occur.SHOULD;
+            if (this.createAndAddQuery(internalMainQuery, internalFilter, occur)) {
+                addedFilter = true;
+            }
+        }
+        if (addedFilter) {
+            mainQuery.add(internalMainQuery.build(), BooleanClause.Occur.MUST);
+        }
     }
 
     protected Query createQuery(SearchEngineFilter[] filters,
@@ -276,161 +286,205 @@ public class SearcherDAO implements ISolrSearcherDAO {
             for (SearchEngineFilter<String> categoryFilter : categories) {
                 List<String> allowedValues = categoryFilter.getAllowedValues();
                 if (null != allowedValues && !allowedValues.isEmpty()) {
-                    BooleanQuery.Builder singleCategoriesQuery = new BooleanQuery.Builder();
-                    for (String singleCategory : allowedValues) {
-                        singleCategory = singleCategory.toLowerCase();
-                        if (null == this.getTreeNodeManager().getNode(singleCategory)) {
-                            logger.warn("Search for null category - code '{}'", singleCategory);
-                        }
-                        TermQuery categoryQuery = new TermQuery(
-                                new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, singleCategory));
-                        singleCategoriesQuery.add(categoryQuery, BooleanClause.Occur.SHOULD);
-                    }
-                    categoriesQuery.add(singleCategoriesQuery.build(), BooleanClause.Occur.MUST);
+                    this.addMultipleCategoriesFilter(categoriesQuery, categoryFilter);
                 } else if (null != categoryFilter.getValue()) {
-                    String categoryCode = categoryFilter.getValue().toLowerCase();
-                    if (null == this.getTreeNodeManager().getNode(categoryCode)) {
-                        logger.warn("Search for null category - code '{}'", categoryCode);
-                    }
-                    TermQuery categoryQuery = new TermQuery(
-                            new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, categoryCode));
-                    categoriesQuery.add(categoryQuery, BooleanClause.Occur.MUST);
+                    this.addSingleCategoryFilter(categoriesQuery, categoryFilter);
                 }
             }
             mainQuery.add(categoriesQuery.build(), BooleanClause.Occur.MUST);
         }
     }
 
+    private void addMultipleCategoriesFilter(BooleanQuery.Builder categoriesQuery,
+            SearchEngineFilter<String> categoryFilter) {
+        BooleanQuery.Builder multipleCategoriesQuery = new BooleanQuery.Builder();
+        for (String category : categoryFilter.getAllowedValues()) {
+            category = category.toLowerCase();
+            if (null == this.getTreeNodeManager().getNode(category)) {
+                log.warn("Search for null category - code '{}'", category);
+            }
+            TermQuery categoryQuery = new TermQuery(
+                    new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, category));
+            multipleCategoriesQuery.add(categoryQuery, BooleanClause.Occur.SHOULD);
+        }
+        categoriesQuery.add(multipleCategoriesQuery.build(), BooleanClause.Occur.MUST);
+    }
+
+    private void addSingleCategoryFilter(BooleanQuery.Builder categoriesQuery,
+            SearchEngineFilter<String> categoryFilter) {
+        String categoryCode = categoryFilter.getValue().toLowerCase();
+        if (null == this.getTreeNodeManager().getNode(categoryCode)) {
+            log.warn("Search for null category - code '{}'", categoryCode);
+        }
+        TermQuery categoryQuery = new TermQuery(
+                new Term(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, categoryCode));
+        categoriesQuery.add(categoryQuery, BooleanClause.Occur.MUST);
+    }
+
     protected Query createQueryByFilter(SearchEngineFilter<?> filter) {
         if (null == filter.getKey() || this.isPaginationFilter(filter)) {
             return null;
         }
-        BooleanQuery.Builder fieldQuery = null;
         String key = this.getFilterKey(filter);
-        String attachmentKey = key + SolrFields.ATTACHMENT_FIELD_SUFFIX;
         Object value = filter.getValue();
         List<?> allowedValues = filter.getAllowedValues();
         Integer relevanceValue = this.getRelevance(filter);
         String relevance = (null != relevanceValue) ? "^" + relevanceValue : "";
         if (null != allowedValues && !allowedValues.isEmpty()) {
-            fieldQuery = new BooleanQuery.Builder();
-            SearchEngineFilter.TextSearchOption option = filter.getTextSearchOption();
-            if (null == option) {
-                option = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
-            }
-            //To be improved to manage different type
-            for (Object singleValue : allowedValues) {
-                if (filter instanceof NumericSearchEngineFilter) {
-                    TermQuery term = new TermQuery(new Term(key, singleValue + relevance));
-                    fieldQuery.add(term, BooleanClause.Occur.SHOULD);
-                } else {
-                    //NOTE: search for lower case....
-                    String[] values = singleValue.toString().split("\\s+");
-                    if (!option.equals(SearchEngineFilter.TextSearchOption.EXACT)) {
-                        BooleanQuery.Builder singleOptionFieldQuery = new BooleanQuery.Builder();
-                        BooleanClause.Occur bc = BooleanClause.Occur.SHOULD;
-                        if (option.equals(SearchEngineFilter.TextSearchOption.ALL_WORDS)) {
-                            bc = BooleanClause.Occur.MUST;
-                        } else if (option.equals(SearchEngineFilter.TextSearchOption.ANY_WORD)) {
-                            logger.debug("'ANY_WORD' option deprecated - used 'AT_LEAST_ONE_WORD'");
-                        }
-                        for (String val : values) {
-                            Query queryTerm = this.getTermQueryForTextSearch(key, val, filter.isLikeOption(),
-                                    relevance);
-                            singleOptionFieldQuery.add(queryTerm, bc);
-                        }
-                        fieldQuery.add(singleOptionFieldQuery.build(), BooleanClause.Occur.SHOULD);
-                    } else {
-                        PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
-                        for (int i = 0; i < values.length; i++) {
-                            phraseQuery.add(new Term(key, values[i].toLowerCase() + relevance), i);
-                        }
-                        fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
-                    }
-                }
-            }
+            return this.createMultipleValuesQuery(filter, key, relevance);
         } else if (null != filter.getStart() || null != filter.getEnd()) {
-            fieldQuery = new BooleanQuery.Builder();
-            Query query;
-            if (filter.getStart() instanceof Date || filter.getEnd() instanceof Date) {
-                String start = this.getFormattedDate((Date) filter.getStart(), SolrFields.SOLR_DATE_MIN);
-                String end = this.getFormattedDate((Date) filter.getEnd(), SolrFields.SOLR_DATE_MAX);
-                query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
-            } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
-                Long lowerValue =
-                        (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
-                Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
-                query = LongPoint.newRangeQuery(key, lowerValue, upperValue);
-            } else {
-                String start = (null != filter.getStart()) ? filter.getStart().toString().toLowerCase() : "A";
-                String end = (null != filter.getEnd()) ? filter.getEnd().toString().toLowerCase() + "z" : null;
-                query = TermRangeQuery.newStringRange(key, start + relevance, (null != end) ? (end + relevance) : null,
-                        true, true);
-            }
-            fieldQuery.add(query, BooleanClause.Occur.MUST);
+            return this.createRangeQuery(filter, key, relevance);
         } else if (null != value) {
-            fieldQuery = new BooleanQuery.Builder();
-            if (value instanceof String) {
+            return this.createSingleValueQuery(filter, key, relevance);
+        } else {
+            BooleanQuery.Builder fieldQuery = new BooleanQuery.Builder();
+            Term term = new Term(key, "*" + relevance);
+            Query queryTerm = new WildcardQuery(term);
+            fieldQuery.add(queryTerm, BooleanClause.Occur.MUST);
+            return fieldQuery.build();
+        }
+    }
+
+    private Query createMultipleValuesQuery(SearchEngineFilter<?> filter, String key, String relevance) {
+        List<?> allowedValues = filter.getAllowedValues();
+        BooleanQuery.Builder fieldQuery = new BooleanQuery.Builder();
+        SearchEngineFilter.TextSearchOption option = filter.getTextSearchOption();
+        if (null == option) {
+            option = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
+        }
+        //To be improved to manage different type
+        for (Object singleValue : allowedValues) {
+            if (filter instanceof NumericSearchEngineFilter) {
+                TermQuery term = new TermQuery(new Term(key, singleValue + relevance));
+                fieldQuery.add(term, BooleanClause.Occur.SHOULD);
+            } else {
                 //NOTE: search for lower case....
-                SearchEngineFilter.TextSearchOption option = filter.getTextSearchOption();
-                if (null == option) {
-                    option = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
-                }
-                String stringValue = value.toString();
-                String[] values = stringValue.split("\\s+");
-                if (!option.equals(SearchEngineFilter.TextSearchOption.EXACT)) {
-                    BooleanClause.Occur bc = BooleanClause.Occur.SHOULD;
-                    if (option.equals(SearchEngineFilter.TextSearchOption.ALL_WORDS)) {
-                        bc = BooleanClause.Occur.MUST;
-                    } else if (option.equals(SearchEngineFilter.TextSearchOption.ANY_WORD)) {
-                        logger.debug("'ANY_WORD' option deprecated - used 'AT_LEAST_ONE_WORD'");
-                    }
-                    for (String val : values) {
-                        Query queryTerm = this.getTermQueryForTextSearch(key, val, filter.isLikeOption(),
-                                relevance);
-                        if ((filter instanceof SolrSearchEngineFilter)
-                                && ((SolrSearchEngineFilter) filter).isIncludeAttachments()) {
-                            BooleanQuery.Builder compositeQuery = new BooleanQuery.Builder();
-                            compositeQuery.add(queryTerm, BooleanClause.Occur.SHOULD);
-                            TermQuery termAttachment = new TermQuery(
-                                    new Term(attachmentKey, val.toLowerCase() + relevance));
-                            compositeQuery.add(termAttachment, BooleanClause.Occur.SHOULD);
-                            fieldQuery.add(compositeQuery.build(), bc);
-                        } else {
-                            fieldQuery.add(queryTerm, bc);
-                        }
-                    }
-                } else {
+                String[] values = singleValue.toString().split("\\s+");
+                if (option.equals(SearchEngineFilter.TextSearchOption.EXACT)) {
                     PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
                     for (int i = 0; i < values.length; i++) {
                         phraseQuery.add(new Term(key, values[i].toLowerCase() + relevance), i);
                     }
-                    if ((filter instanceof SolrSearchEngineFilter)
-                            && ((SolrSearchEngineFilter) filter).isIncludeAttachments()) {
-                        fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
-                        PhraseQuery.Builder phraseQuery2 = new PhraseQuery.Builder();
-                        for (String val : values) {
-                            //NOTE: search lower case....
-                            phraseQuery2.add(new Term(attachmentKey, val.toLowerCase() + relevance));
-                        }
-                        fieldQuery.add(phraseQuery2.build(), BooleanClause.Occur.SHOULD);
-                    } else {
-                        return phraseQuery.build();
-                    }
+                    fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
+                } else {
+                    this.createMultipleValueQueryNotExact(filter, fieldQuery, key, relevance, option, values);
                 }
-            } else if (value instanceof Date) {
-                String toString = this.getFormattedDate((Date) value, null);
-                TermQuery term = new TermQuery(new Term(key, toString + relevance));
-                fieldQuery.add(term, BooleanClause.Occur.MUST);
-            } else if (value instanceof Number) {
-                TermQuery term = new TermQuery(new Term(key, value.toString() + relevance));
-                fieldQuery.add(term, BooleanClause.Occur.MUST);
             }
+        }
+        return fieldQuery.build();
+    }
+
+    private void createMultipleValueQueryNotExact(SearchEngineFilter<?> filter, BooleanQuery.Builder fieldQuery,
+            String key, String relevance, SearchEngineFilter.TextSearchOption option, String[] values) {
+        BooleanQuery.Builder singleOptionFieldQuery = new BooleanQuery.Builder();
+        BooleanClause.Occur bc = BooleanClause.Occur.SHOULD;
+        if (option.equals(SearchEngineFilter.TextSearchOption.ALL_WORDS)) {
+            bc = BooleanClause.Occur.MUST;
+        } else if (option.equals(SearchEngineFilter.TextSearchOption.ANY_WORD)) {
+            log.warn("'ANY_WORD' option deprecated - used 'AT_LEAST_ONE_WORD'");
+        }
+        for (String val : values) {
+            Query queryTerm = this.getTermQueryForTextSearch(key, val, filter.isLikeOption(),
+                    relevance);
+            singleOptionFieldQuery.add(queryTerm, bc);
+        }
+        fieldQuery.add(singleOptionFieldQuery.build(), BooleanClause.Occur.SHOULD);
+    }
+
+    private Query createRangeQuery(SearchEngineFilter<?> filter, String key, String relevance) {
+        BooleanQuery.Builder fieldQuery = new BooleanQuery.Builder();
+        Query query;
+        if (filter.getStart() instanceof Date || filter.getEnd() instanceof Date) {
+            String start = this.getFormattedDate((Date) filter.getStart(), SolrFields.SOLR_DATE_MIN);
+            String end = this.getFormattedDate((Date) filter.getEnd(), SolrFields.SOLR_DATE_MAX);
+            query = TermRangeQuery.newStringRange(key, start + relevance, end + relevance, true, true);
+        } else if (filter.getStart() instanceof Number || filter.getEnd() instanceof Number) {
+            Long lowerValue =
+                    (null != filter.getStart()) ? ((Number) filter.getStart()).longValue() : Long.MIN_VALUE;
+            Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
+            query = LongPoint.newRangeQuery(key, lowerValue, upperValue);
         } else {
-            fieldQuery = new BooleanQuery.Builder();
-            Term term = new Term(key, "*" + relevance);
-            Query queryTerm = new WildcardQuery(term);
-            fieldQuery.add(queryTerm, BooleanClause.Occur.MUST);
+            String start = (null != filter.getStart()) ? filter.getStart().toString().toLowerCase() : "A";
+            String end = (null != filter.getEnd()) ? filter.getEnd().toString().toLowerCase() + "z" : null;
+            query = TermRangeQuery.newStringRange(key, start + relevance, (null != end) ? (end + relevance) : null,
+                    true, true);
+        }
+        fieldQuery.add(query, BooleanClause.Occur.MUST);
+        return fieldQuery.build();
+    }
+
+    private Query createSingleValueQuery(SearchEngineFilter<?> filter, String key, String relevance) {
+        Object value = filter.getValue();
+        BooleanQuery.Builder fieldQuery = new BooleanQuery.Builder();
+        if (value instanceof String) {
+            //NOTE: search for lower case....
+            SearchEngineFilter.TextSearchOption option = filter.getTextSearchOption();
+            if (null == option) {
+                option = SearchEngineFilter.TextSearchOption.AT_LEAST_ONE_WORD;
+            }
+            String stringValue = value.toString();
+            String[] values = stringValue.split("\\s+");
+            if (option.equals(SearchEngineFilter.TextSearchOption.EXACT)) {
+                return this.createSingleValueQueryExact(filter, key, relevance, values);
+            } else {
+                return this.createSingleValueQueryNotExact(filter, key, relevance, option, values);
+            }
+        } else if (value instanceof Date) {
+            String toString = this.getFormattedDate((Date) value, null);
+            TermQuery term = new TermQuery(new Term(key, toString + relevance));
+            fieldQuery.add(term, BooleanClause.Occur.MUST);
+        } else if (value instanceof Number) {
+            TermQuery term = new TermQuery(new Term(key, value + relevance));
+            fieldQuery.add(term, BooleanClause.Occur.MUST);
+        }
+        return fieldQuery.build();
+    }
+
+    private Query createSingleValueQueryExact(SearchEngineFilter<?> filter, String key, String relevance,
+            String[] values) {
+        PhraseQuery.Builder phraseQuery = new PhraseQuery.Builder();
+        BooleanQuery.Builder fieldQuery = new BooleanQuery.Builder();
+        for (int i = 0; i < values.length; i++) {
+            phraseQuery.add(new Term(key, values[i].toLowerCase() + relevance), i);
+        }
+        if (this.isIncludeAttachmentFilter(filter)) {
+            fieldQuery.add(phraseQuery.build(), BooleanClause.Occur.SHOULD);
+            PhraseQuery.Builder phraseQuery2 = new PhraseQuery.Builder();
+            String attachmentKey = key + SolrFields.ATTACHMENT_FIELD_SUFFIX;
+            for (String val : values) {
+                //NOTE: search lower case....
+                phraseQuery2.add(new Term(attachmentKey, val.toLowerCase() + relevance));
+            }
+            fieldQuery.add(phraseQuery2.build(), BooleanClause.Occur.SHOULD);
+            return fieldQuery.build();
+        } else {
+            return phraseQuery.build();
+        }
+    }
+
+    private Query createSingleValueQueryNotExact(SearchEngineFilter<?> filter, String key, String relevance,
+            SearchEngineFilter.TextSearchOption option, String[] values) {
+        BooleanClause.Occur bc = BooleanClause.Occur.SHOULD;
+        BooleanQuery.Builder fieldQuery = new BooleanQuery.Builder();
+        if (option.equals(SearchEngineFilter.TextSearchOption.ALL_WORDS)) {
+            bc = BooleanClause.Occur.MUST;
+        } else if (option.equals(SearchEngineFilter.TextSearchOption.ANY_WORD)) {
+            log.warn("'ANY_WORD' option deprecated - used 'AT_LEAST_ONE_WORD'");
+        }
+        for (String val : values) {
+            Query queryTerm = this.getTermQueryForTextSearch(key, val, filter.isLikeOption(),
+                    relevance);
+            if (this.isIncludeAttachmentFilter(filter)) {
+                BooleanQuery.Builder compositeQuery = new BooleanQuery.Builder();
+                compositeQuery.add(queryTerm, BooleanClause.Occur.SHOULD);
+                String attachmentKey = key + SolrFields.ATTACHMENT_FIELD_SUFFIX;
+                TermQuery termAttachment = new TermQuery(
+                        new Term(attachmentKey, val.toLowerCase() + relevance));
+                compositeQuery.add(termAttachment, BooleanClause.Occur.SHOULD);
+                fieldQuery.add(compositeQuery.build(), bc);
+            } else {
+                fieldQuery.add(queryTerm, bc);
+            }
         }
         return fieldQuery.build();
     }
@@ -441,6 +495,11 @@ public class SearcherDAO implements ISolrSearcherDAO {
             return zdt.format(DateTimeFormatter.ISO_INSTANT);
         }
         return defaultValue;
+    }
+
+    private boolean isIncludeAttachmentFilter(SearchEngineFilter<?> filter) {
+        return (filter instanceof SolrSearchEngineFilter)
+                && ((SolrSearchEngineFilter) filter).isIncludeAttachments();
     }
 
     private boolean isPaginationFilter(SearchEngineFilter<?> filter) {
@@ -476,14 +535,13 @@ public class SearcherDAO implements ISolrSearcherDAO {
         if (filter.isFullTextSearch()) {
             return key;
         }
-        if (!filter.isAttributeFilter()
-                && !(key.startsWith(SolrFields.SOLR_FIELD_PREFIX))) {
-            key = SolrFields.SOLR_FIELD_PREFIX + key;
-        } else if (filter.isAttributeFilter()) {
+        if (filter.isAttributeFilter()) {
             String insertedLangCode = filter.getLangCode();
             String langCode = (StringUtils.isBlank(insertedLangCode)) ? this.getLangManager().getDefaultLang().getCode()
                     : insertedLangCode;
             key = langCode.toLowerCase() + "_" + key;
+        } else if (!key.startsWith(SolrFields.SOLR_FIELD_PREFIX)) {
+            key = SolrFields.SOLR_FIELD_PREFIX + key;
         }
         return key;
     }
