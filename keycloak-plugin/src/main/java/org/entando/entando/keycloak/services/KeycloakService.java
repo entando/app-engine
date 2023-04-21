@@ -1,5 +1,13 @@
 package org.entando.entando.keycloak.services;
 
+import static org.entando.entando.KeycloakWiki.wiki;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.KeycloakWiki;
 import org.entando.entando.aps.system.exception.RestServerError;
@@ -19,22 +27,12 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.entando.entando.KeycloakWiki.wiki;
-
 @Service
 public class KeycloakService {
 
     private final OpenIDConnectService oidcService;
     private final KeycloakConfiguration configuration;
     private final RestTemplate restTemplate;
-
 
     @Autowired
     public KeycloakService(final KeycloakConfiguration configuration, final OpenIDConnectService oidcService, @Qualifier("keycloakRestTemplate")final RestTemplate rest) {
