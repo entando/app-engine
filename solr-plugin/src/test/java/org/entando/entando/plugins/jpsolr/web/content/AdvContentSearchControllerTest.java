@@ -142,7 +142,6 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
                         .param("filters[0].value", "EVN"));
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
-        System.out.println(bodyResult);
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
         Assertions.assertEquals(9, payloadSize);
 
@@ -153,7 +152,6 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
                         .param("filters[0].value", "EVN"));
         String facetedBodyResult = facetedResult.andReturn().getResponse().getContentAsString();
         facetedResult.andExpect(status().isOk());
-        System.out.println(facetedBodyResult);
         int facetedPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.contentsId.size()");
         Assertions.assertEquals(payloadSize, facetedPayloadSize);
         int occurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");

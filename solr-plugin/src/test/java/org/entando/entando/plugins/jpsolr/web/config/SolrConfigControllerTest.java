@@ -16,7 +16,6 @@ package org.entando.entando.plugins.jpsolr.web.config;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -91,7 +90,6 @@ class SolrConfigControllerTest extends AbstractControllerTest {
         mockMvc.perform(post("/plugins/solr/config/NWS")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer " + accessToken))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.contentTypeCode", is("NWS")))
                 .andExpect(jsonPath("$.payload.status", is("success")));
