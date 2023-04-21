@@ -6,10 +6,11 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.NumericSearchEngineFilter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -102,7 +103,7 @@ class SearcherDAOTest {
     @Test
     void shouldFilterByDate() throws Exception {
         mockDefaultLang();
-        Date date = new GregorianCalendar(2023, 4, 21).getTime();
+        Date date = getDate("2023-04-21");
 
         SearchEngineFilter filter = new SearchEngineFilter("key", true, date, TextSearchOption.EXACT);
 
@@ -111,7 +112,7 @@ class SearcherDAOTest {
         List<String> allowedGroups = new ArrayList<>();
 
         testSearchFacetedContents(filters, categories, allowedGroups,
-                "+(+en_key:2023-05-20T22:00:00Z) +(entity_group:free)");
+                "+(+en_key:2023-04-21T00:00:00Z) +(entity_group:free)");
     }
 
     @Test
@@ -285,8 +286,8 @@ class SearcherDAOTest {
 
     @Test
     void shouldFilterOnRangeOfDate() throws Exception {
-        Date date1 = new GregorianCalendar(2023, 4, 21).getTime();
-        Date date2 = new GregorianCalendar(2023, 4, 30).getTime();
+        Date date1 = getDate("2023-04-21");
+        Date date2 = getDate("2023-04-30");
         SolrSearchEngineFilter filter = new SolrSearchEngineFilter("key", date1, date2);
 
         SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
@@ -294,7 +295,7 @@ class SearcherDAOTest {
         List<String> allowedGroups = new ArrayList<>();
 
         testSearchFacetedContents(filters, categories, allowedGroups,
-                "+(+entity_key:[2023-05-20T22:00:00Z TO 2023-05-29T22:00:00Z]) +(entity_group:free)");
+                "+(+entity_key:[2023-04-21T00:00:00Z TO 2023-04-30T00:00:00Z]) +(entity_group:free)");
     }
 
     @Test
@@ -373,6 +374,12 @@ class SearcherDAOTest {
 
     private void mockCategory(String categoryCode) {
         Mockito.when(treeNodeManager.getNode(categoryCode)).thenReturn(Mockito.mock(ITreeNode.class));
+    }
+
+    private Date getDate(String date) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return sdf.parse(date);
     }
 
     private QueryResponse mockQueryResponse() {
