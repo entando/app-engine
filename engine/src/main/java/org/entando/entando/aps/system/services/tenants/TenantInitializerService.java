@@ -115,6 +115,9 @@ public class TenantInitializerService implements ITenantInitializerService {
             BaseConfigManager config = wac.getBean(BaseConfigManager.class);
             config.refreshTenantAware();
 
+            // The Map returned by this method should always return bean names and
+            // corresponding bean instances in the order of definition in the backend configuration, as far as possible.
+            // the returned map should be a LinkedHashMap
             Map<String, RefreshableBeanTenantAware> toRefresh = wac.getBeansOfType(RefreshableBeanTenantAware.class);
             toRefresh.entrySet().stream().filter(e -> !(e.getValue() instanceof BaseConfigManager)).forEach(entry -> {
                 log.debug("try to refresh bean:'{}'", entry.getKey());

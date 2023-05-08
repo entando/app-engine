@@ -39,6 +39,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import com.agiletec.aps.system.common.AbstractParameterizableService;
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
+import org.entando.entando.aps.system.services.tenants.RefreshableBeanTenantAware;
 import org.entando.entando.aps.system.services.widgettype.events.WidgetTypeChangedEvent;
 import org.entando.entando.aps.system.services.widgettype.events.WidgetTypeChangedObserver;
 import org.entando.entando.ent.exception.EntException;
@@ -55,7 +56,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
  * @author M.Diana - E.Santoboni
  */
 public class PageManager extends AbstractParameterizableService implements IPageManager, GroupUtilizer<IPage>,
-        LangsChangedObserver, PageModelUtilizer, PageModelChangedObserver, WidgetTypeChangedObserver {
+        LangsChangedObserver, PageModelUtilizer, PageModelChangedObserver, WidgetTypeChangedObserver,
+        RefreshableBeanTenantAware {
 
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(PageManager.class);
     public static final String ERRMSG_ERROR_WHILE_MOVING_A_PAGE = "Error while moving a page";
@@ -70,19 +72,26 @@ public class PageManager extends AbstractParameterizableService implements IPage
 
     @Override
     public void init() throws Exception {
-        this.initCache();
+        initTenantAware();
         _logger.debug("{} ready. : Initialized", this.getClass().getName());
     }
 
-    private void initCache() throws EntException {
+    @Override
+    public void initTenantAware() throws Exception {
         this.getCacheWrapper().initCache(this.getPageDAO());
     }
 
     @Override
     protected void release() {
-        this.getCacheWrapper().release();
+        releaseTenantAware();
         super.release();
     }
+
+    @Override
+    public void releaseTenantAware() {
+        this.getCacheWrapper().release();
+    }
+
 
     @Override
     public void updateFromLangsChanged(LangsChangedEvent event) {
