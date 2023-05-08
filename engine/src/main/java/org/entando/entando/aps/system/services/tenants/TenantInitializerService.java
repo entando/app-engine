@@ -119,6 +119,7 @@ public class TenantInitializerService implements ITenantInitializerService {
             // corresponding bean instances in the order of definition in the backend configuration, as far as possible.
             // the returned map should be a LinkedHashMap
             Map<String, RefreshableBeanTenantAware> toRefresh = wac.getBeansOfType(RefreshableBeanTenantAware.class);
+            // the returned spliterator is backed by the LinkedHashMap so, if keys are not modified, it is ordered
             toRefresh.entrySet().stream().filter(e -> !(e.getValue() instanceof BaseConfigManager)).forEach(entry -> {
                 log.debug("try to refresh bean:'{}'", entry.getKey());
                 try {
