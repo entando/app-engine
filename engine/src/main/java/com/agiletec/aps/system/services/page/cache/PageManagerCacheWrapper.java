@@ -483,30 +483,32 @@ public class PageManagerCacheWrapper extends AbstractCacheWrapper implements IPa
     @Override
     public IPage getOnlinePage(String pageCode) {
         IPage page = this.get(ONLINE_PAGE_CACHE_NAME_PREFIX + pageCode, IPage.class);
-        return this.returnClone(page);
+        return this.returnClone(page, ONLINE_PAGE_CACHE_NAME_PREFIX + pageCode);
     }
 
     @Override
     public IPage getDraftPage(String pageCode) {
         IPage page = this.get(DRAFT_PAGE_CACHE_NAME_PREFIX + pageCode, IPage.class);
-        return this.returnClone(page);
+        return this.returnClone(page, DRAFT_PAGE_CACHE_NAME_PREFIX + pageCode);
     }
 
     @Override
     public IPage getOnlineRoot() {
-        IPage page = this.get(ONLINE_ROOT_CACHE_NAME, IPage.class).clone();
-        return this.returnClone(page);
+        IPage page = this.get(ONLINE_ROOT_CACHE_NAME, IPage.class);
+        return this.returnClone(page, ONLINE_ROOT_CACHE_NAME);
     }
 
     @Override
     public IPage getDraftRoot() {
-        IPage page = this.get(DRAFT_ROOT_CACHE_NAME, IPage.class).clone();
-        return this.returnClone(page);
+        IPage page = this.get(DRAFT_ROOT_CACHE_NAME, IPage.class);
+        return this.returnClone(page, DRAFT_ROOT_CACHE_NAME);
     }
     
-    private IPage returnClone(IPage page) {
+    private IPage returnClone(IPage page,String pageCode) {
         if (null != page) {
             return page.clone();
+        } else {
+            _logger.debug("page for pageCode:'{}' not found", pageCode);
         }
         return null;
     }
