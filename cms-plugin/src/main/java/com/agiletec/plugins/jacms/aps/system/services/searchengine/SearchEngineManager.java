@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
@@ -167,7 +168,7 @@ public class SearchEngineManager extends AbstractService
 
     @Override
     public void updateFromEntityTypesChanging(EntityTypesChangingEvent event) {
-        if (((IManager) this.getContentManager()).getName().equals(event.getEntityManagerName())) {
+        if (this.getContentManager().getName().equals(event.getEntityManagerName())) {
             if (this.getStatus() == STATUS_NEED_TO_RELOAD_INDEXES) {
                 return;
             }
@@ -186,13 +187,22 @@ public class SearchEngineManager extends AbstractService
     }
 
     protected boolean verifyReloadingNeeded(IApsEntity oldEntityType, IApsEntity newEntityType) {
-        List<AttributeInterface> attributes = oldEntityType.getAttributeList();
-        for (int i = 0; i < attributes.size(); i++) {
-            AttributeInterface oldAttribute = attributes.get(i);
-            AttributeInterface newAttribute = (AttributeInterface) newEntityType.getAttribute(oldAttribute.getName());
-            boolean isOldAttributeIndexeable = (oldAttribute.getIndexingType() != null && oldAttribute.getIndexingType().equalsIgnoreCase(IndexableAttributeInterface.INDEXING_TYPE_TEXT));
-            boolean isNewAttributeIndexeable = (newAttribute != null && newAttribute.getIndexingType() != null && newAttribute.getIndexingType().equalsIgnoreCase(IndexableAttributeInterface.INDEXING_TYPE_TEXT));
-            if ((isOldAttributeIndexeable && !isNewAttributeIndexeable) || (!isOldAttributeIndexeable && isNewAttributeIndexeable)) {
+        for (Entry<String, AttributeInterface> entry : oldEntityType.getAttributeMap().entrySet()) {
+            AttributeInterface newAttribute = newEntityType.getAttribute(entry.getKey());
+            if (newAttribute == null) {
+                // attribute has been removed
+                return true;
+            }
+            AttributeInterface oldAttribute = entry.getValue();
+            if (!oldAttribute.getType().equals(newAttribute.getType())) {
+                return true;
+            }
+            boolean isOldAttributeIndexable = (oldAttribute.getIndexingType() != null
+                    && oldAttribute.getIndexingType().equalsIgnoreCase(IndexableAttributeInterface.INDEXING_TYPE_TEXT));
+            boolean isNewAttributeIndexable = (newAttribute.getIndexingType() != null
+                    && newAttribute.getIndexingType().equalsIgnoreCase(IndexableAttributeInterface.INDEXING_TYPE_TEXT));
+            if ((isOldAttributeIndexable && !isNewAttributeIndexable)
+                    || (!isOldAttributeIndexable && isNewAttributeIndexable)) {
                 return true;
             }
         }
