@@ -24,7 +24,7 @@
                         "useDefaultLang": false
                     },
                     {
-                        "key": "description",
+                        "key": "mydescription",
                         "type": "name",
                         "value": "test page",
                         "useDefaultLang": false
@@ -45,7 +45,7 @@
                         "useDefaultLang": false
                     },
                     {
-                        "key": "description",
+                        "key": "mydescription",
                         "type": "name",
                         "value": "descrizione meta test",
                         "useDefaultLang": false
