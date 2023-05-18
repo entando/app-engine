@@ -92,6 +92,7 @@ class SeoPageControllerIntegrationTest extends AbstractControllerIntegrationTest
     private static String SEO_TEST_7_FC = "seoTest7fc";
 
     private static String SEO_TEST_8 = "seoTest8";
+    private static String SEO_TEST_9 = "seoTest9";
 
     @Test
     void testGetBuiltInSeoPage() throws Exception {
@@ -1130,6 +1131,61 @@ class SeoPageControllerIntegrationTest extends AbstractControllerIntegrationTest
         } finally {
             this.pageManager.deletePage(SEO_TEST_2);
             seoMappingManager.getSeoMappingDAO().deleteMappingForPage(SEO_TEST_2);
+        }
+    }
+
+    @Test
+    void testPostPutSeoPageWithWrongMetadataKeys() throws Exception {
+        try {
+            String accessToken = this.createAccessToken();
+            this.executePostSeoPage("9_POST_invalid_metadata_keys.json", accessToken, status().isConflict())
+                    .andExpect(jsonPath("$.errors.size()", is(2)))
+                    .andExpect(jsonPath("$.errors[0].code", is("13")))
+                    .andExpect(jsonPath("$.errors[0].message", is("SEO duplicated basic keys 'keywords or description'")))
+                    .andExpect(jsonPath("$.errors[0].code", is("13")))
+                    .andExpect(jsonPath("$.errors[0].message", is("SEO duplicated basic keys 'keywords or description'")));
+
+
+
+            this.executePostSeoPage("9_POST_valid.json", accessToken, status().isOk());
+            Assertions.assertNotNull(this.pageService.getPage(SEO_TEST_9, IPageService.STATUS_DRAFT));
+
+            this.executePutSeoPage("9_POST_invalid_metadata_keys.json", SEO_TEST_9, accessToken, status().isConflict())
+                    .andExpect(jsonPath("$.errors.size()", is(2)))
+                    .andExpect(jsonPath("$.errors[0].code", is("13")))
+                    .andExpect(jsonPath("$.errors[0].message", is("SEO duplicated basic keys 'keywords or description'")))
+                    .andExpect(jsonPath("$.errors[1].code", is("13")))
+                    .andExpect(jsonPath("$.errors[1].message", is("SEO duplicated basic keys 'keywords or description'")));
+        } finally {
+            this.pageManager.deletePage(SEO_TEST_9);
+            seoMappingManager.getSeoMappingDAO().deleteMappingForPage(SEO_TEST_9);
+        }
+    }
+
+    @Test
+    void testPostPutSeoPageWithDuplicatedKeys() throws Exception {
+        try {
+            String accessToken = this.createAccessToken();
+            this.executePostSeoPage("9_POST_duplicated_metadata_keys.json", accessToken, status().isConflict())
+                    .andExpect(jsonPath("$.errors.size()", is(2)))
+                    .andExpect(jsonPath("$.errors[0].code", is("13")))
+                    .andExpect(jsonPath("$.errors[0].message", is("SEO duplicated key:'key2'")))
+                    .andExpect(jsonPath("$.errors[1].code", is("13")))
+                    .andExpect(jsonPath("$.errors[1].message", is("SEO duplicated key:'key2'")));
+
+
+            this.executePostSeoPage("9_POST_valid.json", accessToken, status().isOk());
+            Assertions.assertNotNull(this.pageService.getPage(SEO_TEST_9, IPageService.STATUS_DRAFT));
+
+            this.executePutSeoPage("9_POST_duplicated_metadata_keys.json", SEO_TEST_9, accessToken, status().isConflict())
+                    .andExpect(jsonPath("$.errors.size()", is(2)))
+                    .andExpect(jsonPath("$.errors[0].code", is("13")))
+                    .andExpect(jsonPath("$.errors[0].message", is("SEO duplicated key:'key2'")))
+                    .andExpect(jsonPath("$.errors[1].code", is("13")))
+                    .andExpect(jsonPath("$.errors[1].message", is("SEO duplicated key:'key2'")));
+        } finally {
+            this.pageManager.deletePage(SEO_TEST_9);
+            seoMappingManager.getSeoMappingDAO().deleteMappingForPage(SEO_TEST_9);
         }
     }
 

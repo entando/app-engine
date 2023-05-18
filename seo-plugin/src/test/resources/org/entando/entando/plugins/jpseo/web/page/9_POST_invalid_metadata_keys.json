@@ -1,0 +1,53 @@
+{
+    "charset": "utf-8",
+    "code": "seoTest9",
+    "contentType": "text/html",
+    "displayedInMenu": true,
+    "ownerGroup": "free",
+    "pageModel": "service",
+    "parentCode": "service",
+    "joinGroups":[ ],
+    "seo": true,
+    "seoData": {
+        "seoDataByLang": {
+            "en": {
+                "description": "test",
+                "keywords": "keyword1, keyword 2",
+                "friendlyCode": "test_page_9_en",
+                "metaTags": [
+                    {
+                        "key": "keywords",
+                        "type": "name",
+                        "value": "2020",
+                        "useDefaultLang": false
+                    }
+                ],
+                "inheritDescriptionFromDefaultLang": false,
+                "inheritKeywordsFromDefaultLang": false,
+                "inheritFriendlyCodeFromDefaultLang": true
+            },
+            "it": {
+                "description": "",
+                "keywords": "",
+                "friendlyCode": "test_page_9_it",
+                "metaTags": [
+                    {
+                        "key": "description",
+                        "type": "name",
+                        "value": "entando",
+                        "useDefaultLang": false
+                    }
+                ],
+                "inheritDescriptionFromDefaultLang": true,
+                "inheritKeywordsFromDefaultLang": true
+            }
+        },
+        "useExtraDescriptions": true,
+        "useExtraTitles": true
+    },
+    "status": "draft",
+    "titles": {
+        "en": "Pagina di test",
+        "it": ""
+    }
+}

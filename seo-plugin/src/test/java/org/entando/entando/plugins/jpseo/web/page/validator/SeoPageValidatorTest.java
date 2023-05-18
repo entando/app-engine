@@ -108,6 +108,20 @@ class SeoPageValidatorTest {
         validator.validateKeysDuplicated(seoDataByLang, errors);
         Assertions.assertFalse(errors.hasErrors());
 
+        seo = new SeoDataByLang("mykeywords",
+                "my description",
+                "my frindly code",
+                Arrays.asList(
+                        new SeoMetaTag(null,"",null,false),
+                        new SeoMetaTag("testKey2","",null,false)
+                ),
+                false, false,false);
+        seoDataByLang = Map.of("it", seo);
+
+        errors =  (new DataBinder(new Object())).getBindingResult();
+        validator.validateKeysDuplicated(seoDataByLang, errors);
+        Assertions.assertFalse(errors.hasErrors());
+
     }
 
 }

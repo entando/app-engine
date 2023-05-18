@@ -1,6 +1,6 @@
 {
     "charset": "utf-8",
-    "code": "seoTest3",
+    "code": "seoTest9",
     "contentType": "text/html",
     "displayedInMenu": true,
     "ownerGroup": "free",
@@ -9,12 +9,11 @@
     "joinGroups":[ ],
     "seo": true,
     "seoData": {
-        "friendlyCode": "test_page_8",
         "seoDataByLang": {
             "en": {
                 "description": "test",
                 "keywords": "keyword1, keyword 2",
-                "friendlyCode": "test_page_8_en",
+                "friendlyCode": "test_page_9_en",
                 "metaTags": [
                     {
                         "key": "copyright",
@@ -36,12 +35,13 @@
                     }
                 ],
                 "inheritDescriptionFromDefaultLang": false,
-                "inheritKeywordsFromDefaultLang": false
+                "inheritKeywordsFromDefaultLang": false,
+                "inheritFriendlyCodeFromDefaultLang": true
             },
             "it": {
                 "description": "",
                 "keywords": "",
-                "friendlyCode": "test_page_8_it",
+                "friendlyCode": "test_page_9_it",
                 "metaTags": [
                     {
                         "key": "copyright",
