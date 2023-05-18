@@ -119,6 +119,11 @@
         <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
     </listener>
     <servlet>
+        <servlet-name>ExceptionHandlerServlet</servlet-name>
+        <servlet-class>org.entando.entando.aps.servlet.ExceptionHandlerServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet>
         <servlet-name>ControllerServlet</servlet-name>
         <servlet-class>org.entando.entando.aps.servlet.ControllerServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
@@ -180,6 +185,10 @@
         <servlet-name>ControllerServlet</servlet-name>
         <url-pattern>/page/*</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ExceptionHandlerServlet</servlet-name>
+        <url-pattern>/error</url-pattern>
+    </servlet-mapping>
 
     <session-config>
         <session-timeout>30</session-timeout>
@@ -197,10 +206,10 @@
     </error-page>
     <error-page>
         <error-code>500</error-code>
-        <location>/error.jsp</location>
+        <location>/error</location>
     </error-page>
     <error-page>
         <exception-type>java.lang.Exception</exception-type>
-        <location>/error.jsp</location>
+        <location>/error</location>
     </error-page>
 </web-app>
