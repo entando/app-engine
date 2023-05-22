@@ -275,7 +275,6 @@ class AdvContentSearchTest {
         SearchEngineFilter[] filters = {filter1 , filter2, typeFilter};
         FacetedContentsResult result = this.searchEngineManager.searchFacetedEntities(filters, categoriesFilters, this.allowedGroup);
         List<String> contents = result.getContentsId();
-        System.out.println("contents -> " + contents);
         String[] expectedOrderedContentsId2 = {"EVN20", "EVN24"};
         assertEquals(expectedOrderedContentsId2.length, contents.size());
         for (int i = 0; i < expectedOrderedContentsId2.length; i++) {

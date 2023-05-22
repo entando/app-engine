@@ -95,18 +95,21 @@ public class SearchEngineManager extends AbstractService
     }
 
     private void manageEvent(PublicContentChangedEvent event) {
-        Content content = event.getContent();
         try {
-            switch (event.getOperationCode()) {
-                case PublicContentChangedEvent.INSERT_OPERATION_CODE:
+            if (event.getOperationCode() == PublicContentChangedEvent.REMOVE_OPERATION_CODE) {
+                this.deleteIndexedEntity(event.getContentId());
+            } else {
+                Content content = this.getContentManager().loadContent(event.getContentId(), true);
+                if (null == content) {
+                    logger.warn("Null public content - id {}", event.getContentId());
+                    this.deleteIndexedEntity(event.getContentId());
+                    return;
+                }
+                if (event.getOperationCode() == PublicContentChangedEvent.INSERT_OPERATION_CODE) {
                     this.addEntityToIndex(content);
-                    break;
-                case PublicContentChangedEvent.REMOVE_OPERATION_CODE:
-                    this.deleteIndexedEntity(content.getId());
-                    break;
-                case PublicContentChangedEvent.UPDATE_OPERATION_CODE:
+                } else {
                     this.updateIndexedEntity(content);
-                    break;
+                }
             }
         } catch (Throwable t) {
             logger.error("Error on event notification", t);

@@ -26,72 +26,79 @@ import java.util.Map;
 public class PublicContentChangedEvent extends ApsEvent {
 
     public PublicContentChangedEvent() {}
-    
+
     public PublicContentChangedEvent(String channel, Map<String, String> properties) {
         super(channel, properties);
     }
-	
-	@Override
-	public void notify(IManager srv) {
-		((PublicContentChangedObserver) srv).updateFromPublicContentChanged(this);
-	}
-	
+
     @Override
-	public Class getObserverInterface() {
-		return PublicContentChangedObserver.class;
-	}
-	
-	/**
-	 * Restituisce il contenuto modificato, approvato o disapprovato.
-	 * @return Il contenuto modificato.
-	 */
-	public Content getContent() {
-		return _content;
-	}
+    public void notify(IManager srv) {
+        ((PublicContentChangedObserver) srv).updateFromPublicContentChanged(this);
+    }
 
-	/**
-	 * Setta il contenuto modificato, approvato o disapprovato.
-	 * @param content Il contenuto modificato.
-	 */
-	public void setContent(Content content) {
-		this._content = content;
-	}
-	
-	/**
-	 * Restituisce il codice dell'operazione 
-	 * che si stà eseguendo sul contenuto pubblico.
-	 * @return Il codice dell'operazione.
-	 */
-	public int getOperationCode() {
-		return _operationCode;
-	}
+    @Override
+    public Class getObserverInterface() {
+        return PublicContentChangedObserver.class;
+    }
 
-	/**
-	 * Setta il codice dell'operazione 
-	 * che si stà eseguendo sul contenuto pubblico.
-	 * @param operationCode Il codice dell'operazione.
-	 */
-	public void setOperationCode(int operationCode) {
-		this._operationCode = operationCode;
-	}
-	
-	private Content _content;
-	
-	private int _operationCode;
-	
-	/**
-	 * Codice dell'operazione di inserimento del contenuto onLine.
-	 */
-	public static final int INSERT_OPERATION_CODE = 1;
-	
-	/**
-	 * Codice dell'operazione di rimozione del contenuto onLine.
-	 */
-	public static final int REMOVE_OPERATION_CODE = 2;
-	
-	/**
-	 * Codice dell'operazione di aggiornamento del contenuto onLine.
-	 */
-	public static final int UPDATE_OPERATION_CODE = 3;
-	
+    public String getContentId() {
+        return contentId;
+    }
+
+    public void setContentId(String contentId) {
+        this.contentId = contentId;
+    }
+
+    @Deprecated(since = "7.2.1")
+    public Content getContent() {
+        return content;
+    }
+
+    @Deprecated(since = "7.2.1")
+    public void setContent(Content content) {
+        if (null != content) {
+            this.setContentId(content.getId());
+        }
+        this.content = content;
+    }
+
+    /**
+     * Restituisce il codice dell'operazione 
+     * che si stà eseguendo sul contenuto pubblico.
+     * @return Il codice dell'operazione.
+     */
+    public int getOperationCode() {
+        return operationCode;
+    }
+
+    /**
+     * Setta il codice dell'operazione 
+     * che si stà eseguendo sul contenuto pubblico.
+     * @param operationCode Il codice dell'operazione.
+     */
+    public void setOperationCode(int operationCode) {
+        this.operationCode = operationCode;
+    }
+
+    private String contentId;
+
+    private Content content;
+
+    private int operationCode;
+
+    /**
+     * Codice dell'operazione di inserimento del contenuto onLine.
+     */
+    public static final int INSERT_OPERATION_CODE = 1;
+
+    /**
+     * Codice dell'operazione di rimozione del contenuto onLine.
+     */
+    public static final int REMOVE_OPERATION_CODE = 2;
+
+    /**
+     * Codice dell'operazione di aggiornamento del contenuto onLine.
+     */
+    public static final int UPDATE_OPERATION_CODE = 3;
+
 }

@@ -34,7 +34,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -59,62 +58,72 @@ class SearchEngineManagerTest {
     private SearchEngineManager searchEngineManager;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         when(this.factory.getIndexer()).thenReturn(indexerDao);
         when(this.factory.getSearcher()).thenReturn(searcherDao);
         this.searchEngineManager.init();
     }
-    /*
-    public void init() throws Exception {
-        this.searchEngineManager.init();
-        Mockito.verify(factory, Mockito.times(1)).getIndexer();
-        Mockito.verify(factory, Mockito.times(1)).getSearcher();
-    }
-    */
+    
     @Test
-    public void addContentNotify() throws Exception {
+    void addContentNotify() throws Exception {
         when(this.factory.checkCurrentSubfolder()).thenReturn(false);
         Content content = Mockito.mock(Content.class);
+        when(content.getId()).thenReturn("ART123");
+        when(this.contentManager.loadContent("ART123", true)).thenReturn(content);
         PublicContentChangedEvent event = new PublicContentChangedEvent();
         event.setContent(content);
         event.setOperationCode(PublicContentChangedEvent.INSERT_OPERATION_CODE);
         this.searchEngineManager.updateFromPublicContentChanged(event);
         Mockito.verify(indexerDao, Mockito.times(1)).add(content);
         Mockito.verify(indexerDao, Mockito.times(0)).delete(Mockito.anyString(), Mockito.anyString());
-        Mockito.verifyZeroInteractions(searcherDao);
+        Mockito.verifyNoInteractions(searcherDao);
         Mockito.verify(factory, Mockito.times(1)).init();
     }
 
     @Test
-    public void addContentNotify_withError() throws Exception {
+    void addContentNotify_withError() throws Exception {
         when(this.factory.checkCurrentSubfolder()).thenReturn(true);
         Mockito.doThrow(EntException.class).when(this.indexerDao).add(Mockito.any(Content.class));
         Content content = Mockito.mock(Content.class);
         PublicContentChangedEvent event = new PublicContentChangedEvent();
-        event.setContent(content);
+        event.setContentId("ART456");
         event.setOperationCode(PublicContentChangedEvent.INSERT_OPERATION_CODE);
+        when(this.contentManager.loadContent("ART456", true)).thenReturn(content);
         this.searchEngineManager.updateFromPublicContentChanged(event);
         Mockito.verify(indexerDao, Mockito.times(1)).add(content);
-        Mockito.verifyZeroInteractions(searcherDao);
+        Mockito.verifyNoInteractions(searcherDao);
         Mockito.verify(factory, Mockito.times(0)).init();
     }
 
     @Test
-    public void updateContentNotify() throws Exception {
+    void updateContentNotify() throws Exception {
         when(this.factory.checkCurrentSubfolder()).thenReturn(false);
         Content content = Mockito.mock(Content.class);
-        when(content.getId()).thenReturn("ART123");
+        when(content.getId()).thenReturn("NEW123");
         PublicContentChangedEvent event = new PublicContentChangedEvent();
         event.setContent(content);
         event.setOperationCode(PublicContentChangedEvent.UPDATE_OPERATION_CODE);
+        when(this.contentManager.loadContent("NEW123", true)).thenReturn(content);
         this.searchEngineManager.updateFromPublicContentChanged(event);
         Mockito.verify(indexerDao, Mockito.times(1)).add(content);
-        Mockito.verify(indexerDao, Mockito.times(1)).delete(IIndexerDAO.CONTENT_ID_FIELD_NAME, "ART123");
-        Mockito.verifyZeroInteractions(searcherDao);
+        Mockito.verify(indexerDao, Mockito.times(1)).delete(IIndexerDAO.CONTENT_ID_FIELD_NAME, "NEW123");
+        Mockito.verifyNoInteractions(searcherDao);
     }
 
     @Test
-    public void updateContentNotify_withError() throws Exception {
+    void notifyNoPublicContent() throws Exception {
+        PublicContentChangedEvent event = new PublicContentChangedEvent();
+        event.setContentId("TXT123");
+        event.setOperationCode(PublicContentChangedEvent.UPDATE_OPERATION_CODE);
+        when(this.contentManager.loadContent("TXT123", true)).thenReturn(null);
+        this.searchEngineManager.updateFromPublicContentChanged(event);
+        Mockito.verify(indexerDao, Mockito.times(1)).delete(IIndexerDAO.CONTENT_ID_FIELD_NAME, "TXT123");
+        Mockito.verify(indexerDao, Mockito.times(0)).add(Mockito.any());
+        Mockito.verifyNoInteractions(searcherDao);
+    }
+
+    @Test
+    void updateContentNotify_withError() throws Exception {
         when(this.factory.checkCurrentSubfolder()).thenReturn(true);
         Mockito.doThrow(EntException.class).when(this.indexerDao).delete(Mockito.anyString(), Mockito.anyString());
         Content content = Mockito.mock(Content.class);
@@ -122,14 +131,15 @@ class SearchEngineManagerTest {
         PublicContentChangedEvent event = new PublicContentChangedEvent();
         event.setContent(content);
         event.setOperationCode(PublicContentChangedEvent.UPDATE_OPERATION_CODE);
+        when(this.contentManager.loadContent("ART124", true)).thenReturn(content);
         this.searchEngineManager.updateFromPublicContentChanged(event);
         Mockito.verify(indexerDao, Mockito.times(1)).delete(IIndexerDAO.CONTENT_ID_FIELD_NAME, "ART124");
         Mockito.verify(indexerDao, Mockito.times(0)).add(content);
-        Mockito.verifyZeroInteractions(searcherDao);
+        Mockito.verifyNoInteractions(searcherDao);
     }
 
     @Test
-    public void deleteContentNotify() throws Exception {
+    void deleteContentNotify() throws Exception {
         when(this.factory.checkCurrentSubfolder()).thenReturn(false);
         Content content = Mockito.mock(Content.class);
         when(content.getId()).thenReturn("ART125");
@@ -139,11 +149,11 @@ class SearchEngineManagerTest {
         this.searchEngineManager.updateFromPublicContentChanged(event);
         Mockito.verify(indexerDao, Mockito.times(0)).add(content);
         Mockito.verify(indexerDao, Mockito.times(1)).delete(IIndexerDAO.CONTENT_ID_FIELD_NAME, "ART125");
-        Mockito.verifyZeroInteractions(searcherDao);
+        Mockito.verifyNoInteractions(searcherDao);
     }
 
     @Test
-    public void addEntityTypeNotify() throws Exception {
+    void addEntityTypeNotify() throws Exception {
         EntityTypesChangingEvent event = this.initEntityTypeNotify();
         event.setOperationCode(EntityTypesChangingEvent.INSERT_OPERATION_CODE);
         this.searchEngineManager.updateFromEntityTypesChanging(event);
@@ -151,7 +161,7 @@ class SearchEngineManagerTest {
     }
 
     @Test
-    public void updateEntityTypeNotify() throws Exception {
+    void updateEntityTypeNotify() throws Exception {
         EntityTypesChangingEvent event = this.initEntityTypeNotify();
         event.setOperationCode(EntityTypesChangingEvent.UPDATE_OPERATION_CODE);
         this.searchEngineManager.updateFromEntityTypesChanging(event);
@@ -159,7 +169,7 @@ class SearchEngineManagerTest {
     }
 
     @Test
-    public void removeEntityTypeNotify() throws Exception {
+    void removeEntityTypeNotify() throws Exception {
         EntityTypesChangingEvent event = this.initEntityTypeNotify();
         event.setOperationCode(EntityTypesChangingEvent.REMOVE_OPERATION_CODE);
         this.searchEngineManager.updateFromEntityTypesChanging(event);
