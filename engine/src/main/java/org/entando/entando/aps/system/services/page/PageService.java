@@ -437,8 +437,21 @@ public class PageService implements IComponentExistsService, IPageService,
 
     @Override
     public PageDto movePage(String pageCode, PagePositionRequest pageRequest, UserDetails user) {
+        int absolutePosition = getAbsolutePosition(pageRequest.getParentCode(), pageRequest.getPosition(), user);
+        logger.debug("before move page:'{}' replace position:'{}' with absolutePosition:'{}' under parent:'{}'",
+                pageCode, pageRequest.getPosition(), absolutePosition, pageRequest.getParentCode());
+        pageRequest.setPosition(absolutePosition);
         PageDto pageDto = this.movePage(pageCode, pageRequest);
         return this.loadVirtualChildren(pageDto, user);
+    }
+
+    private int getAbsolutePosition(String parentCode, int position, UserDetails user){
+        PageTreeNodeHelper helper = new PageTreeNodeHelper(this.getPageManager(), this.pageAuthorizationService, user);
+        return helper.getNodes(parentCode).stream()
+                .filter(n -> n.getPosition() == position)
+                .findFirst()
+                .map(n -> n.getAbsolutePosition())
+                .orElse(position);
     }
 
     @Override

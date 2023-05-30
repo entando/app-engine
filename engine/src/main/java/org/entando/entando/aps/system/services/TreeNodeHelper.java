@@ -16,9 +16,12 @@ public abstract class TreeNodeHelper<T extends ITreeNode> {
 
     private List<T> buildNodesList(T parentNode, List<T> nodes, boolean root) {
         if (root || !this.isNodeAllowed(parentNode)) {
+            int absolutePosition = 0;
             for (String childNodeCode : parentNode.getChildrenCodes()) {
+                absolutePosition++;
                 T childNode = this.getTreeNode(childNodeCode);
                 if (this.isNodeAllowed(childNode)) {
+                    childNode.setAbsolutePosition(absolutePosition);
                     nodes.add(childNode);
                 }
                 buildNodesList(childNode, nodes, false);
