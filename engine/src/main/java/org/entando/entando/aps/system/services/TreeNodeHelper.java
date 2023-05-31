@@ -1,9 +1,7 @@
 package org.entando.entando.aps.system.services;
 
 import com.agiletec.aps.system.common.tree.ITreeNode;
-import com.agiletec.aps.system.common.tree.TreeNode;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.entando.ent.util.EntLogging;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,16 +20,17 @@ public abstract class TreeNodeHelper<T extends ITreeNode> {
     private List<T> buildNodesList(T parentNode, List<T> nodes, boolean root) {
         log.debug("build node list for parentNode:'{}'", parentNode.getCode());
         if (root || !this.isNodeAllowed(parentNode)) {
-            int absolutePosition = 0;
+            int relativePosition = 0;
             for (String childNodeCode : parentNode.getChildrenCodes()) {
-                absolutePosition++;
                 T childNode = this.getTreeNode(childNodeCode);
                 log.debug("iteration build child:'{}' for parentNode:'{}' position:'{}' absolutePosition:'{}'",
-                        childNodeCode, parentNode.getCode(), childNode.getPosition(), absolutePosition);
+                        childNodeCode, parentNode.getCode(), relativePosition, childNode.getPosition());
 
                 if (this.isNodeAllowed(childNode)) {
-                    childNode.setAbsolutePosition(absolutePosition);
+                    childNode.setRelativePosition(++relativePosition);
                     nodes.add(childNode);
+                    log.debug("added child:'{}' for parentNode:'{}' relativePosition:'{}' absolutePosition:'{}'",
+                            childNodeCode, parentNode.getCode(), relativePosition, childNode.getPosition());
                 }
                 buildNodesList(childNode, nodes, false);
             }

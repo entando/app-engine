@@ -38,7 +38,7 @@ public class TreeNode implements ITreeNode, Serializable {
     private String[] _childrenCodes = new String[0];
 
     private int _position = -1;
-    private int absolutePosition = -1;
+    private int relativePosition = -1;
 
     private ApsProperties _titles = new ApsProperties();
 
@@ -141,13 +141,13 @@ public class TreeNode implements ITreeNode, Serializable {
 
 
     @Override
-    public int getAbsolutePosition() {
-        return absolutePosition;
+    public int getRelativePosition() {
+        return relativePosition;
     }
 
     @Override
-    public void setAbsolutePosition(int absolutePosition) {
-        this.absolutePosition = absolutePosition;
+    public void setRelativePosition(int relativePosition) {
+        this.relativePosition = relativePosition;
     }
 
     @Override

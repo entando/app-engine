@@ -448,9 +448,9 @@ public class PageService implements IComponentExistsService, IPageService,
     private int getAbsolutePosition(String parentCode, int position, UserDetails user){
         PageTreeNodeHelper helper = new PageTreeNodeHelper(this.getPageManager(), this.pageAuthorizationService, user);
         return helper.getNodes(parentCode).stream()
-                .filter(n -> n.getPosition() == position)
+                .filter(n -> n.getRelativePosition() == position)
                 .findFirst()
-                .map(n -> n.getAbsolutePosition())
+                .map(n -> n.getPosition())
                 .orElse(position);
     }
 
