@@ -38,7 +38,6 @@ public class TreeNode implements ITreeNode, Serializable {
     private String[] _childrenCodes = new String[0];
 
     private int _position = -1;
-    private int relativePosition = -1;
 
     private ApsProperties _titles = new ApsProperties();
 
