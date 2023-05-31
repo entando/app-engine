@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Collection;
 import java.util.List;
 
-import org.entando.entando.aps.system.services.IComponentExistsService;
-import org.entando.entando.aps.system.services.IComponentUsageService;
 import org.entando.entando.aps.system.services.page.model.PageConfigurationDto;
 import org.entando.entando.aps.system.services.page.model.PageDto;
 import org.entando.entando.aps.system.services.page.model.PagesStatusDto;
@@ -33,12 +31,13 @@ import org.entando.entando.web.page.model.PageSearchRequest;
 import org.entando.entando.web.page.model.WidgetConfigurationRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.validation.BindingResult;
+import org.entando.entando.aps.system.services.IComponentUsageService;
 
 /**
  *
  * @author paddeo
  */
-public interface IPageService extends IComponentExistsService, IComponentUsageService {
+public interface IPageService extends IComponentUsageService {
 
     String BEAN_NAME = "PageService";
     String STATUS_ONLINE = "published";

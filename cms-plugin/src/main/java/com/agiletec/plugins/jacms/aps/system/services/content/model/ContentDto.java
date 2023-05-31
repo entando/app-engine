@@ -22,6 +22,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.Li
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentRestriction;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.AttachResource;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.entity.model.EntityAttributeDto;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.web.common.json.JsonDateDeserializer;
@@ -39,7 +41,7 @@ import org.entando.entando.web.common.json.JsonDateSerializer;
 import org.entando.entando.web.entity.validator.EntityValidator;
 import org.springframework.validation.BindingResult;
 
-public class ContentDto extends EntityDto implements Serializable {
+public class ContentDto extends EntityDto implements IComponentDto, Serializable {
 
     private String status;
     private boolean onLine;
@@ -90,6 +92,13 @@ public class ContentDto extends EntityDto implements Serializable {
         }
     }
 
+    @Override
+    @JsonIgnore
+    public String getCode() {
+        return super.getId();
+    }
+
+    @Override
     public String getStatus() {
         return status;
     }

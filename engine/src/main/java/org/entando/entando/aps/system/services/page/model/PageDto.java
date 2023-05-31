@@ -23,12 +23,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 /**
  *
  * @author paddeo
  */
-public class PageDto {
+public class PageDto implements IComponentDto {
 
     private static final String DEFAULT_CHARSET = "utf8";
     private static final String DEFAULT_CONTENT_TYPE= "text/html";

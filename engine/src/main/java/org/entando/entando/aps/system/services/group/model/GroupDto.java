@@ -18,9 +18,9 @@ import java.util.Map;
 import com.agiletec.aps.system.services.group.Group;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.entando.entando.aps.system.services.IComponentDto;
 
-
-public class GroupDto {
+public class GroupDto implements IComponentDto {
 
     private String code;
     private String name;

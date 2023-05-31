@@ -13,6 +13,7 @@
  */
 package org.entando.entando.aps.system.services.pagemodel;
 
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
 import org.entando.entando.aps.system.services.security.NonceInjector;
@@ -39,6 +40,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
@@ -106,6 +108,12 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
         PageModelDto dto = this.dtoBuilder.convert(pageModel);
         dto.setReferences(this.getReferencesInfo(pageModel));
         return dto;
+    }
+    
+    @Override
+    public IComponentDto getComponetDto(String code) {
+        return Optional.ofNullable(this.pageModelManager.getPageModel(code))
+                .map(m -> this.dtoBuilder.convert(m)).orElse(null);
     }
 
     @Override
@@ -203,11 +211,16 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
 
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
-        PagedMetadata<PageDto> pagedMetadata = (PagedMetadata<PageDto>) getPageModelReferences(componentCode, "PageManager", restListRequest);
+        PagedMetadata<PageDto> pagedMetadata = (PagedMetadata<PageDto>) this.getPageModelReferences(componentCode, SystemConstants.PAGE_MANAGER, restListRequest);
         List<ComponentUsageEntity> componentUsageEntityList = pagedMetadata.getBody().stream()
                 .map(pageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto.getCode(), pageDto.getStatus()))
                 .collect(Collectors.toList());
         return this.pagedMetadataMapper.getPagedResult(restListRequest, componentUsageEntityList);
+    }
+
+    @Override
+    public String getObjectType() {
+        return "pageModel";
     }
 
     protected PageModel createPageModel(PageModelRequest pageModelRequest) {

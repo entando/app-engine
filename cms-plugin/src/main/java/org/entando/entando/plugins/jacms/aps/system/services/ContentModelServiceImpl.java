@@ -31,7 +31,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.DtoBuilder;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IDtoBuilder;
+import org.entando.entando.aps.system.services.page.IPageService;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -117,7 +119,14 @@ public class ContentModelServiceImpl implements ContentModelService {
         }
         return Optional.ofNullable(dto);
     }
-
+    
+    @Override
+    public IComponentDto getComponetDto(String code) throws EntException {
+        return Optional.ofNullable(this.contentModelManager.getContentModel(Long.valueOf(code)))
+                .map(c -> this.dtoBuilder.convert(c)).orElse(null);
+    }
+    
+    @Override
     public boolean exists(Long modelId) {
         return this.contentModelManager.getContentModel(modelId) != null;
     }

@@ -22,9 +22,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.DtoBuilder;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.category.model.CategoryDto;
 import org.entando.entando.ent.exception.EntException;
@@ -42,7 +45,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 /**
  * @author E.Santoboni
  */
-public class CategoryService implements ICategoryService {
+public class CategoryService implements ICategoryService, CategoryServiceUtilizer<CategoryDto> {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(this.getClass());
 
@@ -77,9 +80,41 @@ public class CategoryService implements ICategoryService {
     }
 
     @Override
-    public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode,
-            RestListRequest restListRequest) {
-        return null;
+    public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
+        List<ComponentUsageEntity> components = new ArrayList<>();
+        if (null != this.getCategoryServiceUtilizers()) {
+            for (CategoryServiceUtilizer utilizer : this.getCategoryServiceUtilizers()) {
+                List<IComponentDto> objects = utilizer.getCategoryUtilizer(componentCode);
+                List<ComponentUsageEntity> utilizerForService = objects.stream()
+                        .map(o -> o.buildUsageEntity(utilizer.getObjectType())).collect(Collectors.toList());
+                components.addAll(utilizerForService);
+            }
+        }
+        List<CategoryDto> categories = this.getCategoryUtilizer(componentCode);
+        components.addAll(categories.stream()
+                        .map(o -> o.buildUsageEntity(this.getObjectType())).collect(Collectors.toList()));
+        List<ComponentUsageEntity> sublist = restListRequest.getSublist(components);
+        PagedMetadata<ComponentUsageEntity> usageEntries = new PagedMetadata(restListRequest, components.size());
+        usageEntries.setBody(sublist);
+        return usageEntries;
+    }
+
+    @Override
+    public String getObjectType() {
+        return "category";
+    }
+
+    @Override
+    public String getManagerName() {
+        return ((IManager) this.getCategoryManager()).getName();
+    }
+
+    @Override
+    public List<CategoryDto> getCategoryUtilizer(String categoryCode) {
+        if (null != this.getCategoryManager().getCategory(categoryCode)) {
+            return this.getTree(categoryCode);
+        }
+        return new ArrayList<>();
     }
 
     public class CategoryDtoBuilder extends DtoBuilder<Category, CategoryDto> {
@@ -133,8 +168,14 @@ public class CategoryService implements ICategoryService {
     }
 
     @Override
+    public IComponentDto getComponetDto(String code) {
+        return Optional.ofNullable(this.getCategoryManager().getCategory(code))
+                .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
+    }
+
+    @Override
     public boolean exists(String categoryCode) {
-        return this.getCategoryManager().getCategory(categoryCode) != null;
+        return null != this.getComponetDto(categoryCode);
     }
 
     @Override

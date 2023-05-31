@@ -11,15 +11,16 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.entando.aps.system.services.page;
+package com.agiletec.plugins.jacms.aps.system.services.resource;
 
 import java.util.List;
 import org.entando.entando.aps.system.services.IComponentDto;
+import org.entando.entando.aps.system.services.IComponentUsageService;
 
-public interface PageServiceUtilizer<T extends IComponentDto> {
+public interface ResourceServiceUtilizer<T extends IComponentDto> extends IComponentUsageService {
 
     public String getManagerName();
 
-    public List<T> getPageUtilizer(String pageCode);
+    public List<T> getResourceUtilizer(String resourceId);
 
 }

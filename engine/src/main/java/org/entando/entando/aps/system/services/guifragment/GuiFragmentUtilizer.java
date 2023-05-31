@@ -14,6 +14,7 @@
 package org.entando.entando.aps.system.services.guifragment;
 
 import java.util.List;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 import org.entando.entando.ent.exception.EntException;
 
@@ -21,7 +22,7 @@ import org.entando.entando.ent.exception.EntException;
  * Basic interface for those services whose handled elements are based on fragment.
  * @author E.Santoboni
  */
-public interface GuiFragmentUtilizer {
+public interface GuiFragmentUtilizer<T extends IComponentDto> {
 	
 	/**
 	 * Return the id of the utilizing service.
@@ -35,6 +36,6 @@ public interface GuiFragmentUtilizer {
 	 * @return The list of the objects that use the fragment with the given code.
 	 * @throws EntException In case of error
 	 */
-	public List getGuiFragmentUtilizers(String guiFragmentCode) throws EntException;
+	public List<T> getGuiFragmentUtilizers(String guiFragmentCode) throws EntException;
 	
 }

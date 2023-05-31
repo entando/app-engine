@@ -49,6 +49,7 @@ import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IComponentExistsService;
 import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.group.GroupServiceUtilizer;
@@ -288,6 +289,12 @@ public class PageService implements IComponentExistsService, IPageService,
             logger.error("Error encoding token page", e);
             throw new RestServerError("error encoding token page", e);
         }
+    }
+
+    @Override
+    public IComponentDto getComponetDto(String code) {
+        return Optional.ofNullable(this.loadPage(code, IPageService.STATUS_DRAFT))
+                .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }
 
     public boolean exists(String pageCode, String status) {
@@ -873,22 +880,22 @@ public class PageService implements IComponentExistsService, IPageService,
         }
     }
 
-
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String pageCode, RestListRequest restListRequest) {
-
         PageDto pageDto = this.getPage(pageCode, IPageService.STATUS_DRAFT);
         List<PageDto> childrenPageDtoList = this.getPages(pageCode);
-
         List<ComponentUsageEntity> componentUsageEntityList = childrenPageDtoList.stream()
                 .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto.getCode(), childPageDto.getStatus()))
                 .collect(Collectors.toList());
-
         if (pageDto.getStatus().equals(IPageService.STATUS_ONLINE)) {
             componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto.getCode(), pageDto.getStatus()));
         }
-
         return pagedMetadataMapper.getPagedResult(restListRequest, componentUsageEntityList);
+    }
+
+    @Override
+    public String getObjectType() {
+        return "page";
     }
 
     private PagedMetadata<PageDto> getPagedResult(PageSearchRequest request, List<PageDto> pages) {

@@ -19,11 +19,12 @@ import org.entando.entando.aps.system.services.guifragment.GuiFragment;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 
 import java.util.Optional;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 /**
  * @author E.Santoboni
  */
-public class GuiFragmentDtoSmall {
+public class GuiFragmentDtoSmall implements IComponentDto {
 
     private String code;
     private boolean locked;

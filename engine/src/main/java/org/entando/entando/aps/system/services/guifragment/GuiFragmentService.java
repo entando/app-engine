@@ -35,7 +35,9 @@ import org.springframework.validation.BeanPropertyBindingResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 public class GuiFragmentService implements IGuiFragmentService {
 
@@ -106,7 +108,14 @@ public class GuiFragmentService implements IGuiFragmentService {
         }
         return this.getDtoBuilder().convert(fragment);
     }
+    
+    @Override
+    public IComponentDto getComponetDto(String code) throws EntException {
+        return Optional.ofNullable(this.getGuiFragmentManager().getGuiFragment(code))
+                .map(f -> this.getDtoBuilder().convert(f)).orElse(null);
+    }
 
+    @Override
     public boolean exists(String code) throws EntException {
         return this.getGuiFragmentManager().getGuiFragment(code) != null;
     }
@@ -235,4 +244,10 @@ public class GuiFragmentService implements IGuiFragmentService {
 
         return pagedMetadataMapper.getPagedResult(restListRequest, componentUsageEntityList);
     }
+
+    @Override
+    public String getObjectType() {
+        return "fragment";
+    }
+    
 }

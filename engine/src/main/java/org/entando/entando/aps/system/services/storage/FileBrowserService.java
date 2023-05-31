@@ -35,8 +35,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.springframework.validation.BeanPropertyBindingResult;
 
@@ -205,7 +207,13 @@ public class FileBrowserService implements IFileBrowserService {
     public boolean exists(String currentPath, Boolean protectedFolder) throws EntException {
         return this.getStorageManager().exists(currentPath, protectedFolder);
     }
-
+    
+    @Override
+    public IComponentDto getComponetDto(String path) throws EntException {
+        return Optional.ofNullable(this.getStorageManager().getAttributes(path, false))
+                .map(a -> this.getFileAttributeViewDtoDtoBuilder().convert(a)).orElse(null);
+    }
+    
     @Override
     public boolean exists(String code) throws EntException {
         return this.getStorageManager().exists(code, false);

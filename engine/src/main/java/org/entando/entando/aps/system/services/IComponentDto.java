@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -11,15 +11,20 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.entando.aps.system.services.page;
+package org.entando.entando.aps.system.services;
 
-import java.util.List;
-import org.entando.entando.aps.system.services.IComponentDto;
+import org.entando.entando.web.component.ComponentUsageEntity;
 
-public interface PageServiceUtilizer<T extends IComponentDto> {
-
-    public String getManagerName();
-
-    public List<T> getPageUtilizer(String pageCode);
-
+public interface IComponentDto {
+    
+    public default ComponentUsageEntity buildUsageEntity(String type) {
+        return new ComponentUsageEntity(type, this.getCode());
+    }
+    
+    public String getCode();
+    
+    public default String getStatus() {
+        return null;
+    }
+    
 }

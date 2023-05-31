@@ -4,8 +4,9 @@ import java.util.List;
 
 import com.agiletec.aps.system.services.lang.Lang;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.entando.entando.aps.system.services.IComponentDto;
 
-public class LanguageDto {
+public class LanguageDto implements IComponentDto {
 
     private String code;
     private String description;

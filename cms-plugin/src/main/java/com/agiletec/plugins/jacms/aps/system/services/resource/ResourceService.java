@@ -25,21 +25,32 @@ import com.agiletec.aps.system.services.group.GroupUtilizer;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.AbstractResource;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceDto;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.DtoBuilder;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.category.CategoryServiceUtilizer;
 import org.entando.entando.aps.system.services.group.GroupServiceUtilizer;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.web.common.model.PagedMetadata;
+import org.entando.entando.web.common.model.RestListRequest;
+import org.entando.entando.web.component.ComponentUsageEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.entando.entando.aps.system.services.IComponentUsageService;
 
 public class ResourceService implements IResourceService,
-        GroupServiceUtilizer<ResourceDto>, CategoryServiceUtilizer<ResourceDto> {
+        GroupServiceUtilizer<ResourceDto>, CategoryServiceUtilizer<ResourceDto>, IComponentUsageService {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(this.getClass());
 
     private IResourceManager resourceManager;
     private IDtoBuilder<ResourceInterface, ResourceDto> dtoBuilder;
+    
+    @Autowired(required = false)
+    private List<ResourceServiceUtilizer> resourceServiceUtilizers;
 
     public IResourceManager getResourceManager() {
         return resourceManager;
@@ -110,6 +121,44 @@ public class ResourceService implements IResourceService,
             });
         }
         return dtoList;
+    }
+
+    @Override
+    public IComponentDto getComponetDto(String code) throws EntException {
+        return Optional.ofNullable(this.resourceManager.loadResource(code))
+                .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
+    }
+
+    @Override
+    public boolean exists(String code) throws EntException {
+        return resourceManager.exists(null, code);
+    }
+
+    @Override
+    public String getObjectType() {
+        return "asset";
+    }
+
+    @Override
+    public Integer getComponentUsage(String componentCode) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
+        List<ComponentUsageEntity> components = new ArrayList<>();
+        if (null != this.resourceServiceUtilizers) {
+            for (ResourceServiceUtilizer utilizer : this.resourceServiceUtilizers) {
+                List<IComponentDto> objects = utilizer.getResourceUtilizer(componentCode);
+                String objectName = utilizer.getObjectType();
+                List<ComponentUsageEntity> utilizerForService = objects.stream()
+                        .map(o -> o.buildUsageEntity(objectName)).collect(Collectors.toList());
+                components.addAll(utilizerForService);
+            }
+        }
+        PagedMetadata<ComponentUsageEntity> usageEntries = new PagedMetadata(restListRequest, components.size());
+        usageEntries.setBody(components);
+        return usageEntries;
     }
 
 }
