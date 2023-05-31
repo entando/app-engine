@@ -139,17 +139,6 @@ public class TreeNode implements ITreeNode, Serializable {
         this._position = position;
     }
 
-
-    @Override
-    public int getRelativePosition() {
-        return relativePosition;
-    }
-
-    @Override
-    public void setRelativePosition(int relativePosition) {
-        this.relativePosition = relativePosition;
-    }
-
     @Override
     public ApsProperties getTitles() {
         return _titles;

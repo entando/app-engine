@@ -65,15 +65,6 @@ public interface ITreeNode extends Serializable {
     public void setPosition(int position);
 
     /**
-     * Returns the relative position of the node compared to the brothers nodes with considering write permissions.
-     *
-     * @return The position of the node compared to the brothers nodes with considering write permissions.
-     */
-    public int getRelativePosition();
-
-    public void setRelativePosition(int absolutePosition);
-
-    /**
      * Return the group code this node belongs to
      *
      * @return The group code
