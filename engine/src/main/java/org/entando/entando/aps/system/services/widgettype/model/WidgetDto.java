@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.entando.entando.aps.system.services.IComponentDto;
 
-public class WidgetDto {
+public class WidgetDto implements IComponentDto {
 
     public static final String USER_TYPOLOGY_CODE = "user";
     public static final String CUSTOM_TYPOLOGY_CODE = "custom";

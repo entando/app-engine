@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.validation.BeanPropertyBindingResult;
 
 import java.util.*;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 public class GroupService implements IGroupService, ApplicationContextAware {
 
@@ -107,7 +108,14 @@ public class GroupService implements IGroupService, ApplicationContextAware {
         dto.setReferences(this.getReferencesInfo(group));
         return dto;
     }
+    
+    @Override
+    public IComponentDto getComponetDto(String code) {
+        return Optional.ofNullable(this.getGroupManager().getGroup(code))
+                .map(g -> this.getDtoBuilder().convert(g)).orElse(null);
+    }
 
+    @Override
     public boolean exists(String groupCode) {
         return this.getGroupManager().getGroup(groupCode) != null;
     }
@@ -322,6 +330,11 @@ public class GroupService implements IGroupService, ApplicationContextAware {
         }
 
         return Optional.of(dtoBuilder.convert(group));
+    }
+
+    @Override
+    public String getObjectType() {
+        return "group";
     }
 
 }

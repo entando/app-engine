@@ -18,8 +18,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.*;
+import org.entando.entando.aps.system.services.IComponentDto;
 
-public class PageModelDto {
+public class PageModelDto implements IComponentDto {
 
     public static final int NO_MAIN_FRAME = -1;
 

@@ -14,8 +14,10 @@
 package org.entando.entando.plugins.jacms.aps.system.services.content;
 
 import java.util.List;
+import org.entando.entando.aps.system.services.IComponentDto;
+import org.entando.entando.aps.system.services.IComponentUsageService;
 
-public interface ContentServiceUtilizer<T> {
+public interface ContentServiceUtilizer<T extends IComponentDto> extends IComponentUsageService {
 
     public String getManagerName();
 

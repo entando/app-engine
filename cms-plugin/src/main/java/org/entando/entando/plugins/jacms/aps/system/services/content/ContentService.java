@@ -53,7 +53,9 @@ import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModel
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.model.ContentTypeDto;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.ContentRenderizationInfo;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.IContentDispenser;
+import com.agiletec.plugins.jacms.aps.system.services.resource.ResourceServiceUtilizer;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
+import com.agiletec.plugins.jacms.aps.system.services.resource.ResourceUtilizer;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -71,6 +73,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.DtoBuilder;
+import org.entando.entando.aps.system.services.IComponentDto;
+import org.entando.entando.aps.system.services.IComponentExistsService;
 import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.category.CategoryServiceUtilizer;
 import org.entando.entando.aps.system.services.entity.AbstractEntityService;
@@ -92,6 +96,7 @@ import org.entando.entando.web.common.exceptions.ResourcePermissionsException;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.common.model.PagedMetadata;
 import org.entando.entando.web.common.model.RestListRequest;
+import org.entando.entando.web.component.ComponentUsageEntity;
 import org.entando.entando.web.entity.validator.EntityValidator;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,11 +104,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.entando.entando.aps.system.services.IComponentUsageService;
 
 public class ContentService extends AbstractEntityService<Content, ContentDto>
         implements IContentService,
         GroupServiceUtilizer<ContentDto>, CategoryServiceUtilizer<ContentDto>,
-        PageServiceUtilizer<ContentDto>, ContentServiceUtilizer<ContentDto>,
+        PageServiceUtilizer<ContentDto>, ContentServiceUtilizer<ContentDto>, 
+        ResourceServiceUtilizer<ContentDto>, 
+        IComponentExistsService, IComponentUsageService, 
         ApplicationContextAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
@@ -353,6 +361,17 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
         } catch (EntException ex) {
             logger.error("Error loading content references for content {}", contentId, ex);
             throw new RestServerError("Error loading content references for content", ex);
+        }
+    }
+
+    @Override
+    public List<ContentDto> getResourceUtilizer(String resourceId) {
+        try {
+            List<String> contentIds = ((ResourceUtilizer) this.getContentManager()).getResourceUtilizers(resourceId);
+            return this.buildDtoList(contentIds);
+        } catch (EntException ex) {
+            logger.error("Error loading content references for resource {}", resourceId, ex);
+            throw new RestServerError("Error loading content references for resource", ex);
         }
     }
 
@@ -847,6 +866,32 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     }
 
     @Override
+    public String getObjectType() {
+        return "content";
+    }
+
+    @Override
+    public Integer getComponentUsage(String componentCode) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
+        List<ComponentUsageEntity> components = new ArrayList<>();
+        Map<String, ContentServiceUtilizer> beans = this.applicationContext.getBeansOfType(ContentServiceUtilizer.class);
+        for (ContentServiceUtilizer utilizer : beans.values()) {
+            List<IComponentDto> objects = utilizer.getContentUtilizer(componentCode);
+            String objectName = utilizer.getObjectType();
+            List<ComponentUsageEntity> utilizerForService = objects.stream()
+                    .map(o -> o.buildUsageEntity(objectName)).collect(Collectors.toList());
+            components.addAll(utilizerForService);
+        }
+        PagedMetadata<ComponentUsageEntity> usageEntries = new PagedMetadata(restListRequest, components.size());
+        usageEntries.setBody(components);
+        return usageEntries;
+    }
+
+    @Override
     protected Content addEntity(IEntityManager entityManager, Content entityToAdd) {
         return this.updateEntity(entityManager, entityToAdd);
     }
@@ -963,6 +1008,12 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
 
     public boolean exists(String code, boolean online) throws EntException {
         return (null != getContentManager().loadContent(code, online));
+    }
+
+    @Override
+    public IComponentDto getComponetDto(String code) throws EntException {
+        return Optional.ofNullable(this.getContentManager().loadContent(code, false))
+                .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }
 
     @Override

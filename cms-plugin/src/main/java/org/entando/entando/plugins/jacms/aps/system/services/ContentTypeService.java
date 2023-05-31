@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
-import org.entando.entando.aps.system.services.IComponentExistsService;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IComponentUsageService;
 import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.entity.AbstractEntityTypeService;
@@ -52,8 +52,7 @@ import org.springframework.validation.BindingResult;
 
 @Service
 @RequiredArgsConstructor
-public class ContentTypeService extends AbstractEntityTypeService<Content, ContentTypeDto> implements
-        IComponentExistsService, IComponentUsageService {
+public class ContentTypeService extends AbstractEntityTypeService<Content, ContentTypeDto> implements IComponentUsageService {
 
     private final ContentService contentService;
 
@@ -168,6 +167,11 @@ public class ContentTypeService extends AbstractEntityTypeService<Content, Conte
     }
 
     @Override
+    public String getObjectType() {
+        return "contentType";
+    }
+
+    @Override
     public Integer getComponentUsage(String componentCode) {
         return contentService.countContentsByType(componentCode);
     }
@@ -192,9 +196,17 @@ public class ContentTypeService extends AbstractEntityTypeService<Content, Conte
         return pagedMetadataMapper
                 .getPagedResult(restListRequest, componentUsageEntityList, "code", pagedData.getTotalItems());
     }
-
-    public boolean exists(String code) {
+    
+    @Override
+    public IComponentDto getComponetDto(String code) {
         IEntityManager entityManager = this.extractEntityManager(JacmsSystemConstants.CONTENT_MANAGER);
-        return entityManager.getEntityPrototype(code) != null;
+        return Optional.ofNullable(entityManager.getEntityPrototype(code))
+                .map(f -> this.getEntityTypeShortDtoBuilder().convert(f)).orElse(null);
     }
+
+    @Override
+    public boolean exists(String code) {
+        return null != this.getComponetDto(code);
+    }
+    
 }

@@ -4,9 +4,12 @@ import org.entando.entando.web.common.model.PagedMetadata;
 import org.entando.entando.web.common.model.RestListRequest;
 import org.entando.entando.web.component.ComponentUsageEntity;
 
-public interface IComponentUsageService {
+public interface IComponentUsageService extends IComponentExistsService {
+    
+    String getObjectType();
 
     Integer getComponentUsage(String componentCode);
 
     PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest);
+    
 }

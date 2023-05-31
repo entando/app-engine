@@ -1,13 +1,15 @@
 package com.agiletec.plugins.jacms.aps.system.services.resource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.services.IComponentDto;
 
-public class ResourceDto {
+public class ResourceDto implements IComponentDto {
 
     private String id;
     private String correlationCode;
@@ -57,7 +59,12 @@ public class ResourceDto {
         }
     }
 
-
+    @JsonIgnore
+    @Override
+    public String getCode() {
+        return this.getId();
+    }
+    
     public String getId() {
         return id;
     }
@@ -170,6 +177,5 @@ public class ResourceDto {
     public void setAllowedExtensions(List<String> allowedExtensions) {
         this.allowedExtensions = allowedExtensions;
     }
-
 
 }

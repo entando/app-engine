@@ -22,13 +22,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * @author E.Santoboni
  */
-public class CategoryDto {
+public class CategoryDto implements IComponentDto {
 
     @NotBlank(message = "category.code.notBlank")
     private String code;
@@ -61,6 +62,7 @@ public class CategoryDto {
                 ifPresent(values -> Arrays.asList(values).forEach((child) -> this.children.add(child)));
     }
 
+    @Override
     public String getCode() {
         return code;
     }

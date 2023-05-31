@@ -52,6 +52,7 @@ import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IComponentExistsService;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jacms.web.resource.model.AssetDto;
@@ -274,6 +275,12 @@ public class ResourcesService implements IComponentExistsService {
         } catch (EntException e) {
             throw new RestServerError("plugins.jacms.resources.resourceManager.error.get", e);
         }
+    }
+
+    @Override
+    public IComponentDto getComponetDto(String code) throws EntException {
+        return Optional.ofNullable(this.resourceManager.loadResource(code))
+                .map(c -> this.convertResourceToDto(c)).orElse(null);
     }
 
     public boolean exists(String code) throws EntException {

@@ -7,11 +7,12 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+import org.entando.entando.aps.system.services.IComponentDto;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public abstract class AssetDto {
+public abstract class AssetDto implements IComponentDto {
     private String id;
 
     private String correlationCode;
@@ -37,4 +38,10 @@ public abstract class AssetDto {
     private String folderPath;
 
     private String fileName;
+
+    @Override
+    public String getCode() {
+        return this.getId();
+    }
+    
 }

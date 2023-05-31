@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.label.model.LabelDto;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
@@ -92,6 +93,12 @@ public class LabelService implements ILabelService {
             logger.error("error in get label group with code {}", code, t);
             throw new RestServerError("error in get label group", t);
         }
+    }
+    
+    @Override
+    public IComponentDto getComponetDto(String code) throws EntException {
+        return Optional.ofNullable(this.getI18nManager().getLabelGroup(code))
+                .map(g -> this.getDtoBuilder().convert(code, g)).orElse(null);
     }
 
     @Override

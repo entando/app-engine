@@ -29,11 +29,13 @@ import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.group.GroupServiceUtilizer;
 import org.entando.entando.aps.system.services.guifragment.GuiFragment;
@@ -166,6 +168,12 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
             logger.error("Failed to fetch gui fragment for widget type code ", e);
         }
         return widgetDto;
+    }
+    
+    @Override
+    public IComponentDto getComponetDto(String code) {
+        return Optional.ofNullable(this.getWidgetManager().getWidgetType(code))
+                .map(f -> this.getDtoBuilder().convert(f)).orElse(null);
     }
 
     @Override
@@ -350,6 +358,10 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
         return pagedMetadataMapper.getPagedResult(restListRequest, totalReferenced);
     }
 
+    @Override
+    public String getObjectType() {
+        return "widget";
+    }
 
     protected String extractUniqueGuiFragmentCode(String widgetTypeCode) throws EntException {
         String uniqueCode = widgetTypeCode;
