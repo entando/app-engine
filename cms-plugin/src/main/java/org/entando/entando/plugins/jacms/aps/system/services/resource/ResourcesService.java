@@ -1,3 +1,16 @@
+/*
+ * Copyright 2021-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
 package org.entando.entando.plugins.jacms.aps.system.services.resource;
 
 import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_CATEGORY_NOT_FOUND;
@@ -280,9 +293,10 @@ public class ResourcesService implements IComponentExistsService {
     @Override
     public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.resourceManager.loadResource(code))
-                .map(c -> this.convertResourceToDto(c)).orElse(null);
+                .map(this::convertResourceToDto).orElse(null);
     }
 
+    @Override
     public boolean exists(String code) throws EntException {
         return resourceManager.exists(null, code);
     }
@@ -622,7 +636,6 @@ public class ResourcesService implements IComponentExistsService {
 
     public AssetDto convertResourceToDto(ResourceInterface resource) {
         String type = unconvertResourceType(resource.getType());
-
         if (ImageAssetDto.RESOURCE_TYPE.equals(type)) {
             return convertImageResourceToDto((ImageResource) resource);
         } else if (FileAssetDto.RESOURCE_TYPE.equals(type)) {

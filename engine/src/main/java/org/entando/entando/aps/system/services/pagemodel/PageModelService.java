@@ -51,6 +51,8 @@ import org.entando.entando.web.common.exceptions.ValidationGenericException;
 public class PageModelService implements IPageModelService, ApplicationContextAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
+    
+    public static final String TYPE_PAGE_MODEL = "pageModel";
 
     private final IPageModelManager pageModelManager;
 
@@ -103,7 +105,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
         PageModel pageModel = this.pageModelManager.getPageModel(code);
         if (null == pageModel) {
             logger.warn("no pageModel found with code {}", code);
-            throw new ResourceNotFoundException(PageModelValidator.ERRCODE_PAGEMODEL_NOT_FOUND, "pageModel", code);
+            throw new ResourceNotFoundException(PageModelValidator.ERRCODE_PAGEMODEL_NOT_FOUND, TYPE_PAGE_MODEL, code);
         }
         PageModelDto dto = this.dtoBuilder.convert(pageModel);
         dto.setReferences(this.getReferencesInfo(pageModel));
@@ -113,7 +115,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
     @Override
     public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.pageModelManager.getPageModel(code))
-                .map(m -> this.dtoBuilder.convert(m)).orElse(null);
+                .map(this.dtoBuilder::convert).orElse(null);
     }
 
     @Override
@@ -183,7 +185,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
         PageModel pageModel = this.pageModelManager.getPageModel(pageModelCode);
         if (null == pageModel) {
             logger.warn("no pageModel found with code {}", pageModelCode);
-            throw new ResourceNotFoundException(PageModelValidator.ERRCODE_PAGEMODEL_NOT_FOUND, "pageModel", pageModelCode);
+            throw new ResourceNotFoundException(PageModelValidator.ERRCODE_PAGEMODEL_NOT_FOUND, TYPE_PAGE_MODEL, pageModelCode);
         }
         PageModelServiceUtilizer<?> utilizer = this.getPageModelServiceUtilizer(managerName);
         if (null == utilizer) {
@@ -203,7 +205,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
     public Integer getComponentUsage(String pageModelCode) {
         try {
             RestListRequest request = new RestListRequest(1, 1);
-            return getPageModelReferences(pageModelCode, "PageManager", request).getTotalItems();
+            return getPageModelReferences(pageModelCode, SystemConstants.PAGE_MANAGER, request).getTotalItems();
         } catch (ResourceNotFoundException e) {
             return 0;
         }
@@ -220,7 +222,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
 
     @Override
     public String getObjectType() {
-        return "pageModel";
+        return TYPE_PAGE_MODEL;
     }
 
     protected PageModel createPageModel(PageModelRequest pageModelRequest) {
@@ -281,7 +283,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
     }
 
     protected BeanPropertyBindingResult validateAdd(PageModelRequest pageModelRequest) {
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(pageModelRequest, "pageModel");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(pageModelRequest, TYPE_PAGE_MODEL);
         PageModel pageModel = pageModelManager.getPageModel(pageModelRequest.getCode());
         if (null != pageModel) {
             bindingResult.reject(PageModelValidator.ERRCODE_CODE_EXISTS, new String[]{pageModelRequest.getCode()}, "pageModel.code.exists");
@@ -292,17 +294,17 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
     }
 
     protected BeanPropertyBindingResult validateEdit(PageModelRequest pageModelRequest) {
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(pageModelRequest, "pageModel");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(pageModelRequest, TYPE_PAGE_MODEL);
         PageModel pageModel = this.pageModelManager.getPageModel(pageModelRequest.getCode());
         if (null == pageModel) {
-            throw new ResourceNotFoundException(PageModelValidator.ERRCODE_PAGEMODEL_NOT_FOUND, "pageModel", pageModelRequest.getCode());
+            throw new ResourceNotFoundException(PageModelValidator.ERRCODE_PAGEMODEL_NOT_FOUND, TYPE_PAGE_MODEL, pageModelRequest.getCode());
         }
         this.validateDefaultWidgets(pageModelRequest, bindingResult);
         return bindingResult;
     }
 
     protected BeanPropertyBindingResult validateDelete(PageModel pageModel) throws EntException {
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(pageModel, "pageModel");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(pageModel, TYPE_PAGE_MODEL);
         Map<String, List<Object>> references = this.getReferencingObjects(pageModel);
         if (references.size() > 0) {
             bindingResult.reject(PageModelValidator.ERRCODE_PAGEMODEL_REFERENCES, new Object[]{pageModel.getCode(), references}, "pageModel.cannot.delete.references");

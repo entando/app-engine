@@ -1,13 +1,27 @@
+/*
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
 package org.entando.entando.web.component;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 import org.entando.entando.aps.system.services.IComponentDto;
 
-public class ComponentUsageEntity {
+public class ComponentUsageEntity implements Serializable {
 
     public static final String TYPE_PAGE = "page";
     public static final String TYPE_WIDGET = "widget";
@@ -64,11 +78,6 @@ public class ComponentUsageEntity {
 
     public ComponentUsageEntity setStatus(String status) {
         this.status = status;
-        return this;
-    }
-
-    public ComponentUsageEntity addExtraProperties(Map<String, Object> extraProperties) {
-        this.extraProperties.putAll(extraProperties);
         return this;
     }
     

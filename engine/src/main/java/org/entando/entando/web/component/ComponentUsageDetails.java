@@ -29,9 +29,13 @@ public class ComponentUsageDetails extends ComponentUsage implements Serializabl
         super.setCode(code);
     }
     
-    public void fillProperties(IComponentDto dto) {
-        this.setStatus(dto.getStatus());
-        this.getExtraProperties().putAll(dto.getExtraProperties());
+    ComponentUsageDetails(String type, String code, IComponentDto dto) {
+        this(type, code);
+        if (null != dto) {
+            this.setExist(true);
+            this.setStatus(dto.getStatus());
+            this.getExtraProperties().putAll(dto.getExtraProperties());
+        }
     }
     
     @Getter@Setter

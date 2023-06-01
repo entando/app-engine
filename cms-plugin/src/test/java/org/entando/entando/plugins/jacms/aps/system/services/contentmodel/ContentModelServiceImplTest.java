@@ -1,3 +1,16 @@
+/*
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * 
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
 package org.entando.entando.plugins.jacms.aps.system.services.contentmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +38,7 @@ import java.util.Optional;
 import java.util.Properties;
 import org.assertj.core.api.Condition;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.plugins.jacms.aps.system.services.ContentModelServiceImpl;
 import org.entando.entando.plugins.jacms.web.contentmodel.model.ContentModelReferenceDTO;
 import org.entando.entando.plugins.jacms.web.contentmodel.validator.ContentModelValidator;
@@ -63,7 +77,7 @@ class ContentModelServiceImplTest {
     private List<SmallEntityType> mockedEntityTypes;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         fillMockedContentModelsMap();
         fillMockedContentTypesMap();
         fillMockedEntityTypes();
@@ -87,14 +101,14 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void findManyShouldFindAll() {
+    void findManyShouldFindAll() {
         RestListRequest request = new RestListRequest();
         PagedMetadata<ContentModelDto> result = contentModelService.findMany(request);
         assertThat(result.getBody()).isNotNull().hasSize(3);
     }
     
     @Test
-    public void findManyShouldFilter() {
+    void findManyShouldFilter() {
         RestListRequest request = new RestListRequest();
         String contentType = "AAA";
         Filter filter = new Filter("contentType", contentType);
@@ -105,7 +119,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void findManyShouldSort() {
+    void findManyShouldSort() {
         RestListRequest req = new RestListRequest();
         req.setSort("contentType");
         req.setDirection(FieldSearchFilter.DESC_ORDER);
@@ -116,12 +130,20 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFindOne() {
+    void shouldFindOne() {
         assertThat(contentModelService.getContentModel(1L)).isNotNull();
     }
 
     @Test
-    public void shouldFailWithNotFound() {
+    void shouldFindComponentDto() {
+        IComponentDto dto = this.contentModelService.getComponentDto(String.valueOf(3L));
+        assertThat(dto).isNotNull();
+        assertThat(dto).isInstanceOf(ContentModelDto.class);
+        assertEquals(dto.getCode(), String.valueOf(((ContentModelDto) dto).getId()));
+    }
+
+    @Test
+    void shouldFailWithNotFound() {
         ResourceNotFoundException ex = Assertions.assertThrows(ResourceNotFoundException.class, () -> {
             contentModelService.getContentModel(20L);
         });
@@ -129,7 +151,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFindOneUsingOptional() {
+    void shouldFindOneUsingOptional() {
         long id = 1L;
         Optional<ContentModelDto> maybeResult = contentModelService.findById(id);
         assertThat(maybeResult).isPresent();
@@ -142,13 +164,13 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFindNothingUsingOptional() {
+    void shouldFindNothingUsingOptional() {
         Optional<ContentModelDto> result = contentModelService.findById(20L);
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void shouldCreateContentModel() {
+    void shouldCreateContentModel() {
         String expectedShape = "<script nonce=\"$content.nonce\">my_js_script</script>";
 
         ContentModelDto contentModelToCreate = new ContentModelDto();
@@ -163,7 +185,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldCreateContentModelNonceAlreadyAdded() {
+    void shouldCreateContentModelNonceAlreadyAdded() {
         String expectedShape = "<script nonce=\"$content.nonce\">my_js_script</script>";
 
         ContentModelDto contentModelToCreate = new ContentModelDto();
@@ -180,7 +202,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFailCreatingContentModel() {
+    void shouldFailCreatingContentModel() {
         ContentModelDto contentModelToCreate = new ContentModelDto();
         // Existing content model id
         long id = 1L;
@@ -205,7 +227,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldUpdateContentModel() {
+    void shouldUpdateContentModel() {
         String expectedShape = "<script nonce=\"$content.nonce\">my_js_script</script>";
 
         long id = 1L;
@@ -230,7 +252,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFailUpdatingContentModelBecauseNotFound() {
+    void shouldFailUpdatingContentModelBecauseNotFound() {
         long id = 20L; // inexistent content model
         ContentModelDto contentModelToUpdate = new ContentModelDto();
         contentModelToUpdate.setId(id);
@@ -241,7 +263,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFailUpdatingContentModelBecauseContentTypeNotFound() {
+    void shouldFailUpdatingContentModelBecauseContentTypeNotFound() {
         long id = 3L;
         ContentModelDto contentModelToUpdate = new ContentModelDto();
         contentModelToUpdate.setId(id);
@@ -255,12 +277,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shoudlDeleteContentModel() {
-        contentModelService.delete(2L);
-    }
-
-    @Test
-    public void shoudlFailDeletingContentModel() {
+    void shoudlFailDeletingContentModel() {
         ValidationConflictException ex = Assertions.assertThrows(ValidationConflictException.class, () -> {
             contentModelService.delete(1L);
         });
@@ -270,7 +287,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shoudlFailDeletingContentModelWithDefaultModelTemplate() {
+    void shoudlFailDeletingContentModelWithDefaultModelTemplate() {
         Mockito.lenient().when(contentManager.getSmallEntityTypes()).thenReturn(mockedEntityTypes);
         Mockito.lenient().when(contentManager.getDefaultModel("BBB")).thenReturn("2");
         ValidationConflictException ex = Assertions.assertThrows(ValidationConflictException.class, () -> {
@@ -282,7 +299,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shoudlFailDeletingContentModelWithDefaultModelListTemplate() {
+    void shoudlFailDeletingContentModelWithDefaultModelListTemplate() {
         Mockito.lenient().when(contentManager.getSmallEntityTypes()).thenReturn(mockedEntityTypes);
         Mockito.lenient().when(contentManager.getListModel("BBB")).thenReturn("2");
         ValidationConflictException ex = Assertions.assertThrows(ValidationConflictException.class, () -> {
@@ -294,7 +311,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldReturnReferences() {
+    void shouldReturnReferences() {
         RestListRequest restListRequest =  new RestListRequest();
         final PagedMetadata<ContentModelReferenceDTO> contentModelReferences = contentModelService
                 .getContentModelReferences(1L, restListRequest);
@@ -303,7 +320,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldFailReturningReferences() {
+    void shouldFailReturningReferences() {
         RestListRequest restListRequest = new RestListRequest();
         ResourceNotFoundException ex = Assertions.assertThrows(ResourceNotFoundException.class, () -> {
             contentModelService.getContentModelReferences(20L, restListRequest);
@@ -312,7 +329,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void shouldReturnDictionary() {
+    void shouldReturnDictionary() {
         Content contentPrototype = new Content();
         contentPrototype.setTypeCode("AAA");
         when(this.contentManager.getEntityPrototype("AAA")).thenReturn(contentPrototype);
@@ -321,8 +338,7 @@ class ContentModelServiceImplTest {
     }
 
     @Test
-    public void getContentModelUsageForNonExistingCodeShouldReturnZero() {
-
+    void getContentModelUsageForNonExistingCodeShouldReturnZero() {
         int componentUsage = contentModelService.getComponentUsage(5000L).getUsage();
         assertEquals(0, componentUsage);
     }

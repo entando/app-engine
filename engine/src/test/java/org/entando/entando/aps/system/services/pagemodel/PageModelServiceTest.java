@@ -1,7 +1,19 @@
+/*
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * 
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
 package org.entando.entando.aps.system.services.pagemodel;
 
 import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
-import com.agiletec.aps.system.services.pagemodel.Frame;
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 import org.entando.entando.aps.system.services.assertionhelper.PageModelAssertionHelper;
@@ -18,8 +30,6 @@ import org.entando.entando.web.common.model.PagedMetadata;
 import org.entando.entando.web.common.model.RestListRequest;
 import org.entando.entando.web.component.ComponentUsageEntity;
 import org.entando.entando.web.page.model.PageSearchRequest;
-import org.entando.entando.web.pagemodel.model.PageModelConfigurationRequest;
-import org.entando.entando.web.pagemodel.model.PageModelFrameReq;
 import org.entando.entando.web.pagemodel.model.PageModelRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,7 +132,7 @@ class PageModelServiceTest {
         RestListRequest restListRequest = new RestListRequest();
         restListRequest.setPageSize(1);
         List<ComponentUsageEntity> componentUsageEntityList = Arrays.asList(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, PageMockHelper.PAGE_CODE, IPageService.STATUS_ONLINE));
-        PagedMetadata pagedMetadata = new PagedMetadata(restListRequest, componentUsageEntityList, 1);
+        PagedMetadata pagedMetadata = new PagedMetadata<>(restListRequest, componentUsageEntityList, 1);
         pagedMetadata.setPageSize(1);
         pagedMetadata.setPage(1);
         pagedMetadata.imposeLimits();
@@ -231,33 +241,6 @@ class PageModelServiceTest {
         PageModel localPageModel = new PageModel();
         localPageModel.setCode(PAGE_MODEL_CODE);
         return localPageModel;
-    }
-
-    private static PageModel pageModelFrom(PageModelRequest pageModelRequest) {
-        Frame[] frames = framesFrom(pageModelRequest.getConfiguration());
-        PageModel pageModel = new PageModel();
-        pageModel.setCode(pageModelRequest.getCode());
-        pageModel.setDescription(pageModelRequest.getDescr());
-        pageModel.setConfiguration(frames);
-        return pageModel;
-    }
-
-    private static Frame[] framesFrom(PageModelConfigurationRequest configuration) {
-        List<PageModelFrameReq> requestFrames = configuration.getFrames();
-        if (requestFrames == null) {
-            return new Frame[]{};
-        }
-        Frame[] frames = new Frame[requestFrames.size()];
-        for (int i = 0; i < requestFrames.size(); i++) {
-            frames[i] = frameFrom(requestFrames.get(i));
-        }
-        return frames;
-    }
-
-    private static Frame frameFrom(PageModelFrameReq request) {
-        Frame frame = new Frame();
-        frame.setDescription(request.getDescr());
-        return frame;
     }
     
 }

@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jacms.aps.system.services.content;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +39,7 @@ import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.ContentRenderizationInfo;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.IContentDispenser;
+import com.agiletec.plugins.jacms.aps.system.services.resource.ResourceUtilizer;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,12 +50,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jacms.aps.system.services.ContentTypeService;
 import org.entando.entando.plugins.jacms.web.content.validator.RestContentListRequest;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.common.model.Filter;
 import org.entando.entando.web.common.model.PagedMetadata;
+import org.entando.entando.web.common.model.RestListRequest;
+import org.entando.entando.web.component.ComponentUsageEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -147,7 +152,28 @@ class ContentServiceTest {
         Mockito.verify(((CategoryUtilizer) this.contentManager), Mockito.times(1)).getCategoryUtilizers(Mockito.anyString());
         Mockito.verify(this.contentManager, Mockito.times(0)).loadContent(Mockito.anyString(), Mockito.eq(true));
     }
+    
+    @Test
+    void getResourceUtilizer() throws Exception {
+        List<String> contentsId = Arrays.asList("ART44", "ART55", "ART66");
+        when(((ResourceUtilizer) this.contentManager).getResourceUtilizers(Mockito.anyString())).thenReturn(contentsId);
+        when(this.contentManager.loadContent(Mockito.anyString(), Mockito.eq(true))).thenReturn(Mockito.mock(Content.class));
+        List<ContentDto> dtos = this.contentService.getResourceUtilizer("resourceId");
+        Assertions.assertEquals(3, dtos.size());
+        Mockito.verify(((ResourceUtilizer) this.contentManager), Mockito.times(1)).getResourceUtilizers(Mockito.anyString());
+        Mockito.verify(this.contentManager, Mockito.times(3)).loadContent(Mockito.anyString(), Mockito.eq(true));
+    }
 
+    @Test
+    void getResourceUtilizerWithError() throws Exception {
+        when(((ResourceUtilizer) this.contentManager).getResourceUtilizers(Mockito.anyString())).thenThrow(EntException.class);
+        Assertions.assertThrows(RestServerError.class, () -> {
+            List<ContentDto> dtos = this.contentService.getResourceUtilizer("resourceId");
+        });
+        Mockito.verify(((ResourceUtilizer) this.contentManager), Mockito.times(1)).getResourceUtilizers(Mockito.anyString());
+        Mockito.verify(this.contentManager, Mockito.times(0)).loadContent(Mockito.anyString(), Mockito.eq(true));
+    }
+    
     @Test
     void getPageUtilizer() throws Exception {
         List<String> contentsId = Arrays.asList("ART1111", "ART2222", "ART333", "ART444", FOUND_CONTENT_02);
@@ -397,19 +423,19 @@ class ContentServiceTest {
     protected void addMockedContent(String id, String typeCode,
             @Nullable String ownerGroup, @Nullable String extraGroup) throws Exception {
         Content mockContent = Mockito.mock(Content.class);
-        when(mockContent.getListModel()).thenReturn("10");
-        when(mockContent.getDefaultModel()).thenReturn("20");
-        when(mockContent.getTypeCode()).thenReturn(typeCode);
+        Mockito.lenient().when(mockContent.getListModel()).thenReturn("10");
+        Mockito.lenient().when(mockContent.getDefaultModel()).thenReturn("20");
+        Mockito.lenient().when(mockContent.getTypeCode()).thenReturn(typeCode);
         if (ownerGroup != null) {
-            when(mockContent.getMainGroup()).thenReturn(ownerGroup);
+            Mockito.lenient().when(mockContent.getMainGroup()).thenReturn(ownerGroup);
         }
         if (extraGroup != null) {
-            when(mockContent.getGroups()).thenReturn(new HashSet<>(Arrays.asList(extraGroup.split(","))));
+            Mockito.lenient().when(mockContent.getGroups()).thenReturn(new HashSet<>(Arrays.asList(extraGroup.split(","))));
         }
         if (id == null) {
-            when(this.contentManager.loadContent(Mockito.anyString(), Mockito.eq(true))).thenReturn(mockContent);
+            Mockito.lenient().when(this.contentManager.loadContent(Mockito.anyString(), Mockito.anyBoolean())).thenReturn(mockContent);
         } else {
-            when(this.contentManager.loadContent(id, true)).thenReturn(mockContent);
+            Mockito.lenient().when(this.contentManager.loadContent(Mockito.eq(id), Mockito.anyBoolean())).thenReturn(mockContent);
         }
     }
 
@@ -497,6 +523,31 @@ class ContentServiceTest {
                 Mockito.eq("text"), Mockito.any())).thenReturn(
                 Arrays.asList("ART7", FOUND_CONTENT_03, "ART8", "ART12", FOUND_CONTENT_01, FOUND_CONTENT_02));
         return requestList;
+    }
+    
+    @Test
+    void shouldFindComponentDto() throws Exception {
+        this.addMockedContent("ART123", "ART", null, null);
+        IComponentDto dto = this.contentService.getComponentDto("ART123");
+        assertThat(dto).isNotNull()
+                .isInstanceOf(ContentDto.class);
+    }
+    
+    @Test
+    void shouldFindUtilizers() {
+        ContentServiceUtilizer utilizer = Mockito.mock(ContentServiceUtilizer.class);
+        List<IComponentDto> components = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            IComponentDto dto = Mockito.mock(IComponentDto.class);
+            components.add(dto);
+        }
+        when(utilizer.getContentUtilizer(Mockito.anyString())).thenReturn(components);
+        when(this.applicationContext.getBeansOfType(ContentServiceUtilizer.class)).thenReturn(Map.of("service", utilizer));
+        PagedMetadata<ComponentUsageEntity> result = contentService.getComponentUsageDetails("test", new RestListRequest());
+        Assertions.assertEquals(3, result.getBody().size());
+        
+        int usage = contentService.getComponentUsage("test");
+        Assertions.assertEquals(result.getBody().size(), usage);
     }
     
 }
