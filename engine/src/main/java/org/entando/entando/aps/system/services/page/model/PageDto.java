@@ -107,6 +107,12 @@ public class PageDto implements IComponentDto {
         this.setFullPath(page.getPath(pageManager));
     }
 
+    @Override
+    public Map<String, Object> getExtraProperties() {
+        return Map.of("onlineInstance", this.isOnlineInstance());
+    }
+    
+    @Override
     public String getCode() {
         return code;
     }
@@ -115,6 +121,7 @@ public class PageDto implements IComponentDto {
         this.code = code;
     }
 
+    @Override
     public String getStatus() {
         return status;
     }

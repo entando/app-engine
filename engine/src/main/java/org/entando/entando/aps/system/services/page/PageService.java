@@ -292,7 +292,7 @@ public class PageService implements IComponentExistsService, IPageService,
     }
 
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.loadPage(code, IPageService.STATUS_DRAFT))
                 .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }
@@ -885,10 +885,10 @@ public class PageService implements IComponentExistsService, IPageService,
         PageDto pageDto = this.getPage(pageCode, IPageService.STATUS_DRAFT);
         List<PageDto> childrenPageDtoList = this.getPages(pageCode);
         List<ComponentUsageEntity> componentUsageEntityList = childrenPageDtoList.stream()
-                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto.getCode(), childPageDto.getStatus()))
+                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto))
                 .collect(Collectors.toList());
         if (pageDto.getStatus().equals(IPageService.STATUS_ONLINE)) {
-            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto.getCode(), pageDto.getStatus()));
+            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto));
         }
         return pagedMetadataMapper.getPagedResult(restListRequest, componentUsageEntityList);
     }

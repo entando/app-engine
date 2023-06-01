@@ -13,13 +13,15 @@
  */
 package org.entando.entando.web.component;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
+import org.entando.entando.aps.system.services.IComponentDto;
 
+@JsonPropertyOrder({"type", "code", "exist", "usage", "status", "extraProperties", "references"})
 public class ComponentUsageDetails extends ComponentUsage implements Serializable {
     
     ComponentUsageDetails(String type, String code) {
@@ -27,10 +29,15 @@ public class ComponentUsageDetails extends ComponentUsage implements Serializabl
         super.setCode(code);
     }
     
+    public void fillProperties(IComponentDto dto) {
+        this.setStatus(dto.getStatus());
+        this.getExtraProperties().putAll(dto.getExtraProperties());
+    }
+    
     @Getter@Setter
     private boolean exist;
     
     @Getter@Setter
-    private List<Map<String, String>> references = new ArrayList<>();
+    private List<ComponentUsageEntity> references = new ArrayList<>();
     
 }

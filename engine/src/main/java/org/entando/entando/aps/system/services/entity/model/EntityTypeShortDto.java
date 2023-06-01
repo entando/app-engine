@@ -63,7 +63,6 @@ public class EntityTypeShortDto implements IComponentDto {
         this.name = name;
     }
 
-    @Override
     public String getStatus() {
         return status;
     }

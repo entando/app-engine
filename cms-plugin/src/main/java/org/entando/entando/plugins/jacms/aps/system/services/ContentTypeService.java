@@ -198,7 +198,7 @@ public class ContentTypeService extends AbstractEntityTypeService<Content, Conte
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         IEntityManager entityManager = this.extractEntityManager(JacmsSystemConstants.CONTENT_MANAGER);
         return Optional.ofNullable(entityManager.getEntityPrototype(code))
                 .map(f -> this.getEntityTypeShortDtoBuilder().convert(f)).orElse(null);
@@ -206,7 +206,7 @@ public class ContentTypeService extends AbstractEntityTypeService<Content, Conte
 
     @Override
     public boolean exists(String code) {
-        return null != this.getComponetDto(code);
+        return null != this.getComponentDto(code);
     }
     
 }

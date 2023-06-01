@@ -278,7 +278,7 @@ public class ResourcesService implements IComponentExistsService {
     }
 
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.resourceManager.loadResource(code))
                 .map(c -> this.convertResourceToDto(c)).orElse(null);
     }

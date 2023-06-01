@@ -168,14 +168,14 @@ public class CategoryService implements ICategoryService, CategoryServiceUtilize
     }
 
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.getCategoryManager().getCategory(code))
                 .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }
 
     @Override
     public boolean exists(String categoryCode) {
-        return null != this.getComponetDto(categoryCode);
+        return null != this.getComponentDto(categoryCode);
     }
 
     @Override

@@ -111,7 +111,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.pageModelManager.getPageModel(code))
                 .map(m -> this.dtoBuilder.convert(m)).orElse(null);
     }
@@ -213,7 +213,7 @@ public class PageModelService implements IPageModelService, ApplicationContextAw
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
         PagedMetadata<PageDto> pagedMetadata = (PagedMetadata<PageDto>) this.getPageModelReferences(componentCode, SystemConstants.PAGE_MANAGER, restListRequest);
         List<ComponentUsageEntity> componentUsageEntityList = pagedMetadata.getBody().stream()
-                .map(pageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto.getCode(), pageDto.getStatus()))
+                .map(pageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto))
                 .collect(Collectors.toList());
         return this.pagedMetadataMapper.getPagedResult(restListRequest, componentUsageEntityList);
     }
