@@ -171,7 +171,7 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.getWidgetManager().getWidgetType(code))
                 .map(f -> this.getDtoBuilder().convert(f)).orElse(null);
     }

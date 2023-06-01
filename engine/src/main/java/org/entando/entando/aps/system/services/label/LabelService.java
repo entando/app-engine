@@ -96,7 +96,7 @@ public class LabelService implements ILabelService {
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.getI18nManager().getLabelGroup(code))
                 .map(g -> this.getDtoBuilder().convert(code, g)).orElse(null);
     }

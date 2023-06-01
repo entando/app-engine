@@ -1011,7 +1011,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     }
 
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.getContentManager().loadContent(code, false))
                 .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }

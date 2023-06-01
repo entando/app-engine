@@ -92,7 +92,7 @@ public class CmsPageServiceWrapper implements ContentServiceUtilizer<PageDto> {
     }
 
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.pageManager.getDraftPage(code))
                 .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }

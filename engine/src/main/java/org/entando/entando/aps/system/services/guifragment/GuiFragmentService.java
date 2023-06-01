@@ -110,7 +110,7 @@ public class GuiFragmentService implements IGuiFragmentService {
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.getGuiFragmentManager().getGuiFragment(code))
                 .map(f -> this.getDtoBuilder().convert(f)).orElse(null);
     }

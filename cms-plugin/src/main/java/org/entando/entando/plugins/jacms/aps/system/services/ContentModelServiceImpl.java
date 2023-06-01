@@ -121,7 +121,7 @@ public class ContentModelServiceImpl implements ContentModelService {
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.contentModelManager.getContentModel(Long.valueOf(code)))
                 .map(c -> this.dtoBuilder.convert(c)).orElse(null);
     }

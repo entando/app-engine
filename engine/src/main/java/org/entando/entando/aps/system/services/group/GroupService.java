@@ -110,7 +110,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.getGroupManager().getGroup(code))
                 .map(g -> this.getDtoBuilder().convert(g)).orElse(null);
     }

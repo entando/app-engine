@@ -15,10 +15,8 @@ package org.entando.entando.web.component;
 
 import com.agiletec.aps.system.services.role.Permission;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.web.common.annotation.RestAccessControl;
@@ -68,24 +66,17 @@ public class ComponentController {
         return new ResponseEntity<>(details, HttpStatus.OK);
     }
 
-    private List<Map<String, String>> extractReferences(ComponentUsageDetails usage, IComponentUsageService service) {
+    private List<ComponentUsageEntity> extractReferences(ComponentUsageDetails usage, IComponentUsageService service) {
         try {
-            IComponentDto component = service.getComponetDto(usage.getCode());
+            IComponentDto component = service.getComponentDto(usage.getCode());
             usage.setExist(null != component);
             if (null != component) {
-                usage.setStatus(component.getStatus());
+                usage.fillProperties(component);
                 RestListRequest listRequest = new RestListRequest();
                 listRequest.setPageSize(-1); // get all elements
                 PagedMetadata<ComponentUsageEntity> result = service.getComponentUsageDetails(usage.getCode(), new RestListRequest());
                 usage.setUsage(result.getTotalItems());
-                List<ComponentUsageEntity> body = result.getBody();
-                return body.stream().map(cu -> {
-                    Map<String, String> properties = new HashMap<>(Map.of("type", cu.getType(), "code", cu.getCode()));
-                    if (null != cu.getStatus()) {
-                        properties.put("status", cu.getStatus());
-                    }
-                    return properties;
-                }).collect(Collectors.toList());
+                return result.getBody();
             }
         } catch (Exception e) {
             throw new EntRuntimeException("Error extracting details", e);

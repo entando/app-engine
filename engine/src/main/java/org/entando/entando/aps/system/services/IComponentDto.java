@@ -13,18 +13,23 @@
  */
 package org.entando.entando.aps.system.services;
 
+import java.util.Map;
 import org.entando.entando.web.component.ComponentUsageEntity;
 
 public interface IComponentDto {
     
     public default ComponentUsageEntity buildUsageEntity(String type) {
-        return new ComponentUsageEntity(type, this.getCode());
+        return new ComponentUsageEntity(type, this);
     }
     
     public String getCode();
     
     public default String getStatus() {
         return null;
+    }
+    
+    public default Map<String, Object> getExtraProperties() {
+        return Map.of();
     }
     
 }

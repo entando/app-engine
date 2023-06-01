@@ -50,7 +50,7 @@ public class ResourceService implements IResourceService,
     private IDtoBuilder<ResourceInterface, ResourceDto> dtoBuilder;
     
     @Autowired(required = false)
-    private List<ResourceServiceUtilizer> resourceServiceUtilizers;
+    private List<? extends ResourceServiceUtilizer> resourceServiceUtilizers;
 
     public IResourceManager getResourceManager() {
         return resourceManager;
@@ -124,7 +124,7 @@ public class ResourceService implements IResourceService,
     }
 
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return Optional.ofNullable(this.resourceManager.loadResource(code))
                 .map(c -> this.getDtoBuilder().convert(c)).orElse(null);
     }
@@ -156,8 +156,9 @@ public class ResourceService implements IResourceService,
                 components.addAll(utilizerForService);
             }
         }
-        PagedMetadata<ComponentUsageEntity> usageEntries = new PagedMetadata(restListRequest, components.size());
-        usageEntries.setBody(components);
+        List<ComponentUsageEntity> sublist = restListRequest.getSublist(components);
+        PagedMetadata<ComponentUsageEntity> usageEntries = new PagedMetadata<>(restListRequest, components.size());
+        usageEntries.setBody(sublist);
         return usageEntries;
     }
 

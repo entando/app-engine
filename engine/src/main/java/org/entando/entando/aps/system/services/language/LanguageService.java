@@ -87,7 +87,7 @@ public class LanguageService implements ILanguageService {
     }
     
     @Override
-    public IComponentDto getComponetDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) throws EntException {
         return this.getLangManager().getAssignableLangs().stream()
                 .filter(lang -> lang.getCode().equals(code))
                 .map(lang -> getLanguageDtoBuilder().convert(lang))
@@ -97,7 +97,7 @@ public class LanguageService implements ILanguageService {
 
     @Override
     public boolean exists(String code) throws EntException {
-        return this.getComponetDto(code) != null;
+        return this.getComponentDto(code) != null;
     }
 
     @Override

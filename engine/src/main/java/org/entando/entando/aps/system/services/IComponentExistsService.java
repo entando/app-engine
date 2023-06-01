@@ -4,5 +4,5 @@ import org.entando.entando.ent.exception.EntException;
 
 public interface IComponentExistsService {
     boolean exists(String code) throws EntException;
-    IComponentDto getComponetDto(String code) throws EntException;
+    IComponentDto getComponentDto(String code) throws EntException;
 }
