@@ -43,6 +43,8 @@ import org.entando.entando.aps.system.services.IComponentDto;
 public class GroupService implements IGroupService, ApplicationContextAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
+    
+    public static final String TYPE_GROUP = "group";
 
     @Autowired
     private IGroupManager groupManager;
@@ -102,7 +104,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
         Group group = this.getGroupManager().getGroup(groupCode);
         if (null == group) {
             logger.warn("no group found with code {}", groupCode);
-            throw new ResourceNotFoundException(GroupValidator.ERRCODE_GROUP_NOT_FOUND, "group", groupCode);
+            throw new ResourceNotFoundException(GroupValidator.ERRCODE_GROUP_NOT_FOUND, TYPE_GROUP, groupCode);
         }
         GroupDto dto = this.getDtoBuilder().convert(group);
         dto.setReferences(this.getReferencesInfo(group));
@@ -126,7 +128,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
         Group group = this.getGroupManager().getGroup(groupCode);
         if (null == group) {
             logger.warn("no group found with code {}", groupCode);
-            throw new ResourceNotFoundException(GroupValidator.ERRCODE_GROUP_NOT_FOUND, "group", groupCode);
+            throw new ResourceNotFoundException(GroupValidator.ERRCODE_GROUP_NOT_FOUND, TYPE_GROUP, groupCode);
         }
         GroupServiceUtilizer<?> utilizer = this.getGroupServiceUtilizer(managerName);
         if (null == utilizer) {
@@ -150,7 +152,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
     public GroupDto updateGroup(String groupCode, String descr) {
         Group group = this.getGroupManager().getGroup(groupCode);
         if (null == group) {
-            throw new ResourceNotFoundException(GroupValidator.ERRCODE_GROUP_NOT_FOUND, "group", groupCode);
+            throw new ResourceNotFoundException(GroupValidator.ERRCODE_GROUP_NOT_FOUND, TYPE_GROUP, groupCode);
         }
         group.setDescription(descr);
         try {
@@ -232,7 +234,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
     }
 
     protected BeanPropertyBindingResult checkGroupForDelete(Group group) {
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(group, "group");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(group, TYPE_GROUP);
 
         if (null == group) {
             return bindingResult;
@@ -312,7 +314,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
      */
     protected Optional<GroupDto> checkForExistenceOrThrowValidationConflictException(Group group) {
 
-        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(group, "group");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(group, TYPE_GROUP);
         Group savedGroup = this.getGroupManager().getGroup(group.getName());
 
         // check for idempotemcy
@@ -334,7 +336,7 @@ public class GroupService implements IGroupService, ApplicationContextAware {
 
     @Override
     public String getObjectType() {
-        return "group";
+        return TYPE_GROUP;
     }
 
 }

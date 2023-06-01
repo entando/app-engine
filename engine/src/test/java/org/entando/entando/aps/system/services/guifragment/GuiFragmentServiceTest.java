@@ -26,11 +26,13 @@ import com.agiletec.aps.system.services.lang.Lang;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.assertionhelper.GuiFragmentAssertionHelper;
 import org.entando.entando.aps.system.services.guifragment.model.GuiFragmentDto;
 import org.entando.entando.aps.system.services.guifragment.model.GuiFragmentDtoBuilder;
 import org.entando.entando.aps.system.services.mockhelper.FragmentMockHelper;
 import org.entando.entando.aps.system.services.mockhelper.PageMockHelper;
+import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
 import org.entando.entando.web.common.assembler.PagedMetadataMapper;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.common.model.PagedMetadata;
@@ -47,7 +49,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ListableBeanFactory;
 
 @ExtendWith(MockitoExtension.class)
 class GuiFragmentServiceTest {
@@ -57,6 +61,9 @@ class GuiFragmentServiceTest {
 
     @Mock
     private GuiFragmentDtoBuilder dtoBuilder;
+
+    @Mock
+    private IWidgetTypeManager widgetTypeManager;
 
     @Mock
     private IGuiFragmentManager guiFragmentManager;
@@ -169,6 +176,23 @@ class GuiFragmentServiceTest {
     void getFragmentUsageForNonExistingCodeShouldReturnZero() {
         int componentUsage = guiFragmentService.getComponentUsage("non_existing");
         Assertions.assertEquals(0, componentUsage);
+    }
+
+    @Test
+    void shouldFindComponentDto() throws Exception {
+        GuiFragment fragment = FragmentMockHelper.mockGuiFragment("test");
+        fragment.setWidgetTypeCode(null);
+        GuiFragmentDtoBuilder builder = new GuiFragmentDtoBuilder();
+        builder.setLangManager(langManager);
+        builder.setWidgetTypeManager(widgetTypeManager);
+        ListableBeanFactory factory = Mockito.mock(ListableBeanFactory.class);
+        Mockito.when(factory.getBeanNamesForType(GuiFragmentUtilizer.class)).thenReturn(new String[0]);
+        builder.setBeanFactory(factory);
+        guiFragmentService.setDtoBuilder(builder);
+        Mockito.when(guiFragmentManager.getGuiFragment("test")).thenReturn(fragment);
+        IComponentDto dto = this.guiFragmentService.getComponentDto("test");
+        assertThat(dto).isNotNull()
+                .isInstanceOf(GuiFragmentDto.class);
     }
 
     @Test

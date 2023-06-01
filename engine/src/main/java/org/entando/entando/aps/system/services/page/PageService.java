@@ -147,6 +147,9 @@ public class PageService implements IComponentExistsService, IPageService,
 
     @Autowired
     private IPageAuthorizationService pageAuthorizationService;
+    
+    @Autowired(required = false)
+    private List<? extends PageServiceUtilizer> pageServiceUtilizers;
 
     protected IPageManager getPageManager() {
         return pageManager;
@@ -879,20 +882,28 @@ public class PageService implements IComponentExistsService, IPageService,
             return 0;
         }
     }
-
+    
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String pageCode, RestListRequest restListRequest) {
         PageDto pageDto = this.getPage(pageCode, IPageService.STATUS_DRAFT);
         List<PageDto> childrenPageDtoList = this.getPages(pageCode);
         List<ComponentUsageEntity> componentUsageEntityList = childrenPageDtoList.stream()
-                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto))
+                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto.getCode(), childPageDto.getStatus()))
                 .collect(Collectors.toList());
         if (pageDto.getStatus().equals(IPageService.STATUS_ONLINE)) {
-            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto));
+            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto.getCode(), pageDto.getStatus()));
+        }
+        if (null != this.pageServiceUtilizers) {
+            for (var utilizer : this.pageServiceUtilizers) {
+                List<IComponentDto> objects = utilizer.getPageUtilizer(pageCode);
+                List<ComponentUsageEntity> utilizerForService = objects.stream()
+                        .map(o -> o.buildUsageEntity(utilizer.getObjectType())).collect(Collectors.toList());
+                componentUsageEntityList.addAll(utilizerForService);
+            }
         }
         return pagedMetadataMapper.getPagedResult(restListRequest, componentUsageEntityList);
     }
-
+    
     @Override
     public String getObjectType() {
         return "page";

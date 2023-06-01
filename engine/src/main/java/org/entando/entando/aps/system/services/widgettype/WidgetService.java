@@ -63,6 +63,8 @@ import org.springframework.web.context.ServletContextAware;
 public class WidgetService implements IWidgetService, GroupServiceUtilizer<WidgetDto>, ServletContextAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(WidgetService.class);
+    
+    public static final String TYPE_WIDGET = "widget";
 
     private IWidgetTypeManager widgetManager;
 
@@ -221,7 +223,7 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
             widgetType.setCode(widgetRequest.getCode());
             this.processWidgetType(widgetType, widgetRequest);
             WidgetType oldWidgetType = this.getWidgetManager().getWidgetType(widgetType.getCode());
-            BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(widgetType, "widget");
+            BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(widgetType, TYPE_WIDGET);
             if (null != oldWidgetType) {
                 bindingResult.reject(WidgetValidator.ERRCODE_WIDGET_ALREADY_EXISTS, new String[]{widgetType.getCode()}, "widgettype.exists");
                 throw new ValidationGenericException(bindingResult);
@@ -247,12 +249,12 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
     public WidgetDto updateWidget(String widgetCode, WidgetRequest widgetUpdateRequest) {
         WidgetType type = this.getWidgetManager().getWidgetType(widgetCode);
         if (type == null) {
-            throw new ResourceNotFoundException(WidgetValidator.ERRCODE_WIDGET_DOES_NOT_EXISTS, "widget", widgetCode);
+            throw new ResourceNotFoundException(WidgetValidator.ERRCODE_WIDGET_DOES_NOT_EXISTS, TYPE_WIDGET, widgetCode);
         }
         WidgetDto widgetDto;
         try {
             if (null == this.getGroupManager().getGroup(widgetUpdateRequest.getGroup())) {
-                BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(type, "widget");
+                BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(type, TYPE_WIDGET);
                 bindingResult.reject(WidgetValidator.ERRCODE_WIDGET_GROUP_INVALID,
                         new String[]{widgetUpdateRequest.getGroup()}, "widgettype.group.invalid");
                 throw new ValidationGenericException(bindingResult);
@@ -265,7 +267,7 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
                     && !type.isLogic()
                     && !(WidgetType.existsJsp(this.srvCtx, widgetCode, type.getPluginCode())
             || (guiFragment != null && !(StringUtils.isBlank(guiFragment.getDefaultGui()))))) {
-                BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(type, "widget");
+                BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(type, TYPE_WIDGET);
                 bindingResult.reject(WidgetValidator.ERRCODE_NOT_BLANK, new String[]{type.getCode()},
                         "widgettype.customUi.notBlank");
                 throw new ValidationGenericException(bindingResult);
@@ -360,7 +362,7 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
 
     @Override
     public String getObjectType() {
-        return "widget";
+        return TYPE_WIDGET;
     }
 
     protected String extractUniqueGuiFragmentCode(String widgetTypeCode) throws EntException {

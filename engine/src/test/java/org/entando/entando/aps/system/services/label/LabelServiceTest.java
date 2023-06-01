@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
+import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.label.model.LabelDto;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.common.model.Filter;
@@ -306,6 +307,17 @@ class LabelServiceTest {
         final ApsProperties properties = new ApsProperties();
         value.keySet().forEach(item -> properties.setProperty(item, value.get(item)));
         return properties;
+    }
+
+    @Test
+    void shouldFindComponentDto() throws Exception {
+        ApsProperties existinglabels = LabelTestHelper.stubTestApsProperties();
+        Mockito.when(i18nManager.getLabelGroup(anyString())).thenReturn(existinglabels);
+        IComponentDto dto = this.labelService.getComponentDto("test");
+        assertThat(dto).isNotNull()
+                .isInstanceOf(LabelDto.class);
+        Assertions.assertEquals("test", dto.getCode());
+        Assertions.assertEquals("test", ((LabelDto) dto).getKey());
     }
 
 }

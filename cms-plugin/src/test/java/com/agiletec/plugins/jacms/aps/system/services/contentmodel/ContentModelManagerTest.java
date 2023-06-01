@@ -36,7 +36,6 @@ import com.agiletec.plugins.jacms.aps.system.services.contentmodel.model.Content
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -27,6 +27,9 @@ import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceDto
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.DtoBuilder;
 import org.entando.entando.aps.system.services.IComponentDto;
@@ -49,6 +52,7 @@ public class ResourceService implements IResourceService,
     private IResourceManager resourceManager;
     private IDtoBuilder<ResourceInterface, ResourceDto> dtoBuilder;
     
+    @Getter(AccessLevel.PROTECTED)@Setter
     @Autowired(required = false)
     private List<? extends ResourceServiceUtilizer> resourceServiceUtilizers;
 
@@ -141,14 +145,17 @@ public class ResourceService implements IResourceService,
 
     @Override
     public Integer getComponentUsage(String componentCode) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        RestListRequest request = new RestListRequest();
+        request.setPageSize(-1); // get all elements
+        PagedMetadata<ComponentUsageEntity> entities = this.getComponentUsageDetails(componentCode, request);
+        return entities.getTotalItems();
     }
 
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
         List<ComponentUsageEntity> components = new ArrayList<>();
-        if (null != this.resourceServiceUtilizers) {
-            for (ResourceServiceUtilizer utilizer : this.resourceServiceUtilizers) {
+        if (null != this.getResourceServiceUtilizers()) {
+            for (var utilizer : this.getResourceServiceUtilizers()) {
                 List<IComponentDto> objects = utilizer.getResourceUtilizer(componentCode);
                 String objectName = utilizer.getObjectType();
                 List<ComponentUsageEntity> utilizerForService = objects.stream()

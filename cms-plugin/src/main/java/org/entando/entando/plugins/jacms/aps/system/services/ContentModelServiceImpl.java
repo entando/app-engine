@@ -33,7 +33,6 @@ import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.DtoBuilder;
 import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IDtoBuilder;
-import org.entando.entando.aps.system.services.page.IPageService;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -121,9 +120,9 @@ public class ContentModelServiceImpl implements ContentModelService {
     }
     
     @Override
-    public IComponentDto getComponentDto(String code) throws EntException {
+    public IComponentDto getComponentDto(String code) {
         return Optional.ofNullable(this.contentModelManager.getContentModel(Long.valueOf(code)))
-                .map(c -> this.dtoBuilder.convert(c)).orElse(null);
+                .map(this.dtoBuilder::convert).orElse(null);
     }
     
     @Override

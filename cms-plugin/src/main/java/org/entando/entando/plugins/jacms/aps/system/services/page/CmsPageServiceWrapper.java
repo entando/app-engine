@@ -20,7 +20,6 @@ import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.ContentUtilizer;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.IComponentDto;
 import org.entando.entando.aps.system.services.IDtoBuilder;
@@ -51,9 +50,6 @@ public class CmsPageServiceWrapper implements ContentServiceUtilizer<PageDto> {
     @Qualifier(JacmsSystemConstants.PAGE_MANAGER_WRAPPER)
     private ContentUtilizer pageManagerWrapper;
 
-    @Autowired
-    private ContentServiceUtilizer pageServiceWrapper;
-    
     @Override
     public String getManagerName() {
         return this.getPageManagerWrapper().getName();
@@ -72,7 +68,7 @@ public class CmsPageServiceWrapper implements ContentServiceUtilizer<PageDto> {
     
     @Override
     public String getObjectType() {
-        return "page";
+        return "";
     }
     
     @Override
@@ -82,13 +78,7 @@ public class CmsPageServiceWrapper implements ContentServiceUtilizer<PageDto> {
     
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
-        List<IComponentDto> objects = this.pageServiceWrapper.getContentUtilizer(componentCode);
-        String objectName = this.pageServiceWrapper.getObjectType();
-        List<ComponentUsageEntity> utilizerForService = objects.stream()
-                .map(o -> o.buildUsageEntity(objectName)).collect(Collectors.toList());
-        PagedMetadata<ComponentUsageEntity> usageEntries = new PagedMetadata(restListRequest, utilizerForService.size());
-        usageEntries.setBody(utilizerForService);
-        return usageEntries;
+        return null;
     }
 
     @Override
