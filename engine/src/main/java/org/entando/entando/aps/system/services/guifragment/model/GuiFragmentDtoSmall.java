@@ -28,7 +28,7 @@ public class GuiFragmentDtoSmall implements IComponentDto {
 
     private String code;
     private boolean locked;
-    private WidgetTypeRef widgetType = new WidgetTypeRef();
+    private WidgetTypeRef widgetType = null;
     private String pluginCode;
 
     public GuiFragmentDtoSmall() {

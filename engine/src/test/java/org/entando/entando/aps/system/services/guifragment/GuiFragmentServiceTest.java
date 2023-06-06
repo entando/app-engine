@@ -15,6 +15,7 @@ package org.entando.entando.aps.system.services.guifragment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.entando.entando.aps.system.services.guifragment.FragmentTestUtil.validFragmentRequest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -23,20 +24,24 @@ import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.ApsProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.stream.IntStream;
 import org.entando.entando.aps.system.services.IComponentDto;
-import org.entando.entando.aps.system.services.assertionhelper.GuiFragmentAssertionHelper;
+import org.entando.entando.aps.system.services.assertionhelper.ComponentUsageEntityAssertionHelper;
 import org.entando.entando.aps.system.services.guifragment.model.GuiFragmentDto;
 import org.entando.entando.aps.system.services.guifragment.model.GuiFragmentDtoBuilder;
 import org.entando.entando.aps.system.services.mockhelper.FragmentMockHelper;
 import org.entando.entando.aps.system.services.mockhelper.PageMockHelper;
+import org.entando.entando.aps.system.services.mockhelper.WidgetMockHelper;
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
+import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.web.common.assembler.PagedMetadataMapper;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.common.model.PagedMetadata;
-import org.entando.entando.web.common.model.RestListRequest;
 import org.entando.entando.web.component.ComponentUsageEntity;
 import org.entando.entando.web.guifragment.model.GuiFragmentRequestBody;
 import org.entando.entando.web.page.model.PageSearchRequest;
@@ -71,8 +76,8 @@ class GuiFragmentServiceTest {
     @Mock
     private ILangManager langManager;
 
-    @Mock
-    private PagedMetadataMapper pagedMetadataMapper;
+    @Spy
+    private PagedMetadataMapper pagedMetadataMapper = new PagedMetadataMapper();
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -177,75 +182,93 @@ class GuiFragmentServiceTest {
         int componentUsage = guiFragmentService.getComponentUsage("non_existing");
         Assertions.assertEquals(0, componentUsage);
     }
-
+    
     @Test
-    void shouldFindComponentDto() throws Exception {
-        GuiFragment fragment = FragmentMockHelper.mockGuiFragment("test");
-        fragment.setWidgetTypeCode(null);
+    void shouldFindComponentDtoWithWidgetRef() throws Exception {
+        this.shouldFindComponentDto(false);
+    }
+    
+    @Test
+    void shouldFindComponentDtoWithoutWidgetRef() throws Exception {
+        this.shouldFindComponentDto(true);
+    }
+    
+    private void shouldFindComponentDto(boolean nullWidgetRef) throws Exception {
+        GuiFragment fragment = new GuiFragment();
+        fragment.setCode("test_dto");
+        fragment.setGui("<h1>test</h1>");
+        if (!nullWidgetRef) {
+            fragment.setWidgetTypeCode("ref_widget_code");
+        }
         GuiFragmentDtoBuilder builder = new GuiFragmentDtoBuilder();
         builder.setLangManager(langManager);
+        Lang defaultLang = new Lang();
+        defaultLang.setCode("en");
+        Mockito.lenient().when(this.langManager.getDefaultLang()).thenReturn(defaultLang);
         builder.setWidgetTypeManager(widgetTypeManager);
+        if (!nullWidgetRef) {
+            WidgetType widgetType = new WidgetType();
+            widgetType.setCode("ref_widget_code");
+            ApsProperties titles = new ApsProperties();
+            titles.putAll(Map.of("it", "titolo", "en", "title"));
+            widgetType.setTitles(titles);
+            Mockito.lenient().when(this.widgetTypeManager.getWidgetType("ref_widget_code")).thenReturn(widgetType);
+        }
         ListableBeanFactory factory = Mockito.mock(ListableBeanFactory.class);
         Mockito.when(factory.getBeanNamesForType(GuiFragmentUtilizer.class)).thenReturn(new String[0]);
         builder.setBeanFactory(factory);
         guiFragmentService.setDtoBuilder(builder);
-        Mockito.when(guiFragmentManager.getGuiFragment("test")).thenReturn(fragment);
-        IComponentDto dto = this.guiFragmentService.getComponentDto("test");
+        Mockito.when(guiFragmentManager.getGuiFragment("test_dto")).thenReturn(fragment);
+        IComponentDto dto = this.guiFragmentService.getComponentDto("test_dto");
         assertThat(dto).isNotNull()
                 .isInstanceOf(GuiFragmentDto.class);
+        if (nullWidgetRef) {
+            Assertions.assertNull(((GuiFragmentDto) dto).getWidgetType());
+        } else {
+            Assertions.assertNotNull(((GuiFragmentDto) dto).getWidgetType());
+        }
     }
-
+    
     @Test
     void getFragmentUsageTest() throws Exception {
-
+        this.getFragmentUsageTest(false);
+    }
+    
+    @Test
+    void getFragmentUsageTestWithNullRelatedWidget() throws Exception {
+        this.getFragmentUsageTest(true);
+    }
+    
+    private void getFragmentUsageTest(boolean nullWidgetRef) throws Exception {
         Lang lang = new Lang();
         lang.setCode("IT");
         when(langManager.getDefaultLang()).thenReturn(lang);
-
         GuiFragment fragment = FragmentMockHelper.mockGuiFragment();
         GuiFragmentDto fragmentDto = FragmentMockHelper.mockGuiFragmentDto(fragment, langManager);
-
-        mockPagedMetadata(fragment, fragmentDto, 1, 1, 100, 5);
-
-        PagedMetadata<ComponentUsageEntity> componentUsageDetails = guiFragmentService.getComponentUsageDetails(fragment.getCode(), new PageSearchRequest(PageMockHelper.PAGE_CODE));
-
-        GuiFragmentAssertionHelper.assertUsageDetails(componentUsageDetails);
-    }
-
-
-    /**
-     * init mock for a multipaged request
-     */
-    private void mockPagedMetadata(GuiFragment fragment, GuiFragmentDto fragmentDto, int currPage, int lastPage, int pageSize, int totalSize) {
-
-        try {
-            when(guiFragmentManager.getGuiFragment(anyString())).thenReturn(fragment);
-            when(this.dtoBuilder.convert(any(GuiFragment.class))).thenReturn(fragmentDto);
-
-            RestListRequest restListRequest = new RestListRequest();
-            restListRequest.setPageSize(pageSize);
-
-            ComponentUsageEntity componentUsageEntity = new ComponentUsageEntity(ComponentUsageEntity.TYPE_WIDGET, fragmentDto.getWidgetTypeCode());
-            List<ComponentUsageEntity> fragmentList = fragmentDto.getFragments().stream()
-                    .map(fragmentRef -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_FRAGMENT, fragmentRef.getCode()))
-                    .collect(Collectors.toList());
-            List<ComponentUsageEntity> pageModelList = fragmentDto.getPageModels().stream()
-                    .map(pageModelRef -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE_TEMPLATE, pageModelRef.getCode()))
-                    .collect(Collectors.toList());
-
-            List<ComponentUsageEntity> componentUsageEntityList = new ArrayList<>();
-            componentUsageEntityList.add(componentUsageEntity);
-            componentUsageEntityList.addAll(fragmentList);
-            componentUsageEntityList.addAll(pageModelList);
-
-            PagedMetadata pagedMetadata = new PagedMetadata(restListRequest, componentUsageEntityList, totalSize);
-            pagedMetadata.setPageSize(pageSize);
-            pagedMetadata.setPage(currPage);
-            pagedMetadata.imposeLimits();
-            when(pagedMetadataMapper.getPagedResult(any(), any())).thenReturn(pagedMetadata);
-
-        } catch (Exception e) {
-            Assertions.fail("Mock Exception");
+        if (nullWidgetRef) {
+            fragment.setWidgetTypeCode(null);
+            fragmentDto.setWidgetType(null);
         }
+        when(guiFragmentManager.getGuiFragment(anyString())).thenReturn(fragment);
+        when(this.dtoBuilder.convert(any(GuiFragment.class))).thenReturn(fragmentDto);
+        PagedMetadata<ComponentUsageEntity> componentUsageDetails = guiFragmentService.getComponentUsageDetails(fragment.getCode(), new PageSearchRequest(PageMockHelper.PAGE_CODE));
+        assertUsageDetails(componentUsageDetails, nullWidgetRef);
     }
+    
+    public static void assertUsageDetails(PagedMetadata<ComponentUsageEntity> usageDetails, boolean nullWidgetRef) {
+        assertEquals(1, usageDetails.getPage());
+        List<ComponentUsageEntity> expectedUsageEntityList = new ArrayList<>(Arrays.asList(
+                new ComponentUsageEntity(ComponentUsageEntity.TYPE_FRAGMENT, FragmentMockHelper.FRAGMENT_REF_1_CODE),
+                new ComponentUsageEntity(ComponentUsageEntity.TYPE_FRAGMENT, FragmentMockHelper.FRAGMENT_REF_2_CODE),
+                new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE_TEMPLATE, PageMockHelper.PAGE_MODEL_REF_CODE_1),
+                new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE_TEMPLATE, PageMockHelper.PAGE_MODEL_REF_CODE_2)));
+        if (!nullWidgetRef) {
+            expectedUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_WIDGET, WidgetMockHelper.WIDGET_1_CODE));
+        }
+        Assertions.assertEquals(expectedUsageEntityList.size(), usageDetails.getBody().size());
+        Assertions.assertEquals(expectedUsageEntityList.size(), usageDetails.getTotalItems());
+        IntStream.range(0, usageDetails.getBody().size())
+                .forEach(i -> ComponentUsageEntityAssertionHelper.assertComponentUsageEntity(expectedUsageEntityList.get(i), usageDetails.getBody().get(i)));
+    }
+    
 }
