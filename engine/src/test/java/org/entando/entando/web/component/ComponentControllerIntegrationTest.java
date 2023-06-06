@@ -104,7 +104,7 @@ class ComponentControllerIntegrationTest extends AbstractControllerIntegrationTe
             result.andExpect(jsonPath("$[0].references[" + i + "].status", is("published")));
             String pageCode = JsonPath.read(bodyResult, "$[0].references[" + i + "].code");
             Assertions.assertTrue(pages.contains(pageCode));
-            if (JsonPath.read(bodyResult, "$[0].references[" + i + "].onlineInstance")) {
+            if (JsonPath.read(bodyResult, "$[0].references[" + i + "].online")) {
                 onlinePages++;
             }
         }

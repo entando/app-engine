@@ -109,7 +109,7 @@ public class PageDto implements IComponentDto {
 
     @Override
     public Map<String, Object> getExtraProperties() {
-        return Map.of("onlineInstance", this.isOnlineInstance());
+        return Map.of("online", this.isOnlineInstance());
     }
     
     @Override

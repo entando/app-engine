@@ -62,7 +62,7 @@ class ComponentControllerIntegrationTest extends AbstractControllerIntegrationTe
             String code = JsonPath.read(bodyResult, "$[0].references[" + i + "].code");
             if (type.equals("content")) {
                 Assertions.assertTrue(contents.contains(code));
-                result.andExpect(jsonPath("$[0].references[" + i + "].isOnline", is(true)));
+                result.andExpect(jsonPath("$[0].references[" + i + "].online", is(true)));
             } else {
                 Assertions.assertEquals("category", type);
                 Assertions.assertTrue(categories.contains(code));

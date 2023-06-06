@@ -888,10 +888,10 @@ public class PageService implements IComponentExistsService, IPageService,
         PageDto pageDto = this.getPage(pageCode, IPageService.STATUS_DRAFT);
         List<PageDto> childrenPageDtoList = this.getPages(pageCode);
         List<ComponentUsageEntity> componentUsageEntityList = childrenPageDtoList.stream()
-                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto.getCode(), childPageDto.getStatus()))
+                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto))
                 .collect(Collectors.toList());
         if (pageDto.getStatus().equals(IPageService.STATUS_ONLINE)) {
-            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto.getCode(), pageDto.getStatus()));
+            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto));
         }
         if (null != this.pageServiceUtilizers) {
             for (var utilizer : this.pageServiceUtilizers) {

@@ -95,7 +95,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
     @JsonIgnore
     @Override
     public Map<String, Object> getExtraProperties() {
-        return Map.of("isOnline", this.isOnLine());
+        return Map.of("online", this.isOnLine());
     }
 
     @Override
