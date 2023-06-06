@@ -79,7 +79,6 @@ import org.springframework.util.FileSystemUtils;
 
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
-import org.entando.entando.aps.system.services.DtoBuilder;
 import org.entando.entando.aps.system.services.IComponentDto;
 
 @ExtendWith(MockitoExtension.class)

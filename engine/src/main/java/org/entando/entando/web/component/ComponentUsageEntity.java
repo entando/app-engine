@@ -29,6 +29,8 @@ public class ComponentUsageEntity implements Serializable {
     public static final String TYPE_PAGE_TEMPLATE = "pageTemplate";
     public static final String TYPE_CONTENT = "content";
     
+    public static final String ONLINE_PROPERTY = "online";
+    
     private String type;
     private String code;
     private String status;
