@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +41,6 @@ import org.entando.entando.aps.system.services.IDtoBuilder;
 import org.entando.entando.aps.system.services.group.GroupServiceUtilizer;
 import org.entando.entando.aps.system.services.guifragment.GuiFragment;
 import org.entando.entando.aps.system.services.guifragment.IGuiFragmentManager;
-import org.entando.entando.aps.system.services.page.IPageService;
 import org.entando.entando.aps.system.services.security.NonceInjector;
 import org.entando.entando.aps.system.services.widgettype.model.WidgetDetails;
 import org.entando.entando.aps.system.services.widgettype.model.WidgetDto;
@@ -77,7 +77,7 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
     private IGroupManager groupManager;
 
     private IDtoBuilder<WidgetType, WidgetDto> dtoBuilder;
-
+    
     private ServletContext srvCtx;
     
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -126,11 +126,11 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
     protected IDtoBuilder<WidgetType, WidgetDto> getDtoBuilder() {
         return dtoBuilder;
     }
-
+    
     public void setDtoBuilder(IDtoBuilder<WidgetType, WidgetDto> dtoBuilder) {
         this.dtoBuilder = dtoBuilder;
     }
-
+    
     public PagedMetadataMapper getPagedMetadataMapper() {
         return pagedMetadataMapper;
     }
@@ -345,21 +345,25 @@ public class WidgetService implements IWidgetService, GroupServiceUtilizer<Widge
             return 0;
         }
     }
-
-
+    
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String componentCode, RestListRequest restListRequest) {
         WidgetInfoDto widgetInfoDto = this.getWidgetInfo(componentCode);
+        BiFunction<String, Boolean, ComponentUsageEntity> buildCompUsageEntityFunction = (code, online) -> {
+            ComponentUsageEntity cue = new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, code);
+            cue.getExtraProperties().put(ComponentUsageEntity.ONLINE_PROPERTY, online);
+            return cue;
+        };
         List<ComponentUsageEntity> totalReferenced = widgetInfoDto.getPublishedUtilizers().stream()
-                .map(widgetDetail -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, widgetDetail.getPageCode(), IPageService.STATUS_ONLINE))
+                .map(widgetDetail -> buildCompUsageEntityFunction.apply(widgetDetail.getPageCode(), Boolean.TRUE))
                 .collect(Collectors.toList());
         List<ComponentUsageEntity> draftReferenced = widgetInfoDto.getDraftUtilizers().stream()
-                .map(widgetDetail -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, widgetDetail.getPageCode(), IPageService.STATUS_DRAFT))
+                .map(widgetDetail -> buildCompUsageEntityFunction.apply(widgetDetail.getPageCode(), Boolean.FALSE))
                 .collect(Collectors.toList());
         totalReferenced.addAll(draftReferenced);
         return pagedMetadataMapper.getPagedResult(restListRequest, totalReferenced);
     }
-
+    
     @Override
     public String getObjectType() {
         return TYPE_WIDGET;
