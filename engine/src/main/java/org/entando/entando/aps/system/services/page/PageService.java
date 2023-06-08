@@ -16,7 +16,6 @@ package org.entando.entando.aps.system.services.page;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.IManager;
 import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
-import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.group.GroupUtilizer;
 import com.agiletec.aps.system.services.group.IGroupManager;
@@ -44,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.StringUtils;
@@ -886,13 +886,23 @@ public class PageService implements IComponentExistsService, IPageService,
     @Override
     public PagedMetadata<ComponentUsageEntity> getComponentUsageDetails(String pageCode, RestListRequest restListRequest) {
         PageDto pageDto = this.getPage(pageCode, IPageService.STATUS_DRAFT);
-        List<PageDto> childrenPageDtoList = this.getPages(pageCode);
-        List<ComponentUsageEntity> componentUsageEntityList = childrenPageDtoList.stream()
-                .map(childPageDto -> new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, childPageDto))
-                .collect(Collectors.toList());
+        List<ComponentUsageEntity> componentUsageEntityList = new ArrayList<>();
         if (pageDto.getStatus().equals(IPageService.STATUS_ONLINE)) {
-            componentUsageEntityList.add(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, pageDto));
+            ComponentUsageEntity cue = pageDto.buildUsageEntity(ComponentUsageEntity.TYPE_PAGE);
+            cue.getExtraProperties().put(ComponentUsageEntity.ONLINE_PROPERTY, true);
+            componentUsageEntityList.add(cue);
         }
+        BiFunction<String, Boolean, ComponentUsageEntity> buildEntityFromPage = (draftPageCode, online) -> {
+            PageDto dto = this.getPage(draftPageCode, (online.booleanValue() ? IPageService.STATUS_ONLINE : IPageService.STATUS_DRAFT));
+            return dto.buildUsageEntity(ComponentUsageEntity.TYPE_PAGE);
+        };
+        pageDto.getChildren().forEach(c -> {
+            IPage draftChild = this.getPageManager().getDraftPage(c);
+            componentUsageEntityList.add(buildEntityFromPage.apply(draftChild.getCode(), Boolean.FALSE));
+            if (draftChild.isOnline()) {
+                componentUsageEntityList.add(buildEntityFromPage.apply(draftChild.getCode(), Boolean.TRUE));
+            }
+        });
         if (null != this.pageServiceUtilizers) {
             for (var utilizer : this.pageServiceUtilizers) {
                 List<IComponentDto> objects = utilizer.getPageUtilizer(pageCode);

@@ -20,6 +20,8 @@ public class PageMockHelper {
     public static final String TOKEN = "tokeNNN";
     public static final String GROUP = "free";
     public static final String STATUS = IPageService.STATUS_ONLINE;
+    public static final String CHILD_1 = "child1";
+    public static final String CHILD_2 = "child2";
     public static final String UTILIZER_1 = "about";
     public static final String UTILIZER_2 = "contact";
     public static final String UTILIZER_3 = "homepage";
@@ -35,18 +37,14 @@ public class PageMockHelper {
         page.setParentCode(PARENT_CODE);
         page.setGroup(GROUP);
         page.setModelCode(mockServicePageModel().getCode());
-
         setWidgets(page, widgetCodes);
-
         return page;
     }
-
 
     /**
      *
      */
     private static Page setWidgets(Page page, String... widgetCodes) {
-
         Widget[] widgets = Arrays.stream(widgetCodes)
                 .map(WidgetMockHelper::mockWidget)
                 .toArray(Widget[]::new);
@@ -54,12 +52,11 @@ public class PageMockHelper {
         return page;
     }
 
-
     public static PageDto mockPageDto() {
         PageDto pageDto = new PageDto();
         pageDto.setCode(PAGE_CODE);
         pageDto.setStatus(STATUS);
-        pageDto.setChildren(Arrays.asList(UTILIZERS));
+        pageDto.setChildren(Arrays.asList(new String[]{CHILD_1, CHILD_2}));
         pageDto.setParentCode(PARENT_CODE);
         return pageDto;
     }

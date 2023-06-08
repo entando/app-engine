@@ -401,6 +401,14 @@ class PageServiceTest {
     private void mockPagedMetadata(Page page, PageDto pageDto, String[] utilizers, int currPage, int lastPage, int pageSize, int totalSize) {
 
         try {
+            pageDto.getChildren().stream().forEach(childCode -> {
+                IPage mockChild = Mockito.mock(IPage.class);
+                Mockito.lenient().when(mockChild.getCode()).thenReturn(childCode);
+                Mockito.lenient().when(mockChild.isOnline()).thenReturn(true);
+                when(pageManager.getDraftPage(childCode)).thenReturn(mockChild);
+                when(pageManager.getOnlinePage(childCode)).thenReturn(Mockito.mock(IPage.class));
+                when(pageTokenManager.encrypt(childCode)).thenReturn(PageMockHelper.TOKEN);
+            });
             when(pageManager.getDraftPage(page.getCode())).thenReturn(page);
             when(pageTokenManager.encrypt(page.getCode())).thenReturn(PageMockHelper.TOKEN);
             Mockito.lenient().when(dtoBuilder.convert(any(IPage.class))).thenReturn(pageDto);

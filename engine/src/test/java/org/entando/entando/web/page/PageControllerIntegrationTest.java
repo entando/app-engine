@@ -102,11 +102,11 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
     @Autowired
     private PageDtoToRequestConverter pageDtoToRequestConverter;
-
+    
     @Configuration
     @Profile("pageControllerIntegrationTest")
     static class PageControllerTestConfiguration {
-
+    
         /**
          * Mocking a PageServiceUtilizer (needed for testing the getPageReferences() endpoint)
          */
@@ -1876,10 +1876,6 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 .header("Authorization", "Bearer " + accessToken));
     }
 
-    private Widget createWidget() {
-        return null;
-    }
-
     private void addPage(String accessToken, PageRequest pageRequest) throws Exception {
         ResultActions result = mockMvc
                 .perform(post("/pages")
@@ -1979,27 +1975,46 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
             this.pageManager.deletePage(PageRequestMockHelper.ADD_PAGE_CODE);
         }
     }
-
-
+    
     @Test
     void testPageUsageDetailsWithPublishedPageShouldBeIncluded() throws Exception {
-
         List<ComponentUsageEntity> expectedResult = Arrays.asList(
                 new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, PageRequestMockHelper.ADD_FIRST_CHILD_PAGE_CODE, IPageService.STATUS_UNPUBLISHED),
                 new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, PageRequestMockHelper.ADD_PAGE_CODE, IPageService.STATUS_ONLINE));
-
         this.execPageUsageDetailsTest(true, expectedResult);
     }
-
-
+    
     @Test
     void testPageUsageDetailsWithUnpublishedPageShouldNOTBeIncluded() throws Exception {
-
         List<ComponentUsageEntity> expectedResult = Arrays.asList(new ComponentUsageEntity(ComponentUsageEntity.TYPE_PAGE, PageRequestMockHelper.ADD_FIRST_CHILD_PAGE_CODE, IPageService.STATUS_UNPUBLISHED));
-
         this.execPageUsageDetailsTest(false, expectedResult);
     }
+    
+    /**
+     * executes a test of page usage details
+     *
+     * @param publishParentPage
+     */
+    private void execPageUsageDetailsTest(boolean publishParentPage, List<ComponentUsageEntity> expectedResult) throws Exception {
+        UserDetails admin = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String adminAccessToken = mockOAuthInterceptor(admin);
+        this.deletePagesForUsageDetailsTest();
+        try {
+            this.addPagesForUsageDetailsTest(publishParentPage, adminAccessToken, false);
+            ResultActions resultActions = mockMvc.perform(get("/pages/{code}/usage/details", PageRequestMockHelper.ADD_PAGE_CODE)
+                    .params(getFilteredParams())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + adminAccessToken))
+                    .andDo(resultPrint());
+            PageRestResponseAssertionHelper.assertNoFilters(resultActions);
+            PageAssertionHelper.assertUsagePageDetails(resultActions, expectedResult);
 
+        } catch (Exception e) {
+            Assertions.fail();
+        } finally {
+            this.deletePagesForUsageDetailsTest();
+        }
+    }
 
     @Test
     void testComponentExistenceAnalysis() throws Exception {
@@ -2287,21 +2302,16 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     private void testPagePermissionsForSuperuserEndpoints(Page page, UserDetails userDetails, ResultMatcher expected) throws Exception {
-
         String pageCode = page.getCode();
         String accessToken = mockOAuthInterceptor(userDetails);
-
         try {
             this.pageManager.addPage(page);
-
             mockMvc.perform(get("/pages/{pageCode}/usage", pageCode)
                             .header("Authorization", "Bearer " + accessToken))
                     .andExpect(expected);
-
             mockMvc.perform(get("/pages/{pageCode}/usage/details", pageCode)
                             .header("Authorization", "Bearer " + accessToken))
                     .andExpect(expected);
-
             mockMvc.perform(get("/pages/{pageCode}/references/jacmsContentManager", pageCode)
                             .header("Authorization", "Bearer " + accessToken))
                     .andExpect(expected);
@@ -2309,38 +2319,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
             this.pageManager.deletePage(pageCode);
         }
     }
-
-    /**
-     * executes a test of page usage details
-     *
-     * @param publishParentPage
-     */
-    private void execPageUsageDetailsTest(boolean publishParentPage, List<ComponentUsageEntity> expectedResult) throws Exception {
-
-        UserDetails admin = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
-        String adminAccessToken = mockOAuthInterceptor(admin);
-        this.deletePagesForUsageDetailsTest();
-
-        try {
-            this.addPagesForUsageDetailsTest(publishParentPage, adminAccessToken, false);
-
-            ResultActions resultActions = mockMvc.perform(get("/pages/{code}/usage/details", PageRequestMockHelper.ADD_PAGE_CODE)
-                    .params(getFilteredParams())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + adminAccessToken))
-                    .andDo(resultPrint());
-
-            PageRestResponseAssertionHelper.assertNoFilters(resultActions);
-            PageAssertionHelper.assertUsagePageDetails(resultActions, expectedResult);
-
-        } catch (Exception e) {
-            Assertions.fail();
-        } finally {
-            this.deletePagesForUsageDetailsTest();
-        }
-    }
-
-
+    
     /**
      * creates and returns a LinkedMultiValueMap containing one filter
      * @return
@@ -2353,28 +2332,32 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
         requestParams.add("filters[0].value", "unpublished");
         return requestParams;
     }
-
-
+    
     /**
      * insert some pages useful to test
      */
     private void addPagesForUsageDetailsTest(boolean publishParentPage, String adminAccessToken, boolean addSecondChildPage) throws Exception {
-
         // add base page
         PageRequest pageRequest = PageRequestMockHelper.mockPageRequest();
         this.addPage(adminAccessToken, pageRequest);
         if (publishParentPage) {
             this.pageManager.setPageOnline(PageRequestMockHelper.ADD_PAGE_CODE);
         }
-
+        IPage parent = this.pageManager.getDraftPage(PageRequestMockHelper.ADD_PAGE_CODE);
+        Assertions.assertNotNull(parent);
+        Assertions.assertFalse(parent.isOnlineInstance());
+        Assertions.assertEquals(publishParentPage, parent.isOnline());
         // add first child page
         PageRequest firstChildPageRequest = PageRequestMockHelper.mockPageRequest();
         firstChildPageRequest.setCode(PageRequestMockHelper.ADD_FIRST_CHILD_PAGE_CODE);
         firstChildPageRequest.setParentCode(PageRequestMockHelper.ADD_PAGE_CODE);
         this.addPage(adminAccessToken, firstChildPageRequest);
+        IPage child = this.pageManager.getDraftPage(PageRequestMockHelper.ADD_FIRST_CHILD_PAGE_CODE);
+        Assertions.assertNotNull(child);
+        Assertions.assertFalse(child.isOnlineInstance());
+        Assertions.assertFalse(child.isOnline());
     }
-
-
+    
     /**
      * insert some pages useful to test
      */
@@ -2383,4 +2366,5 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
         this.pageManager.deletePage(PageRequestMockHelper.ADD_FIRST_CHILD_PAGE_CODE);
         this.pageManager.deletePage(PageRequestMockHelper.ADD_PAGE_CODE);
     }
+    
 }

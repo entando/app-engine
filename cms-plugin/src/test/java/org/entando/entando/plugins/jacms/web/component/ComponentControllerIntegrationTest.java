@@ -118,8 +118,27 @@ class ComponentControllerIntegrationTest extends AbstractControllerIntegrationTe
                         .content(payload)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .header("Authorization", "Bearer " + accessToken));
-        System.out.println(result.andReturn().getResponse().getContentAsString());
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
+        result.andExpect(jsonPath("$.size()", is(1)));
+        result.andExpect(jsonPath("$[0].type", is("page")));
+        result.andExpect(jsonPath("$[0].code", is("pagina_11")));
+        result.andExpect(jsonPath("$[0].exist", is(true)));
+        result.andExpect(jsonPath("$[0].online", is(false)));
+        result.andExpect(jsonPath("$[0].usage", is(3)));
+        result.andExpect(jsonPath("$[0].references.size()", is(3)));
+        List<String> contents = List.of("EVN193", "EVN194");
+        for (int i = 0; i < 3; i++) {
+            String type = JsonPath.read(bodyResult, "$[0].references[" + i + "].type");
+            String code = JsonPath.read(bodyResult, "$[0].references[" + i + "].code");
+            if (type.equals("page")) {
+                Assertions.assertEquals("pagina_11", code);
+                result.andExpect(jsonPath("$[0].references[" + i + "].online", is(true)));
+            } else {
+                Assertions.assertEquals("content", type);
+                Assertions.assertTrue(contents.contains(code));
+            }
+        }
     }
     
 }
