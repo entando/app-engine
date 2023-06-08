@@ -10,7 +10,7 @@
     <groupId>org.entando</groupId>
 
     <artifactId>app-engine</artifactId>
-    <version>7.2.1</version>
+    <version>7.2.2</version>
     <packaging>pom</packaging>
 
     <modules>
