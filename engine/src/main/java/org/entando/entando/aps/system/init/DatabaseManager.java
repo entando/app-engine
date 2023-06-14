@@ -53,6 +53,7 @@ import liquibase.lockservice.DatabaseChangeLogLock;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.io.output.StringBuilderWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.init.IInitializerManager.DatabaseMigrationStrategy;
 import org.entando.entando.aps.system.init.exception.DatabaseMigrationException;
 import org.entando.entando.aps.system.init.model.Component;
@@ -114,7 +115,11 @@ public class DatabaseManager extends AbstractInitializerManager
             logger.warn(String.format("Database Migration Strategy, Tenant '%s', SKIPPED", tenantCodeOp.orElse("*primary*")));
             return report;
         }
-        if (null == report) {
+
+        // disable DB backup restore for all tenants because:
+        // - a tenant manager is activated by design only after the tenant startup successfully
+        // - in a tenant we use only CDS and we cannot depend on another micro in startup phase (is anti-pattern)
+        if (null == report && !isTenant()) {
             report = SystemInstallationReport.getInstance();
             lastLocalBackupFolder = checkRestore(report, strategy);
         }
@@ -144,6 +149,10 @@ public class DatabaseManager extends AbstractInitializerManager
             }
         }
         return report;
+    }
+
+    private boolean isTenant() {
+        return ApsTenantApplicationUtils.getTenant().map(StringUtils::isNotBlank).orElse(false);
     }
     
     private String checkRestore(SystemInstallationReport report, DatabaseMigrationStrategy migrationStrategy) {
