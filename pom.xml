@@ -85,7 +85,7 @@
         <spring.version>5.3.20</spring.version>
         <springsecurity.version>5.5.7</springsecurity.version>
         <springsecurityoauth2.version>2.5.2.RELEASE</springsecurityoauth2.version>
-        <struts2.version>2.5.30</struts2.version>
+        <struts2.version>2.5.31</struts2.version>
         <jackson.version>2.11.4</jackson.version> <!-- Jackson 2.12.* is not compatible with logback-jackson 0.1.5 -->
         <hibernate-validator-version>6.0.20.Final</hibernate-validator-version>
         <lucene-core.version>8.9.0</lucene-core.version>
