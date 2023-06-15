@@ -129,7 +129,9 @@ public class DatabaseManager extends AbstractInitializerManager
 
         try {
             initComponents(report, strategy, datasources);
-            if (DatabaseMigrationStrategy.AUTO.equals(strategy) && Status.RESTORE.equals(report.getStatus())) {
+            if (DatabaseMigrationStrategy.AUTO.equals(strategy)
+                    && report != null
+                    && Status.RESTORE.equals(report.getStatus())) {
                 //ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:MI:SS.FF'
                 if (null != lastLocalBackupFolder) {
                     this.restoreBackup(lastLocalBackupFolder);
