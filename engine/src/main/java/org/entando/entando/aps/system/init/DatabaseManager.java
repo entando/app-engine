@@ -119,9 +119,9 @@ public class DatabaseManager extends AbstractInitializerManager
         // disable DB backup restore for all tenants because:
         // - a tenant manager is activated by design only after the tenant startup successfully
         // - in a tenant we use only CDS and we cannot depend on another micro in startup phase (is anti-pattern)
-        if (null == report && !isTenant()) {
+        if (null == report) {
             report = SystemInstallationReport.getInstance();
-            lastLocalBackupFolder = checkRestore(report, strategy);
+
         }
 
         // Check if we are dealing with an old database version (not Liquibase compliant - Entando <= 6.3.2)
@@ -129,9 +129,8 @@ public class DatabaseManager extends AbstractInitializerManager
 
         try {
             initComponents(report, strategy, datasources);
-            if (DatabaseMigrationStrategy.AUTO.equals(strategy)
-                    && report != null
-                    && Status.RESTORE.equals(report.getStatus())) {
+            if (!isTenant() && DatabaseMigrationStrategy.AUTO.equals(strategy) && Status.RESTORE.equals(report.getStatus())) {
+                lastLocalBackupFolder = checkRestore(report, strategy);
                 //ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:MI:SS.FF'
                 if (null != lastLocalBackupFolder) {
                     this.restoreBackup(lastLocalBackupFolder);
