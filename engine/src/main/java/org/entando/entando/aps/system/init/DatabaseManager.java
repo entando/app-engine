@@ -121,6 +121,9 @@ public class DatabaseManager extends AbstractInitializerManager
         // - in a tenant we use only CDS and we cannot depend on another micro in startup phase (is anti-pattern)
         if (null == report) {
             report = SystemInstallationReport.getInstance();
+            if(!isTenant()) {
+                lastLocalBackupFolder = checkRestore(report, strategy);
+            }
 
         }
 
@@ -130,7 +133,6 @@ public class DatabaseManager extends AbstractInitializerManager
         try {
             initComponents(report, strategy, datasources);
             if (!isTenant() && DatabaseMigrationStrategy.AUTO.equals(strategy) && Status.RESTORE.equals(report.getStatus())) {
-                lastLocalBackupFolder = checkRestore(report, strategy);
                 //ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:MI:SS.FF'
                 if (null != lastLocalBackupFolder) {
                     this.restoreBackup(lastLocalBackupFolder);
