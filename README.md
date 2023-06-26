@@ -1,5 +1,7 @@
 # Entando app-engine
 
+test
+
 This multi-module Maven project contains all the Entando core modules needed to build the app-engine war file.
 
 To run the war file locally:
