@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/entando/entando-tomcat-base:7.2.0
+FROM registry.hub.docker.com/entando/entando-tomcat-base:7.2.0-IT-410-PR-26
 ARG VERSION
 
 ### Required OpenShift Labels
