@@ -36,6 +36,11 @@ jobs:
 
   publication:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        platform: ${{ fromJson('[' + env.DOCKER_TOMCAT_IMAGE_ARCHITECTURE + ']') }}
+
     steps:
 
       - name: Checkout
@@ -140,6 +145,17 @@ jobs:
           platforms: ${{ env.DOCKER_EAP-WILDFLY_IMAGE_ARCHITECTURE }}
 
       - name: Build and push tomcat Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ env.DOCKER_IMAGE_CONTEXT }}
+          file: ${{ env.DOCKER_TOMCAT_IMAGE_FILE }}
+          push: false
+          tags: ${{ steps.meta-tomcat.outputs.tags }}
+          labels: ${{ steps.meta-tomcat.outputs.labels }}
+          platforms: ${{ matrix.platform }}
+
+      - name: Push multi-platform tomcat Docker image
+        if: startsWith(matrix.platform, 'linux/amd64')
         uses: docker/build-push-action@v4
         with:
           context: ${{ env.DOCKER_IMAGE_CONTEXT }}
