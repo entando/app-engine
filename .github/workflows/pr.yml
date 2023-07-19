@@ -80,7 +80,7 @@ jobs:
       - name: "Cache Maven packages"
         uses: actions/cache@v2
         with:
-          path: ~/.m2/repository
+          path: ~/.m2
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
       #~ SONAR CACHE
