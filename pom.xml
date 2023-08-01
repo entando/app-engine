@@ -193,6 +193,7 @@
         <netty-common.version>4.1.77.Final</netty-common.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
         <solr-solrj.version>8.11.1</solr-solrj.version>
+        <spring-hateoas.version>1.5.5</spring-hateoas.version>
     </properties>
     <issueManagement>
         <system>Github</system>
@@ -1546,6 +1547,11 @@
                 <groupId>commons-fileupload</groupId>
                 <artifactId>commons-fileupload</artifactId>
                 <version>${commons-fileupload.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.hateoas</groupId>
+                <artifactId>spring-hateoas</artifactId>
+                <version>${spring-hateoas.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
