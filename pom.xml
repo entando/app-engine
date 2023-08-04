@@ -147,7 +147,7 @@
         <xml-apis.version>1.4.01</xml-apis.version>
         <oro.version>2.0.8</oro.version>
         <xom.version>1.3.7</xom.version>
-        <esapi.version>2.3.0.0</esapi.version>
+        <esapi.version>2.4.0.0</esapi.version>
         <tika-version>1.28.4</tika-version>
         <c3p0.version>0.9.5.5</c3p0.version>
         <vorbis-java-tika.version>0.8</vorbis-java-tika.version>
