@@ -1,3 +1,5 @@
+cypress test
+
 # Entando app-engine
 
 This multi-module Maven project contains all the Entando core modules needed to build the app-engine war file.
