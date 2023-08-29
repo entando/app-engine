@@ -14,6 +14,7 @@
 package org.entando.entando.aps.system.init;
 
 import com.agiletec.aps.system.EntThreadLocal;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.agiletec.aps.util.FileTextReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -158,6 +159,19 @@ class DatabaseManagerTest {
         }
     }
 
+    @Test
+    void testSkipInstallDatabaseRestoreLastDumpIfTenantNotPrimary() throws Exception {
+
+        ApsTenantApplicationUtils.setTenant("tenant1");
+
+        try (MockedConstruction<Liquibase> construction = Mockito.mockConstruction(Liquibase.class);
+                MockedStatic<DatabaseFactory> dbFactory = Mockito.mockStatic(DatabaseFactory.class)) {
+            dbFactory.when(DatabaseFactory::getInstance).thenReturn(Mockito.mock(DatabaseFactory.class));
+
+            databaseManager.installDatabase(null, DatabaseMigrationStrategy.SKIP, Optional.empty());
+            Mockito.verifyNoInteractions(databaseRestorer);
+        }
+    }
     @Test
     void testInstallDatabaseRestoreDefaultDump() throws Throwable {
 

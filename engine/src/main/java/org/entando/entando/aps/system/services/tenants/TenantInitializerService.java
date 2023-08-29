@@ -72,6 +72,8 @@ public class TenantInitializerService implements ITenantInitializerService {
 
                 refreshBeanForTenantCode(svCtx, tenantCode);
 
+                executePostInitProcesses();
+
             } catch (Throwable th) {
                 statuses.put(tenantCode,TenantStatus.FAILED);
                 if(tenantDataAccessor.getTenantConfigs().get(tenantCode).isInitializationAtStartRequired()) {
@@ -134,6 +136,10 @@ public class TenantInitializerService implements ITenantInitializerService {
         } else {
             throw new RuntimeException(String.format("Tenant:'%s' cannot retrieve WebApplicationContext", tenantCode));
         }
+    }
+
+    private void executePostInitProcesses() {
+        initializerManager.executePostInitProcesses();
     }
 
 }
