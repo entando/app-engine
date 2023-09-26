@@ -16,7 +16,9 @@ package org.entando.entando.plugins.jpcds.aps.system.storage;
 import static org.entando.entando.aps.system.services.tenants.ITenantManager.PRIMARY_CODE;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.tenants.TenantConfig;
 import org.entando.entando.ent.exception.EntRuntimeException;
@@ -45,6 +48,7 @@ import org.springframework.util.Base64Utils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.entando.entando.aps.system.services.storage.CdsActive;
 
@@ -60,7 +64,7 @@ public class CdsRemoteCaller  {
     private final RestTemplate restTemplateWithRedirect;
     private final CdsConfiguration configuration;
 
-    // used weak map to skip excessive growth
+    // used weak map to skip excessive growthclear
     private Map<String, String> tenantsToken = new WeakHashMap<>();
 
     @Autowired
@@ -76,8 +80,8 @@ public class CdsRemoteCaller  {
             boolean isProtectedResource,
             Optional<InputStream> fileInputStream ,
             Optional<TenantConfig> config,
-            boolean forceTokenRetrieve) {
-
+            boolean forceTokenRetrieve,
+            int cdsRetry) {
         try {
             logger.debug("Trying to call POST on url:'{}' with isProtectedResource:'{}' forceTokenRetrieve:'{}' isFile:'{}' and is config tenant empty:'{}'",
                     url,
@@ -90,6 +94,7 @@ public class CdsRemoteCaller  {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = fileInputStream
+                    .map(this::cloneInputStream)
                     .map(is -> buildFileBodyRequest(subPath, isProtectedResource, is))
                     .orElseGet(() -> buildDirectoryBodyRequest(subPath, isProtectedResource));
 
@@ -98,7 +103,8 @@ public class CdsRemoteCaller  {
             ResponseEntity<List<CdsCreateRowResponseDto>> fullResponse = restTemplate.exchange(url,
                     HttpMethod.POST,
                     entity,
-                    new ParameterizedTypeReference<List<CdsCreateRowResponseDto>>(){});
+                    new ParameterizedTypeReference<>() {
+                    });
 
             List<CdsCreateRowResponseDto> responseList = Optional
                     .ofNullable(fullResponse.getBody())
@@ -115,15 +121,29 @@ public class CdsRemoteCaller  {
             return response;
         } catch (HttpClientErrorException e) {
             if (!forceTokenRetrieve && (e.getStatusCode().equals(HttpStatus.UNAUTHORIZED))) {
-                return this.executePostCall(url, subPath, isProtectedResource, fileInputStream, config, true);
+                return this.executePostCall(url, subPath, isProtectedResource, fileInputStream, config, true,
+                        cdsRetry + 1);
             } else {
-                throw buildExceptionWithMessage("POST", e.getStatusCode() , url.toString());
+                throw buildExceptionWithMessage("POST", e.getStatusCode(), url.toString());
             }
         } catch(Exception ex){
+            if (ex instanceof ResourceAccessException && ex.getCause() instanceof SocketTimeoutException
+                    && cdsRetry < 2) {
+                return this.executePostCall(url, subPath, isProtectedResource, fileInputStream, config, true,
+                        cdsRetry + 1);
+            }
             throw new EntRuntimeException(String.format(GENERIC_REST_ERROR_MSG, url.toString()), ex);
         }
     }
 
+    private InputStream cloneInputStream(InputStream is) {
+        try {
+            return IOUtils.toBufferedInputStream(is);
+        } catch (IOException e) {
+            logger.error("Error in cloning input stream", e);
+            throw new EntRuntimeException("Error in cloning input stream", e);
+        }
+    }
     private MultiValueMap<String, Object> buildDirectoryBodyRequest(String subPath, boolean isProtectedResource){
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("path", subPath);

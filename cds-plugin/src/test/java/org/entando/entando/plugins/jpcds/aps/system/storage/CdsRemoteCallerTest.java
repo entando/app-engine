@@ -93,7 +93,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.empty(),
                 Optional.ofNullable(tc),
-                false);
+                false,
+                0);
 
         Assertions.assertTrue(ret.isStatusOk());
 
@@ -102,7 +103,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.empty(),
                 Optional.ofNullable(tc),
-                false);
+                false,
+                0);
 
         Assertions.assertTrue(ret.isStatusOk());
 
@@ -147,7 +149,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.empty(),
                 Optional.ofNullable(tc),
-                false)
+                false,
+                0)
         );
         assertEquals("Generic error in a rest call for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'", ex.getMessage());
 
@@ -166,7 +169,8 @@ class CdsRemoteCallerTest {
                         false,
                         Optional.empty(),
                         Optional.ofNullable(tc),
-                        false)
+                        false,
+                        0)
         );
         Assertions.assertEquals(
                 "Invalid operation 'POST', response status:'502 BAD_GATEWAY' for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
@@ -187,7 +191,8 @@ class CdsRemoteCallerTest {
                         false,
                         Optional.empty(),
                         Optional.ofNullable(tc),
-                        false)
+                        false,
+                        0)
         );
         Assertions.assertEquals(
                 "Invalid operation 'POST', response status:'401 UNAUTHORIZED' for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
@@ -233,7 +238,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.ofNullable(is),
                 Optional.empty(),
-                false);
+                false,
+                0);
 
         Assertions.assertTrue(ret.isStatusOk());
 

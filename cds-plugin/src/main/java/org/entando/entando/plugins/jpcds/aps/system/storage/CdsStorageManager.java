@@ -80,12 +80,14 @@ public class CdsStorageManager implements IStorageManager {
             this.validateAndReturnResourcePath(config, subPath, isProtectedResource);
 
             URI apiUrl = CdsUrlUtils.buildCdsInternalApiUrl(config, configuration, "/upload/");
+            int cdsRetry = 0;
             CdsCreateResponseDto response = caller.executePostCall(apiUrl,
                     subPath,
                     isProtectedResource,
                     fileInputStream,
                     config,
-                    false);
+                    false,
+                    cdsRetry);
 
             if (!response.isStatusOk()) {
                 throw new EntRuntimeException("Invalid status - Response " + response.isStatusOk());
