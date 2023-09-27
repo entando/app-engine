@@ -17,10 +17,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
@@ -199,7 +203,6 @@ class CdsRemoteCallerTest {
                 ex.getMessage());
 
     }
-
     @Test
     void shouldCreateFileForPrimary() throws Exception {
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
@@ -551,4 +554,47 @@ class CdsRemoteCallerTest {
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}));
     }
 
+    @Test
+    void shouldThrowExceptionIfAnErrorOccurInCloningFileInputStream() throws Exception {
+
+        Map<String, String> configMap = Map.of("cdsPublicUrl", "http://my-server/tenant1/cms-resources",
+                "cdsPrivateUrl", "http://cds-kube-service:8081/",
+                "cdsPath", "/mytenant/api/v1",
+                "kcAuthUrl", "http://tenant1.server.com/auth",
+                "kcRealm", "tenant1",
+                "kcClientId", "id",
+                "kcClientSecret", "secret",
+                "tenantCode", "my-tenant1");
+        TenantConfig tc = new TenantConfig(configMap);
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+
+        URI url = URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/");
+
+        Mockito.when(restTemplate.exchange(anyString(),
+                eq(HttpMethod.POST),
+                any(),
+                eq(new ParameterizedTypeReference<Map<String, Object>>() {
+                }))).thenReturn(
+                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN, "entando")));
+
+        try (MockedStatic<IOUtils> utilities = Mockito.mockStatic(IOUtils.class)) {
+            utilities.when(() -> IOUtils.toBufferedInputStream(any()))
+                    .thenThrow(new IOException());
+
+            Exception ex = assertThrows(EntRuntimeException.class,
+                    () -> cdsRemoteCaller.executePostCall(url,
+                            "/sub-path-testy",
+                            false,
+                            Optional.of(new ByteArrayInputStream("fake".getBytes(StandardCharsets.UTF_8))),
+                            Optional.ofNullable(tc),
+                            false,
+                            0)
+            );
+            assertEquals("Generic error in a rest call for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
+                    ex.getMessage());
+            assertEquals("Error in cloning input stream", ex.getCause().getMessage());
+
+        }
+
+    }
 }

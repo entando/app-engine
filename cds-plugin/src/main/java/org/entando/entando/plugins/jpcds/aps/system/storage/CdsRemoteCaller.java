@@ -140,7 +140,6 @@ public class CdsRemoteCaller  {
         try {
             return IOUtils.toBufferedInputStream(is);
         } catch (IOException e) {
-            logger.error("Error in cloning input stream", e);
             throw new EntRuntimeException("Error in cloning input stream", e);
         }
     }
