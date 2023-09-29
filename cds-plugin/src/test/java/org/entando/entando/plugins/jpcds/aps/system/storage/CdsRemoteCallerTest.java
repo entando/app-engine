@@ -622,8 +622,6 @@ class CdsRemoteCallerTest {
         Optional<TenantConfig> tenantConfig = Optional.of(tc);
         // set tenant
         ApsTenantApplicationUtils.setTenant("my-tenant");
-        ArrayList<CdsCreateRowResponseDto> responseDtoList = new ArrayList<>();
-        responseDtoList.add(new CdsCreateRowResponseDto());
         // the input stream used to execute the post call
         Optional<InputStream> fileInputStream = Optional.of(
                 new ByteArrayInputStream("fake".getBytes(StandardCharsets.UTF_8)));
@@ -650,7 +648,7 @@ class CdsRemoteCallerTest {
                 ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token", "xxxxxx")));
 
         CdsCreateResponseDto responseDto = cdsRemoteCaller.executePostCall(
-                URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/"),
+                url,
                 "/sub-path-testy",
                 false,
                 fileInputStream,
