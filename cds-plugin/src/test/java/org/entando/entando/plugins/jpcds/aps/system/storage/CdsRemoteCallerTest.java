@@ -590,9 +590,10 @@ class CdsRemoteCallerTest {
             utilities.when(() -> IOUtils.toBufferedInputStream(any()))
                     .thenThrow(new IOException());
 
+            URI url = URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/");
             Exception ex = assertThrows(EntRuntimeException.class,
                     () -> cdsRemoteCaller.executePostCall(
-                            URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/"),
+                            url,
                             "/sub-path-testy",
                             false,
                             fileInputStream,
