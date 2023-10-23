@@ -19,6 +19,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundException;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -53,6 +55,8 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 		String subPath = super.getDiskSubFolder() + resourceInstance.getFileName();
 		try {
 			return this.getStorageManager().getStream(subPath, this.isProtectedResource());
+		} catch (EntCDSResourceNotFoundException e) {
+			throw new EntCDSResourceNotFoundRuntimeException("Error on extracting resource Stream", e);
 		} catch (Throwable t) {
 			logger.error("Error on extracting resource Stream", t);
 			throw new RuntimeException("Error on extracting resource Stream", t);

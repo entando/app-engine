@@ -33,6 +33,7 @@ import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.aps.system.services.tenants.TenantConfig;
 import org.entando.entando.aps.util.UrlUtils.EntUrlBuilder;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundException;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.plugins.jpcds.aps.system.storage.CdsUrlUtils.EntSubPath;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,9 +160,9 @@ public class CdsStorageManager implements IStorageManager {
                 log.info("File Not found - uri {}", url);
                 return null;
             }  
-            throw new EntException(ERROR_EXTRACTING_FILE, e);
+            throw new EntCDSResourceNotFoundException(ERROR_EXTRACTING_FILE, e);
         } catch (Exception e) {
-            throw new EntException(ERROR_EXTRACTING_FILE, e);
+            throw new EntCDSResourceNotFoundException(ERROR_EXTRACTING_FILE, e);
         }
     }
 

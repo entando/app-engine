@@ -21,7 +21,6 @@
  */
 package com.agiletec.plugins.jpversioning.aps.system.services.resource;
 
-import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -31,15 +30,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import java.util.Optional;
 import javax.xml.parsers.SAXParser;
 
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
-import org.entando.entando.aps.system.services.tenants.ITenantManager;
-import org.entando.entando.aps.system.services.tenants.RefreshableBeanTenantAware;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntSafeXmlUtils;
@@ -202,7 +199,8 @@ public class TrashedResourceManager extends AbstractService implements ITrashedR
 				Iterator<ResourceInstance> iter = instancesMap.values().iterator();
 				while (iter.hasNext()) {
 					ResourceInstance resourceInstance = iter.next();
-					InputStream is = resource.getResourceStream(resourceInstance);
+					InputStream is = getResourceStream(resource, resourceInstance);
+
 					if (null != is) {
 						String path = folder + resourceInstance.getFileName();
 						paths.add(path);
@@ -212,7 +210,7 @@ public class TrashedResourceManager extends AbstractService implements ITrashedR
 			} else {
 				AbstractMonoInstanceResource monoResource = (AbstractMonoInstanceResource) resource;
 				ResourceInstance resourceInstance = monoResource.getInstance();
-				InputStream is = resource.getResourceStream(resourceInstance);
+				InputStream is = getResourceStream(resource, resourceInstance);
 				if (null != is) {
 					String path = folder + resourceInstance.getFileName();
 					paths.add(path);
@@ -228,6 +226,16 @@ public class TrashedResourceManager extends AbstractService implements ITrashedR
     		_logger.error("Error adding Trashed Resource", t);
     		throw new EntException("Error adding Trashed Resource", t);
     	}
+	}
+
+	private static InputStream getResourceStream(ResourceInterface resource, ResourceInstance resourceInstance) {
+		InputStream is = null;
+		try {
+			is = resource.getResourceStream(resourceInstance);
+		} catch (EntCDSResourceNotFoundRuntimeException e) {
+			_logger.warn("removal of a resource not in the CDS");
+		}
+		return is;
 	}
 
 	/**

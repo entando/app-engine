@@ -34,6 +34,8 @@ import javax.swing.ImageIcon;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundException;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.im4java.core.ConvertCmd;
@@ -74,6 +76,8 @@ public class ImageResource extends AbstractMultiInstanceResource {
         String subPath = super.getDiskSubFolder() + instance.getFileName();
         try {
             return this.getStorageManager().getStream(subPath, this.isProtectedResource());
+        } catch (EntCDSResourceNotFoundException e) {
+            throw new EntCDSResourceNotFoundRuntimeException("Error on extracting file", e);
         } catch (Throwable t) {
             logger.error("Error on extracting file", t);
             throw new RuntimeException("Error on extracting file", t);
