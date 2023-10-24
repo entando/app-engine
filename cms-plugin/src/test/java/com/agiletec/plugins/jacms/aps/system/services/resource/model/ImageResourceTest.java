@@ -9,11 +9,10 @@ import org.entando.entando.aps.system.services.storage.IStorageManager;
 import org.entando.entando.ent.exception.EntCDSResourceNotFoundException;
 import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.exception.EntRuntimeException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class ImageResourceTest {
+class ImageResourceTest {
 
     @Test
     void getResourceStreamShouldFireEntCDSResourceNotFoundExceptionIfAnErrorOccurInCDSManager() throws EntException {

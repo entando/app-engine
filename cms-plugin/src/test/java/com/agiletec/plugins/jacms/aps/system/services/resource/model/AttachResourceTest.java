@@ -12,7 +12,7 @@ import org.entando.entando.ent.exception.EntException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class AttachResourceTest {
+class AttachResourceTest {
 
     @Test
     void getResourceStreamShouldFireEntCDSResourceNotFoundExceptionIfAnErrorOccurInCDSManager() throws EntException {
