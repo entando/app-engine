@@ -21,15 +21,22 @@
  */
 package com.agiletec.plugins.jpversioning.aps.system.services.resource;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.plugins.jacms.aps.system.services.resource.model.AbstractMultiInstanceResource;
+import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInstance;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.agiletec.aps.system.SystemConstants;
+import java.util.Map;
+import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
@@ -42,6 +49,7 @@ import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInt
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 /**
  * @author G.Cocco
@@ -268,6 +276,18 @@ public class TestTrashedResourceManager extends BaseTestCase {
 		}
 	}
 
+
+	@Test
+	void testaddTrashedResourceShouldNotCrashIfResourceIsNoMoreInTheCDS() throws Throwable {
+
+		AbstractMultiInstanceResource resource = mock(AbstractMultiInstanceResource.class);
+		when(resource.isMultiInstance()).thenReturn(true);
+		when(resource.getInstances()).thenReturn(Map.of("", mock(ResourceInstance.class)));
+		when(resource.getResourceStream(any())).thenThrow(EntCDSResourceNotFoundRuntimeException.class);
+		this._trashedResourceManager.setTrashedResourceDAO(mock(TrashedResourceDAO.class));
+		assertDoesNotThrow(() -> this._trashedResourceManager.addTrashedResource(resource));
+
+	}
 	private ResourceDataBean getMockResource(String resourceType, String mainGroup, String resDescrToAdd, String categoryCodeToAdd) {
 		File file = new File("target/test/entando_logo.jpg");
 		BaseResourceDataBean bean = new BaseResourceDataBean(file);

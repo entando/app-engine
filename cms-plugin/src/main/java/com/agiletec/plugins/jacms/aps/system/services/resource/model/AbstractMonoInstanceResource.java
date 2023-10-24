@@ -30,6 +30,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 public abstract class AbstractMonoInstanceResource extends AbstractResource {
 
 	private static final EntLogger logger = EntLogFactory.getSanitizedLogger(AbstractMonoInstanceResource.class);
+	public static final String ERROR_ON_EXTRACTING_RESOURCE_STREAM = "Error on extracting resource Stream";
 
 	private ResourceInstance instance;
 
@@ -48,7 +49,7 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 	public InputStream getResourceStream(int size, String langCode) {
 		return this.getResourceStream();
 	}
-	
+
 	@Override
 	public InputStream getResourceStream() {
 		ResourceInstance resourceInstance = instance;
@@ -56,10 +57,10 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 		try {
 			return this.getStorageManager().getStream(subPath, this.isProtectedResource());
 		} catch (EntCDSResourceNotFoundException e) {
-			throw new EntCDSResourceNotFoundRuntimeException("Error on extracting resource Stream", e);
+			throw new EntCDSResourceNotFoundRuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, e);
 		} catch (Throwable t) {
-			logger.error("Error on extracting resource Stream", t);
-			throw new RuntimeException("Error on extracting resource Stream", t);
+			logger.error(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
+			throw new RuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
 		}
 	}
     

@@ -44,6 +44,7 @@ import org.im4java.core.IMOperation;
 public class ImageResource extends AbstractMultiInstanceResource {
 
     private static final String FAILED_TO_DELETE_TEMP_FILE = "Failed to delete temp file {}";
+    public static final String ERROR_ON_EXTRACTING_FILE = "Error on extracting file";
     private IImageDimensionReader imageDimensionReader;
     private Map<String, String> imageResizerClasses;
     private boolean  imageMagickEnabled;
@@ -77,10 +78,10 @@ public class ImageResource extends AbstractMultiInstanceResource {
         try {
             return this.getStorageManager().getStream(subPath, this.isProtectedResource());
         } catch (EntCDSResourceNotFoundException e) {
-            throw new EntCDSResourceNotFoundRuntimeException("Error on extracting file", e);
+            throw new EntCDSResourceNotFoundRuntimeException(ERROR_ON_EXTRACTING_FILE, e);
         } catch (Throwable t) {
-            logger.error("Error on extracting file", t);
-            throw new RuntimeException("Error on extracting file", t);
+            logger.error(ERROR_ON_EXTRACTING_FILE, t);
+            throw new RuntimeException(ERROR_ON_EXTRACTING_FILE, t);
         }
     }
 
