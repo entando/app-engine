@@ -14,16 +14,25 @@
 package org.entando.entando.web.userprofile.validator;
 
 import com.agiletec.aps.system.common.entity.IEntityManager;
+import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
+import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.entity.validator.EntityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 
 /**
  * @author E.Santoboni
  */
 @Component
 public class ProfileValidator extends EntityValidator {
+
+    public static final String PROFILE_NAME_VALIDATOR_REGEX = "^(?=.{2,70}$)^\\S[A-Za-z0-9À-ÿ_-]*([ ]*[A-Za-z0-9À-ÿ_-]+)*$";
+    public static final String ERRCODE_PROFILE_NAME_NOT_FOUND = "5";
+    public static final String ERRCODE_PROFILE_NAME_NOT_VALID = "6";
+    public static final String FULLNAME = "fullname";
+    public static final String ATTRIBUTES = "attributes";
 
     @Autowired
     private IUserProfileManager userProfileManager;
@@ -35,6 +44,19 @@ public class ProfileValidator extends EntityValidator {
     @Override
     protected IEntityManager getEntityManager() {
         return this.userProfileManager;
+    }
+
+    public void validateFullName(EntityDto bodyRequest, BindingResult bindingResult) {
+        String fullName = (String) bodyRequest.getAttributes().stream().filter(e -> e.getCode().equals(FULLNAME))
+                .findFirst()
+                .orElseThrow(() -> {
+                    bindingResult.rejectValue(ATTRIBUTES, ERRCODE_PROFILE_NAME_NOT_FOUND, "user.fullName.notFound");
+                    return new ValidationConflictException(bindingResult);
+                }).getValue();
+        if (!fullName.matches(PROFILE_NAME_VALIDATOR_REGEX)) {
+            bindingResult.rejectValue(ATTRIBUTES, ERRCODE_PROFILE_NAME_NOT_VALID, "user.fullName.invalid");
+            throw new ValidationConflictException(bindingResult);
+        }
     }
 
 }
