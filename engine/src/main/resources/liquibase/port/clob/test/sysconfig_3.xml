@@ -7,6 +7,7 @@
 				</validations>
 				<roles>
 					<role>userprofile:fullname</role>
+					<regexp><![CDATA[^(?=.{2,70}$)\S[a-zA-ZÀ-ÿ0-9 _-]*\S$]]></regexp>
 				</roles>
 			</attribute>
 			<attribute name="email" attributetype="Monotext" searchable="true" >

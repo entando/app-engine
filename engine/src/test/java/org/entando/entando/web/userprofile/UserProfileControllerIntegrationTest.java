@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Date;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -528,6 +529,73 @@ class UserProfileControllerIntegrationTest extends AbstractControllerIntegration
         } finally {
             this.userProfileManager.deleteProfile("new_user_2");
             Assertions.assertNull(this.userProfileManager.getProfile("new_user_2"));
+        }
+    }
+
+    @Test
+    void testPutMyProfileRegexAccept() throws Exception {
+        try {
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("RX2"));
+            String accessToken = this.createAccessToken();
+
+            this.executeProfileTypePost("13_POST_regex.json", accessToken, status().isOk());
+
+            Assertions.assertNotNull(this.userProfileManager.getEntityPrototype("RX2"));
+
+            this.executeProfilePost("13_POST_valid.json", accessToken, status().isOk()).andDo(resultPrint())
+                    .andExpect(jsonPath("$.payload.id", is("new_user")))
+                    .andExpect(jsonPath("$.errors.size()", is(0)))
+                    .andExpect(jsonPath("$.metaData.size()", is(0)));
+
+            UserDetails userEditMyProfile = new OAuth2TestUtils.UserBuilder("new_user", "0x24")
+                    .withAuthorization(Group.FREE_GROUP_NAME, "editor", Permission.ENTER_BACKEND)
+                    .build();
+            String userEditMyProfileToken = mockOAuthInterceptor(userEditMyProfile);
+
+            this.executePutUpdateMyProfile("13_PUT_valid.json", userEditMyProfile, userEditMyProfileToken,
+                            status().isOk())
+                    .andExpect(jsonPath("$.payload.id", is("new_user")))
+                    .andExpect(jsonPath("$.payload.typeCode", is("RX2")))
+                    .andExpect(jsonPath("$.payload.typeDescription", is("Type for test RX2")));
+
+        } finally {
+            this.userManager.removeUser("new_user");
+            if (null != this.userProfileManager.getEntityPrototype("RX2")) {
+                ((IEntityTypesConfigurer) this.userProfileManager).removeEntityPrototype("RX2");
+            }
+        }
+    }
+
+    @Test
+    void testPutMyProfileRegexReject() throws Exception {
+        try {
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("RX2"));
+            String accessToken = this.createAccessToken();
+
+            this.executeProfileTypePost("13_POST_regex.json", accessToken, status().isOk());
+
+            Assertions.assertNotNull(this.userProfileManager.getEntityPrototype("RX2"));
+
+            this.executeProfilePost("13_POST_valid.json", accessToken, status().isOk()).andDo(resultPrint())
+                    .andExpect(jsonPath("$.payload.id", is("new_user")))
+                    .andExpect(jsonPath("$.errors.size()", is(0)))
+                    .andExpect(jsonPath("$.metaData.size()", is(0)));
+
+            UserDetails userEditMyProfile = new OAuth2TestUtils.UserBuilder("new_user", "0x24")
+                    .withAuthorization(Group.FREE_GROUP_NAME, "editor", Permission.ENTER_BACKEND)
+                    .build();
+            String userEditMyProfileToken = mockOAuthInterceptor(userEditMyProfile);
+
+            this.executePutUpdateMyProfile("13_PUT_invalid.json", userEditMyProfile, userEditMyProfileToken,
+                            status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.size()", is(1)))
+                    .andExpect(jsonPath("$.errors[0].message",
+                            containsString("Attribute 'fullname' Invalid format")));
+        } finally {
+            this.userManager.removeUser("new_user");
+            if (null != this.userProfileManager.getEntityPrototype("RX2")) {
+                ((IEntityTypesConfigurer) this.userProfileManager).removeEntityPrototype("RX2");
+            }
         }
     }
 

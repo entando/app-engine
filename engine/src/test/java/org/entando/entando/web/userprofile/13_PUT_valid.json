@@ -1,7 +1,7 @@
 {
   "id": "new_user",
-  "typeCode": "TST",
-  "typeDescription": "Type for test TST",
+  "typeCode": "RX2",
+  "typeDescription": "Type for test RX2",
   "description": "Profile of user",
   "mainGroup": "free",
   "groups": [
@@ -10,8 +10,8 @@
   ],
   "attributes": [
     {
-      "code": "Name",
-      "value": "Name"
+      "code": "fullname",
+      "value": "John Doe"
     }
   ]
 }

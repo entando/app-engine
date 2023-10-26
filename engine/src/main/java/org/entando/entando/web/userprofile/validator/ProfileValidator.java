@@ -30,11 +30,6 @@ import org.springframework.validation.BindingResult;
 @Component
 public class ProfileValidator extends EntityValidator {
 
-    public static final String PROFILE_NAME_VALIDATOR_REGEX = "^(?=.{2,70}$)\\S[a-zA-ZÀ-ÿ0-9 _-]*\\S$";
-    public static final String ERRCODE_PROFILE_NAME_NOT_FOUND = "5";
-    public static final String ERRCODE_PROFILE_NAME_NOT_VALID = "6";
-    public static final String FULLNAME = "fullname";
-    public static final String ATTRIBUTES = "attributes";
 
     @Autowired
     private IUserProfileManager userProfileManager;
@@ -46,22 +41,6 @@ public class ProfileValidator extends EntityValidator {
     @Override
     protected IEntityManager getEntityManager() {
         return this.userProfileManager;
-    }
-
-    public void validateFullName(EntityDto bodyRequest, BindingResult bindingResult) {
-        String fullName = (String) bodyRequest.getAttributes().stream().filter(e -> e.getCode().equals(FULLNAME))
-                .findFirst()
-                .orElseThrow(() -> {
-                    bindingResult.rejectValue(ATTRIBUTES, ERRCODE_PROFILE_NAME_NOT_FOUND, "user.fullName.notFound");
-                    return new ValidationConflictException(bindingResult);
-                }).getValue();
-        Pattern pattern = Pattern.compile(PROFILE_NAME_VALIDATOR_REGEX);
-        Matcher matcher = pattern.matcher(fullName);
-
-        if (!matcher.matches()) {
-            bindingResult.rejectValue(ATTRIBUTES, ERRCODE_PROFILE_NAME_NOT_VALID, "user.fullName.invalid");
-            throw new ValidationConflictException(bindingResult);
-        }
     }
 
 }

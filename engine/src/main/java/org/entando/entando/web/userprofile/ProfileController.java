@@ -169,7 +169,6 @@ public class ProfileController {
                                                                          @Valid @RequestBody EntityDto bodyRequest, BindingResult bindingResult) {
         logger.debug("Update profile for the logged user {} -> {}", user.getUsername(), bodyRequest);
         this.getProfileValidator().validateBodyName(user.getUsername(), bodyRequest, bindingResult);
-        this.getProfileValidator().validateFullName(bodyRequest,bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }

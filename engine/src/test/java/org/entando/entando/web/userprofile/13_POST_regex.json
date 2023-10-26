@@ -1,0 +1,19 @@
+{
+  "code": "RX2",
+  "name": "Profile Type RX2",
+  "attributes": [
+    {
+      "code": "fullname",
+      "type": "Monotext",
+      "name": "Description of full name attribute",
+      "mandatory": false,
+      "validationRules": {
+        "regex":"^(?=.{2,70}$)\\S[a-zA-ZÀ-ÿ0-9 _-]*\\S$"
+      },
+      "roles": [{
+        "code": "userprofile:fullname",
+        "descr": "The Attribute containing the full name"
+      }]
+    }
+  ]
+}
