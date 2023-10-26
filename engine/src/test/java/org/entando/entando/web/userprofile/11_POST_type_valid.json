@@ -7,6 +7,12 @@
       "type": "Monotext",
       "name": "Description of text attribute",
       "mandatory": true
+    },
+    {
+      "code": "fullname",
+      "type": "Monotext",
+      "name": "Description of text attribute",
+      "mandatory": false
     }
   ]
 }

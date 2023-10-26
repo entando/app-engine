@@ -12,6 +12,10 @@
     {
       "code": "Name",
       "value": "Name"
+    },
+    {
+      "code": "fullname",
+      "value": "Valid Name"
     }
   ]
 }
