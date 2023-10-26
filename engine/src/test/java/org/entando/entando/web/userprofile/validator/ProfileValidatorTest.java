@@ -1,6 +1,7 @@
 package org.entando.entando.web.userprofile.validator;
 
 import java.util.List;
+import java.util.Objects;
 import org.entando.entando.aps.system.services.entity.model.EntityAttributeDto;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
@@ -26,6 +27,28 @@ class ProfileValidatorTest {
         ProfileValidator profileValidator = new ProfileValidator();
         Assertions.assertThrows(ValidationConflictException.class,
                 () -> profileValidator.validateFullName(entityDto, bindingResult));
+        Assertions.assertTrue(bindingResult.getAllErrors().stream()
+                .anyMatch(objectError -> Objects.equals(objectError.getDefaultMessage(), "user.fullName.invalid")));
+
+    }
+
+    @Test
+    void validateFullNameShouldThrowExceptionIfFullNameIsNotPresent() {
+
+        // --Given
+        EntityDto entityDto = new EntityDto();
+        EntityAttributeDto entityAttributeDto = new EntityAttributeDto();
+        entityAttributeDto.setCode("otherCode");
+        entityAttributeDto.setValue("xxx");
+        entityDto.setAttributes(List.of(entityAttributeDto));
+        BindingResult bindingResult = new BeanPropertyBindingResult(entityDto, "entityDto");
+
+        // Then
+        ProfileValidator profileValidator = new ProfileValidator();
+        Assertions.assertThrows(ValidationConflictException.class,
+                () -> profileValidator.validateFullName(entityDto, bindingResult));
+        Assertions.assertTrue(bindingResult.getAllErrors().stream()
+                .anyMatch(objectError -> Objects.equals(objectError.getDefaultMessage(), "user.fullName.notFound")));
 
     }
 
