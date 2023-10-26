@@ -36,7 +36,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
+import org.entando.entando.ent.exception.EntResourceNotFoundRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntSafeXmlUtils;
@@ -232,7 +232,7 @@ public class TrashedResourceManager extends AbstractService implements ITrashedR
 		InputStream is = null;
 		try {
 			is = resource.getResourceStream(resourceInstance);
-		} catch (EntCDSResourceNotFoundRuntimeException e) {
+		} catch (EntResourceNotFoundRuntimeException e) {
 			_logger.warn("removal of a resource not in the CDS");
 		}
 		return is;

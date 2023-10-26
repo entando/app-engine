@@ -16,9 +16,9 @@ package org.entando.entando.ent.exception;
 /**
  * Generic Entando Runtime Exception
  */
-public class EntCDSResourceNotFoundRuntimeException extends EntRuntimeException {
+public class EntResourceNotFoundException extends EntException {
 
-    public EntCDSResourceNotFoundRuntimeException(String message, Throwable cause) {
+    public EntResourceNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 }

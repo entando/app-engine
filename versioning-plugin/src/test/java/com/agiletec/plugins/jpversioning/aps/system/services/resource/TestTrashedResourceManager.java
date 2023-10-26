@@ -38,7 +38,7 @@ import java.util.List;
 import com.agiletec.aps.system.SystemConstants;
 import java.util.Map;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
-import org.entando.entando.ent.exception.EntCDSResourceNotFoundRuntimeException;
+import org.entando.entando.ent.exception.EntResourceNotFoundRuntimeException;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
@@ -51,7 +51,6 @@ import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInt
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 /**
  * @author G.Cocco
@@ -291,7 +290,7 @@ public class TestTrashedResourceManager extends BaseTestCase {
         AbstractMultiInstanceResource resource = mock(AbstractMultiInstanceResource.class);
         when(resource.isMultiInstance()).thenReturn(true);
         when(resource.getInstances()).thenReturn(Map.of("", mock(ResourceInstance.class)));
-        when(resource.getResourceStream(any())).thenThrow(EntCDSResourceNotFoundRuntimeException.class);
+        when(resource.getResourceStream(any())).thenThrow(EntResourceNotFoundRuntimeException.class);
         TrashedResourceManager trashedResourceManager = new TrashedResourceManager();
         IStorageManager storageManager = mock(IStorageManager.class);
         when(storageManager.exists(anyString(), anyBoolean())).thenReturn(true);
@@ -307,7 +306,7 @@ public class TestTrashedResourceManager extends BaseTestCase {
 
         AbstractMonoInstanceResource resource = mock(AbstractMonoInstanceResource.class);
         when(resource.getInstance()).thenReturn(mock(ResourceInstance.class));
-        when(resource.getResourceStream(any())).thenThrow(EntCDSResourceNotFoundRuntimeException.class);
+        when(resource.getResourceStream(any())).thenThrow(EntResourceNotFoundRuntimeException.class);
         TrashedResourceManager trashedResourceManager = new TrashedResourceManager();
         IStorageManager storageManager = mock(IStorageManager.class);
         when(storageManager.exists(anyString(), anyBoolean())).thenReturn(true);
