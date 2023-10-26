@@ -14,15 +14,10 @@
 package org.entando.entando.web.userprofile.validator;
 
 import com.agiletec.aps.system.common.entity.IEntityManager;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
-import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.entity.validator.EntityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BindingResult;
 
 /**
  * @author E.Santoboni
