@@ -1,14 +1,10 @@
 package org.entando.entando.web.userprofile.validator;
 
-import static org.mockito.Mockito.*;
-
 import java.util.List;
-import java.util.Map;
 import org.entando.entando.aps.system.services.entity.model.EntityAttributeDto;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.junit.jupiter.api.Assertions;
-import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;

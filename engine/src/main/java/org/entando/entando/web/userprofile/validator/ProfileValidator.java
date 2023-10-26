@@ -14,6 +14,8 @@
 package org.entando.entando.web.userprofile.validator;
 
 import com.agiletec.aps.system.common.entity.IEntityManager;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
@@ -53,7 +55,10 @@ public class ProfileValidator extends EntityValidator {
                     bindingResult.rejectValue(ATTRIBUTES, ERRCODE_PROFILE_NAME_NOT_FOUND, "user.fullName.notFound");
                     return new ValidationConflictException(bindingResult);
                 }).getValue();
-        if (!fullName.matches(PROFILE_NAME_VALIDATOR_REGEX)) {
+        Pattern pattern = Pattern.compile(PROFILE_NAME_VALIDATOR_REGEX);
+        Matcher matcher = pattern.matcher(fullName);
+
+        if (!matcher.matches()) {
             bindingResult.rejectValue(ATTRIBUTES, ERRCODE_PROFILE_NAME_NOT_VALID, "user.fullName.invalid");
             throw new ValidationConflictException(bindingResult);
         }
