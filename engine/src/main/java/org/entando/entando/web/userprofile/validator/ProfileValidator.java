@@ -28,7 +28,7 @@ import org.springframework.validation.BindingResult;
 @Component
 public class ProfileValidator extends EntityValidator {
 
-    public static final String PROFILE_NAME_VALIDATOR_REGEX = "^(?=.{2,70}$)^\\S[A-Za-z0-9À-ÿ_-]*([ ]*[A-Za-z0-9À-ÿ_-]+)*$";
+    public static final String PROFILE_NAME_VALIDATOR_REGEX = "^(?=.{2,70}$)\\S[a-zA-ZÀ-ÿ0-9 _-]*\\S$";
     public static final String ERRCODE_PROFILE_NAME_NOT_FOUND = "5";
     public static final String ERRCODE_PROFILE_NAME_NOT_VALID = "6";
     public static final String FULLNAME = "fullname";
