@@ -538,7 +538,7 @@ class UserProfileControllerIntegrationTest extends AbstractControllerIntegration
             Assertions.assertNull(this.userProfileManager.getEntityPrototype("RX2"));
             String accessToken = this.createAccessToken();
 
-            this.executeProfileTypePost("13_POST_regex.json", accessToken, status().isOk());
+            this.executeProfileTypePost("13_POST_type_regex.json", accessToken, status().isOk());
 
             Assertions.assertNotNull(this.userProfileManager.getEntityPrototype("RX2"));
 
@@ -572,7 +572,7 @@ class UserProfileControllerIntegrationTest extends AbstractControllerIntegration
             Assertions.assertNull(this.userProfileManager.getEntityPrototype("RX2"));
             String accessToken = this.createAccessToken();
 
-            this.executeProfileTypePost("13_POST_regex.json", accessToken, status().isOk());
+            this.executeProfileTypePost("13_POST_type_regex.json", accessToken, status().isOk());
 
             Assertions.assertNotNull(this.userProfileManager.getEntityPrototype("RX2"));
 

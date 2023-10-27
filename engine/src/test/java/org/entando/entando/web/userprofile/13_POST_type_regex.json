@@ -8,7 +8,7 @@
       "name": "Description of full name attribute",
       "mandatory": false,
       "validationRules": {
-        "regex":"^(?=.{2,70}$)\\S[a-zA-ZÀ-ÿ0-9 _-]*\\S$"
+        "regex":"^(?=.{2,70}$)[a-zA-ZÀ-ÿ0-9_-]{1}[a-zA-ZÀ-ÿ0-9 _-]*[a-zA-ZÀ-ÿ0-9_-]{1}$"
       },
       "roles": [{
         "code": "userprofile:fullname",
