@@ -563,6 +563,7 @@ class UserProfileControllerIntegrationTest extends AbstractControllerIntegration
             if (null != this.userProfileManager.getEntityPrototype("RX2")) {
                 ((IEntityTypesConfigurer) this.userProfileManager).removeEntityPrototype("RX2");
             }
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("RX2"));
         }
     }
 
@@ -596,6 +597,7 @@ class UserProfileControllerIntegrationTest extends AbstractControllerIntegration
             if (null != this.userProfileManager.getEntityPrototype("RX2")) {
                 ((IEntityTypesConfigurer) this.userProfileManager).removeEntityPrototype("RX2");
             }
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("RX2"));
         }
     }
 
