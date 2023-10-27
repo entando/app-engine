@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProfileValidator extends EntityValidator {
 
-
     @Autowired
     private IUserProfileManager userProfileManager;
 

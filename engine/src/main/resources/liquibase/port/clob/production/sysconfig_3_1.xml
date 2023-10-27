@@ -5,6 +5,7 @@
 			<attribute name="fullname" attributetype="Monotext" description="Full Name" searchable="true">
 				<validations>
 					<required>true</required>
+					<regexp><![CDATA[^(?=.{2,70}$)[a-zA-ZÀ-ÿ0-9_-]{1}[a-zA-ZÀ-ÿ0-9 _-]*[a-zA-ZÀ-ÿ0-9_-]{1}$]]></regexp>
 				</validations>
 				<roles>
 					<role>userprofile:fullname</role>
