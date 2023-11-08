@@ -64,11 +64,11 @@ class TestApiUserProfileInterface extends ApiBaseTestCase {
         this.testGetUserProfile(mediaType, "admin", "supervisorCoach", "en");
     }
 
-    /*@Test
+    @Test
     void testCreateNewUserProfileFromXml() throws Throwable {
         MediaType mediaType = MediaType.APPLICATION_XML;
         this.testCreateNewUserProfile(mediaType, "supervisorCoach");
-    }*/
+    }
     
     @Test
     void testCreateNewUserProfileFromJson() throws Throwable {
