@@ -52,7 +52,7 @@ class KeycloakConfigurationTest {
         // we need this because there is no filter or http request
         ApsTenantApplicationUtils.setTenant("my-test-tenant");
 
-        Mockito.when(tenantManager.getConfig("my-test-tenant")).thenReturn(Optional.empty());
+        Mockito.when(tenantManager.getConfigOfReadyTenant("my-test-tenant")).thenReturn(Optional.empty());
         kc.setTenantManager(tenantManager);
 
 
@@ -90,7 +90,7 @@ class KeycloakConfigurationTest {
         ApsTenantApplicationUtils.setTenant("my-test-tenant");
         KeycloakConfiguration kc = new KeycloakConfiguration();
         TenantConfig tc = new TenantConfig(map);
-        Mockito.when(tenantManager.getConfig("my-test-tenant")).thenReturn(Optional.ofNullable(tc));
+        Mockito.when(tenantManager.getConfigOfReadyTenant("my-test-tenant")).thenReturn(Optional.ofNullable(tc));
         kc.setTenantManager(tenantManager);
 
         Assertions.assertTrue(kc.isEnabled());
@@ -110,7 +110,7 @@ class KeycloakConfigurationTest {
         ApsTenantApplicationUtils.setTenant("my-test-tenant");
         KeycloakConfiguration kc = new KeycloakConfiguration();
         TenantConfig tc = new TenantConfig(new HashMap<>());
-        Mockito.when(tenantManager.getConfig("my-test-tenant")).thenReturn(Optional.ofNullable(tc));
+        Mockito.when(tenantManager.getConfigOfReadyTenant("my-test-tenant")).thenReturn(Optional.ofNullable(tc));
         kc.setTenantManager(tenantManager);
 
         Assertions.assertFalse(kc.isEnabled());
@@ -138,7 +138,7 @@ class KeycloakConfigurationTest {
         ApsTenantApplicationUtils.setTenant("my-test-tenant");
         KeycloakConfiguration kc = new KeycloakConfiguration();
         TenantConfig tc = new TenantConfig(map);
-        Mockito.when(tenantManager.getConfig("my-test-tenant")).thenReturn(Optional.ofNullable(tc));
+        Mockito.when(tenantManager.getConfigOfReadyTenant("my-test-tenant")).thenReturn(Optional.ofNullable(tc));
         kc.setTenantManager(tenantManager);
 
         Assertions.assertFalse(kc.isEnabled());

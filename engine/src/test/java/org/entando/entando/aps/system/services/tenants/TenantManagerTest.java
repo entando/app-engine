@@ -108,7 +108,7 @@ class TenantManagerTest {
         Map<String, TenantStatus> statuses = data.getTenantStatuses();
         data.getTenantStatuses().keySet().stream().forEach(k -> statuses.put(k, TenantStatus.READY));
 
-        Optional<TenantConfig> otc = tm.getConfig("TE_nant1");
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
         Assertions.assertThat(otc).isNotEmpty();
         TenantConfig tc = otc.get();
         Optional<String> customValue1 = tc.getProperty("customField1");
@@ -127,7 +127,7 @@ class TenantManagerTest {
         Map<String, TenantStatus> statuses = data.getTenantStatuses();
         data.getTenantStatuses().keySet().stream().forEach(k -> statuses.put(k, TenantStatus.READY));
 
-        Optional<TenantConfig> otc = tm.getConfig("TE_nant1");
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
         Assertions.assertThat(otc).isNotEmpty();
         TenantConfig tc = otc.get();
         Assertions.assertThat(tc.isKcEnabled()).isTrue();
@@ -150,7 +150,7 @@ class TenantManagerTest {
         TenantManager tm = new TenantManager("[\"pippo\"pippo]", new ObjectMapper(), new TenantDataAccessor());
         Assertions.catchThrowableOfType(() -> tm.afterPropertiesSet(), JsonMappingException.class);
 
-        Optional<TenantConfig> otc = tm.getConfig("TE_nant1");
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
         Assertions.assertThat(otc).isEmpty();
 
         otc = tm.getTenantConfigByDomain("tenant2.com");
@@ -167,7 +167,7 @@ class TenantManagerTest {
         RuntimeException ex = Assertions.catchThrowableOfType(() -> tm.afterPropertiesSet(), RuntimeException.class);
         Assertions.assertThat(ex.getMessage()).isEqualTo("You cannot use 'primary' as tenant code");
 
-        Optional<TenantConfig> otc = tm.getConfig("TE_nant1");
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
         Assertions.assertThat(otc).isEmpty();
 
         otc = tm.getTenantConfigByDomain("tenant2.com");
@@ -183,7 +183,7 @@ class TenantManagerTest {
         TenantManager tm = new TenantManager(TENANT_CONFIGS, new ObjectMapper(), new TenantDataAccessor());
         tm.afterPropertiesSet();
 
-        RuntimeException ex = Assertions.catchThrowableOfType(() -> tm.getConfig("TE_nant1"), RuntimeException.class);
+        RuntimeException ex = Assertions.catchThrowableOfType(() -> tm.getConfigOfReadyTenant("TE_nant1"), RuntimeException.class);
         Assertions.assertThat(ex.getMessage()).isEqualTo(String.format(errorToCheck,"TE_nant1"));
 
         ex = Assertions.catchThrowableOfType(() -> tm.getTenantConfigByDomain("tenant2.com"), RuntimeException.class);
@@ -192,7 +192,7 @@ class TenantManagerTest {
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant1");
         Assertions.assertThat(ds.getDriverClassName()).isEqualTo("org.postgresql.Driver");
 
-        Optional<TenantConfig> otc = tm.getConfig("TE_pippo123");
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_pippo123");
         Assertions.assertThat(otc).isEmpty();
 
         otc = tm.getTenantConfigByDomain("pippo123.com");

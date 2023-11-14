@@ -34,19 +34,17 @@ import org.springframework.stereotype.Component;
 public class TenantManager implements ITenantManager, InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantManager.class);
-
-
+    
     private final String tenantsConfigAsString;
     private final ObjectMapper objectMapper;
     private final TenantDataAccessor tenantDataAccessor;
-
+    
     @Autowired
     public TenantManager(@Value("${ENTANDO_TENANTS:}") String s, ObjectMapper o, TenantDataAccessor tenantDataAccessor){
         this.tenantsConfigAsString = s;
         this.objectMapper = o;
         this.tenantDataAccessor = tenantDataAccessor;
     }
-
 
     protected void release() {
         try {
@@ -85,13 +83,13 @@ public class TenantManager implements ITenantManager, InitializingBean {
 
     @Override
     public String getTenantCodeByDomain(String domain) {
-        String tenantCode =  tenantDataAccessor.getTenantConfigs().values().stream()
+        String tenantCode = tenantDataAccessor.getTenantConfigs().values().stream()
                 .filter(v -> v.getFqdns().contains(domain))
                 .map(tc -> tc.getTenantCode())
                 .filter(StringUtils::isNotBlank)
                 .findFirst()
                 .orElse(getCodes().stream().filter(code -> StringUtils.equals(code, domain)).findFirst().orElse(null));
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.debug("From domain:'{}' retrieved tenantCode:'{}' from codes:'{}'",
                     domain, tenantCode, getCodes().stream().collect(Collectors.joining(",")));
         }
@@ -100,7 +98,7 @@ public class TenantManager implements ITenantManager, InitializingBean {
 
     @Override
     public Optional<TenantConfig> getTenantConfigByDomain(String domain) {
-        return this.getConfig(this.getTenantCodeByDomain(domain));
+        return this.getConfigOfReadyTenant(this.getTenantCodeByDomain(domain));
     }
 
     @Override
@@ -109,17 +107,21 @@ public class TenantManager implements ITenantManager, InitializingBean {
     }
 
     @Override
-    public Optional<TenantConfig> getConfig(String tenantCode) {
+    public Optional<TenantConfig> getConfigOfReadyTenant(String tenantCode) {
         return Optional.ofNullable(tenantCode).map(this::identityIfStatusReadyOrThrow).map(tenantDataAccessor.getTenantConfigs()::get);
     }
 
+    @Override
+    public Optional<TenantConfig> getConfig(String tenantCode) {
+        return Optional.ofNullable(tenantCode).map(tenantDataAccessor.getTenantConfigs()::get);
+    }
+    
     private void initTenantsCodes() throws Exception {
         if (!StringUtils.isBlank(this.tenantsConfigAsString)) {
             List<TenantConfig> list = this.objectMapper.readValue(tenantsConfigAsString, new TypeReference<List<Map<String,String>>>(){})
                     .stream()
                     .map(TenantConfig::new)
                     .collect(Collectors.toList());
-
             list.stream().filter(tc -> PRIMARY_CODE.equalsIgnoreCase(tc.getTenantCode())).findFirst().ifPresent(tc -> {
                 logger.error("You cannot use 'primary' as tenant code");
                 throw new RuntimeException("You cannot use 'primary' as tenant code");

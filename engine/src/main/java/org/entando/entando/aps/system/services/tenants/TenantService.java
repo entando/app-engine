@@ -51,19 +51,19 @@ public class TenantService implements ITenantService {
     }
 
     public TenantDto getCurrentTenant() {
-        return tenantManager.getConfig(ApsTenantApplicationUtils.getTenant().orElse(PRIMARY_CODE))
+        return tenantManager.getConfigOfReadyTenant(ApsTenantApplicationUtils.getTenant().orElse(PRIMARY_CODE))
                 .map(this::mapTenantToTenantDto).orElseGet(this::mapPrimaryToTenantDto);
     }
 
     public Optional<TenantDto> getTenant(String tenantCode) {
-        return tenantManager.getConfig(tenantCode)
+        return tenantManager.getConfigOfReadyTenant(tenantCode)
                 .map(this::mapTenantToTenantDto).or(() -> Optional.ofNullable(tenantCode)
                         .filter(PRIMARY_CODE::equals).map(t -> mapPrimaryToTenantDto()));
     }
 
     public List<TenantDto> getTenants() {
         List<TenantDto> tenants = tenantManager.getCodes().stream()
-                .map(tenantManager::getConfig)
+                .map(tenantManager::getConfigOfReadyTenant)
                 .flatMap(Optional::stream)
                 .map(this::mapTenantToTenantDto).collect(Collectors.toList());
 

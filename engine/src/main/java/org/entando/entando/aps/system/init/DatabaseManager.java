@@ -106,9 +106,6 @@ public class DatabaseManager extends AbstractInitializerManager
             DatabaseMigrationStrategy strategy,
             Optional<Map<String, DataSource>> datasources) throws Exception {
         String lastLocalBackupFolder = null;
-
-
-
         if (DatabaseMigrationStrategy.SKIP.equals(strategy)) {
             Optional<String> tenantCodeOp = ApsTenantApplicationUtils.getTenant();
             logger.warn(String.format("Database Migration Strategy, Tenant '%s', SKIPPED", tenantCodeOp.orElse("*primary*")));
@@ -118,10 +115,8 @@ public class DatabaseManager extends AbstractInitializerManager
             report = SystemInstallationReport.getInstance();
             lastLocalBackupFolder = checkRestore(report, strategy);
         }
-
         // Check if we are dealing with an old database version (not Liquibase compliant - Entando <= 6.3.2)
         legacyDatabaseCheck(datasources);
-
         try {
             initComponents(report, strategy, datasources);
             if (DatabaseMigrationStrategy.AUTO.equals(strategy) && Status.RESTORE.equals(report.getStatus())) {
@@ -264,7 +259,6 @@ public class DatabaseManager extends AbstractInitializerManager
                             componentConfiguration.getCode(), changeLogFile, dataSourceName, report.getStatus(),
                             migrationStrategy,
                             datasources);
-
                     pendingChangeSet.addAll(changeSetToExecute);
                     ApsSystemUtils.directStdoutTrace("|   ( ok )  " + dataSourceName);
                     if (!DatabaseMigrationStrategy.DISABLED.equals(migrationStrategy)) {
@@ -272,6 +266,8 @@ public class DatabaseManager extends AbstractInitializerManager
                     } else {
                         liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.SKIPPED);
                     }
+                } else {
+                    liquibaseReport.getDatabaseStatus().put(dataSourceName, Status.NOT_AVAILABLE);
                 }
             }
             if (report.getStatus().equals(SystemInstallationReport.Status.RESTORE) || report.getStatus().equals(SystemInstallationReport.Status.PORTING)) {
