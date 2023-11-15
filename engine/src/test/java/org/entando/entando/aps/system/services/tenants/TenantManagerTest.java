@@ -158,7 +158,6 @@ class TenantManagerTest {
 
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant_not_found");
         Assertions.assertThat(ds).isNull();
-
     }
 
     @Test
@@ -175,11 +174,12 @@ class TenantManagerTest {
 
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant_not_found");
         Assertions.assertThat(ds).isNull();
-
     }
 
     @Test
     void shouldOperationThrowExceptionWithTenantNotInitiated() throws Throwable {
+        TenantDataAccessor data = new TenantDataAccessor();
+        data.getTenantStatuses().put("tenant2", TenantStatus.READY);
         TenantManager tm = new TenantManager(TENANT_CONFIGS, new ObjectMapper(), new TenantDataAccessor());
         tm.afterPropertiesSet();
 
@@ -188,6 +188,12 @@ class TenantManagerTest {
 
         ex = Assertions.catchThrowableOfType(() -> tm.getTenantConfigByDomain("tenant2.com"), RuntimeException.class);
         Assertions.assertThat(ex.getMessage()).isEqualTo(String.format(errorToCheck,"TE_nant1"));
+        
+        Optional<TenantConfig> otc1 = tm.getConfig("TE_nant1");
+        Assertions.assertThat(otc1).isNotEmpty();
+        TenantConfig tc = otc1.get();
+        Assertions.assertThat(tc.isKcEnabled()).isTrue();
+        Assertions.assertThat(tc.getTenantCode()).isEqualTo("TE_nant1");
 
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant1");
         Assertions.assertThat(ds.getDriverClassName()).isEqualTo("org.postgresql.Driver");
@@ -200,7 +206,6 @@ class TenantManagerTest {
 
         ds = (BasicDataSource)tm.getDatasource("TE_nant_not_found");
         Assertions.assertThat(ds).isNull();
-
     }
 
 }
