@@ -21,6 +21,7 @@ import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
+import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.web.AuthRequestBuilder;
 import org.entando.entando.web.common.interceptor.EntandoOauth2Interceptor;
 import org.entando.entando.web.utils.OAuth2TestUtils;
@@ -39,8 +40,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CorsFilter;
+import org.testcontainers.containers.GenericContainer;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SystemStubsExtension.class, SpringExtension.class})
 @ContextConfiguration(locations = {
         "classpath*:spring/testpropertyPlaceholder.xml",
         "classpath*:spring/baseSystemConfig.xml",
@@ -53,7 +58,7 @@ import org.springframework.web.filter.CorsFilter;
         "classpath*:spring/web/**.xml",})
 @WebAppConfiguration(value = "")
 public abstract class AbstractControllerIntegrationTest {
-
+    
     protected MockMvc mockMvc;
 
     private String accessToken;
@@ -76,9 +81,15 @@ public abstract class AbstractControllerIntegrationTest {
     @Autowired
     @InjectMocks
     protected EntandoOauth2Interceptor entandoOauth2Interceptor;
+    
+    private static GenericContainer solrContainer;
 
+    @SystemStub
+    private static EnvironmentVariables environmentVariables;
+    
     @BeforeAll
     public static void setup() throws Exception {
+        solrContainer = SolrTestUtils.startContainer(solrContainer, environmentVariables);
         TestEntandoJndiUtils.setupJndi();
     }
 

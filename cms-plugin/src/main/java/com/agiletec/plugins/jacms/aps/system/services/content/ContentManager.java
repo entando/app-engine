@@ -14,7 +14,6 @@
 package com.agiletec.plugins.jacms.aps.system.services.content;
 
 import com.agiletec.aps.system.ApsSystemUtils;
-import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.ApsEntityManager;
 import com.agiletec.aps.system.common.entity.IEntityDAO;
 import com.agiletec.aps.system.common.entity.IEntitySearcherDAO;
@@ -53,8 +52,9 @@ import org.springframework.cache.annotation.CacheEvict;
  * Contents manager. This implements all the methods needed to create and manage
  * the contents.
  */
-public class ContentManager extends ApsEntityManager
-                            implements IContentManager, GroupUtilizer<String>, PageUtilizer, ContentUtilizer, ResourceUtilizer, CategoryUtilizer {
+public class ContentManager extends ApsEntityManager 
+        implements IContentManager, GroupUtilizer<String>, PageUtilizer, 
+        ContentUtilizer, ResourceUtilizer<String>, CategoryUtilizer<String, String> {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ContentManager.class);
     
@@ -633,7 +633,7 @@ public class ContentManager extends ApsEntityManager
     }
 
     @Override
-    public List getResourceUtilizers(String resourceId) throws EntException {
+    public List<String> getResourceUtilizers(String resourceId) throws EntException {
         try {
             return this.getContentDAO().getResourceUtilizers(resourceId);
         } catch (Throwable t) {
@@ -642,7 +642,7 @@ public class ContentManager extends ApsEntityManager
     }
 
     @Override
-    public List getCategoryUtilizers(String resourceId) throws EntException {
+    public List<String> getCategoryUtilizers(String resourceId) throws EntException {
         try {
             return this.getContentDAO().getCategoryUtilizers(resourceId);
         } catch (Throwable t) {
@@ -661,7 +661,7 @@ public class ContentManager extends ApsEntityManager
 
     @SuppressWarnings("rawtypes")
     @Override
-    public List getCategoryUtilizersForReloadReferences(String categoryCode) {
+    public List<String> getCategoryUtilizersForReloadReferences(String categoryCode) {
         List<String> contentIdToReload = new ArrayList<>();
         try {
             Set<String> contents = this.getContentUpdaterService().getContentsId(categoryCode);

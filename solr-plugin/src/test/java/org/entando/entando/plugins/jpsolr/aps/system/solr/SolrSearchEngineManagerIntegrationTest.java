@@ -52,13 +52,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
-import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;
 import org.entando.entando.ent.exception.EntRuntimeException;
-import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
-import org.entando.entando.plugins.jpsolr.SolrTestExtension;
+import org.entando.entando.plugins.jpsolr.SolrBaseTestCase;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
 import org.junit.jupiter.api.AfterAll;
@@ -67,18 +65,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.FileSystemResourceLoader;
-import org.springframework.mock.web.MockServletContext;
 
 /**
  * Test del servizio detentore delle operazioni sul motore di ricerca.
  *
  * @author E.Santoboni
  */
-@ExtendWith(SolrTestExtension.class)
-class SolrSearchEngineManagerIntegrationTest {
+class SolrSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
 
     private static final String ROLE_FOR_TEST = "jacmstest:date";
 
@@ -87,22 +80,19 @@ class SolrSearchEngineManagerIntegrationTest {
     private ISolrSearchEngineManager searchEngineManager = null;
     private ICategoryManager categoryManager;
 
-    private static ApplicationContext applicationContext;
-
-    public static ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    public static void setApplicationContext(ApplicationContext applicationContext) {
-        SolrSearchEngineManagerIntegrationTest.applicationContext = applicationContext;
-    }
+    //private static ApplicationContext applicationContext;
 
     @BeforeAll
     public static void startUp() throws Exception {
+        /*
         ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
         ApplicationContext applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
         setApplicationContext(applicationContext);
-        IContentManager contentManager = applicationContext.getBean(IContentManager.class);
+        */
+        SolrBaseTestCase.startUp();
+        
+        
+        IContentManager contentManager = getApplicationContext().getBean(IContentManager.class);
         AttributeRole role = contentManager.getAttributeRole(ROLE_FOR_TEST);
         Assertions.assertNotNull(role);
         Content artType = contentManager.createContentType("ART");
@@ -139,7 +129,7 @@ class SolrSearchEngineManagerIntegrationTest {
             dateAttrEnv.setRoles(new String[]{ROLE_FOR_TEST});
             ((IEntityTypesConfigurer) contentManager).updateEntityPrototype(evnType);
         }
-        ISolrSearchEngineManager solrSearchEngineManager = applicationContext.getBean(ISolrSearchEngineManager.class);
+        ISolrSearchEngineManager solrSearchEngineManager = getApplicationContext().getBean(ISolrSearchEngineManager.class);
         solrSearchEngineManager.refreshCmsFields();
     }
 
@@ -169,7 +159,7 @@ class SolrSearchEngineManagerIntegrationTest {
             dateAttrEnv.setRoles(new String[0]);
             ((IEntityTypesConfigurer) contentManager).updateEntityPrototype(evnType);
         } finally {
-            BaseTestCase.tearDown();
+            SolrBaseTestCase.tearDown();
         }
     }
 
