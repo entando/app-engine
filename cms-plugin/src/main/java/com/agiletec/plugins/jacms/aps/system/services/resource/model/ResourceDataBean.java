@@ -108,7 +108,7 @@ public interface ResourceDataBean {
      *
      * @return La lista dei metadati della risorsa.
      */
-    public Map getMetadata();
+    public Map<String, String> getMetadata();
 
     public void setMetadata(Map<String,String> metadata);
 
