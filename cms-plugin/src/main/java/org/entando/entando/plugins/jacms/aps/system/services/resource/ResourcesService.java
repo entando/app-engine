@@ -51,6 +51,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +62,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
@@ -523,8 +523,7 @@ public class ResourcesService implements IComponentExistsService {
     private List<ImageResourceDimension> getImageDimensions() {
         Map<Integer, ImageResourceDimension> master = imageDimensionManager.getImageDimensions();
         List<ImageResourceDimension> dimensions = new ArrayList<>(master.values());
-        BeanComparator comparator = new BeanComparator("dimx");
-        Collections.sort(dimensions, comparator);
+        Collections.sort(dimensions, Comparator.comparing(ImageResourceDimension::getDimx));
         return dimensions;
     }
 
@@ -532,7 +531,7 @@ public class ResourcesService implements IComponentExistsService {
         List<FieldSearchFilter> filters = new ArrayList<>();
         if (requestList.getType() != null) {
             filters.add(
-                    new FieldSearchFilter(IResourceManager.RESOURCE_TYPE_FILTER_KEY,
+                    new FieldSearchFilter<>(IResourceManager.RESOURCE_TYPE_FILTER_KEY,
                             convertResourceType(requestList.getType()), false)
             );
         }
@@ -582,7 +581,7 @@ public class ResourcesService implements IComponentExistsService {
     private FieldSearchFilter[] createFolderPathSearchFilter(String folderPath) {
         List<FieldSearchFilter> filters = new ArrayList<>();
         if (folderPath != null) {
-            filters.add(new FieldSearchFilter(IResourceManager.RESOURCE_FOLDER_PATH_FILTER_KEY, folderPath, true));
+            filters.add(new FieldSearchFilter<>(IResourceManager.RESOURCE_FOLDER_PATH_FILTER_KEY, folderPath, true));
         }
         return filters.stream().toArray(FieldSearchFilter[]::new);
     }
@@ -593,10 +592,10 @@ public class ResourcesService implements IComponentExistsService {
         Object start = original.getStart();
         Object end = original.getEnd();
         if (null != value) {
-            dateFilter = new FieldSearchFilter(original.getKey(), this.checkDate(value, original), false);
+            dateFilter = new FieldSearchFilter<>(original.getKey(), this.checkDate(value, original), false);
             dateFilter.setValueDateDelay(original.getValueDateDelay());
         } else if (null != start || null != end) {
-            dateFilter = new FieldSearchFilter(original.getKey(), this.checkDate(start, original), this.checkDate(end, original));
+            dateFilter = new FieldSearchFilter<>(original.getKey(), this.checkDate(start, original), this.checkDate(end, original));
             dateFilter.setStartDateDelay(original.getStartDateDelay());
             dateFilter.setEndDateDelay(original.getEndDateDelay());
         } else {

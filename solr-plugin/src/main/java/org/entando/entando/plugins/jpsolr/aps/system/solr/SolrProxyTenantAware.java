@@ -127,7 +127,7 @@ public class SolrProxyTenantAware implements ISolrProxyTenantAware {
 
     private String getTenantParameter(String paramName, String defaultValue) {
         return ApsTenantApplicationUtils.getTenant()
-                .flatMap(tenantManager::getConfig)
+                .flatMap(tenantManager::getConfigOfReadyTenant)
                 .flatMap(tenantConfig -> tenantConfig.getProperty(paramName))
                 .orElse(defaultValue);
     }

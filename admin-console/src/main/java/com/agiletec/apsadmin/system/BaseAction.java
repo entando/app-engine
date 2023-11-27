@@ -219,7 +219,7 @@ public class BaseAction extends ActionSupport implements ServletRequestAware, Pa
     }
     
     public TenantConfig getCurrentTenantConfig() {
-        return ApsTenantApplicationUtils.getTenant().flatMap(getTenantManager()::getConfig).orElse(null);
+        return ApsTenantApplicationUtils.getTenant().flatMap(getTenantManager()::getConfigOfReadyTenant).orElse(null);
     }
 	
 	@Override

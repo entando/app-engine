@@ -310,7 +310,7 @@ class DatabaseManagerTest {
         try {
             TenantConfig tenantConfig = Mockito.mock(TenantConfig.class);
             Mockito.lenient().when(tenantConfig.getDbMigrationStrategy()).thenReturn(Optional.of("disabled"));
-            Mockito.lenient().when(tenantManager.getConfig("tenant1")).thenReturn(Optional.of(tenantConfig));
+            Mockito.lenient().when(tenantManager.getConfigOfReadyTenant("tenant1")).thenReturn(Optional.of(tenantConfig));
             Map<String, String> liquibaseChangeSets = new HashMap<>();
             liquibaseChangeSets.put("portDataSource", "changeSetPort.xml");
             Component componentConfiguration = Mockito.mock(Component.class);
@@ -350,7 +350,7 @@ class DatabaseManagerTest {
         try {
             TenantConfig tenantConfig = Mockito.mock(TenantConfig.class);
             Mockito.lenient().when(tenantConfig.getDbMigrationStrategy()).thenReturn(Optional.ofNullable(tenantStrategy));
-            Mockito.lenient().when(tenantManager.getConfig("tenant1")).thenReturn(Optional.of(tenantConfig));
+            Mockito.lenient().when(tenantManager.getConfigOfReadyTenant("tenant1")).thenReturn(Optional.of(tenantConfig));
             SystemInstallationReport report = Mockito.mock(SystemInstallationReport.class);
             databaseManager.installDatabase(Mockito.mock(SystemInstallationReport.class), DatabaseMigrationStrategy.SKIP, Optional.empty());
             Mockito.verifyNoInteractions(storageManager);

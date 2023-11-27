@@ -34,6 +34,9 @@ import javax.swing.ImageIcon;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntResourceNotFoundException;
+import org.entando.entando.ent.exception.EntResourceNotFoundRuntimeException;
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.im4java.core.ConvertCmd;
@@ -42,6 +45,7 @@ import org.im4java.core.IMOperation;
 public class ImageResource extends AbstractMultiInstanceResource {
 
     private static final String FAILED_TO_DELETE_TEMP_FILE = "Failed to delete temp file {}";
+    public static final String ERROR_ON_EXTRACTING_FILE = "Error on extracting file";
     private IImageDimensionReader imageDimensionReader;
     private Map<String, String> imageResizerClasses;
     private boolean  imageMagickEnabled;
@@ -74,9 +78,11 @@ public class ImageResource extends AbstractMultiInstanceResource {
         String subPath = super.getDiskSubFolder() + instance.getFileName();
         try {
             return this.getStorageManager().getStream(subPath, this.isProtectedResource());
+        } catch (EntResourceNotFoundException e) {
+            throw new EntResourceNotFoundRuntimeException(ERROR_ON_EXTRACTING_FILE, e);
         } catch (Throwable t) {
-            logger.error("Error on extracting file", t);
-            throw new RuntimeException("Error on extracting file", t);
+            logger.error(ERROR_ON_EXTRACTING_FILE, t);
+            throw new EntRuntimeException(ERROR_ON_EXTRACTING_FILE, t);
         }
     }
 

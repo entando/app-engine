@@ -32,6 +32,8 @@ public interface ITenantManager {
 
     DataSource getDatasource(String tenantCode);
 
+    Optional<TenantConfig> getConfigOfReadyTenant(String tenantCode);
+
     Optional<TenantConfig> getConfig(String tenantCode);
 
     Optional<TenantConfig> getTenantConfigByDomain(String domain);

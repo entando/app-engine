@@ -79,6 +79,6 @@ class SolrResourcesManagerTest {
         TenantConfig tenantConfig = Mockito.mock(TenantConfig.class);
         Mockito.when(tenantConfig.getProperty("solrAddress")).thenReturn(Optional.of("http://localhost:9999/solr"));
         Mockito.when(tenantConfig.getProperty("solrCore")).thenReturn(Optional.of(TENANT_1));
-        Mockito.when(tenantManager.getConfig(TENANT_1)).thenReturn(Optional.of(tenantConfig));
+        Mockito.when(tenantManager.getConfigOfReadyTenant(TENANT_1)).thenReturn(Optional.of(tenantConfig));
     }
 }

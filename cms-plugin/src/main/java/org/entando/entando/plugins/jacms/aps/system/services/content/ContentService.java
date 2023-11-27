@@ -109,13 +109,13 @@ import org.entando.entando.aps.system.services.component.IComponentUsageService;
 public class ContentService extends AbstractEntityService<Content, ContentDto>
         implements IContentService,
         GroupServiceUtilizer<ContentDto>, CategoryServiceUtilizer<ContentDto>,
-        PageServiceUtilizer<ContentDto>, ContentServiceUtilizer<ContentDto>, 
-        ResourceServiceUtilizer<ContentDto>, 
-        IComponentExistsService, IComponentUsageService, 
+        PageServiceUtilizer<ContentDto>, ContentServiceUtilizer<ContentDto>,
+        ResourceServiceUtilizer<ContentDto>,
+        IComponentExistsService, IComponentUsageService,
         ApplicationContextAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
-    
+
     private ICategoryManager categoryManager;
     private IContentManager contentManager;
     private IContentModelManager contentModelManager;
@@ -326,7 +326,8 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     @Override
     public List<ContentDto> getGroupUtilizer(String groupCode) {
         try {
-            List<String> contentIds = ((GroupUtilizer<String>) this.getContentManager()).getGroupUtilizers(groupCode);
+            @SuppressWarnings("unchecked")
+            List<String> contentIds = ((GroupUtilizer) this.getContentManager()).getGroupUtilizers(groupCode);
             return this.buildDtoList(contentIds);
         } catch (EntException ex) {
             logger.error("Error loading content references for group {}", groupCode, ex);
@@ -337,6 +338,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     @Override
     public List<ContentDto> getCategoryUtilizer(String categoryCode) {
         try {
+            @SuppressWarnings("unchecked")
             List<String> contentIds = ((CategoryUtilizer) this.getContentManager()).getCategoryUtilizers(categoryCode);
             return this.buildDtoList(contentIds);
         } catch (EntException ex) {
@@ -348,6 +350,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     @Override
     public List<ContentDto> getPageUtilizer(String pageCode) {
         try {
+            @SuppressWarnings("unchecked")
             List<String> contentIds = ((PageUtilizer) this.getContentManager()).getPageUtilizers(pageCode);
             return this.buildDtoList(contentIds);
         } catch (EntException ex) {
@@ -359,6 +362,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     @Override
     public List<ContentDto> getContentUtilizer(String contentId) {
         try {
+            @SuppressWarnings("unchecked")
             List<String> contentIds = ((ContentUtilizer) this.getContentManager()).getContentUtilizers(contentId);
             return this.buildDtoList(contentIds);
         } catch (EntException ex) {
@@ -370,6 +374,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     @Override
     public List<ContentDto> getResourceUtilizer(String resourceId) {
         try {
+            @SuppressWarnings("unchecked")
             List<String> contentIds = ((ResourceUtilizer) this.getContentManager()).getResourceUtilizers(resourceId);
             return this.buildDtoList(contentIds);
         } catch (EntException ex) {
@@ -561,11 +566,9 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
     public Integer countContentsByType(String contentType) {
         try {
             EntitySearchFilter[] filters = new EntitySearchFilter[]{
-                new EntitySearchFilter("typeCode", false, contentType, false)
+                new EntitySearchFilter<>("typeCode", false, contentType, false)
             };
-
             List<String> userGroupCodes = Collections.singletonList("administrators");
-
             return getContentManager().countWorkContents(null, false, filters, userGroupCodes);
         } catch (Exception t) {
             logger.error("error in contents count by type", t);
@@ -714,13 +717,13 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
         request.setRestriction(ContentRestriction.getRestrictionValue(request.getMainGroup()));
         return super.updateEntity(JacmsSystemConstants.CONTENT_MANAGER, request, bindingResult);
     }
-    
+
     @Override
     public void deleteContent(String code, UserDetails user) {
         this.checkContentAuthorization(user, code, false, true, null);
         this.deleteContent(code);
     }
-    
+
     private void deleteContent(String code) {
         try {
             Content content = this.getContentManager().loadContent(code, false);
@@ -749,7 +752,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
         return updateContentStatus(code, status, user, bindingResult, false);
     }
 
-    private ContentDto updateContentStatus(String code, String status, 
+    private ContentDto updateContentStatus(String code, String status,
             UserDetails user, BeanPropertyBindingResult bindingResult, boolean forceUnpublish) {
         try {
             this.checkContentExists(code);
@@ -841,16 +844,16 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
                 logger.warn("no content found with code {}", code);
                 throw new ResourceNotFoundException(ERRCODE_CONTENT_NOT_FOUND, ComponentUsageEntity.TYPE_CONTENT, code);
             }
-            ContentServiceUtilizer<?> utilizer = this.getContentServiceUtilizer(managerName);
+            ContentServiceUtilizer<IComponentDto> utilizer = this.getContentServiceUtilizer(managerName);
             if (null == utilizer) {
                 logger.warn("no references found for {}", managerName);
                 throw new ResourceNotFoundException(ERRCODE_CONTENT_REFERENCES, "reference", managerName);
             }
-            List<?> dtoList = utilizer.getContentUtilizer(code);
-            List<?> subList = requestList.getSublist(dtoList);
-            SearcherDaoPaginatedResult<?> pagedResult = new SearcherDaoPaginatedResult(dtoList.size(), subList);
-            PagedMetadata<Object> pagedMetadata = new PagedMetadata<>(requestList, pagedResult);
-            pagedMetadata.setBody((List<Object>) subList);
+            List<IComponentDto> dtoList = utilizer.getContentUtilizer(code);
+            List<IComponentDto> subList = requestList.getSublist(dtoList);
+            SearcherDaoPaginatedResult<? extends IComponentDto> pagedResult = new SearcherDaoPaginatedResult<>(dtoList.size(), subList);
+            PagedMetadata<IComponentDto> pagedMetadata = new PagedMetadata<>(requestList, pagedResult);
+            pagedMetadata.setBody(subList);
             return pagedMetadata;
         } catch (EntException ex) {
             logger.error("Error extracting content references - content {} - manager {}", code, managerName, ex);
@@ -858,7 +861,8 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
         }
     }
 
-    private ContentServiceUtilizer<?> getContentServiceUtilizer(String managerName) {
+    @SuppressWarnings("unchecked")
+    private ContentServiceUtilizer<IComponentDto> getContentServiceUtilizer(String managerName) {
         Map<String, ContentServiceUtilizer> beans = this.applicationContext
                 .getBeansOfType(ContentServiceUtilizer.class);
         ContentServiceUtilizer defName = beans.values().stream()
@@ -885,6 +889,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
         List<ComponentUsageEntity> components = new ArrayList<>();
         Map<String, ? extends ContentServiceUtilizer> beans = this.applicationContext.getBeansOfType(ContentServiceUtilizer.class);
         for (var utilizer : beans.values()) {
+            @SuppressWarnings("unchecked")
             List<IComponentDto> objects = utilizer.getContentUtilizer(componentCode);
             List<ComponentUsageEntity> utilizerForService = objects.stream()
                     .map(o -> o.buildUsageEntity()).collect(Collectors.toList());

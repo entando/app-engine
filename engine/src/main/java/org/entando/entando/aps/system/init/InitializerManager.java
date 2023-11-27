@@ -93,7 +93,7 @@ public class InitializerManager extends AbstractInitializerManager implements II
             throw new EntException(message, e);
         }
     }
-    
+
     public void init() throws Exception {
         initPrimary();
     }
@@ -101,8 +101,7 @@ public class InitializerManager extends AbstractInitializerManager implements II
     public void initPrimary() throws Exception {
         DatabaseMigrationStrategy migrationStrategyEnum = this.getMigrationStrategyEnum();
         DatabaseMigrationStrategy defaultComputedStrategy = Optional.ofNullable(migrationStrategyEnum).orElse(DatabaseMigrationStrategy.DISABLED);
-
-        initTenant(defaultComputedStrategy, Optional.empty());
+        this.initTenant(defaultComputedStrategy, Optional.empty());
     }
 
     public void initTenant(DatabaseMigrationStrategy migrationStrategy, Optional<Map<String, DataSource>> datasources) throws Exception {
@@ -122,7 +121,7 @@ public class InitializerManager extends AbstractInitializerManager implements II
         logger.debug("{}: initialized - migration strategy {}", this.getClass().getName(), this.getMigrationStrategy());
     }
 
-        public void executePostInitProcesses() throws BeansException {
+    public void executePostInitProcesses() throws BeansException {
         SystemInstallationReport report = null;
         try {
             report = this.extractReport();

@@ -243,7 +243,7 @@ public class UserFilterOptionBean implements Serializable {
 			AttributeInterface attribute = this.getAttribute();
 			if (attribute instanceof ITextAttribute) {
 				String text = this.getFormFieldValues().get(this.getFormFieldNames()[0]);
-				filter = new EntitySearchFilter(attribute.getName(), true, text, true);
+				filter = new EntitySearchFilter<String>(attribute.getName(), true, text, true);
 				if (attribute.isMultilingual()) {
 					filter.setLangCode(this.getCurrentLang().getCode());
 				}
@@ -252,7 +252,7 @@ public class UserFilterOptionBean implements Serializable {
 				String end = this.getFormFieldValues().get(this.getFormFieldNames()[1]);
 				Date startDate = DateConverter.parseDate(start, this.getDateFormat());
 				Date endDate = DateConverter.parseDate(end, this.getDateFormat());
-				filter = new EntitySearchFilter(attribute.getName(), true, startDate, endDate);
+				filter = new EntitySearchFilter<Date>(attribute.getName(), true, startDate, endDate);
 			} else if (attribute instanceof BooleanAttribute) {
 				String value = this.getFormFieldValues().get(this.getFormFieldNames()[0]);
 				String ignore = this.getFormFieldValues().get(this.getFormFieldNames()[1]);
@@ -263,7 +263,7 @@ public class UserFilterOptionBean implements Serializable {
 					filter = new EntitySearchFilter(attribute.getName(), true);
 					filter.setNullOption(true);
 				} else {
-					filter = new EntitySearchFilter(attribute.getName(), true, value, false);
+					filter = new EntitySearchFilter<String>(attribute.getName(), true, value, false);
 				}
 			} else if (attribute instanceof NumberAttribute) {
 				String start = this.getFormFieldValues().get(this.getFormFieldNames()[0]);
@@ -278,7 +278,7 @@ public class UserFilterOptionBean implements Serializable {
 					Integer endNumberInt = Integer.parseInt(end);
 					endNumber = new BigDecimal(endNumberInt);
 				} catch (Throwable t) {}
-				filter = new EntitySearchFilter(attribute.getName(), true, startNumber, endNumber);
+				filter = new EntitySearchFilter<BigDecimal>(attribute.getName(), true, startNumber, endNumber);
 			}
 		} catch (Throwable t) {
 			_logger.error("Error extracting entity search filters", t);
@@ -308,45 +308,31 @@ public class UserFilterOptionBean implements Serializable {
 		if (!this.isAttributeFilter()) {
 			if (this.getKey().equals(KEY_FULLTEXT) && !StringUtils.isEmpty(value0)) {
 				//String[] fieldsSuffix = {"", "_option"};
-				filter = new SearchEngineFilter(this.getCurrentLang().getCode(), value0, this.getOption(value1));
+				filter = new SearchEngineFilter<>(this.getCurrentLang().getCode(), value0, this.getOption(value1));
 			} else if (this.getKey().equals(KEY_CATEGORY) && !StringUtils.isEmpty(value0)) {
-				filter = new SearchEngineFilter(IIndexerDAO.CONTENT_CATEGORY_FIELD_NAME, value0, SearchEngineFilter.TextSearchOption.EXACT);
+				filter = new SearchEngineFilter<>(IIndexerDAO.CONTENT_CATEGORY_FIELD_NAME, value0, SearchEngineFilter.TextSearchOption.EXACT);
 			}
 		} else {
 			AttributeInterface attribute = this.getAttribute();
 			if (attribute instanceof ITextAttribute && !StringUtils.isEmpty(value0)) {
-				filter = new SearchEngineFilter(this.getIndexFieldName(), value0, SearchEngineFilter.TextSearchOption.EXACT);
+				filter = new SearchEngineFilter<>(this.getIndexFieldName(), value0, SearchEngineFilter.TextSearchOption.EXACT);
 				//String[] fieldsSuffix = {"_textFieldName"};
 			} else if (attribute instanceof DateAttribute && 
 					(!StringUtils.isEmpty(value0) || !StringUtils.isEmpty(value1))) {
-				Date big0 = null;
-				try {
-					big0 = DateConverter.parseDate(value0, this.getDateFormat());
-				} catch (Exception e) {}
-				Date big1 = null;
-				try {
-					big1 = DateConverter.parseDate(value1, this.getDateFormat());
-				} catch (Exception e) {}
+				Date big0 = DateConverter.parseDate(value0, this.getDateFormat());
+				Date big1 = DateConverter.parseDate(value1, this.getDateFormat());
 				//String[] fieldsSuffix = {"_dateStartFieldName", "_dateEndFieldName"};
-				filter = new SearchEngineFilter(this.getIndexFieldName(), big0, big1);
+				filter = new SearchEngineFilter<>(this.getIndexFieldName(), big0, big1);
 			} else if (attribute instanceof BooleanAttribute && 
 					(!StringUtils.isEmpty(value0) && !StringUtils.isEmpty(value1))) {
-				filter = new SearchEngineFilter(this.getIndexFieldName(), value0, SearchEngineFilter.TextSearchOption.EXACT);
+				filter = new SearchEngineFilter<>(this.getIndexFieldName(), value0, SearchEngineFilter.TextSearchOption.EXACT);
 				//String[] fieldsSuffix = {"_booleanFieldName", "_booleanFieldName_ignore", "_booleanFieldName_control"};
 			} else if (attribute instanceof NumberAttribute && 
 					(!StringUtils.isEmpty(value0) || !StringUtils.isEmpty(value1))) {
 				//String[] fieldsSuffix = {"_numberStartFieldName", "_numberEndFieldName"};
-				BigDecimal big0 = null;
-				try {
-					big0 = new BigDecimal(value0);
-				} catch (Exception e) {
-				}
-				BigDecimal big1 = null;
-				try {
-					big1 = new BigDecimal(value1);
-				} catch (Exception e) {
-				}
-				filter = new SearchEngineFilter(this.getIndexFieldName(), big0, big1);
+				BigDecimal big0 = new BigDecimal(value0);
+				BigDecimal big1 = new BigDecimal(value1);
+				filter = new SearchEngineFilter<>(this.getIndexFieldName(), big0, big1);
 			}
 		}
 		return filter;

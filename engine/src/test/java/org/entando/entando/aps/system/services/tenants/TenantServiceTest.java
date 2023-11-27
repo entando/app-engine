@@ -57,7 +57,7 @@ class TenantServiceTest {
             // primary case of CDS disabled
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.empty());
             when(storageManager.getResourceUrl("",false)).thenReturn("/cmsresource");
-            when(tenantManager.getConfig("primary")).thenReturn(Optional.empty());
+            when(tenantManager.getConfigOfReadyTenant("primary")).thenReturn(Optional.empty());
 
             TenantDto primary = tenantService.getCurrentTenant();
             Assertions.assertTrue(primary.isPrimary());
@@ -70,7 +70,7 @@ class TenantServiceTest {
             Mockito.reset(tenantManager, storageManager);
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.empty());
             when(storageManager.getResourceUrl("",false)).thenReturn("http://cds-primary/public");
-            when(tenantManager.getConfig("primary")).thenReturn(Optional.empty());
+            when(tenantManager.getConfigOfReadyTenant("primary")).thenReturn(Optional.empty());
 
             TenantDto primaryCds = tenantService.getCurrentTenant();
             Assertions.assertTrue(primaryCds.isPrimary());
@@ -84,7 +84,7 @@ class TenantServiceTest {
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.of("tenant1"));
             when(storageManager.getResourceUrl("",false)).thenReturn("http://cds-tenant1/public");
             TenantConfig tc = new TenantConfig(Map.of("tenantCode","tenant1"));
-            when(tenantManager.getConfig("tenant1")).thenReturn(Optional.of(tc));
+            when(tenantManager.getConfigOfReadyTenant("tenant1")).thenReturn(Optional.of(tc));
 
             TenantDto tenant = tenantService.getCurrentTenant();
             Assertions.assertFalse(tenant.isPrimary());
@@ -102,7 +102,7 @@ class TenantServiceTest {
             // primary case of CDS disabled
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.empty());
             when(storageManager.getResourceUrl("",false)).thenReturn("/cmsresource");
-            when(tenantManager.getConfig("primary")).thenReturn(Optional.empty());
+            when(tenantManager.getConfigOfReadyTenant("primary")).thenReturn(Optional.empty());
 
             Optional<TenantDto> primaryRes = tenantService.getTenant("primary");
             Assertions.assertTrue(primaryRes.isPresent());
@@ -116,7 +116,7 @@ class TenantServiceTest {
             Mockito.reset(tenantManager, storageManager);
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.empty());
             when(storageManager.getResourceUrl("",false)).thenReturn("http://cds-primary/public");
-            when(tenantManager.getConfig("primary")).thenReturn(Optional.empty());
+            when(tenantManager.getConfigOfReadyTenant("primary")).thenReturn(Optional.empty());
 
             Optional<TenantDto> primaryCdsRes = tenantService.getTenant("primary");
             Assertions.assertTrue(primaryCdsRes.isPresent());
@@ -132,7 +132,7 @@ class TenantServiceTest {
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.of("tenant1"));
             when(storageManager.getResourceUrl("",false)).thenReturn("http://cds-tenant1/public");
             TenantConfig tc = new TenantConfig(Map.of("tenantCode","tenant1"));
-            when(tenantManager.getConfig("tenant1")).thenReturn(Optional.of(tc));
+            when(tenantManager.getConfigOfReadyTenant("tenant1")).thenReturn(Optional.of(tc));
 
             Optional<TenantDto> tenantRes = tenantService.getTenant("tenant1");
             Assertions.assertTrue(tenantRes.isPresent());
@@ -167,7 +167,7 @@ class TenantServiceTest {
 
         // Cds enabled with 1 tenant
         TenantConfig tc = new TenantConfig(Map.of("tenantCode","tenant1"));
-        when(tenantManager.getConfig("tenant1")).thenReturn(Optional.of(tc));
+        when(tenantManager.getConfigOfReadyTenant("tenant1")).thenReturn(Optional.of(tc));
         when(tenantManager.getCodes()).thenReturn(Arrays.asList("tenant1"));
 
 

@@ -47,19 +47,19 @@ class BaseActionTest {
             apsTenantApplicationUtils.reset();
             Mockito.reset(tenantManager);
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.of("tenantx"));
-            Mockito.when(tenantManager.getConfig("tenantx")).thenReturn(Optional.empty());
+            Mockito.when(tenantManager.getConfigOfReadyTenant("tenantx")).thenReturn(Optional.empty());
             config = this.baseAction.getCurrentTenantConfig();
             Assertions.assertNull(config);
-            Mockito.verify(tenantManager, Mockito.times(1)).getConfig("tenantx");
+            Mockito.verify(tenantManager, Mockito.times(1)).getConfigOfReadyTenant("tenantx");
             
             apsTenantApplicationUtils.reset();
             Mockito.reset(tenantManager);
             apsTenantApplicationUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.of("tenanty"));
             TenantConfig tc = new TenantConfig(Map.of("tenantCode","tenanty"));
-            Mockito.when(tenantManager.getConfig("tenanty")).thenReturn(Optional.of(tc));
+            Mockito.when(tenantManager.getConfigOfReadyTenant("tenanty")).thenReturn(Optional.of(tc));
             config = this.baseAction.getCurrentTenantConfig();
             Assertions.assertNotNull(config);
-            Mockito.verify(tenantManager, Mockito.times(1)).getConfig("tenanty");
+            Mockito.verify(tenantManager, Mockito.times(1)).getConfigOfReadyTenant("tenanty");
         }
     }
     

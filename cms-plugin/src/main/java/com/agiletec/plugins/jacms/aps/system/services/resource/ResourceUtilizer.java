@@ -21,8 +21,9 @@ import org.entando.entando.ent.exception.EntException;
  * Interfaccia base per i servizi, i cui elementi gestiti, 
  * possono presentare delle referenziazione con delle risorse.
  * @author E.Santoboni
+ * @param <T>
  */
-public interface ResourceUtilizer {
+public interface ResourceUtilizer<T> {
 	
 	/**
 	 * Restituisce l'identificativo del servizio utilizzatore.
@@ -37,6 +38,6 @@ public interface ResourceUtilizer {
 	 * @return La lista degli oggetti referenzianti la risorsa.
 	 * @throws EntException in caso di errore.
 	 */
-	public List getResourceUtilizers(String resourceId) throws EntException;
+	public List<T> getResourceUtilizers(String resourceId) throws EntException;
 	
 }

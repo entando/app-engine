@@ -17,6 +17,17 @@
 <script>
     jQuery(function () {
         $('#activity-stream [data-toggle="tooltip"]').tooltip({trigger: 'hover'});
+        <s:set var="appBuilderIntegrationEnabled" ><wp:info key="systemParam" paramName="appBuilderIntegrationEnabled" /></s:set>
+		<s:if test="#appBuilderIntegrationEnabled == 'true'">
+        // trigger updateLocale if language is changed
+        $('#languageDropdownComponent a').click(function(e) {
+            e.preventDefault();
+            if (updateLocalStorageWithLocale) {
+                updateLocalStorageWithLocale($(this).data('locale'));
+            }
+            window.location.href = $(this).attr('href');
+        });
+        </s:if>
     })
 </script>
 

@@ -2,8 +2,6 @@ package org.entando.entando.aps.system.services.tenants;
 
 import com.agiletec.aps.system.services.baseconfig.BaseConfigManager;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
-import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.fasterxml.jackson.databind.ser.Serializers.Base;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -71,6 +69,8 @@ public class TenantInitializerService implements ITenantInitializerService {
                 statuses.put(tenantCode,TenantStatus.READY);
 
                 refreshBeanForTenantCode(svCtx, tenantCode);
+                
+                this.executePostInitProcesses();
 
             } catch (Throwable th) {
                 statuses.put(tenantCode,TenantStatus.FAILED);
@@ -106,8 +106,11 @@ public class TenantInitializerService implements ITenantInitializerService {
         Map<String, DataSource> datasources = new HashMap<>();
         datasources.put("portDataSource",tenantDataAccessor.getTenantDatasource(tenantCode));
         datasources.put("servDataSource",tenantDataAccessor.getTenantDatasource(tenantCode));
-        initializerManager.initTenant(strategy, Optional.of(datasources));
-
+        this.initializerManager.initTenant(strategy, Optional.of(datasources));
+    }
+    
+    private void executePostInitProcesses() {
+        initializerManager.executePostInitProcesses();
     }
 
     private void refreshBeanForTenantCode(ServletContext svCtx, String tenantCode) throws Throwable {

@@ -19,6 +19,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import org.entando.entando.ent.exception.EntResourceNotFoundException;
+import org.entando.entando.ent.exception.EntResourceNotFoundRuntimeException;
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -28,6 +31,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 public abstract class AbstractMonoInstanceResource extends AbstractResource {
 
 	private static final EntLogger logger = EntLogFactory.getSanitizedLogger(AbstractMonoInstanceResource.class);
+	public static final String ERROR_ON_EXTRACTING_RESOURCE_STREAM = "Error on extracting resource Stream";
 
 	private ResourceInstance instance;
 
@@ -46,16 +50,18 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 	public InputStream getResourceStream(int size, String langCode) {
 		return this.getResourceStream();
 	}
-	
+
 	@Override
 	public InputStream getResourceStream() {
 		ResourceInstance resourceInstance = instance;
 		String subPath = super.getDiskSubFolder() + resourceInstance.getFileName();
 		try {
 			return this.getStorageManager().getStream(subPath, this.isProtectedResource());
+		} catch (EntResourceNotFoundException e) {
+			throw new EntResourceNotFoundRuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, e);
 		} catch (Throwable t) {
-			logger.error("Error on extracting resource Stream", t);
-			throw new RuntimeException("Error on extracting resource Stream", t);
+			logger.error(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
+			throw new EntRuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
 		}
 	}
     

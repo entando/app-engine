@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator.Feature;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import java.util.List;
@@ -39,6 +40,7 @@ public class ObjectMapperConfiguration {
     public XmlMapper xmlMapper() {
         XmlMapper xmlMapper = new XmlMapper();
         xmlMapper.configure(Feature.WRITE_XML_DECLARATION, true);
+        xmlMapper.configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
         SimpleModule simpleModule = new SimpleModule("CustomXmlSerializerModule", Version.unknownVersion());
         simpleModule.addSerializer(ListResponse.class, new ListResponseSerializer());

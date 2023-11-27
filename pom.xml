@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-maven-root</artifactId>
-        <version>7.2.0-ENG-4226-PR-18</version>
+        <version>7.4.0-ENG-5316-PR-21</version>
     </parent>
     <groupId>org.entando</groupId>
 
     <artifactId>app-engine</artifactId>
-    <version>7.3.0-SNAPSHOT</version>
+    <version>7.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -64,8 +64,8 @@
         <tag>HEAD</tag>
     </scm>
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <checkstyle.skip>true</checkstyle.skip>
         <allTestsSuiteClass/>
         <preDeploymentTestGroups/>
@@ -79,14 +79,13 @@
         <test.database.password>agile</test.database.password>
         <test.database.port.url>jdbc:derby:memory:testPort;create=true</test.database.port.url>
         <test.database.serv.url>jdbc:derby:memory:testServ;create=true</test.database.serv.url>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven.compiler.source>11</maven.compiler.source>
         <!--dependency versions-->
         <spring.version>5.3.27</spring.version>
         <springsecurity.version>5.5.7</springsecurity.version>
         <springsecurityoauth2.version>2.5.2.RELEASE</springsecurityoauth2.version>
         <struts2.version>2.5.31</struts2.version>
-        <jackson.version>2.11.4</jackson.version> <!-- Jackson 2.12.* is not compatible with logback-jackson 0.1.5 -->
+        <jackson.version>2.12.7</jackson.version>
+        <jackson-databind.version>2.12.7.1</jackson-databind.version>
         <hibernate-validator-version>6.0.20.Final</hibernate-validator-version>
         <lucene-core.version>8.9.0</lucene-core.version>
         <json-path-assert.version>2.6.0</json-path-assert.version>
@@ -130,6 +129,7 @@
         <mockito.version>3.11.2</mockito.version>
         <junit-jupiter.version>5.7.2</junit-jupiter.version>
         <testcontainers.version>1.17.6</testcontainers.version>
+        <system-stubs-jupiter.version>2.1.3</system-stubs-jupiter.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
         <jdom.version>1.1.3</jdom.version>
@@ -153,7 +153,7 @@
         <vorbis-java-tika.version>0.8</vorbis-java-tika.version>
         <drewnoakes-metadata-extractor.version>2.18.0</drewnoakes-metadata-extractor.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <lombok.version>1.18.20</lombok.version>
+        <lombok.version>1.18.22</lombok.version>
         <maven-dependency-plugin.version>3.3.0</maven-dependency-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
         <maven-resources-plugin.version>2.5</maven-resources-plugin.version>
@@ -1014,6 +1014,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>uk.org.webcompere</groupId>
+                <artifactId>system-stubs-jupiter</artifactId>
+                <version>${system-stubs-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-servlet-api</artifactId>
                 <version>${tomcat-servlet-api.version}</version>
@@ -1183,7 +1189,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson-databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.module</groupId>
