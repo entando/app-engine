@@ -62,8 +62,6 @@ jobs:
       ENTANDO_BOT_TOKEN: "${{ secrets.ENTANDO_BOT_TOKEN }}"
       ENTANDO_OPT_OKD_LOGIN_TOKEN: "${{ secrets.ENTANDO_OPT_OKD_LOGIN_TOKEN }}"
     steps:
-      - name: Chechout
-        uses: actions/checkout@v3
       #~ CHECKOUT
       - name: "CHECKOUT"
         id: CHECKOUT
@@ -104,99 +102,111 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 1
           path: "local-checkout/admin-console/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report cds-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 2
           path: "local-checkout/cds-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report cms-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 3
           path: "local-checkout/cms-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report contentscheduler-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 4
           path: "local-checkout/contentscheduler-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report engine
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 5
           path: "local-checkout/engine/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report keycloak-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 6
           path: "local-checkout/keycloak-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report mail-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 7
           path: "local-checkout/mail-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report portal-ui
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 8
           path: "local-checkout/portal-ui/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report redis-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 9
           path: "local-checkout/redis-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report seo-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 10
           path: "local-checkout/seo-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report solr-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 11
           path: "local-checkout/solr-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
       - name: Test Report versioning-plugin
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: Maven Tests 12
           path: "local-checkout/versioning-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
-      - name: Test Report webapp
+          max-annotations: '0'
+      - name: Test Report webapp 13
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -204,3 +214,4 @@ jobs:
           path: "local-checkout/webapp/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
