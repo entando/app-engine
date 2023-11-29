@@ -106,3 +106,4 @@ jobs:
           path: "local-checkout/*/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
+          max-annotations: '0'
