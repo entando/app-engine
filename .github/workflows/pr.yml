@@ -63,6 +63,13 @@ jobs:
       ENTANDO_OPT_OKD_LOGIN_TOKEN: "${{ secrets.ENTANDO_OPT_OKD_LOGIN_TOKEN }}"
     steps:
       #~ CHECKOUT
+      - name: "CHECKOUT"
+        id: CHECKOUT
+        run: |
+          ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
+          ~/ppl-run checkout-branch \
+            --lcd "$LOCAL_CLONE_DIR" \
+            --token "$ENTANDO_BOT_TOKEN" \
       - name: Chechout
         uses: actions/checkout@v3
       #~ JDK
