@@ -102,7 +102,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 1
+          name: admin-console tests
           path: "local-checkout/admin-console/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -111,7 +111,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 2
+          name: cds-plugin tests
           path: "local-checkout/cds-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -120,7 +120,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 3
+          name: cms-plugin tests
           path: "local-checkout/cms-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -129,7 +129,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 4
+          name: contentscheduler-plugin tests
           path: "local-checkout/contentscheduler-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -138,7 +138,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 5
+          name: engine tests
           path: "local-checkout/engine/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -147,7 +147,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 6
+          name: keycloak-plugin tests
           path: "local-checkout/keycloak-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -156,7 +156,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 7
+          name: mail-plugin tests
           path: "local-checkout/mail-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -165,7 +165,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 8
+          name: portal-ui tests
           path: "local-checkout/portal-ui/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -174,7 +174,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 9
+          name: redis-plugin tests
           path: "local-checkout/redis-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -183,7 +183,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 10
+          name: seo-plugin tests
           path: "local-checkout/seo-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -192,7 +192,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 11
+          name: solr-plugin tests
           path: "local-checkout/solr-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
@@ -201,16 +201,16 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests 12
+          name: versioning-plugin tests
           path: "local-checkout/versioning-plugin/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
           max-annotations: '0'
-      - name: Test Report webapp 13
+      - name: Test Report webapp
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Maven Tests
+          name: webapp tests
           path: "local-checkout/webapp/target/surefire-reports/*.xml"
           reporter: java-junit
           fail-on-error: true
