@@ -22,8 +22,8 @@ import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
-import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.agiletec.aps.util.DateConverter;
+import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedEvent;
 import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedObserver;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
@@ -44,11 +44,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.entando.entando.aps.system.services.cache.ICacheInfoManager;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.SolrFieldsChecker.CheckFieldsResult;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.cache.ISolrSearchEngineCacheWrapper;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.ContentTypeSettings;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
@@ -63,12 +63,11 @@ public class SolrSearchEngineManager extends SearchEngineManager
         InitializingBean {
 
     public static final String RELOAD_FIELDS_NAME = "RELOAD_FIELDS";
-    private static final String LAST_RELOAD_CACHE_PARAM_NAME = "SolrSearchEngine_lastReloadInfo";
 
     @Setter
     private transient ILangManager langManager;
     @Setter
-    private transient ICacheInfoManager cacheInfoManager;
+    private transient ISolrSearchEngineCacheWrapper cacheWrapper;
     @Setter
     private transient ISolrProxyTenantAware solrProxy;
 
@@ -102,6 +101,7 @@ public class SolrSearchEngineManager extends SearchEngineManager
     @Override
     protected void release() {
         try {
+            this.cacheWrapper.release();
             this.solrProxy.close();
         } catch (Exception ex) {
             log.error("Error closing Solr resources {}", ex);
@@ -116,17 +116,19 @@ public class SolrSearchEngineManager extends SearchEngineManager
             log.error("Error destroying Solr resources {}", ex);
         }
     }
-
+    
     private void refreshAllTenantsFields() {
         for (ISolrResourcesAccessor tenantResources : this.solrProxy.getAllSolrTenantsResources()) {
             Lock lock = tenantsLock.get(tenantResources.getSolrCore());
             lock.lock();
             try {
+                List<SmallEntityType> smallTypes = this.getContentManager().getSmallEntityTypes();
                 boolean refresh = this.getContentTypesSettings(tenantResources.getSolrSchemaDAO())
                         .stream().anyMatch(settings -> !settings.isValid());
                 if (refresh) {
                     log.info("Refreshing CMS fields for core '{}'", tenantResources.getSolrCore());
                     refreshCmsFields(tenantResources);
+                    smallTypes.stream().forEach(set -> this.cacheWrapper.markContentTypeStatusSchema(set.getCode()));
                 }
             } catch (EntException ex) {
                 log.error("Error refreshing CMS fields", ex);
@@ -219,7 +221,8 @@ public class SolrSearchEngineManager extends SearchEngineManager
         lock.lock();
         try {
             List<Map<String, ?>> fields = this.solrProxy.getSolrSchemaDAO().getFields();
-            refreshFields(fields, getAttributesToCheck(typeCode));
+            this.refreshFields(fields, getAttributesToCheck(typeCode));
+            this.cacheWrapper.markContentTypeStatusSchema(typeCode);
         } catch (Exception ex) {
             throw new EntException("Error refreshing contentType " + typeCode, ex);
         } finally {
@@ -248,6 +251,19 @@ public class SolrSearchEngineManager extends SearchEngineManager
     }
 
     @Override
+    public void updateFromPublicContentChanged(PublicContentChangedEvent event) {
+        String typeCode = event.getContentId().substring(0, 3);
+        try {
+            if (!this.cacheWrapper.isTypeMarked(typeCode)) {
+                this.refreshContentType(typeCode);
+            }
+            super.updateFromPublicContentChanged(event);
+        } catch (EntException e) {
+            log.error("Error refresh type " + typeCode, e);
+        }
+    }
+
+    @Override
     public void updateFromEntityTypesChanging(EntityTypesChangingEvent event) {
         Lock lock = tenantsLock.get(this.solrProxy.getSolrCore());
         lock.lock();
@@ -263,17 +279,14 @@ public class SolrSearchEngineManager extends SearchEngineManager
                 attributes = List.of();
             }
             refreshFields(fields, attributes);
+            this.cacheWrapper.markContentTypeStatusSchema(event.getNewEntityType().getTypeCode());
         } finally {
             lock.unlock();
         }
     }
-
+    
     private void refreshFields(List<Map<String, ?>> fields, List<AttributeInterface> attributes) {
-        refreshFields(fields, attributes, solrProxy.getSolrSchemaDAO());
-    }
-
-    private void refreshFields(List<Map<String, ?>> fields, List<AttributeInterface> attributes,
-            ISolrSchemaDAO schemaDAO) {
+        ISolrSchemaDAO schemaDAO = solrProxy.getSolrSchemaDAO();
         SolrFieldsChecker fieldsChecker = new SolrFieldsChecker(fields, attributes, langManager.getLangs());
         CheckFieldsResult result = fieldsChecker.checkFields();
         if (result.needsUpdate()) {
@@ -352,21 +365,20 @@ public class SolrSearchEngineManager extends SearchEngineManager
 
     @Override
     public void notifyEndingIndexLoading(LastReloadInfo info, IIndexerDAO newIndexerDAO) {
-        this.cacheInfoManager.putInCache(ICacheInfoManager.DEFAULT_CACHE_NAME, this.getLastReloadCacheKey(), info);
+        this.setLastReloadInfo(info);
         this.solrProxy.getIndexStatus().setReadyIfPossible();
     }
 
     @Override
+    protected void setLastReloadInfo(LastReloadInfo lastReloadInfo) {
+        this.cacheWrapper.setLastReloadInfo(lastReloadInfo);
+    }
+
+    @Override
     public LastReloadInfo getLastReloadInfo() {
-        return (SolrLastReloadInfo) this.cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME,
-                this.getLastReloadCacheKey());
+        return this.cacheWrapper.getLastReloadInfo();
     }
-
-    private String getLastReloadCacheKey() {
-        String suffix = ApsTenantApplicationUtils.getTenant().orElse("_primary_");
-        return LAST_RELOAD_CACHE_PARAM_NAME + "_" + suffix;
-    }
-
+    
     @Override
     public int getStatus() {
         return this.solrProxy.getIndexStatus().getValue();
@@ -376,4 +388,5 @@ public class SolrSearchEngineManager extends SearchEngineManager
     protected void setStatus(int status) {
         this.solrProxy.getIndexStatus().setValue(status);
     }
+    
 }

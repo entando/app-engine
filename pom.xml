@@ -193,7 +193,7 @@
         <junrar.version>7.4.1</junrar.version>
         <netty-common.version>4.1.77.Final</netty-common.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
-        <solr-solrj.version>8.11.1</solr-solrj.version>
+        <solr-solrj.version>9.4.0</solr-solrj.version>
         <spring-hateoas.version>1.5.5</spring-hateoas.version>
     </properties>
     <issueManagement>

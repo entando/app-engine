@@ -3,7 +3,6 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr;
 import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_NEED_TO_RELOAD_INDEXES;
 import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_READY;
 import static com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager.STATUS_RELOADING_INDEXES_IN_PROGRESS;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.agiletec.aps.system.services.category.ICategoryManager;
@@ -11,12 +10,12 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import java.util.List;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.common.util.NamedList;
-import org.entando.entando.aps.system.services.cache.ICacheInfoManager;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.plugins.jpsolr.aps.system.solr.cache.ISolrSearchEngineCacheWrapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,20 +40,19 @@ class SolrSearchEngineManagerTest {
     @Mock
     private IContentManager contentManager;
     @Mock
-    private ICacheInfoManager cacheInfoManager;
+    private ISolrSearchEngineCacheWrapper cacheWrapper;
 
     private SolrProxyTenantAware solrProxy;
     private SolrSearchEngineManager solrSearchEngineManager;
 
-    private MockedConstruction<HttpSolrClient.Builder> mockedConstructionSolrClientBuilder;
-    private HttpSolrClient solrClient;
+    private MockedConstruction<Http2SolrClient.Builder> mockedConstructionSolrClientBuilder;
+    private Http2SolrClient solrClient;
 
     @BeforeEach
     void setUp() throws Exception {
-        mockedConstructionSolrClientBuilder = Mockito.mockConstruction(HttpSolrClient.Builder.class,
+        mockedConstructionSolrClientBuilder = Mockito.mockConstruction(Http2SolrClient.Builder.class,
                 (builder, context) -> {
-                    solrClient = Mockito.mock(HttpSolrClient.class);
-                    Mockito.when(builder.withHttpClient(any())).thenReturn(builder);
+                    solrClient = Mockito.mock(Http2SolrClient.class);
                     Mockito.when(builder.build()).thenReturn(solrClient);
                 });
         solrProxy = new SolrProxyTenantAware(
@@ -65,7 +63,7 @@ class SolrSearchEngineManagerTest {
         solrSearchEngineManager.setSolrProxy(solrProxy);
         solrSearchEngineManager.setContentManager(contentManager);
         solrSearchEngineManager.setLangManager(langManager);
-        solrSearchEngineManager.setCacheInfoManager(cacheInfoManager);
+        solrSearchEngineManager.setCacheWrapper(cacheWrapper);
     }
 
     @AfterEach

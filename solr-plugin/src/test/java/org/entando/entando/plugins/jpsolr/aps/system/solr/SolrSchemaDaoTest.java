@@ -53,6 +53,9 @@ class SolrSchemaDaoTest {
 
     @Test
     void shouldUpdateFields() throws Exception {
+        NamedList<Object> mockedResult = new NamedList<>();
+        mockedResult.add("fields", getMockedFields());
+        Mockito.lenient().when(solrClient.request(any(SchemaRequest.Fields.class), anyString())).thenReturn(mockedResult);
         List<Map<String, ?>> fieldsToAdd = List.of(Map.of("name", "field1"));
         List<Map<String, ?>> fieldsToReplace = List.of(Map.of("name", "field2"));
         Assertions.assertTrue(solrSchemaDAO.updateFields(fieldsToAdd, fieldsToReplace));
@@ -78,4 +81,5 @@ class SolrSchemaDaoTest {
         fields.add(field);
         return fields;
     }
+    
 }

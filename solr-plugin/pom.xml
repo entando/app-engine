@@ -80,6 +80,8 @@
             <groupId>org.entando.entando.plugins</groupId>
             <artifactId>entando-plugin-jacms</artifactId>
             <version>${project.version}</version>
+            <classifier>classes</classifier>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.entando.entando</groupId>

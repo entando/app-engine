@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:context="http://www.springframework.org/schema/context"
-        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:component-scan base-package="org.entando.entando.plugins.jpsolr"/>
-
+    <context:component-scan base-package="org.entando.entando.plugins.jpsolr.*"/>
+    
+    <bean name="jpsolrSolrManagerCache" class="java.util.concurrent.ConcurrentHashMap"/>
+    
+    <bean id="jpsolrExternalCachesContainer" class="org.entando.entando.aps.system.services.cache.ExternalCachesContainer">
+        <property name="caches">
+            <set>
+                <bean class="org.entando.entando.aps.system.services.cache.CustomConcurrentMapCacheFactoryBean"
+                      p:name="Entando_SolrSEManager" p:store-ref="jpsolrSolrManagerCache" />
+            </set>
+        </property>
+    </bean>
+    
     <bean id="searchEngineManagerFactory"
             class="org.entando.entando.plugins.jpsolr.aps.system.solr.SearchEngineManagerFactory">
         <property name="indexDiskRootFolder">
@@ -17,8 +29,8 @@
         <property name="categoryManager" ref="CategoryManager"/>
         <property name="contentManager" ref="jacmsContentManager"/>
         <property name="tenantManager" ref="tenantManager"/>
-        <property name="cacheInfoManager" ref="CacheInfoManager"/>
-        <property name="solrHttpClientBuilder" ref="solrHttpClientBuilder"/>
+        <property name="cacheWrapper" ref="jpsolrSolrSearchEngineCacheWrapper"/>
+        <property name="solrHttpClientBuilder" ref="jpsolrSolrHttpClientBuilder"/>
         <property name="notifyManager" ref="NotifyManager"/>
     </bean>
 
