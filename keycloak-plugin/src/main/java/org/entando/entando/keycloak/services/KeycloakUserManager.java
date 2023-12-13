@@ -139,8 +139,8 @@ public class KeycloakUserManager extends AbstractParameterizableService implemen
     private UserDetails addLocalGroups(UserDetails user, String id) {
         this.keycloakService.getUserGroups(id).stream().forEach(groupId -> {
             Group group = new Group();
-            group.setName(id);
-            group.setDescription("KC group " + id);
+            group.setName(groupId);
+            group.setDescription(groupId);
             Authorization auth = new Authorization(group, null);
             user.addAuthorization(auth);
         });
