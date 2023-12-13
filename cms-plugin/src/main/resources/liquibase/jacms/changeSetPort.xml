@@ -21,4 +21,6 @@
 
     <include file="port/20230623000000_jacms_contentmodels_change_id_type.xml" relativeToChangelogFile="true" />
 
+    <include file="port/20231212000000_jacms_group_code_size.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>

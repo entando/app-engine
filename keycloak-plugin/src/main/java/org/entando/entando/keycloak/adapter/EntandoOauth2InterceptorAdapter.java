@@ -16,22 +16,26 @@ public class EntandoOauth2InterceptorAdapter extends EntandoOauth2Interceptor {
 
     private boolean keycloakEnabled;
 
+    @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         return keycloakEnabled
                 ? keycloak.preHandle(request, response, handler)
                 : super.preHandle(request, response, handler);
     }
 
+    @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable ModelAndView modelAndView) throws Exception {
         if (keycloakEnabled) keycloak.postHandle(request, response, handler, modelAndView);
         else super.postHandle(request, response, handler, modelAndView);
     }
 
+    @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws Exception {
         if (keycloakEnabled) keycloak.afterCompletion(request, response, handler, ex);
         else super.afterCompletion(request, response, handler, ex);
     }
 
+    @Override
     public void afterConcurrentHandlingStarted(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (keycloakEnabled) keycloak.afterConcurrentHandlingStarted(request, response, handler);
         else super.afterConcurrentHandlingStarted(request, response, handler);
