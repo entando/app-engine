@@ -1,11 +1,21 @@
 package org.entando.entando.keycloak.services;
 
+import static org.entando.entando.KeycloakWiki.wiki;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.KeycloakWiki;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.keycloak.services.oidc.OpenIDConnectService;
 import org.entando.entando.keycloak.services.oidc.exception.OidcException;
 import org.entando.entando.keycloak.services.oidc.model.AuthResponse;
+import org.entando.entando.keycloak.services.oidc.model.GroupRepresentation;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -58,6 +68,27 @@ public class KeycloakService {
         return Optional.ofNullable(response.getBody())
                 .map(Arrays::asList)
                 .orElse(Collections.emptyList());
+    }
+
+    public List<GroupRepresentation> listGroups() {
+        final String url = String.format("%s/admin/realms/%s/groups", configuration.getAuthUrl(), configuration.getRealm());
+        String token = this.extractToken();
+        final ResponseEntity<GroupRepresentation[]> response = this.executeRequest(token, url,
+                HttpMethod.GET, createEntity(token), GroupRepresentation[].class, Map.of());
+        return Optional.ofNullable(response.getBody())
+                .map(Arrays::asList)
+                .orElse(Collections.emptyList());
+    }
+
+    public List<String> getUserGroups(String userId) {
+        final String url = String.format("%s/admin/realms/%s/users/%s/groups", configuration.getAuthUrl(), configuration.getRealm(), userId);
+        String token = this.extractToken();
+        final ResponseEntity<GroupRepresentation[]> response = this.executeRequest(token, url,
+                HttpMethod.GET, createEntity(token), GroupRepresentation[].class, Map.of());
+        List<GroupRepresentation> list = Optional.ofNullable(response.getBody())
+                .map(Arrays::asList)
+                .orElse(Collections.emptyList());
+        return list.stream().map(gr -> gr.getId()).collect(Collectors.toList());
     }
 
     public void removeUser(final String uuid) {

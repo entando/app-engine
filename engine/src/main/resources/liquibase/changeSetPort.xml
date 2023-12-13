@@ -25,5 +25,6 @@
 
     <include file="port/20230407000000_disable_content_menu.xml" relativeToChangelogFile="true" />
 
+    <include file="port/20231212000000_group_code_size.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>

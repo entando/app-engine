@@ -1,0 +1,31 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="20231212000000_group_code_size" author="entando">
+        
+        <modifyDataType
+            tableName="authgroups" columnName="groupname"
+            newDataType="varchar(50)" />
+        
+        <modifyDataType
+            tableName="authgroups" columnName="descr"
+            newDataType="varchar(100)" />
+        
+        <modifyDataType
+            tableName="authusergrouprole" columnName="groupname"
+            newDataType="varchar(50)" />
+        
+        <modifyDataType
+            tableName="apicatalog_services" columnName="requiredgroup"
+            newDataType="varchar(50)" />
+        
+        <modifyDataType
+            tableName="actionlogrelations" columnName="refgroup"
+            newDataType="varchar(50)" />
+        
+    </changeSet>
+</databaseChangeLog>
