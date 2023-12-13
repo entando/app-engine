@@ -27,5 +27,7 @@
 
     <include file="port/20230626000000_mfe_communication_mediator_object.xml" relativeToChangelogFile="true" />
 
+    <include file="port/20231212000000_group_code_size.xml" relativeToChangelogFile="true" />
+
 
 </databaseChangeLog>

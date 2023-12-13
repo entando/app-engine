@@ -4,7 +4,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 
 import com.agiletec.aps.system.common.AbstractParameterizableService;
-import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
+import com.agiletec.aps.system.services.authorization.Authorization;
+import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
-import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.keycloak.services.oidc.OpenIDConnectService;
 import org.entando.entando.keycloak.services.oidc.exception.CredentialsExpiredException;
 import org.entando.entando.keycloak.services.oidc.exception.OidcException;
@@ -26,16 +26,21 @@ public class KeycloakUserManager extends AbstractParameterizableService implemen
 
     private static final String ERRCODE_USER_NOT_FOUND = "1";
 
-    private final IAuthorizationManager authorizationManager;
+    //private final IAuthorizationManager authorizationManager;
     private final KeycloakService keycloakService;
     private final OpenIDConnectService oidcService;
 
     private List<String> parameterNames = new ArrayList<>();
 
-    public KeycloakUserManager(final IAuthorizationManager authorizationManager,
+    @Override
+    public void init() {
+        log.debug("{} ready", this.getClass().getName());
+    }
+
+    public KeycloakUserManager(/*final IAuthorizationManager authorizationManager,*/
             final KeycloakService keycloakService,
             final OpenIDConnectService oidcService) {
-        this.authorizationManager = authorizationManager;
+        //this.authorizationManager = authorizationManager;
         this.keycloakService = keycloakService;
         this.oidcService = oidcService;
     }
@@ -111,21 +116,13 @@ public class KeycloakUserManager extends AbstractParameterizableService implemen
 
     @Override
     public UserDetails getUser(final String username) {
-        return getUserRepresentation(username)
-                .map(KeycloakMapper::convertUserDetails)
-                .map(this::getAuthorizations)
+        Optional<UserRepresentation> userOpt = this.getUserRepresentation(username);
+        String id = userOpt.map(user -> user.getId()).orElse(null);
+        return userOpt.map(KeycloakMapper::convertUserDetails)
+                .map(user -> this.addLocalGroups(user, id))
                 .orElse(null);
     }
-
-    private UserDetails getAuthorizations(final User user) {
-        try {
-            user.setAuthorizations(authorizationManager.getUserAuthorizations(user.getUsername()));
-            return user;
-        } catch (EntException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    
     @Override
     public UserDetails getUser(final String username, final String password) {
         try {
@@ -138,7 +135,18 @@ public class KeycloakUserManager extends AbstractParameterizableService implemen
             return null;
         }
     }
-
+    
+    private UserDetails addLocalGroups(UserDetails user, String id) {
+        this.keycloakService.getUserGroups(id).stream().forEach(groupId -> {
+            Group group = new Group();
+            group.setName(id);
+            group.setDescription("KC group " + id);
+            Authorization auth = new Authorization(group, null);
+            user.addAuthorization(auth);
+        });
+        return user;
+    }
+    
     @Override
     public UserDetails getGuestUser() {
         User user = new User();
@@ -169,9 +177,5 @@ public class KeycloakUserManager extends AbstractParameterizableService implemen
     protected List<String> getParameterNames() {
         return parameterNames;
     }
-
-    @Override
-    public void init() {
-        log.debug("{} ready", this.getClass().getName());
-    }
+    
 }

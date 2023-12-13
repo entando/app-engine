@@ -17,4 +17,6 @@
 
     <include file="serv/20230228000000_unused_permission.xml" relativeToChangelogFile="true" />
 
+    <include file="serv/20231212000000_group_code_size.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>

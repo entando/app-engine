@@ -1,6 +1,5 @@
 package org.entando.entando.keycloak.adapter;
 
-import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.system.services.user.UserManager;
@@ -17,10 +16,10 @@ public class UserManagerAdapter extends UserManager implements IUserManager {
     public UserManagerAdapter(){
 
     }
-    public UserManagerAdapter(final IAuthorizationManager authorizationManager,
+    public UserManagerAdapter(/*final IAuthorizationManager authorizationManager,*/
                               final KeycloakService keycloakService,
                               final OpenIDConnectService oidcService) {
-        keycloak = new KeycloakUserManager(authorizationManager, keycloakService, oidcService);
+        keycloak = new KeycloakUserManager(/*authorizationManager, */keycloakService, oidcService);
     }
 
     private boolean keycloakEnabled;
