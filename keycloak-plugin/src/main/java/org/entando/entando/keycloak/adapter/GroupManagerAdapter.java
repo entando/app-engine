@@ -32,9 +32,13 @@ import org.entando.entando.aps.system.services.tenants.TenantStatus;
 import org.entando.entando.keycloak.services.KeycloakService;
 import org.entando.entando.keycloak.services.oidc.model.GroupRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 public class GroupManagerAdapter extends GroupManager implements IGroupManager {
+    
+    @Value("${KEYCLOAK_ENABLE_GROUPS_IMPORT:true}")
+    private boolean enableGroupsImport;
     
     @Autowired
     private KeycloakService keycloakService;
@@ -52,6 +56,10 @@ public class GroupManagerAdapter extends GroupManager implements IGroupManager {
     }
     
     private void checkAndLoadKcGroups() {
+        if (!enableGroupsImport) {
+            log.info("Import of Keyclock groups disabled");
+            return;
+        }
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         Runnable myRunnable = () -> {
             int counter = 0;
