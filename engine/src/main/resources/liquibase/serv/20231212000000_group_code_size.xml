@@ -7,6 +7,15 @@
 
     <changeSet id="20231212000000_group_code_size" author="entando">
         
+        <dropIndex indexName="actionlogrelations_refgroup_idx" 
+                   tableName="actionlogrelations"/> 
+        
+        <dropForeignKeyConstraint baseTableName="authusergrouprole"  
+            constraintName="authusergrouprole_grn_fkey"/>  
+        
+        <dropForeignKeyConstraint baseTableName="apicatalog_services"  
+            constraintName="apicatalog_services_gr_fkey"/>
+        
         <modifyDataType
             tableName="authgroups" columnName="groupname"
             newDataType="varchar(50)" />
@@ -27,5 +36,22 @@
             tableName="actionlogrelations" columnName="refgroup"
             newDataType="varchar(50)" />
         
+        <addForeignKeyConstraint constraintName="authusergrouprole_grn_fkey"
+                baseColumnNames="groupname"
+                baseTableName="authusergrouprole"
+                referencedColumnNames="groupname"
+                referencedTableName="authgroups" />
+        
+        <addForeignKeyConstraint constraintName="apicatalog_services_gr_fkey"
+                baseColumnNames="requiredgroup"
+                baseTableName="apicatalog_services"
+                referencedColumnNames="groupname"
+                referencedTableName="authgroups" />
+        
+        <createIndex tableName="actionlogrelations" indexName="actionlogrelations_refgroup_idx">
+            <column name="refgroup" />
+        </createIndex>
+        
     </changeSet>
+    
 </databaseChangeLog>

@@ -7,6 +7,12 @@
 
     <changeSet id="20231212000000_jacms_group_code_size" author="entando">
         
+        <dropIndex indexName="contentrelations_refgroup_idx" 
+                   tableName="contentrelations"/>
+         
+        <dropIndex indexName="contents_maingroup_idx" 
+                   tableName="maingroup"/> 
+        
         <modifyDataType
             tableName="contents" columnName="maingroup"
             newDataType="varchar(50)" />
@@ -19,5 +25,14 @@
             tableName="contentrelations" columnName="refgroup"
             newDataType="varchar(50)" />
         
+        <createIndex tableName="contents" indexName="contents_maingroup_idx">
+            <column name="maingroup" />
+        </createIndex>
+        
+        <createIndex tableName="contentrelations" indexName="contentrelations_refgroup_idx">
+            <column name="refgroup" />
+        </createIndex>
+        
     </changeSet>
+    
 </databaseChangeLog>
