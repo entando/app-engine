@@ -289,8 +289,8 @@ class GroupControllerIntegrationTest extends AbstractControllerIntegrationTest {
         String accessToken = mockOAuthInterceptor(user);
 
         GroupRequest groupRequest = new GroupRequest();
-        groupRequest.setCode(StringUtils.repeat("a", 21));
-        groupRequest.setName(StringUtils.repeat("a", 51));
+        groupRequest.setCode(StringUtils.repeat("a", 51));
+        groupRequest.setName(StringUtils.repeat("a", 101));
 
         ObjectMapper mapper = new ObjectMapper();
         String payload = mapper.writeValueAsString(groupRequest);

@@ -19,11 +19,11 @@ import org.hibernate.validator.constraints.NotBlank;
 
 public class GroupRequest {
 
-    @Size(max = 20, message = "string.size.invalid")
+    @Size(max = 50, message = "string.size.invalid")
     @NotBlank(message = "group.code.notBlank")
     private String code;
 
-    @Size(max = 50, message = "string.size.invalid")
+    @Size(max = 100, message = "string.size.invalid")
     @NotBlank(message = "group.name.notBlank")
     private String name;
 
