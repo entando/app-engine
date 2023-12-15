@@ -28,6 +28,7 @@ import com.agiletec.aps.system.services.group.IGroupManager;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.opensymphony.xwork2.Action;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -136,9 +137,9 @@ class TestGroupAction extends ApsAdminBaseTestCase {
         assertEquals(1, errors.size());
         errors = fieldErrors.get("description");
         assertEquals(1, errors.size());
-
+        
         // name troppo lungo
-        result = this.executeSaveNew("admin", "groupNameDecisamenteTroppoLungo", "description");
+        result = this.executeSaveNew("admin", StringUtils.repeat("lungo", 11), "description");
         assertEquals(Action.INPUT, result);
         fieldErrors = this.getAction().getFieldErrors();
         assertEquals(1, fieldErrors.size());
