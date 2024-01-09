@@ -1103,19 +1103,27 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             String bodyResult = result.andReturn().getResponse().getContentAsString();
 
             newContentId1 = JsonPath.read(bodyResult, "$.payload[0].id");
+            newContentId2 = JsonPath.read(bodyResult, "$.payload[1].id");
+            
             Content newContent1 = this.contentManager.loadContent(newContentId1, false);
             Assertions.assertNotNull(newContent1);
-
-            newContentId2 = JsonPath.read(bodyResult, "$.payload[1].id");
+            ImageAttribute imageAttribute1 = (ImageAttribute) newContent1.getAttribute("img1");
+            Assertions.assertNotNull(imageAttribute1);
+            Assertions.assertEquals("alt img en1", imageAttribute1.getMetadataForLang(IResourceManager.ALT_METADATA_KEY, "en"));
+            Assertions.assertEquals("legend img en1", imageAttribute1.getMetadataForLang(IResourceManager.LEGEND_METADATA_KEY, "en"));
+            Assertions.assertNull(imageAttribute1.getMetadataForLang(IResourceManager.DESCRIPTION_METADATA_KEY, "it"));
+            Assertions.assertEquals("alt img it1", imageAttribute1.getMetadataForLang(IResourceManager.ALT_METADATA_KEY, "it"));
+            Assertions.assertEquals("legend img it1", imageAttribute1.getMetadataForLang(IResourceManager.LEGEND_METADATA_KEY, "it"));
+            
             Content newContent2 = this.contentManager.loadContent(newContentId2, false);
             Assertions.assertNotNull(newContent2);
-
+            ImageAttribute imageAttribute2 = (ImageAttribute) newContent2.getAttribute("img1");
+            Assertions.assertNotNull(imageAttribute2);
+            Assertions.assertEquals("legend img it2", imageAttribute2.getMetadataForLang(IResourceManager.LEGEND_METADATA_KEY, "it"));
+            Assertions.assertEquals("alt img it2", imageAttribute2.getMetadataForLang(IResourceManager.ALT_METADATA_KEY, "it"));
+            
 
         } finally {
-            if (null != imageResourceId) {
-                performDeleteResource(accessToken, "image", imageResourceId)
-                        .andExpect(status().isOk());
-            }
             if (null != newContentId1) {
                 Content newContent = this.contentManager.loadContent(newContentId1, false);
                 if (null != newContent) {
@@ -1130,6 +1138,10 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             }
             if (null != this.contentManager.getEntityPrototype("IAT")) {
                 ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype("IAT");
+            }
+            if (null != imageResourceId) {
+                performDeleteResource(accessToken, "image", imageResourceId)
+                        .andExpect(status().isOk());
             }
         }
     }
@@ -5026,6 +5038,47 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             if (null != this.contentManager.getEntityPrototype(contentType)) {
                 ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype(contentType);
             }
+        }
+    }
+    
+    @Test
+    void testGetImageAttributeWithMetadata() throws Exception {
+        String newContentId = null;
+        String accessToken = this.createAccessToken();
+        try {
+            Content content = this.contentManager.loadContent("ART1", true);
+            content.setId(null);
+            ImageAttribute picture = (ImageAttribute) content.getAttribute("Foto");
+            picture.setMetadata(IResourceManager.ALT_METADATA_KEY, "it", "Alt ita Value");
+            picture.setMetadata(IResourceManager.LEGEND_METADATA_KEY, "it", "Legend Ita Value");
+            newContentId = this.contentManager.addContent(content);
+            this.contentManager.insertOnLineContent(content);
+            Content addedContent = this.contentManager.loadContent(newContentId, true);
+            ImageAttribute addedPicture = (ImageAttribute) addedContent.getAttribute("Foto");
+            Assertions.assertEquals("Alt ita Value", addedPicture.getResourceAltForLang("it"));
+            Assertions.assertEquals("Legend Ita Value", addedPicture.getResourceLegendForLang("it"));
+            ResultActions result = mockMvc
+                    .perform(get("/plugins/cms/contents/{code}", newContentId)
+                            .param("status", IContentService.STATUS_DRAFT)
+                            .header("Authorization", "Bearer " + accessToken));
+            String bodyResult = result.andReturn().getResponse().getContentAsString();
+            result.andExpect(jsonPath("$.payload.size()", is(20)))
+                    .andExpect(jsonPath("$.errors.size()", is(0)))
+                    .andExpect(jsonPath("$.metaData.size()", is(0)))
+                    .andExpect(jsonPath("$.payload.id", is(newContentId)));
+            int attributeSize = JsonPath.read(bodyResult, "$.payload.attributes.size()");
+            Assertions.assertEquals(7, attributeSize);
+            for (int i = 0; i < attributeSize; i++) {
+                String attributeName = JsonPath.read(bodyResult, "$.payload.attributes[" + i + "].code");
+                if (attributeName.equals("Foto")) {
+                    result.andExpect(jsonPath("$.payload.attributes[" + i + "].values.it.metadata.legend", is("Legend Ita Value")));
+                    result.andExpect(jsonPath("$.payload.attributes[" + i + "].values.it.metadata.alt", is("Alt ita Value")));
+                }
+            }
+        } finally {
+            Content onlineContent = this.contentManager.loadContent(newContentId, false);
+            this.contentManager.removeOnLineContent(onlineContent);
+            this.contentManager.deleteContent(newContentId);
         }
     }
     
