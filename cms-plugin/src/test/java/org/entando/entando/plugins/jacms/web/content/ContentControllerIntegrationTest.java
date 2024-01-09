@@ -59,6 +59,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentDto;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.SymbolicLink;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ImageAttribute;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.LinkAttribute;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
@@ -397,7 +398,6 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload.size()", is(1)))
                     .andExpect(jsonPath("$.errors.size()", is(0)))
                     .andExpect(jsonPath("$.metaData.size()", is(0)))
-
                     .andExpect(jsonPath("$.payload[0].id", Matchers.anything()))
                     .andExpect(jsonPath("$.payload[0].attributes[0].code", is("link1")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value", Matchers.isEmptyOrNullString()));
@@ -412,7 +412,6 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload.size()", is(1)))
                     .andExpect(jsonPath("$.errors.size()", is(0)))
                     .andExpect(jsonPath("$.metaData.size()", is(0)))
-
                     .andExpect(jsonPath("$.payload[0].id", Matchers.anything()))
                     .andExpect(jsonPath("$.payload[0].attributes[0].code", is("link1")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.destType", is(SymbolicLink.PAGE_TYPE)))
@@ -420,8 +419,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.symbolicDestination", is("#!P;pagina_11!#")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.rel", is("alternate")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.target", is("_blank")))
-                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hreflang", is("it")))
-
+                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hrefLang", is("it")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].values.it", is("pagina_11")));
 
             this.executeContentPut("1_PUT_invalid_with_link.json", newContentId, accessToken, status().isBadRequest())
@@ -522,7 +520,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.urlDest", is("https://myurl.com")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.rel", is("rel")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.target", is("_blank")))
-                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hreflang", is("it")))
+                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hrefLang", is("it")))
                     .andExpect(jsonPath("$.payload[0].attributes[1].code", is("link2")))
                     .andExpect(jsonPath("$.payload[0].attributes[1].value.pageDest", is("pagina_11")))
                     .andExpect(jsonPath("$.payload[0].attributes[2].code", is("link3")))
@@ -535,9 +533,13 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             String bodyResult = result.andReturn().getResponse().getContentAsString();
             newContentId = JsonPath.read(bodyResult, "$.payload[0].id");
             Content newContent = this.contentManager.loadContent(newContentId, false);
-
             Assertions.assertNotNull(newContent);
-
+            LinkAttribute linkAttribute = (LinkAttribute) newContent.getAttribute("link1");
+            Assertions.assertNotNull(linkAttribute);
+            Assertions.assertEquals("_blank", linkAttribute.getTarget());
+            Assertions.assertEquals("rel", linkAttribute.getRel());
+            Assertions.assertEquals("it", linkAttribute.getHrefLang());
+            
             this.executeContentPut("1_PUT_valid_with_some_more_links.json", newContentId, accessToken, status().isOk())
                     .andExpect(jsonPath("$.payload.size()", is(1)))
                     .andExpect(jsonPath("$.errors.size()", is(0)))
