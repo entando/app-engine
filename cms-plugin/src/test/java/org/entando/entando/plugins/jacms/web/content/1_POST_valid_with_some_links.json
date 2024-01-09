@@ -16,7 +16,7 @@
                 "urlDest": "https://myurl.com",
                 "rel": "rel",
                 "target": "_blank",
-                "hreflang": "it"
+                "hrefLang": "it"
             },
             "values": {
                 "it": "My URL Link"
