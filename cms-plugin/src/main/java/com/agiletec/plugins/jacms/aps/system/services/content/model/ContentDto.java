@@ -314,9 +314,8 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         resourceAttribute.setResource(resourceInterface, langCode);
         Map<String, Object> values = (Map<String, Object>) resource.get("metadata");
         if (values != null) {
-            Map<String, String> metadata = values.entrySet().stream()
-                    .collect(Collectors.toMap(Entry::getKey, e -> (String) e.getValue()));
-            resourceAttribute.setMetadataMap(langCode, metadata);
+            values.entrySet().stream()
+                    .forEach(e -> resourceAttribute.setMetadata(e.getKey(), langCode, (String) e.getValue()));
         }
     }
 

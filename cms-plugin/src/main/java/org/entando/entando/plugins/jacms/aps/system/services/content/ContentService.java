@@ -305,10 +305,12 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
                             AssetDto assetDto = resourcesService.convertResourceToDto((ResourceInterface) e.getValue());
                             if (contentAttr.getMetadatas() != null && ImageAssetDto.class
                                     .isAssignableFrom(assetDto.getClass())) {
-                                ((ImageAssetDto) assetDto).setMetadata(contentAttr.getMetadatas().get(e.getKey()));
+                                Map<String, String> metadataByLang = contentAttr.getMetadatas().entrySet().stream()
+                                        .filter(entry -> entry.getKey() != null && entry.getValue().get(e.getKey()) != null)
+                                        .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().get(e.getKey())));
+                                ((ImageAssetDto) assetDto).setMetadata(metadataByLang);
                             }
                             assetDto.setName(contentAttr.getTextForLang(e.getKey()));
-
                             return new AbstractMap.SimpleEntry<>(e.getKey(), assetDto);
                         }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
