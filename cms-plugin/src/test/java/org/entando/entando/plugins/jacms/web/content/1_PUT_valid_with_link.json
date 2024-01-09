@@ -15,7 +15,7 @@
                 "pageDest":"pagina_11",
                 "target": "_blank",
                 "rel": "alternate",
-                "hreflang": "it"
+                "hrefLang": "it"
             },
             "values":{
                 "it":"pagina_11"
