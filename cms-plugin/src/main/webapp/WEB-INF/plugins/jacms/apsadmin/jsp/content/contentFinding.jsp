@@ -9,9 +9,8 @@
 
 <!-- Admin console Breadcrumbs -->
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="breadcrumb.app" /></li>
-    <li><s:text name="breadcrumb.jacms" /></li>
-    <li class="page-title-container"><s:text name="breadcrumb.jacms.content.list" /></li>
+    <li><s:text name="breadcrumb.contents" /></li>
+    <li class="page-title-container"><s:text name="breadcrumb.contents.mananagement" /></li>
 </ol>
 
 <!-- Page Title -->

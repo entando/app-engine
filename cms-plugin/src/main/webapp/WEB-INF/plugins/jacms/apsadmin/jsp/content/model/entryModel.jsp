@@ -3,8 +3,7 @@
 <%@ taglib prefix="jacms" uri="/jacms-apsadmin-core"%>
 <%@ taglib prefix="wpsf" uri="/apsadmin-form"%>
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="breadcrumb.app" /></li>
-    <li><s:text name="breadcrumb.jacms" /></li>
+    <li><s:text name="breadcrumb.contents" /></li>
     <li>
         <a href="<s:url action="list" namespace="/do/jacms/ContentModel" />"
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.contentModels" />">

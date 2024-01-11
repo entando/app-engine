@@ -3,7 +3,7 @@
 <%@ taglib prefix="wpsf" uri="/apsadmin-form" %>
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="menu.configure" /></li>
+    <li><s:text name="breadcrumb.contents"/></li>
     <li>
         <s:text name="title.categoryManagement" />
     </li>

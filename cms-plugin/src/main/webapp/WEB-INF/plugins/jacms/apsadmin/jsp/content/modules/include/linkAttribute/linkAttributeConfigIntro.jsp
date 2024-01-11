@@ -9,8 +9,7 @@
 <s:url action="list" namespace="/do/jacms/Content" var="contentListURL"/>
 <s:text name="note.goToSomewhere" var="contentListURLTitle"/>
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="breadcrumb.app" /></li>
-    <li><s:text name="breadcrumb.jacms" /></li>
+    <li><s:text name="breadcrumb.contents" /></li>
     <li>
         <a href="${contentListURL}" title="${contentListURLTitle}">
             <s:text name="breadcrumb.jacms.content.list" />

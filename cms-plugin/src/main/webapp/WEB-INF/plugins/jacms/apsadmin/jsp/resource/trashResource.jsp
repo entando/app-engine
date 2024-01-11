@@ -9,8 +9,7 @@
 <s:set var="targetParamValue" value="resourceTypeCode"/>
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="breadcrumb.app"/></li>
-    <li><s:text name="breadcrumb.jacms"/></li>
+    <li><s:text name="breadcrumb.contents"/></li>
     <li>
         <s:property value="%{getText('title.' + resourceTypeCode + 'Management')}"/>
     </li>

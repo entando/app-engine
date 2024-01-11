@@ -9,11 +9,10 @@
 <script type="text/javascript" src="<wp:resourceURL ignoreTenant="true" />administration/js/ckeditor/adapters/jquery.js"></script>
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="breadcrumb.app" /></li>
-    <li><s:text name="breadcrumb.jacms" /></li>
+    <li><s:text name="breadcrumb.contents" /></li>
     <li>
         <a href="<s:url action="list" namespace="/do/jacms/Content"/>">
-            <s:text name="breadcrumb.jacms.content.list" />
+            <s:text name="breadcrumb.contents.mananagement" />
         </a>
     </li>
     <li>

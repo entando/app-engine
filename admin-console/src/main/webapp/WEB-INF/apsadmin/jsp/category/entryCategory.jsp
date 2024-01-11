@@ -4,7 +4,7 @@
 <%@ taglib prefix="wp" uri="/aps-core"%>
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li><s:text name="menu.configure" /></li>
+    <li><s:text name="breadcrumb.contents"/></li>
     <li><a href="<s:url namespace="/do/Category" action="viewTree" />"><s:text
                 name="title.categoryManagement" /></a></li>
     <li class="page-title-container"><s:if test="strutsAction == 1">
