@@ -17,14 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,14 +45,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -93,7 +102,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.empty(),
                 Optional.ofNullable(tc),
-                false);
+                false,
+                0);
 
         Assertions.assertTrue(ret.isStatusOk());
 
@@ -102,7 +112,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.empty(),
                 Optional.ofNullable(tc),
-                false);
+                false,
+                0);
 
         Assertions.assertTrue(ret.isStatusOk());
 
@@ -147,7 +158,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.empty(),
                 Optional.ofNullable(tc),
-                false)
+                false,
+                0)
         );
         assertEquals("Generic error in a rest call for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'", ex.getMessage());
 
@@ -166,7 +178,8 @@ class CdsRemoteCallerTest {
                         false,
                         Optional.empty(),
                         Optional.ofNullable(tc),
-                        false)
+                        false,
+                        0)
         );
         Assertions.assertEquals(
                 "Invalid operation 'POST', response status:'502 BAD_GATEWAY' for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
@@ -187,14 +200,14 @@ class CdsRemoteCallerTest {
                         false,
                         Optional.empty(),
                         Optional.ofNullable(tc),
-                        false)
+                        false,
+                        0)
         );
         Assertions.assertEquals(
                 "Invalid operation 'POST', response status:'401 UNAUTHORIZED' for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
                 ex.getMessage());
 
     }
-
     @Test
     void shouldCreateFileForPrimary() throws Exception {
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
@@ -233,7 +246,8 @@ class CdsRemoteCallerTest {
                 false,
                 Optional.ofNullable(is),
                 Optional.empty(),
-                false);
+                false,
+                0);
 
         Assertions.assertTrue(ret.isStatusOk());
 
@@ -545,4 +559,103 @@ class CdsRemoteCallerTest {
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}));
     }
 
+    @Test
+    void shouldThrowExceptionIfAnErrorOccurInCloningFileInputStream() throws Exception {
+        // set the config map for tenant
+        Map<String, String> configMap = Map.of("cdsPublicUrl", "http://my-server/tenant1/cms-resources",
+                "cdsPrivateUrl", "http://cds-kube-service:8081/",
+                "cdsPath", "/mytenant/api/v1",
+                "kcAuthUrl", "http://tenant1.server.com/auth",
+                "kcRealm", "tenant1",
+                "kcClientId", "id",
+                "kcClientSecret", "secret",
+                "tenantCode", "my-tenant1");
+        TenantConfig tc = new TenantConfig(configMap);
+        Optional<TenantConfig> tenantConfig = Optional.of(tc);
+        // set tenant
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+
+        // the input stream used to execute the post call
+        Optional<InputStream> fileInputStream = Optional.of(
+                new ByteArrayInputStream("fake".getBytes(StandardCharsets.UTF_8)));
+
+        Mockito.when(restTemplate.exchange(anyString(),
+                eq(HttpMethod.POST),
+                any(),
+                eq(new ParameterizedTypeReference<Map<String, Object>>() {
+                }))).thenReturn(
+                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN, "entando")));
+
+        try (MockedStatic<IOUtils> utilities = Mockito.mockStatic(IOUtils.class)) {
+            utilities.when(() -> IOUtils.toBufferedInputStream(any()))
+                    .thenThrow(new IOException());
+
+            URI url = URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/");
+            Exception ex = assertThrows(EntRuntimeException.class,
+                    () -> cdsRemoteCaller.executePostCall(
+                            url,
+                            "/sub-path-testy",
+                            false,
+                            fileInputStream,
+                            tenantConfig,
+                            false,
+                            0)
+            );
+            assertEquals("Generic error in a rest call for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
+                    ex.getMessage());
+            assertEquals("Error in cloning input stream", ex.getCause().getMessage());
+
+        }
+    }
+
+    @Test
+    void shouldRetryOneTimeIfPostTimeOutOccurs() throws Exception {
+        // set the config map for tenant
+        Map<String, String> configMap = Map.of("cdsPublicUrl", "http://my-server/tenant1/cms-resources",
+                "cdsPrivateUrl", "http://cds-kube-service:8081/",
+                "cdsPath", "/mytenant/api/v1",
+                "kcAuthUrl", "http://tenant1.server.com/auth",
+                "kcRealm", "tenant1",
+                "kcClientId", "id",
+                "kcClientSecret", "secret",
+                "tenantCode", "my-tenant1");
+        TenantConfig tc = new TenantConfig(configMap);
+        Optional<TenantConfig> tenantConfig = Optional.of(tc);
+        // set tenant
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+        // the input stream used to execute the post call
+        Optional<InputStream> fileInputStream = Optional.of(
+                new ByteArrayInputStream("fake".getBytes(StandardCharsets.UTF_8)));
+
+        CdsCreateRowResponseDto resp = new CdsCreateRowResponseDto();
+        resp.setStatus("OK");
+        List<CdsCreateRowResponseDto> list = new ArrayList<>();
+        list.add(resp);
+        URI url = URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/");
+        Mockito.when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(),
+                        eq(new ParameterizedTypeReference<List<CdsCreateRowResponseDto>>() {
+                        })))
+
+                .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED))
+                .thenThrow(new ResourceAccessException("", new SocketTimeoutException("")))
+                .thenReturn(ResponseEntity.ok(list));
+
+        URI auth = URI.create("http://tenant1.server.com/auth/realms/tenant1/protocol/openid-connect/token");
+        Mockito.when(restTemplate.exchange(eq(auth.toString()),
+                eq(HttpMethod.POST),
+                any(),
+                eq(new ParameterizedTypeReference<Map<String, Object>>() {
+                }))).thenReturn(
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token", "xxxxxx")));
+
+        CdsCreateResponseDto responseDto = cdsRemoteCaller.executePostCall(
+                url,
+                "/sub-path-testy",
+                false,
+                fileInputStream,
+                tenantConfig,
+                false,
+                0);
+        assertTrue(responseDto.isStatusOk());
+    }
 }
