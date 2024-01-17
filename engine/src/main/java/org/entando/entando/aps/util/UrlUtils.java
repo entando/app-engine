@@ -39,6 +39,11 @@ public final class UrlUtils {
     public static final String HTTPS_SCHEME = "https";
 
     private UrlUtils(){}
+    
+    public static String checkUrl(String url) {
+        return getProtoFromEnv().filter(UrlUtils::isHttps)
+                .map(p -> url.replaceFirst(HTTP_SCHEME+"://", HTTPS_SCHEME+"://")).orElse(url);
+    }
 
     public static String fetchScheme(HttpServletRequest request){
         return getProtoFromEnv().filter(UrlUtils::isHttps)

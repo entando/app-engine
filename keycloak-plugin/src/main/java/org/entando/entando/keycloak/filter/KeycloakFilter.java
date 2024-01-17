@@ -224,7 +224,7 @@ public class KeycloakFilter implements Filter {
         final HttpSession session = request.getSession();
         final String authorizationCode = request.getParameter("code");
         final String stateParameter = request.getParameter("state");
-        final String redirectUri = request.getRequestURL().toString();
+        final String redirectUri = UrlUtils.checkUrl(request.getRequestURL().toString());
         final String redirectTo = request.getParameter("redirectTo");
         final String error = request.getParameter("error");
         final String errorDescription = request.getParameter("error_description");

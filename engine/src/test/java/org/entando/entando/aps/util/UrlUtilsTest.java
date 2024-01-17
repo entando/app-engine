@@ -51,6 +51,27 @@ class UrlUtilsTest {
     public void afterAll() throws Exception {
         Mockito.reset(requestMock);
     }
+    
+    @Test
+    void shouldConvertSchema() throws Exception {
+        Map<String, String> envsOrig = System.getenv().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        try {
+            String httpUrl = "http://www.myportal.com/myui";
+            Assertions.assertEquals(httpUrl, UrlUtils.checkUrl(httpUrl));
+            String httpsUrl = "https://www.mysecondportal.com/myui";
+            Assertions.assertEquals(httpsUrl, UrlUtils.checkUrl(httpsUrl));
+
+            Map<String, String> envs = (HashMap<String, String>) envsOrig.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            envs.put("ENTANDO_APP_USE_TLS", "true");
+            UnitTestUtils.setEnv(envs);
+            Assertions.assertEquals("https://www.myportal.com/myui", UrlUtils.checkUrl(httpUrl));
+            Assertions.assertEquals(httpsUrl, UrlUtils.checkUrl(httpsUrl));
+        } finally {
+            UnitTestUtils.setEnv(envsOrig);
+        }
+    }
 
     @Test
     void shouldFetchSchemeWorksFineWithDifferentInputs() throws Exception {
