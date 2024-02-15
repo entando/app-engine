@@ -177,7 +177,6 @@ public class CdsRemoteCaller  {
         logger.debug("Trying to call GET (getFileAttributeView) on url:'{}' and is config tenant empty:'{}'",
                 url,
                 config.isEmpty());
-
         return this.executeGetCall(url,
                 Arrays.asList(MediaType.APPLICATION_JSON),
                 config,
@@ -190,7 +189,6 @@ public class CdsRemoteCaller  {
                 url,
                 isProtectedResource,
                 config.isEmpty());
-
         Optional<byte[]> bytes;
         if (isProtectedResource) {
             bytes = executeGetCall(url, null, config,  false, new ParameterizedTypeReference<byte[]>(){});
@@ -204,11 +202,21 @@ public class CdsRemoteCaller  {
                 }
                 throw buildExceptionWithMessage("GET", e.getStatusCode(), url.toString());
             }
-
         }
         return bytes.map(ByteArrayInputStream::new);
     }
-
+    
+    public Optional<CdsDiskInfo> getDiskInfo(URI url) {
+        logger.debug("Trying to call GET (diskinfo)");
+        Optional<CdsDiskInfo> infos;
+        try {
+            infos = Optional.ofNullable(restTemplate.getForObject(url, CdsDiskInfo.class));
+        } catch (HttpClientErrorException e) {
+            throw buildExceptionWithMessage("GET", e.getStatusCode(), url.toString());
+        }
+        return infos;
+    }
+    
     private <T> Optional<T> executeGetCall(URI url, List<MediaType> acceptableMediaTypes, Optional<TenantConfig> config,
             boolean forceTokenRetrieve,
             ParameterizedTypeReference<T> responseType) {
@@ -217,7 +225,6 @@ public class CdsRemoteCaller  {
             HttpEntity<String> entity = new HttpEntity<>(headers);
             ResponseEntity<T> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
             return Optional.ofNullable(responseEntity.getBody());
-
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 logger.info("File Not found - uri {}", url);
@@ -231,7 +238,7 @@ public class CdsRemoteCaller  {
         }
     }
 
-    private EntRuntimeException buildExceptionWithMessage(String method, HttpStatus statusCode, String url){
+    private EntRuntimeException buildExceptionWithMessage(String method, HttpStatus statusCode, String url) {
         return new EntRuntimeException(String.format(REST_ERROR_MSG, method, statusCode, url));
     }
 

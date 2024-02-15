@@ -50,7 +50,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Slf4j
 @Service(SystemConstants.STORAGE_MANAGER)
 @CdsActive(true)
-public class CdsStorageManager implements IStorageManager {
+public class CdsStorageManager implements IStorageManager, ICdsStorageManager {
 
     private static final String ERROR_VALIDATING_PATH_MSG = "Error validating path";
     
@@ -166,6 +166,23 @@ public class CdsStorageManager implements IStorageManager {
         }
     }
 
+    @Override
+    public CdsDiskInfo getDiskInfo() throws EntException {
+        final String ERROR_EXTRACTING_DISK_INFO = "Error extracting disk info: url %s";
+        URI url = null;
+        try {
+            Optional<TenantConfig> config = getTenantConfig();
+            url = CdsUrlUtils.buildCdsInternalApiUrl(config, configuration, "utils", "diskinfo");
+            Optional<CdsDiskInfo> is = caller.getDiskInfo(url);
+            return is.orElseThrow(IOException::new);
+        } catch (EntRuntimeException ert) {
+            throw ert;
+        } catch (Exception e) {
+            String errorMessage = String.format(ERROR_EXTRACTING_DISK_INFO, Optional.ofNullable(url).map(URI::toString).orElse("null"));
+            throw new EntResourceNotFoundException(errorMessage, e);
+        }
+    }
+    
     @Override
     public String getResourceUrl(String subPath, boolean isProtectedResource) {
         try {
