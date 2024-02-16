@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -166,11 +168,11 @@ class CdsStorageManagerTest {
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
         ApsTenantApplicationUtils.setTenant("my-tenant");
-        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class))).thenReturn(Optional.of(Mockito.mock(CdsDiskInfo.class)));
-        CdsDiskInfo diskInfo = this.cdsStorageManager.getDiskInfo();
+        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class), Mockito.any())).thenReturn(Optional.of(Mockito.mock(DiskInfoDto.class)));
+        DiskInfoDto diskInfo = this.cdsStorageManager.getDiskInfo();
         Assertions.assertThat(diskInfo).isNotNull();
         ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
-        Mockito.verify(cdsRemoteCaller).getDiskInfo(uriCaptor.capture());
+        Mockito.verify(cdsRemoteCaller).getDiskInfo(uriCaptor.capture(), Mockito.any());
         String expectedUrl = "http://tenant-cds-kube-service:8081/api/v1/utils/diskinfo";
         Assertions.assertThat(uriCaptor.getValue().toString()).isEqualTo(expectedUrl);
     }
@@ -186,11 +188,11 @@ class CdsStorageManagerTest {
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
         ApsTenantApplicationUtils.setTenant("my-tenant");
-        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class))).thenThrow(new EntRuntimeException("Error"));
+        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class), Mockito.any())).thenThrow(new EntRuntimeException("Error"));
         Exception ex = assertThrows(Exception.class,() -> this.cdsStorageManager.getDiskInfo());
         Assertions.assertThat(ex).isInstanceOf(EntRuntimeException.class);
         
-        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class))).thenReturn(Optional.empty());
+        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class), Mockito.any())).thenReturn(Optional.empty());
         Exception otherEx = assertThrows(Exception.class,() -> this.cdsStorageManager.getDiskInfo());
         Assertions.assertThat(otherEx).isInstanceOf(EntResourceNotFoundException.class);
         String expectedUrl = "http://tenantx-cds-kube-service:8081/api/v1/utils/diskinfo";
