@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+
 import static org.entando.entando.aps.system.services.tenants.ITenantManager.PRIMARY_CODE;
 
 import java.io.ByteArrayInputStream;
@@ -205,11 +207,11 @@ public class CdsRemoteCaller  {
         return bytes.map(ByteArrayInputStream::new);
     }
     
-    public Optional<CdsDiskInfo> getDiskInfo(URI url) {
-        logger.debug("Trying to call GET (diskinfo)");
-        Optional<CdsDiskInfo> infos;
+    public Optional<DiskInfoDto> getDiskInfo(URI url, Optional<TenantConfig> config) {
+        logger.error("Trying to call GET (diskinfo) on url:'{}' and is config tenant empty:'{}'", url, config.isEmpty());
+        Optional<DiskInfoDto> infos;
         try {
-            infos = Optional.ofNullable(restTemplate.getForObject(url, CdsDiskInfo.class));
+            infos = this.executeGetCall(url, null, config, false, new ParameterizedTypeReference<DiskInfoDto>(){});
         } catch (HttpClientErrorException e) {
             throw buildExceptionWithMessage("GET", e.getStatusCode(), url.toString());
         }

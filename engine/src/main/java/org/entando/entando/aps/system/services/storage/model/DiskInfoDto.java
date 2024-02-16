@@ -11,12 +11,19 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-package org.entando.entando.plugins.jpcds.aps.system.storage;
+package org.entando.entando.aps.system.services.storage.model;
 
-import org.entando.entando.ent.exception.EntException;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 
-public interface ICdsStorageManager {
+@Getter@Setter
+public class DiskInfoDto implements Serializable {
     
-    public CdsDiskInfo getDiskInfo() throws EntException;
+    @JsonProperty(value = "total_size")
+    private long totalSize;
+    @JsonProperty(value = "used_space")
+    private long usedSpace;
     
 }

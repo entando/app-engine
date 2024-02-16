@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -318,23 +320,34 @@ class CdsRemoteCallerTest {
                 ex.getMessage());
         Mockito.verify(restTemplate, Mockito.times(2))
                 .exchange(eq(urlUnAuth),eq(HttpMethod.DELETE),any(), eq(new ParameterizedTypeReference<Map<String, String>>(){}));
-
     }
     
     @Test
     void shouldRetrieveDiskInfo() throws Exception {
+        Mockito.when(cdsConfiguration.getKcAuthUrl()).thenReturn("http://auth.server.com/auth");
+        Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
+        Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
+        Mockito.when(cdsConfiguration.getKcClientSecret()).thenReturn("sec");
         String url = "http://cds-kube-service:8081/mytenant/api/v1/utils/diskinfo";
-        URI urlUnAuth = URI.create(url);
-        Mockito.when(restTemplate.getForObject(eq(urlUnAuth), eq(CdsDiskInfo.class))).thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
-        Exception ex = assertThrows(EntRuntimeException.class,() -> cdsRemoteCaller.getDiskInfo(urlUnAuth));
+        URI urlDiskInfo = URI.create(url);
+        URI authPrimary = URI.create("http://auth.server.com/auth/realms/primary/protocol/openid-connect/token");
+        Mockito.when(restTemplate.exchange(eq(authPrimary.toString()),
+                eq(HttpMethod.POST),
+                any(),
+                eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
+                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+        Mockito.when(restTemplate.exchange(eq(urlDiskInfo),eq(HttpMethod.GET),any(), eq(new ParameterizedTypeReference<DiskInfoDto>(){})))
+                .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
+        Exception ex = assertThrows(EntRuntimeException.class,() -> cdsRemoteCaller.getDiskInfo(urlDiskInfo, Optional.empty()));
         Assertions.assertEquals(
                 String.format("Invalid operation 'GET', response status:'401 UNAUTHORIZED' for url:'%s'", url),
                 ex.getMessage());
-        CdsDiskInfo diskInfo = new CdsDiskInfo();
+        DiskInfoDto diskInfo = new DiskInfoDto();
         diskInfo.setTotalSize(10l);
         diskInfo.setUsedSpace(5l);
-        Mockito.when(restTemplate.getForObject(eq(urlUnAuth), eq(CdsDiskInfo.class))).thenReturn(diskInfo);
-        Optional<CdsDiskInfo> extractedOpt = this.cdsRemoteCaller.getDiskInfo(urlUnAuth);
+        Mockito.when(restTemplate.exchange(eq(urlDiskInfo),eq(HttpMethod.GET),any(), eq(new ParameterizedTypeReference<DiskInfoDto>(){})))
+                .thenReturn(ResponseEntity.ok().body(diskInfo));
+        Optional<DiskInfoDto> extractedOpt = this.cdsRemoteCaller.getDiskInfo(urlDiskInfo, Optional.empty());
         Assertions.assertTrue(extractedOpt.isPresent());
         Assertions.assertEquals(10l, extractedOpt.get().getTotalSize());
     }
@@ -342,7 +355,7 @@ class CdsRemoteCallerTest {
     @Test
     void shouldDeserializeDiskInfo() throws Exception {
         String response = "{\"total_size\": 222,\"used_space\": 111}";
-        CdsDiskInfo info = new ObjectMapper().readValue(response, CdsDiskInfo.class);
+        DiskInfoDto info = new ObjectMapper().readValue(response, DiskInfoDto.class);
         Assertions.assertEquals(222l, info.getTotalSize());
         Assertions.assertEquals(111l, info.getUsedSpace());
     }

@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -44,7 +46,7 @@ import org.entando.entando.aps.system.services.storage.CdsActive;
 @Slf4j
 @Service("StorageManager")
 @CdsActive(true)
-public class CdsStorageManager implements IStorageManager, ICdsStorageManager {
+public class CdsStorageManager implements IStorageManager {
 
     private static final String ERROR_VALIDATING_PATH_MSG = "Error validating path";
     private final transient ITenantManager tenantManager;
@@ -166,13 +168,13 @@ public class CdsStorageManager implements IStorageManager, ICdsStorageManager {
     }
 
     @Override
-    public CdsDiskInfo getDiskInfo() throws EntException {
+    public DiskInfoDto getDiskInfo() throws EntException {
         final String ERROR_EXTRACTING_DISK_INFO = "Error extracting disk info: url %s";
         URI url = null;
         try {
             Optional<TenantConfig> config = getTenantConfig();
             url = CdsUrlUtils.buildCdsInternalApiUrl(config, configuration, "utils", "diskinfo");
-            Optional<CdsDiskInfo> is = caller.getDiskInfo(url);
+            Optional<DiskInfoDto> is = caller.getDiskInfo(url, config);
             return is.orElseThrow(IOException::new);
         } catch (EntRuntimeException ert) {
             throw ert;
