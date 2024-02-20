@@ -12,7 +12,7 @@
             <s:text name="jacms.menu.contentAdmin" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.contentEditing" />
     </li>
 </ol>

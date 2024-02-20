@@ -6,7 +6,7 @@
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.userSetting" /></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.userManagement" /></li>
 </ol>
 

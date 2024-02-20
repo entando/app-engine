@@ -7,7 +7,7 @@
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.roleManagement" />">
         <s:text name="title.roleManagement"/>
     </a></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.roleManagement.roleDetail"/></li>
 </ol>
 

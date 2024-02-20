@@ -9,7 +9,7 @@
     <li><s:text name="title.administration" /></li>
     <li><s:text name="title.apiManagement" /></li>
     <li><a href="<s:url action="list" />"><s:text name="title.apiConsumerManagement" /></a></li>
-    <li class="page-title-container">
+    <li>
         <s:if test="strutsAction == 1">
             <s:text name="title.apiConsumerManagement.new" />
         </s:if>

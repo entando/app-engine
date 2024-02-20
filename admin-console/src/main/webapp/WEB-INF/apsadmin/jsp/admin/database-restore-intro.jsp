@@ -9,7 +9,7 @@
             title="<s:text name="note.goToSomewhere" />: <s:text name="title.databaseManagement" />"><s:text
                 name="title.databaseManagement" /></a></li>
     <li><s:text name="title.databaseBackup.details" /></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.databaseBackup.restore" /></li>
 </ol>
 <h1 class="page-title-container">

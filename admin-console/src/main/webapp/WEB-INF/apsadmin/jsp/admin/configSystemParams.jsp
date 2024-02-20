@@ -5,7 +5,7 @@
     <li>
         <a href="<s:url namespace="/do/BaseAdmin" action="settings" />"><s:text name="menu.configure" /></a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="menu.settings.general" />
     </li>
 </ol>

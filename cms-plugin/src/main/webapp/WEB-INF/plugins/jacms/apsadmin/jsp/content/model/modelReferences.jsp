@@ -9,7 +9,7 @@
             <s:text name="title.contentModels" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.contentModels.remove" />
     </li>
 </ol>

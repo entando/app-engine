@@ -7,7 +7,7 @@
     <li>
         <s:text name="title.categoryManagement" />
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.categorySettings" />
     </li>
 </ol>

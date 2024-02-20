@@ -8,7 +8,7 @@
     <li>
         <s:text name="title.languageAndLabels"/>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.languageAdmin.labels"/>
     </li>
 </ol>

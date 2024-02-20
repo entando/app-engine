@@ -8,7 +8,7 @@
             <s:text name="title.categoryManagement" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.categoryReference" />
     </li>
 </h1>

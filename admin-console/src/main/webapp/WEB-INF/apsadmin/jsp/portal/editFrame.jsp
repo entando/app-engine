@@ -14,7 +14,7 @@
            </s:url>" title="<s:text name="note.goToSomewhere" />: <s:text name="title.configPage" />"><s:text name="title.configPage" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.editFrame" />
     </li>
 </ol>

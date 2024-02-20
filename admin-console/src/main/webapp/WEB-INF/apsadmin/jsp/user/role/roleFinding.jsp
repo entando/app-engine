@@ -6,7 +6,7 @@
     <li>
         <s:text name="menu.userSettings"/>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.roleManagement"/>
     </li>
 </ol>

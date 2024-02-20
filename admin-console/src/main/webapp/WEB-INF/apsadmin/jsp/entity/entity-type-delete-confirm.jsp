@@ -10,7 +10,7 @@
             <s:text name="%{'title.' + entityManagerName + '.management'}"/>
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.entityTypes.editType.remove"/>
     </li>
 </ol>

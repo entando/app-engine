@@ -6,7 +6,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="jpcontentscheduler.integrations"/></li>
     <li><s:text name="jpcontentscheduler.admin.menu"/></li>
-    <li class="page-title-container">
+    <li>
         <s:text name="jpcontentscheduler.admin.users"/>
     </li>
 </ol>

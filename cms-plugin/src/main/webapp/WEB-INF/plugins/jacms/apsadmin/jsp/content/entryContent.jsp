@@ -14,7 +14,7 @@
             <s:text name="breadcrumb.contents.mananagement" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:if test="getStrutsAction() == 1">
             <s:text name="label.add" />
         </s:if>

@@ -6,7 +6,7 @@
     <li><s:text name="jpmail.admin"/></li>
     <li><s:text name="jpmail.admin.menu"/></li>
     <li> <a href="<s:url namespace="/do/jpmail/MailConfig" action="viewSenders" />"><s:text name="title.eMailManagement.sendersConfig"/></a></li>
-    <li class="page-title-container"><s:text name="title.eMailManagement.deleteSender"/></li>
+    <li><s:text name="title.eMailManagement.deleteSender"/></li>
 </ol>
 <h1 class="page-title-container">
     <s:text name="title.eMailManagement.deleteSender"/>

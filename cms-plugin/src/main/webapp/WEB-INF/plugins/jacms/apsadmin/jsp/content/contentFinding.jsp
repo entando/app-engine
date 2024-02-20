@@ -10,7 +10,7 @@
 <!-- Admin console Breadcrumbs -->
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="breadcrumb.contents" /></li>
-    <li class="page-title-container"><s:text name="breadcrumb.contents.mananagement" /></li>
+    <li><s:text name="breadcrumb.contents.mananagement" /></li>
 </ol>
 
 <!-- Page Title -->

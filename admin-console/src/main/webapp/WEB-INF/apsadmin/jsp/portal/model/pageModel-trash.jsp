@@ -9,7 +9,7 @@
             <s:text name="title.pageModelManagement" />
         </a>
     </li>
-    <li class="page-title-container"><s:text name="label.delete" /></li>
+    <li><s:text name="label.delete" /></li>
 </ol>
 
 <h1 class="page-title-container">

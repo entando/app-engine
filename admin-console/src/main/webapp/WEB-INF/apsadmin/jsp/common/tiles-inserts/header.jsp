@@ -61,6 +61,7 @@
             <a class="dropdown-toggle nav-item-iconic" id="languageDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                 <c:set var="current_languague" value="${not empty WW_TRANS_I18N_LOCALE ? WW_TRANS_I18N_LOCALE : pageContext.response.locale}" />
                 <c:out value="${fn:toUpperCase(current_languague.language)}" />
+                <span class="icon fa fa-angle-down fa-fw"></span>&#32;
             </a>
             <ul id="languageDropdownComponent" class="dropdown-menu" aria-labelledby="languageDropdownMenu">
                 <li><a data-locale="en" href="<s:url namespace="/" includeParams="all"><s:param name="request_locale">en</s:param></s:url>">EN</a></li>
@@ -68,9 +69,9 @@
             </ul>
         </li>
         <li id="preview-portal" class="drawer-pf-trigger2 notifications dropdown">
-            <a class="nav-item-iconic" target="#" href="<s:url value="/" />" title="<s:text name="note.goToPortal" /> ( <s:text name="note.sameWindow" /> )">
-                <span class="icon fa fa-globe fa-fw"></span>&#32;
-                <s:text name="note.goToPortal" />
+            <a class="nav-item-iconic" target="#" href="<s:url value="/" />" title="<s:text name="note.goToPortal" />">
+                <span class="icon fa fa-home fa-fw"></span>&#32;
+                <!-- <s:text name="note.goToPortal" /> -->
             </a>
         </li>
         <% if( "true".equalsIgnoreCase(System.getenv().get("ACTIVITY_STREAM_NOTIFICATION_ENABLED")) ) { %>

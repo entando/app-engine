@@ -6,7 +6,7 @@
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.guiFragmentManagement" />">
             <s:text name="title.guiFragmentManagement" />
         </a></li>
-    <li class="page-title-container"><s:text name="guiFragment.label.delete" /></li>
+    <li><s:text name="guiFragment.label.delete" /></li>
 </ol>
 
 <h1 class="page-title-container">

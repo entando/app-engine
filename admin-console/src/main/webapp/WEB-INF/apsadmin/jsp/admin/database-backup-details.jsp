@@ -7,7 +7,7 @@
             href="<s:url action="entry" namespace="/do/Admin/Database" />"
             title="<s:text name="note.goToSomewhere" />: <s:text name="title.databaseManagement" />"><s:text
                 name="title.databaseManagement" /></a></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.databaseBackup.details" /></li>
 </ol>
 <h1 class="page-title-container">

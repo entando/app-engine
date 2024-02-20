@@ -18,7 +18,7 @@
     <li><a href="<s:url namespace="/do/Role" action="list" />"> <s:text
             name="title.roleManagement"/>
     </a></li>
-    <li class="page-title-container"><s:if
+    <li><s:if
             test="getStrutsAction() == 1">
         <s:text name="title.roleManagement.roleNew"/>
     </s:if> <s:if test="getStrutsAction() == 2">

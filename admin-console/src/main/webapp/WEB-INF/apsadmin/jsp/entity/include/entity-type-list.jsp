@@ -5,7 +5,7 @@
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <s:text name="%{'title.' + entityManagerName + '.menu'}"/>
-    <li class="page-title-container">
+    <li>
     <s:text name="%{'title.' + entityManagerName + '.management'}"/>
 </li>
 </ol>

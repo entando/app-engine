@@ -10,7 +10,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="breadcrumb.contents"/></li>
     <li><s:text name="jpversioning.admin.menu"/></li>
-    <li class="page-title-container"><s:text name="title.jpversioning.config" /></li>
+    <li><s:text name="title.jpversioning.config" /></li>
 </ol>
 
 <div class="page-tabs-header">

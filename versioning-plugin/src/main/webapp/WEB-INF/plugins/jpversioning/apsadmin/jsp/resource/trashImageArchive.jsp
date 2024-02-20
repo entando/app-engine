@@ -11,7 +11,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="breadcrumb.contents"/></li>
     <li><s:text name="jpversioning.admin.menu"/></li>
-    <li class="page-title-container"><s:text name="title.jpversioning.resources.images" /></li>
+    <li><s:text name="title.jpversioning.resources.images" /></li>
 </ol>
 
 <div class="page-tabs-header">

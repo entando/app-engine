@@ -5,7 +5,7 @@
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.pageDesigner" /></li>
-    <li class="page-title-container"><s:text name="title.pageTree" /></li>
+    <li><s:text name="title.pageTree" /></li>
 </ol>
 
 <h1 class="page-title-container"><s:text name="title.pageTree" />

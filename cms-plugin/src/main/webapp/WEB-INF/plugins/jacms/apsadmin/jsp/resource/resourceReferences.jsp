@@ -14,7 +14,7 @@
             <s:property value="%{getText('breadcrumb.dataAsset.' + resourceTypeCode + '.list')}" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.resourceManagement.resourceTrash"/>
     </li>
 </ol>

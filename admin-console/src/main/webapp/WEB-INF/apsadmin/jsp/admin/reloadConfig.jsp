@@ -7,7 +7,7 @@
             <s:text name="title.reload.config" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="menu.reload.config" />
     </li>
 </ol>

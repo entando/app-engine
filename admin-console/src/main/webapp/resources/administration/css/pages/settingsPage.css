@@ -11,8 +11,6 @@
     height: 30px;
     line-height: 30px;
 }
-
-
 .bottom-row .btn-primary {
     background: #39a5dc!important;
     border-color: #00659c!important;
@@ -29,7 +27,7 @@
 }
 
 .form-group-separator {
-    border-bottom: 1px solid #979797;
+    border-bottom: 1px solid #ededed;
     color: #aaabad;
     font-size: 12px;
 }
@@ -74,4 +72,8 @@
 
 .no-chevron::after {
     display: none !important;
+}
+
+.layout-pf-fixed .navbar-pf-vertical {
+    border-bottom: 1px solid #fff;
 }

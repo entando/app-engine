@@ -6,7 +6,7 @@
             <s:text name="title.groupManagement" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.groupManagement.groupTrash" />
     </li>
 </ol>

@@ -5,7 +5,7 @@
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="breadcrumb.contents" /></li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.contentModels" />
     </li>
 </ol>

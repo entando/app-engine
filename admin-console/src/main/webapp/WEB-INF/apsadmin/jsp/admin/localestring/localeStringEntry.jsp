@@ -13,7 +13,7 @@
     <li>
         <s:text name="title.languageAdmin.labels"/>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:if test="getStrutsAction() == 1"><s:text name="locale.addNewLabel" /></s:if>
         <s:elseif test="getStrutsAction() == 2"><s:text name="title.generalSettings.locale.edit" /> </s:elseif>
         </li>

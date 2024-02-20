@@ -8,7 +8,7 @@
             <s:text name="title.categoryManagement" />
         </a>
     </li>
-    <li class="page-title-container"><s:text name="title.categoryDetail"/></li>
+    <li><s:text name="title.categoryDetail"/></li>
 </ol>
 <h1 class="page-title-container">
     <s:text name="title.categoryDetail"/>

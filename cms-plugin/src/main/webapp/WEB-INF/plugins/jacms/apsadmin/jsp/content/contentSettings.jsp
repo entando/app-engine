@@ -6,7 +6,7 @@
     <li>
         <s:text name="breadcrumb.contents"/>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="menu.contents.settings" />
     </li>
 </ol>

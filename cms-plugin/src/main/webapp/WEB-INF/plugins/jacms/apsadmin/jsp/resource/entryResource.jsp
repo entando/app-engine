@@ -38,7 +38,7 @@
             </a>
         </s:else>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:if test="getStrutsAction() == 1">
             <s:text name="title.%{resourceTypeCode}.new"/>
         </s:if>

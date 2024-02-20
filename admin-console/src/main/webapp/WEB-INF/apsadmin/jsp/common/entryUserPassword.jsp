@@ -3,7 +3,7 @@
 <%@ taglib prefix="wpsa" uri="/apsadmin-core" %>
 <%@ taglib prefix="wpsf" uri="/apsadmin-form" %>
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-    <li class="page-title-container">
+    <li>
         <s:text name="title.changePassword" />
     </li>
 </ol>

@@ -7,7 +7,7 @@
     <li><a href="<s:url action="list" namespace="/do/Portal/GuiFragment"></s:url>" title="<s:text name="note.goToSomewhere" />: <s:text name="title.guiFragmentManagement" />">
             <s:text name="title.guiFragmentManagement" /></a>
     </li>
-    <li class="page-title-container"><s:text name="title.guiFragmentDetail" /></li>
+    <li><s:text name="title.guiFragmentDetail" /></li>
 </ol>
 
 <h1 class="page-title-container">

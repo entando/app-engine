@@ -18,7 +18,7 @@
     <li><a href="<s:url action="list" namespace="/do/Group" />"
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.groupManagement" />"><s:text
                 name="title.groupManagement" /></a></li>
-    <li class="page-title-container"><s:if
+    <li><s:if
             test="getStrutsAction() == 1">
             <s:text name="title.groupManagement.groupNew" />
         </s:if> <s:elseif test="getStrutsAction() == 2">

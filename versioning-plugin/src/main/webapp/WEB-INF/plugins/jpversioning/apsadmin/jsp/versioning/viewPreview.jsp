@@ -12,7 +12,7 @@
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.jpversioning.content" />">
             <s:text name="title.jpversioning.content" /></a>
     </li>
-    <li class="page-title-container"><s:text name="jpversioning.label.detail" /></li>
+    <li><s:text name="jpversioning.label.detail" /></li>
 </ol>
 
 <div class="page-tabs-header">

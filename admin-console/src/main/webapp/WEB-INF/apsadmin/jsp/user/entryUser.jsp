@@ -9,7 +9,7 @@
         <a href="<s:url namespace="/do/User" action="list" />">
             <s:text name="title.userManagement" /></a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:if test="getStrutsAction() == 1">
             <s:text name="title.userManagement.userNew" />
         </s:if>

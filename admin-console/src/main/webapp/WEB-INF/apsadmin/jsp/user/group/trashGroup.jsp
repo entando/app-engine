@@ -7,7 +7,7 @@
     <li><a href="<s:url action="list" namespace="/do/Group" />"
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.groupManagement" />"><s:text
                 name="title.groupManagement" /></a></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.groupManagement.groupTrash" /></li>
 </ol>
 <h1 class="page-title-container">

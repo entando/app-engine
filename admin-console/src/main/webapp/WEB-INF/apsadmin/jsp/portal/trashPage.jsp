@@ -5,7 +5,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.pageDesigner" /></li>
     <li><a href="<s:url action="viewTree" namespace="/do/Page" />" title="<s:text name="note.goToSomewhere" />: <s:text name="title.pageTree" />"><s:text name="title.pageTree" /></a></li>
-    <li class="page-title-container"><s:text name="title.pageManagement.pageTrash" /></li>
+    <li><s:text name="title.pageManagement.pageTrash" /></li>
 </ol>
 
 <h1 class="page-title-container"><s:text name="title.pageManagement.pageTrash" /></h1>

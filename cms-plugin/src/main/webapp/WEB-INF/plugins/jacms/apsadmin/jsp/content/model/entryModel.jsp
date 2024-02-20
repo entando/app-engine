@@ -10,7 +10,7 @@
             <s:text name="title.contentModels" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:if test="strutsAction == 1">
             <s:text name="title.contentModels.new" />
         </s:if> <s:if test="strutsAction == 2">

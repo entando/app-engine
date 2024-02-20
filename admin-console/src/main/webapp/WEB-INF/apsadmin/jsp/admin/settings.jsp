@@ -5,7 +5,7 @@
 <%@ taglib prefix="wpsa" uri="/apsadmin-core" %>
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
-	<li class="page-title-container">
+	<li>
 		<s:text name="menu.configure" />
 	</li>
 </ol>

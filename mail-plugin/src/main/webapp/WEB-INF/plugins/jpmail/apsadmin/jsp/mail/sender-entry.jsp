@@ -8,10 +8,10 @@
     <li><s:text name="jpmail.admin.menu"/></li>
     <li> <a href="<s:url namespace="/do/jpmail/MailConfig" action="viewSenders" />"><s:text name="title.eMailManagement.sendersConfig"/></a></li>
         <s:if test="%{strutsAction==1}" >
-        <li class="page-title-container"><s:text name="title.eMailManagement.newSender" /></li>
+        <li><s:text name="title.eMailManagement.newSender" /></li>
         </s:if>
         <s:else>
-        <li class="page-title-container"><s:text name="title.eMailManagement.editSender" />:&nbsp;<s:property value="code"/></li>
+        <li><s:text name="title.eMailManagement.editSender" />:&nbsp;<s:property value="code"/></li>
         </s:else>
 </ol>
 

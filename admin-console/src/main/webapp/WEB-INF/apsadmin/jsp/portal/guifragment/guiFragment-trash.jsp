@@ -7,7 +7,7 @@
     <li><s:text name="title.uxPatterns" /></li>
     <li><a href="<s:url action="list" />"><s:text name="title.guiFragmentManagement" /></a></li>
         <s:if test="getStrutsAction() == 4">
-        <li class="page-title-container"><s:text name="guiFragment.label.delete" /></li>
+        <li><s:text name="guiFragment.label.delete" /></li>
         </s:if>
 </ol>
 

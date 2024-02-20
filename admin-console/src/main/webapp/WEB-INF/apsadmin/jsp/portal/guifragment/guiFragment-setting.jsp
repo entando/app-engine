@@ -5,10 +5,10 @@
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.uxPatterns" /></li>
-    <li class="page-title-container"><a href='<s:url action="list" namespace="/do/Portal/GuiFragment" />'>
+    <li><a href='<s:url action="list" namespace="/do/Portal/GuiFragment" />'>
             <span><s:text name="title.guiFragmentManagement" /></a>
     </li>
-    <li class="page-title-container"><s:text name="label.settings" /></li>
+    <li><s:text name="label.settings" /></li>
 </ol>
 
 <div class="page-tabs-header">

@@ -14,7 +14,7 @@
     <li><a href="<s:url action="list" namespace="/do/PageModel"></s:url>"
            title="<s:text name="note.goToSomewhere" />: <s:text name="title.pageModelManagement" />">
             <s:text name="title.pageModelManagement" /></a></li>
-    <li class="page-title-container"><s:text name="title.pageModelDetail" /></li>
+    <li><s:text name="title.pageModelDetail" /></li>
 
 </ol>
 

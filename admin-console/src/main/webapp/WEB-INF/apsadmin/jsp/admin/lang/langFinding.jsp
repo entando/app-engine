@@ -22,7 +22,7 @@
     <li>
         <s:text name="title.languageAndLabels"/>
     </li>
-    <li class="page-title-container"><s:text name="title.languageAdmin"/></li>
+    <li><s:text name="title.languageAdmin"/></li>
 </ol>
 <div class="page-tabs-header">
     <div class="row">

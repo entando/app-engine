@@ -28,7 +28,7 @@
     <s:else>
         <li><s:text name="breadcrumb.digitalAsset"/></li>
     </s:else>
-    <li class="page-title-container">
+    <li>
         <s:property value="%{getText('breadcrumb.dataAsset.' + resourceTypeCode + '.list')}"/>
     </li>
 </ol>

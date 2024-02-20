@@ -15,7 +15,7 @@
             <s:text name="title.configPage" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="name.widget" />
     </li>
 </ol>

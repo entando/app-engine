@@ -13,7 +13,7 @@
     <li>
         <s:property value="%{getText('title.' + resourceTypeCode + 'Management')}"/>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.resourceManagement.resourceTrash"/>
     </li>
 </ol>

@@ -7,7 +7,7 @@
             <s:text name="title.pageManagement" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.pageManagement.pageTrash" />
     </li>
 </ol>

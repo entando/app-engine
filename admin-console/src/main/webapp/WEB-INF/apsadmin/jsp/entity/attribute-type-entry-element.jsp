@@ -27,7 +27,7 @@
         <li><s:text
                 name="title.attribute.new" /></li>
         </s:else>
-    <li class="page-title-container"><s:property value="listAttribute.type" /></li>
+    <li><s:property value="listAttribute.type" /></li>
 </ol>
 
 

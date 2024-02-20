@@ -2,7 +2,7 @@
 <%@ taglib prefix="wp" uri="/aps-core" %>
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="menu.configure"/></li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.reload.config" />
     </li>
 </ol>

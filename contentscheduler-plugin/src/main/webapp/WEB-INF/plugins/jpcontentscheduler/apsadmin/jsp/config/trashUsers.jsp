@@ -10,7 +10,7 @@
     <li>
         <s:text name="jpcontentscheduler.admin.menu" />
     </li>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.contentList" />
     </li>
 </ol>

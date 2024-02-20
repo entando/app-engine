@@ -22,11 +22,11 @@
         </s:else>
     </li>
     <s:if test="strutsAction == 2">
-        <li class="page-title-container"><s:text
+        <li><s:text
                 name="title.attribute.edit" /></li>
         </s:if>
         <s:else>
-        <li class="page-title-container"><s:text
+        <li><s:text
                 name="title.attribute.new" /></li>
         </s:else>
 </ol>

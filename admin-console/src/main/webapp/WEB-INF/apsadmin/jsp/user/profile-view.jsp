@@ -6,7 +6,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.userSetting" /></li>
     <li><a href="<s:url namespace="/do/User" action="list" />"><s:text name="title.userManagement" /></a></li>
-    <li class="page-title-container"><s:text name="title.userProfileDetails" /></li>
+    <li><s:text name="title.userProfileDetails" /></li>
 </ol>
 
 <h1 class="page-title-container">

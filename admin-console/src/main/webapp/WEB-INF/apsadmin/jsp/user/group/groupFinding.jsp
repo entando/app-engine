@@ -3,7 +3,7 @@
 <%@ taglib prefix="wpsa" uri="/apsadmin-core"%>
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="menu.configure" /></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.groupManagement" /></li>
 </ol>
 <h1 class="page-title-container">

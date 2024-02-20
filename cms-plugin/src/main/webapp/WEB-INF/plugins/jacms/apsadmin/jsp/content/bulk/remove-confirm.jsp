@@ -11,7 +11,7 @@
             <s:text name="breadcrumb.jacms.content.list" />
         </a>
     </li>
-    <li class="page-title-container"><s:property value="%{#labelTitle}" /></li>
+    <li><s:property value="%{#labelTitle}" /></li>
 </ol>
 
 <!-- Page Title -->

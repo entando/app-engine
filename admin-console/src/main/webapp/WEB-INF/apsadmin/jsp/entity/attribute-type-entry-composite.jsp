@@ -9,7 +9,7 @@
            <s:text name="title.entityAdmin.manager" />&#32;<s:property value="entityManagerName" />">
     </li>
     <li><s:text name="%{'title.' + entityManagerName + '.management'}" /></a>
-    <li class="page-title-container">
+    <li>
         <s:text name="title.entityTypes.editType.edit" />
         : <s:property value="entityType.typeCode" /> - <s:property value="entityType.typeDescr" />
     </li>

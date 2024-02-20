@@ -32,7 +32,7 @@
             <s:property value="%{getText('breadcrumb.dataAsset.' + resourceTypeCode + '.list')}" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <s:if test="getStrutsAction() == 1">
             <s:text name="title.%{resourceTypeCode}.new" />
         </s:if>

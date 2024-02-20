@@ -6,7 +6,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.administration" /></li>
     <li><s:text name="title.apiManagement" /></li>
-    <li class="page-title-container"><s:text name="title.apiConsumerManagement" /></li>
+    <li><s:text name="title.apiConsumerManagement" /></li>
 </ol>
 
 <h1 class="page-title-container"><s:text name="title.apiConsumerManagement" />

@@ -5,7 +5,7 @@
     <li><s:text name="title.userSetting"/></li>
     <li><a href="<s:url namespace="/do/User" action="list" />"><s:text
                 name="title.userManagement"/></a></li>
-    <li class="page-title-container"><s:text
+    <li><s:text
             name="title.userManagement.userTrash"/></li>
 </ol>
 

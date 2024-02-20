@@ -7,7 +7,7 @@
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="jpmail.admin"/></li>
     <li><s:text name="jpmail.admin.menu"/></li>
-    <li class="page-title-container"><s:text name="jpmail.admin.menu.smtp"/></li>
+    <li><s:text name="jpmail.admin.menu.smtp"/></li>
 </ol>
 
 <div class="page-tabs-header">

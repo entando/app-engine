@@ -17,7 +17,7 @@
         </s:set>
         <a href="${configureURL}" title="${configureTitle}"><s:text name="title.configPage" /></a>
     </li>
-    <li class="page-title-container"><s:text name="name.widget" /></li>
+    <li><s:text name="name.widget" /></li>
 </ol>
 
 <!-- Page Title -->

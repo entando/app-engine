@@ -12,7 +12,7 @@
         </a>
     </li>
 
-    <li class="page-title-container"><s:text name="title.api.apiService.trash" /></li>
+    <li><s:text name="title.api.apiService.trash" /></li>
 </ol>
 
 <h1 class="page-title-container">

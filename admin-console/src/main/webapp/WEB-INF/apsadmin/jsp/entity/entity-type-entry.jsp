@@ -10,10 +10,10 @@
         </a>
     </li>
     <s:if test="operationId == 1">
-        <li class="page-title-container"><s:text name="title.entityTypes.editType.new"/></li>
+        <li><s:text name="title.entityTypes.editType.new"/></li>
     </s:if>
     <s:else>
-        <li class="page-title-container"><s:text name="title.entityTypes.editType.edit"/></li>
+        <li><s:text name="title.entityTypes.editType.edit"/></li>
     </s:else>
 </ol>
 

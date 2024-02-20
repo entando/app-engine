@@ -11,7 +11,7 @@
     <li><s:text name="title.uxPatterns" /></li>
     <li><a href="<s:url action="viewWidgets" />"><s:text name="title.widgetManagement" /></a></li>
     <li><s:text name="title.uxPatterns.info" /></li>
-    <li class="page-title-container"><s:property value="getTitle(#showletTypeVar.code, #showletTypeVar.titles)" /></li>
+    <li><s:property value="getTitle(#showletTypeVar.code, #showletTypeVar.titles)" /></li>
 </ol>
 
 <h1 class="page-title-container"><s:text name="title.widgetManagement.pages" />&nbsp;<s:property value="getTitle(#showletTypeVar.code, #showletTypeVar.titles)" />

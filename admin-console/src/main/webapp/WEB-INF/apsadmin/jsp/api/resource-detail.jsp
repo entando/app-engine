@@ -17,7 +17,7 @@
             <span class="list-group-item-value"><s:text name="name.api.resource" /></span>
         </a>
     </li>
-    <li class="page-title-container"><s:text name="title.apiResourceEdit" /></li>
+    <li><s:text name="title.apiResourceEdit" /></li>
 </ol>
 
 <h1 class="page-title-container"><s:text name="title.apiResourceEdit" />

@@ -12,7 +12,7 @@
             <s:text name="%{'title.' + entityManagerName + '.management'}" />
         </a>
     </li>
-    <li class="page-title-container">
+    <li>
         <a href="<s:url action="initEditEntityType" namespace="/do/Entity"><s:param name="entityManagerName"><s:property value="entityManagerName" />
                </s:param><s:param name="entityTypeCode">
                    <s:property value="entityType.typeCode" />

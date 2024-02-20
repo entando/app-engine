@@ -5,7 +5,7 @@
     <li><s:text name="title.administration" /></li>
     <li><s:text name="title.apiManagement" /></li>
     <li><a href="<s:url action="list" />"><s:text name="title.apiConsumerManagement" /></a></li>
-    <li class="page-title-container"><s:text name="title.apiConsumerManagement.trash" /></li>
+    <li><s:text name="title.apiConsumerManagement.trash" /></li>
 </ol>
 
 <h1 class="page-title-container">

@@ -16,7 +16,7 @@
         </a>
     </li>
         <s:if test="#thirdTitleVar==null">
-            <li class="page-title-container">
+            <li>
                 <s:text name="label.edit" />
             </li>
         </s:if>
@@ -29,7 +29,7 @@
                 <s:text name="label.edit" />
             </a>
         </li>
-        <li class="page-title-container">
+        <li>
             <s:property value="#thirdTitleVar" escapeXml="false" escapeHtml="false" />
         </li>    
         </s:else>

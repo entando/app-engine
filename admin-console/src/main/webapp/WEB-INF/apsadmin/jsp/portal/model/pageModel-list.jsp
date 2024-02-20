@@ -4,7 +4,7 @@
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="title.uxPatterns" /></li>
-    <li class="page-title-container"><s:text name="title.pageModelManagement" /></li>
+    <li><s:text name="title.pageModelManagement" /></li>
 </ol>
 
 <h1 class="page-title-container">
