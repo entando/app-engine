@@ -51,30 +51,33 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
     
     private ICategoryManager categoryManager;
 
-    private final String LOAD_RESOURCE_VO
+    private static final String LOAD_RESOURCE_VO
             = "SELECT restype, descr, maingroup, resourcexml, masterfilename, creationdate, lastmodified, owner, folderpath, correlationcode FROM resources WHERE resid = ? ";
 
     private static final String LOAD_RESOURCE_VO_BY_CODE
             = "SELECT resid, restype, descr, maingroup, resourcexml, masterfilename, creationdate, lastmodified, owner, folderpath, correlationcode FROM resources WHERE correlationcode = ? ";
 
-    private final String ADD_RESOURCE
+    private static final String ADD_RESOURCE
             = "INSERT INTO resources (resid, restype, descr, maingroup, resourcexml, masterfilename, creationdate, lastmodified, owner, folderpath, correlationcode) "
             + "VALUES ( ? , ? , ? , ? , ? , ? , ? , ? , ?, ?, ?)";
 
-    private final String UPDATE_RESOURCE
+    private static final String UPDATE_RESOURCE
             = "UPDATE resources SET restype = ? , descr = ? , maingroup = ? , resourcexml = ? , masterfilename = ? , lastmodified = ?, folderpath = ? WHERE resid = ? ";
 
-    private final String DELETE_CONTENTS_REFERENCE
+    private static final String DELETE_CONTENTS_REFERENCE
             = "DELETE FROM contentrelations WHERE refresource = ? ";
 
-    private final String DELETE_RESOURCE
+    private static final String DELETE_RESOURCE
             = "DELETE FROM resources WHERE resid = ? ";
 
-    private final String ADD_RESOURCE_REL_RECORD
+    private static final String ADD_RESOURCE_REL_RECORD
             = "INSERT INTO resourcerelations (resid, refcategory) VALUES ( ? , ? )";
 
-    private final String DELETE_RESOURCE_REL_RECORD
+    private static final String DELETE_RESOURCE_REL_RECORD
             = "DELETE FROM resourcerelations WHERE resid = ? ";
+
+    private static final String SELECT_ALL_REL_RECORD
+            = "SELECT resid FROM resourcerelations WHERE resid IS NOT NULL";
 
     protected ICategoryManager getCategoryManager() {
         return categoryManager;
@@ -305,12 +308,22 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
     
     @Override
     public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes) {
+        return this.searchResourcesId(filters, categories, groupCodes, null);
+    }
+    
+    @Override
+    public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes, Boolean referenced) {
         filters = this.addGroupFilter(filters, groupCodes);
-        return this.searchResourcesId(filters, categories);
+        return this.searchResourcesId(filters, categories, referenced);
+    }
+    
+    @Override
+    public Integer countResources(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes) {
+        return this.countResources(filters, categories, groupCodes, null);
     }
 
     @Override
-    public Integer countResources(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes) {
+    public Integer countResources(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes, Boolean referenced) {
         Connection conn = null;
         int count = 0;
         PreparedStatement stat = null;
@@ -318,7 +331,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         try {
             conn = this.getConnection();
             filters = this.addGroupFilter(filters, groupCodes);
-            stat = this.buildStatement(filters, categories, true, conn);
+            stat = this.buildStatement(filters, categories, true, referenced, conn);
             result = stat.executeQuery();
             if (result.next()) {
                 count = result.getInt(1);
@@ -334,13 +347,19 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
     
     @Override
     public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories) {
+        Boolean referenced = null;
+        return this.searchResourcesId(filters, categories, referenced);
+    }
+    
+    @Override
+    public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories, Boolean referenced) {
         Connection conn = null;
         List<String> resources = new ArrayList<>();
         PreparedStatement stat = null;
         ResultSet res = null;
         try {
             conn = this.getConnection();
-            stat = this.buildStatement(filters, categories, false, conn);
+            stat = this.buildStatement(filters, categories, false, referenced, conn);
             res = stat.executeQuery();
             while (res.next()) {
                 String id = res.getString(this.getMasterTableIdFieldName());
@@ -357,8 +376,9 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         return resources;
     }
 
-    private PreparedStatement buildStatement(FieldSearchFilter[] filters, List<String> categories, boolean isCount, Connection conn) {
-        String query = this.createQueryString(filters, categories, isCount);
+    private PreparedStatement buildStatement(FieldSearchFilter[] filters, 
+            List<String> categories, boolean isCount, Boolean referenced, Connection conn) {
+        String query = this.createQueryString(filters, categories, isCount, referenced);
         PreparedStatement stat = null;
         try {
             stat = conn.prepareStatement(query);
@@ -376,9 +396,16 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         return stat;
     }
 
-    private String createQueryString(FieldSearchFilter[] filters, List<String> categories, boolean isCount) {
+    private String createQueryString(FieldSearchFilter[] filters,
+            List<String> categories, boolean isCount, Boolean referenced) {
         StringBuffer query = this.createBaseQueryBlock(filters, false, isCount, categories);
-        this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
+        boolean hasAppendWhereClause = this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
+        if (null != referenced) {
+            super.verifyWhereClauseAppend(query, hasAppendWhereClause);
+            query.append(" ").append(this.getMasterTableIdFieldName())
+                    .append(((referenced) ? " IN " : " NOT IN "))
+                    .append("(").append(SELECT_ALL_REL_RECORD).append(") ");
+        }
         if (!isCount) {
             super.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
