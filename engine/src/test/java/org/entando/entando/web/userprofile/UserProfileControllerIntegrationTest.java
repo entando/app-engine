@@ -48,6 +48,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 class UserProfileControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
     @Autowired
@@ -70,6 +76,28 @@ class UserProfileControllerIntegrationTest extends AbstractControllerIntegration
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
         testCors("/userProfiles/editorCoach");
+    }
+    
+    @Test
+    void testGetFullUserProfileType() throws Exception {
+        String accessToken = this.createAccessToken();
+        ResultActions result = mockMvc
+                .perform(get("/userProfiles/{username}", new Object[]{"supervisorCoach"})
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk());
+        String resultString = result.andReturn().getResponse().getContentAsString();
+        List<Map<String, ?>> attributes = JsonPath.read(resultString, "$.payload.attributes");
+        Map<String, Map<String, ?>> attributeMap = attributes.stream().collect(Collectors.toMap(e -> e.get("code").toString(), Function.identity()));
+        Assertions.assertTrue(Boolean.parseBoolean(attributeMap.get("Boolean").get("value").toString()));
+        Assertions.assertFalse(Boolean.parseBoolean(attributeMap.get("CheckBox").get("value").toString()));
+        Assertions.assertEquals("2010-03-21 00:00:00", attributeMap.get("Date").get("value"));
+        Assertions.assertEquals("2012-03-21 00:00:00", attributeMap.get("Date2").get("value"));
+        Assertions.assertEquals("a", attributeMap.get("Enumerator").get("value"));
+        Assertions.assertEquals("02", attributeMap.get("EnumeratorMap").get("value"));
+        Assertions.assertEquals("02", ((Map) attributeMap.get("EnumeratorMap").get("values")).get("mapKey"));
+        Assertions.assertEquals("Value 2", ((Map) attributeMap.get("EnumeratorMap").get("values")).get("mapValue"));
+        Assertions.assertEquals("<p>text Hypertext</p>", ((Map) attributeMap.get("Hypertext").get("values")).get("it"));
+        Assertions.assertNull(((Map) attributeMap.get("Hypertext").get("values")).get("en"));
     }
 
     @Test
