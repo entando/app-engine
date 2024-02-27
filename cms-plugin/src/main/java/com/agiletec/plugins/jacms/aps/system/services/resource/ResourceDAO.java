@@ -77,7 +77,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
             = "DELETE FROM resourcerelations WHERE resid = ? ";
 
     private static final String SELECT_ALL_REL_RECORD
-            = "SELECT resid FROM resourcerelations WHERE resid IS NOT NULL";
+            = "SELECT refresource FROM contentrelations WHERE refresource IS NOT NULL";
 
     protected ICategoryManager getCategoryManager() {
         return categoryManager;
@@ -402,7 +402,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         boolean hasAppendWhereClause = this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
         if (null != referenced) {
             super.verifyWhereClauseAppend(query, hasAppendWhereClause);
-            query.append(" ").append(this.getMasterTableIdFieldName())
+            query.append(" ").append(this.getMasterTableName()).append(".").append(this.getMasterTableIdFieldName())
                     .append(((referenced) ? " IN " : " NOT IN "))
                     .append("(").append(SELECT_ALL_REL_RECORD).append(") ");
         }
