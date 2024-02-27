@@ -30,6 +30,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import lombok.Getter;
+import lombok.Setter;
 
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.ArrayUtils;
@@ -45,11 +48,12 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 public class ResourceFinderAction extends AbstractResourceAction {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ResourceFinderAction.class);
-
+    
     private String text;
     private String fileName;
     private String ownerGroupName;
     private String categoryCode;
+    private String referenced;
     private ResourceIconUtil resourceIconUtil;
     private IImageDimensionReader imageDimensionManager;
     private boolean openCollapsed = false;
@@ -82,7 +86,8 @@ public class ResourceFinderAction extends AbstractResourceAction {
                 filters = ArrayUtils.add(filters, this.getPagerFilter(limit));
             }
             List<String> categories = (StringUtils.isBlank(this.getCategoryCode())) ? null : Arrays.asList(this.getCategoryCode());
-            result = this.getResourceManager().getPaginatedResourcesId(filters, categories, groupCodesForSearch);
+            Boolean getReferenced = Optional.ofNullable(this.getReferenced()).map(r -> r.equalsIgnoreCase("yes")).orElse(null);
+            result = this.getResourceManager().getPaginatedResourcesId(filters, categories, groupCodesForSearch, getReferenced);
         } catch (Throwable t) {
             logger.error("error in getPaginateResourcesId", t);
             throw new RuntimeException("error in getPaginateResourcesId", t);
@@ -204,7 +209,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getText() {
         return text;
     }
-
     public void setText(String text) {
         this.text = text;
     }
@@ -212,7 +216,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getFileName() {
         return fileName;
     }
-
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
@@ -220,9 +223,15 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getOwnerGroupName() {
         return ownerGroupName;
     }
-
     public void setOwnerGroupName(String ownerGroupName) {
         this.ownerGroupName = ownerGroupName;
+    }
+
+    public String getReferenced() {
+        return referenced;
+    }
+    public void setReferenced(String referenced) {
+        this.referenced = referenced;
     }
 
     public String getCategoryCode() {
@@ -231,7 +240,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
         }
         return categoryCode;
     }
-
     public void setCategoryCode(String categoryCode) {
         this.categoryCode = categoryCode;
     }
@@ -239,7 +247,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     protected ResourceIconUtil getResourceIconUtil() {
         return resourceIconUtil;
     }
-
     public void setResourceIconUtil(ResourceIconUtil resourceIconUtil) {
         this.resourceIconUtil = resourceIconUtil;
     }
@@ -247,7 +254,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     protected IImageDimensionReader getImageDimensionManager() {
         return imageDimensionManager;
     }
-
     public void setImageDimensionManager(IImageDimensionReader imageDimensionManager) {
         this.imageDimensionManager = imageDimensionManager;
     }
@@ -262,7 +268,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
                 || !StringUtils.isBlank(this.getFileName())
                 || !StringUtils.isBlank(this.getOwnerGroupName()));
     }
-
     public void setOpenCollapsed(boolean openCollapsed) {
         this.openCollapsed = openCollapsed;
     }
@@ -274,7 +279,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getLastOrder() {
         return lastOrder;
     }
-
     public void setLastOrder(String order) {
         this.lastOrder = order;
     }
@@ -282,7 +286,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getOrder() {
         return order;
     }
-
     public void setOrder(String order) {
         this.order = order;
     }
@@ -290,7 +293,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getLastGroupBy() {
         return lastGroupBy;
     }
-
     public void setLastGroupBy(String lastGroupBy) {
         this.lastGroupBy = lastGroupBy;
     }
@@ -298,7 +300,6 @@ public class ResourceFinderAction extends AbstractResourceAction {
     public String getGroupBy() {
         return groupBy;
     }
-
     public void setGroupBy(String groupBy) {
         this.groupBy = groupBy;
     }
