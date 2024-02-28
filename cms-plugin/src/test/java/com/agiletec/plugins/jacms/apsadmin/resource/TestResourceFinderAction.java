@@ -25,6 +25,7 @@ import com.opensymphony.xwork2.Action;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -94,6 +95,7 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         ResourceFinderAction action = (ResourceFinderAction) this.getAction();
         assertTrue(action.getResources().isEmpty());
         assertEquals("WrongDescription", action.getText());
+        Assertions.assertFalse(action.isOpenCollapsed());
     }
 
     @Test
@@ -191,12 +193,15 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         List<String> expected = List.of("82", "22", "44");
         assertEquals(expected.size(), paginatedResult.getCount());
         assertEquals(expected, paginatedResult.getList());
+        Assertions.assertFalse(action.isOpenCollapsed());
         
         result = this.executeSearchResource("admin", "Image", null, null, null, null, "yes");
         assertEquals(Action.SUCCESS, result);
-        paginatedResult = ((ResourceFinderAction) this.getAction()).getPaginatedResourcesId(10);
+        action = (ResourceFinderAction) this.getAction();
+        paginatedResult = action.getPaginatedResourcesId(10);
         assertEquals(1, paginatedResult.getCount());
         assertEquals("44", paginatedResult.getList().get(0));
+        Assertions.assertTrue(action.isOpenCollapsed());
         
         result = this.executeSearchResource("admin", "Image", null, null, null, null, "no");
         assertEquals(Action.SUCCESS, result);
@@ -204,6 +209,23 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         expected = List.of("82", "22");
         assertEquals(expected.size(), paginatedResult.getCount());
         assertEquals(expected, paginatedResult.getList());
+        
+        result = this.executeSearchResource("admin", "Image", null, null, null, null, "all");
+        assertEquals(Action.SUCCESS, result);
+        action = (ResourceFinderAction) this.getAction();
+        paginatedResult = action.getPaginatedResourcesId(10);
+        expected = List.of("82", "22", "44");
+        assertEquals(expected.size(), paginatedResult.getCount());
+        assertEquals(expected, paginatedResult.getList());
+        Assertions.assertTrue(action.isOpenCollapsed());
+        
+        result = this.executeSearchResource("admin", "Image", null, null, null, null, "");
+        assertEquals(Action.SUCCESS, result);
+        action = (ResourceFinderAction) this.getAction();
+        paginatedResult = action.getPaginatedResourcesId(10);
+        assertEquals(expected.size(), paginatedResult.getCount());
+        assertEquals(expected, paginatedResult.getList());
+        Assertions.assertFalse(action.isOpenCollapsed());
     }
 
     @Test
