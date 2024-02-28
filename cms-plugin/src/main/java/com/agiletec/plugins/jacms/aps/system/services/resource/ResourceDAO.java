@@ -403,7 +403,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         if (null != referenced) {
             super.verifyWhereClauseAppend(query, hasAppendWhereClause);
             query.append(" ").append(this.getMasterTableName()).append(".").append(this.getMasterTableIdFieldName())
-                    .append(((referenced) ? " IN " : " NOT IN "))
+                    .append((Boolean.TRUE.equals(referenced) ? " IN " : " NOT IN "))
                     .append("(").append(SELECT_ALL_REL_RECORD).append(") ");
         }
         if (!isCount) {

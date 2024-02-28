@@ -335,7 +335,9 @@ class CdsRemoteCallerTest {
                 ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
         Mockito.when(restTemplate.exchange(eq(urlDiskInfo),eq(HttpMethod.GET),any(), eq(new ParameterizedTypeReference<DiskInfoDto>(){})))
                 .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
-        Exception ex = assertThrows(EntRuntimeException.class,() -> cdsRemoteCaller.getDiskInfo(urlDiskInfo, Optional.empty()));
+        Optional<TenantConfig> config = Optional.empty();
+        System.out.println("zzzzzzzzzzzzzzzzzzzzz");
+        Exception ex = assertThrows(EntRuntimeException.class,() -> cdsRemoteCaller.getDiskInfo(urlDiskInfo, config));
         Assertions.assertEquals(
                 String.format("Invalid operation 'GET', response status:'401 UNAUTHORIZED' for url:'%s'", url),
                 ex.getMessage());

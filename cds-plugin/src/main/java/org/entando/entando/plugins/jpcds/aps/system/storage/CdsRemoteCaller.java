@@ -209,14 +209,8 @@ public class CdsRemoteCaller  {
     }
     
     public Optional<DiskInfoDto> getDiskInfo(URI url, Optional<TenantConfig> config) {
-        logger.error("Trying to call GET (diskinfo) on url:'{}' and is config tenant empty:'{}'", url, config.isEmpty());
-        Optional<DiskInfoDto> infos;
-        try {
-            infos = this.executeGetCall(url, null, config, false, new ParameterizedTypeReference<DiskInfoDto>(){});
-        } catch (HttpClientErrorException e) {
-            throw buildExceptionWithMessage("GET", e.getStatusCode(), url.toString());
-        }
-        return infos;
+        logger.debug("Trying to call GET (diskinfo) on url:'{}' and is config tenant empty:'{}'", url, config.isEmpty());
+        return this.executeGetCall(url, null, config, false, new ParameterizedTypeReference<DiskInfoDto>(){});
     }
     
     private <T> Optional<T> executeGetCall(URI url, List<MediaType> acceptableMediaTypes, Optional<TenantConfig> config,
