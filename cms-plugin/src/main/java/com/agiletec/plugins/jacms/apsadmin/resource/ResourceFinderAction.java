@@ -84,8 +84,9 @@ public class ResourceFinderAction extends AbstractResourceAction {
                 filters = ArrayUtils.add(filters, this.getPagerFilter(limit));
             }
             List<String> categories = (StringUtils.isBlank(this.getCategoryCode())) ? null : Arrays.asList(this.getCategoryCode());
-            Boolean getReferenced = Optional.ofNullable(this.getReferenced()).map(r -> r.equalsIgnoreCase("yes")).orElse(null);
-            result = this.getResourceManager().getPaginatedResourcesId(filters, categories, groupCodesForSearch, getReferenced);
+            Boolean extractReferenced = Optional.ofNullable(this.getReferenced())
+                    .filter(r -> !r.isBlank() && !r.equalsIgnoreCase("all")).map(r -> r.equalsIgnoreCase("yes")).orElse(null);
+            result = this.getResourceManager().getPaginatedResourcesId(filters, categories, groupCodesForSearch, extractReferenced);
         } catch (Throwable t) {
             logger.error("error in getPaginateResourcesId", t);
             throw new RuntimeException("error in getPaginateResourcesId", t);
@@ -264,7 +265,8 @@ public class ResourceFinderAction extends AbstractResourceAction {
         }
         return (this.openCollapsed || hasFilterByCat
                 || !StringUtils.isBlank(this.getFileName())
-                || !StringUtils.isBlank(this.getOwnerGroupName()));
+                || !StringUtils.isBlank(this.getOwnerGroupName()) 
+                || !StringUtils.isBlank(this.getReferenced()));
     }
     public void setOpenCollapsed(boolean openCollapsed) {
         this.openCollapsed = openCollapsed;
