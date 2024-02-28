@@ -173,7 +173,7 @@ class CdsStorageManagerTest {
         ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
         Mockito.verify(cdsRemoteCaller).getDiskInfo(uriCaptor.capture(), Mockito.any());
         String expectedUrl = "http://tenant-cds-kube-service:8081/api/v1/utils/diskinfo";
-        Assertions.assertThat(uriCaptor.getValue().toString()).isEqualTo(expectedUrl);
+        Assertions.assertThat(uriCaptor.getValue()).hasToString(expectedUrl);
     }
     
     @Test
