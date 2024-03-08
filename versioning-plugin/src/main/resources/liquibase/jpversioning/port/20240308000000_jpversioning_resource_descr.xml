@@ -5,12 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <include file="port/00000000000001_schemaPort.xml" relativeToChangelogFile="true" />
-
-    <include file="port/00000000000001_dataPort_test.xml" relativeToChangelogFile="true" />
-
-    <include file="port/20231212000000_jpversioning_group_code_size.xml" relativeToChangelogFile="true" />
+    <changeSet id="20240308000000_jpversioning_resource_descr" author="entando" >
+        
+        <modifyDataType tableName="jpversioning_trashedresources" columnName="descr" newDataType="varchar(255)" />
+        
+    </changeSet>
     
-    <include file="port/20240308000000_jpversioning_resource_descr.xml" relativeToChangelogFile="true" />
-
 </databaseChangeLog>

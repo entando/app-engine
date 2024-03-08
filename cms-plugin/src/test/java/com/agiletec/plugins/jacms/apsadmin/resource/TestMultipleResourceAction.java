@@ -106,6 +106,7 @@ class TestMultipleResourceAction extends ApsAdminBaseTestCase {
         this.addParameter("resourceTypeCode", "Image");
         this.addParameter("mainGroup", "test");
         this.addParameter("descr_0", "test");
+        this.addParameter("fileUploadName_0", "test".repeat(100));
         String result = this.executeAction();
         ActionSupport action = this.getAction();
         Map<String, List<String>> actionFieldErrors = action.getFieldErrors();
