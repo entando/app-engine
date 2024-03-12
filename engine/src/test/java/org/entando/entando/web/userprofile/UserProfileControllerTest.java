@@ -56,6 +56,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartResolver;
 
 @ExtendWith(MockitoExtension.class)
 class UserProfileControllerTest extends AbstractControllerTest {
@@ -75,6 +76,9 @@ class UserProfileControllerTest extends AbstractControllerTest {
     private ProfileAvatarValidator profileAvatarValidator;
 
     @Mock
+    private MultipartResolver multipartResolver;
+
+    @Mock
     private IAvatarService avatarService;
 
     @BeforeEach
@@ -82,7 +86,7 @@ class UserProfileControllerTest extends AbstractControllerTest {
         profileAvatarValidator = new ProfileAvatarValidator(userProfileManager);
         ProfileController controller = new ProfileController(userProfileService, profileValidator,
                 profileAvatarValidator, userManager,
-                userProfileManager, avatarService);
+                userProfileManager, avatarService, multipartResolver);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
