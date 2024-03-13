@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Functions;
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -132,7 +133,6 @@ class LocalStorageManagerIntegrationTest extends BaseTestCase {
     @Test
     void testGetStream_ShouldBlockPathTraversal() throws Throwable {
         String testFilePath = "../testfolder/test.txt";
-
         try {
             localStorageManager.getStream(testFilePath, false);
         } catch (EntRuntimeException e) {
@@ -255,9 +255,23 @@ class LocalStorageManagerIntegrationTest extends BaseTestCase {
         this.localStorageManager.deleteDirectory("target/mydir", false);
         this.localStorageManager.deleteDirectory("target", false);
     }
-
+    
+    @Test
+    void testGetDiskInfo() throws Throwable {
+        DiskInfoDto dto = null;
+        try {
+            dto = this.localStorageManager.getDiskInfo();
+            Assertions.fail();
+        } catch (Exception e) {
+            Assertions.assertTrue(UnsupportedOperationException.class.isAssignableFrom(e.getClass()));
+            Assertions.assertEquals("Not supported for Local Storage", e.getMessage());
+        } finally {
+            assertNull(dto);
+        }
+    }
+    
     @BeforeEach
-    private void init() throws Exception {
+    void init() throws Exception {
         try {
             localStorageManager = (IStorageManager) this.getApplicationContext().getBean(SystemConstants.STORAGE_MANAGER);
         } catch (Throwable t) {

@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
@@ -24,6 +25,7 @@ import com.opensymphony.xwork2.Action;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -93,6 +95,7 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         ResourceFinderAction action = (ResourceFinderAction) this.getAction();
         assertTrue(action.getResources().isEmpty());
         assertEquals("WrongDescription", action.getText());
+        Assertions.assertFalse(action.isOpenCollapsed());
     }
 
     @Test
@@ -182,6 +185,50 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
     }
 
     @Test
+    void testSearchByReference() throws Throwable {
+        String result = this.executeSearchResource("admin", "Image", null, null, null, null, null);
+        assertEquals(Action.SUCCESS, result);
+        ResourceFinderAction action = (ResourceFinderAction) this.getAction();
+        SearcherDaoPaginatedResult<String> paginatedResult = action.getPaginatedResourcesId(10);
+        List<String> expected = List.of("82", "22", "44");
+        assertEquals(expected.size(), paginatedResult.getCount());
+        assertEquals(expected, paginatedResult.getList());
+        Assertions.assertFalse(action.isOpenCollapsed());
+        
+        result = this.executeSearchResource("admin", "Image", null, null, null, null, "yes");
+        assertEquals(Action.SUCCESS, result);
+        action = (ResourceFinderAction) this.getAction();
+        paginatedResult = action.getPaginatedResourcesId(10);
+        assertEquals(1, paginatedResult.getCount());
+        assertEquals("44", paginatedResult.getList().get(0));
+        Assertions.assertTrue(action.isOpenCollapsed());
+        
+        result = this.executeSearchResource("admin", "Image", null, null, null, null, "no");
+        assertEquals(Action.SUCCESS, result);
+        paginatedResult = ((ResourceFinderAction) this.getAction()).getPaginatedResourcesId(10);
+        expected = List.of("82", "22");
+        assertEquals(expected.size(), paginatedResult.getCount());
+        assertEquals(expected, paginatedResult.getList());
+        
+        result = this.executeSearchResource("admin", "Image", null, null, null, null, "all");
+        assertEquals(Action.SUCCESS, result);
+        action = (ResourceFinderAction) this.getAction();
+        paginatedResult = action.getPaginatedResourcesId(10);
+        expected = List.of("82", "22", "44");
+        assertEquals(expected.size(), paginatedResult.getCount());
+        assertEquals(expected, paginatedResult.getList());
+        Assertions.assertTrue(action.isOpenCollapsed());
+        
+        result = this.executeSearchResource("admin", "Image", null, null, null, null, "");
+        assertEquals(Action.SUCCESS, result);
+        action = (ResourceFinderAction) this.getAction();
+        paginatedResult = action.getPaginatedResourcesId(10);
+        assertEquals(expected.size(), paginatedResult.getCount());
+        assertEquals(expected, paginatedResult.getList());
+        Assertions.assertFalse(action.isOpenCollapsed());
+    }
+
+    @Test
     void testSearchWithOrder_1() throws Throwable {
         List<String> expected = Arrays.asList(new String[]{"22", "44", "82"});
         this.executeTestSearchWithOrder_1(expected, "created");
@@ -218,6 +265,11 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
 
     private String executeSearchResource(String username, String resourceTypeCode,
             String text, String ownerGroupName, String fileName, String categoryCode) throws Throwable {
+        return this.executeSearchResource(username, resourceTypeCode, text, ownerGroupName, fileName, categoryCode, null);
+    }
+
+    private String executeSearchResource(String username, String resourceTypeCode,
+            String text, String ownerGroupName, String fileName, String categoryCode, String referenced) throws Throwable {
         this.setUserOnSession(username);
         this.initAction("/do/jacms/Resource", "search");
         this.addParameter("resourceTypeCode", resourceTypeCode);
@@ -225,6 +277,9 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         this.addParameter("fileName", fileName);
         this.addParameter("ownerGroupName", ownerGroupName);
         this.addParameter("categoryCode", categoryCode);
+        if (null != referenced) {
+            this.addParameter("referenced", referenced);
+        }
         return this.executeAction();
     }
 

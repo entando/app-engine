@@ -187,6 +187,8 @@ public interface IResourceManager {
     public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories) throws EntException;
 
     public SearcherDaoPaginatedResult<String> getPaginatedResourcesId(FieldSearchFilter[] filters, List<String> categories, Collection<String> userGroupCodes) throws EntException;
+    
+    public SearcherDaoPaginatedResult<String> getPaginatedResourcesId(FieldSearchFilter[] filters, List<String> categories, Collection<String> userGroupCodes, Boolean referenced) throws EntException;
 
     /**
      * Restituisce la risorsa con l'id specificato.
@@ -200,9 +202,6 @@ public interface IResourceManager {
 
     public ResourceInterface loadResource(String id, String correlationalCode) throws EntException;
 
-    /**
-     * Check that a resource exists by or or correlotionCode
-     */
     boolean exists(String id, String correlationCode);
 
     /**

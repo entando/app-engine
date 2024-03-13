@@ -28,9 +28,12 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.storage.BasicFileAttributeView;
+import org.entando.entando.aps.system.services.storage.CdsEnvironmentVariables;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
 import org.entando.entando.aps.system.services.storage.RootFolderAttributeView;
 import org.entando.entando.aps.system.services.storage.StorageManagerUtil;
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -255,6 +258,18 @@ public class FileBrowserAction extends BaseAction {
             return FAILURE;
         }
         return SUCCESS;
+    }
+    
+    public DiskInfoDto getDiskInfo() {
+        try {
+            if (!CdsEnvironmentVariables.active()) {
+                return null;
+            }
+            return this.getStorageManager().getDiskInfo();
+        } catch (EntException t) {
+            logger.error("error extracting disk info", t);
+            return null;
+        }
     }
 
     public String download() {

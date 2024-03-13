@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.ByteArrayInputStream;
@@ -166,6 +167,23 @@ public class CdsStorageManager implements IStorageManager {
         }
     }
 
+    @Override
+    public DiskInfoDto getDiskInfo() throws EntException {
+        final String ERROR_EXTRACTING_DISK_INFO = "Error extracting disk info: url %s";
+        URI url = null;
+        try {
+            Optional<TenantConfig> config = getTenantConfig();
+            url = CdsUrlUtils.buildCdsInternalApiUrl(config, configuration, "utils", "diskinfo");
+            Optional<DiskInfoDto> is = caller.getDiskInfo(url, config);
+            return is.orElseThrow(IOException::new);
+        } catch (EntRuntimeException ert) {
+            throw ert;
+        } catch (Exception e) {
+            String errorMessage = String.format(ERROR_EXTRACTING_DISK_INFO, Optional.ofNullable(url).map(URI::toString).orElse("null"));
+            throw new EntResourceNotFoundException(errorMessage, e);
+        }
+    }
+    
     @Override
     public String getResourceUrl(String subPath, boolean isProtectedResource) {
         try {
