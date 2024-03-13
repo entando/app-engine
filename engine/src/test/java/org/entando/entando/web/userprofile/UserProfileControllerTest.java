@@ -14,6 +14,7 @@
 package org.entando.entando.web.userprofile;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,6 +28,7 @@ import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Stream;
+import org.apache.commons.fileupload.FileUpload;
 import org.apache.commons.io.IOUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
@@ -57,6 +59,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 @ExtendWith(MockitoExtension.class)
 class UserProfileControllerTest extends AbstractControllerTest {
@@ -84,6 +87,7 @@ class UserProfileControllerTest extends AbstractControllerTest {
     @BeforeEach
     public void setUp() throws Exception {
         profileAvatarValidator = new ProfileAvatarValidator(userProfileManager);
+
         ProfileController controller = new ProfileController(userProfileService, profileValidator,
                 profileAvatarValidator, userManager,
                 userProfileManager, avatarService, multipartResolver);
@@ -104,8 +108,8 @@ class UserProfileControllerTest extends AbstractControllerTest {
 
     @Test
     void shouldGetNewlyCreatedProfile() throws Exception {
-        when(this.userManager.getUser("user_without_profile")).thenReturn(Mockito.mock(UserDetails.class));
-        when(this.userProfileManager.getDefaultProfileType()).thenReturn(Mockito.mock(IUserProfile.class));
+        when(this.userManager.getUser("user_without_profile")).thenReturn(mock(UserDetails.class));
+        when(this.userProfileManager.getDefaultProfileType()).thenReturn(mock(IUserProfile.class));
         ResultActions result = performGetUserProfiles("user_without_profile");
         result.andExpect(status().isOk());
     }
@@ -222,6 +226,38 @@ class UserProfileControllerTest extends AbstractControllerTest {
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.filename").value("jack_bauer.png"));
+    }
+
+    @Test
+    void shouldPostAvatarReturnErrorWhenPayloadTooBig() throws Exception {
+        String accessToken = this.createAccessToken();
+        ProfileAvatarRequest profileAvatarRequest = new ProfileAvatarRequest("myFile.png",
+                IOUtils.toByteArray(new ClassPathResource("userprofile/image.png").getInputStream()), false);
+
+        multipartResolver = mock(CommonsMultipartResolver.class);
+        FileUpload fileUpload = mock(FileUpload.class);
+
+        when(fileUpload.getSizeMax()).thenReturn(20L);
+        when(fileUpload.getFileSizeMax()).thenReturn(20L);
+        when(((CommonsMultipartResolver)multipartResolver).getFileUpload()).thenReturn(fileUpload);
+
+        // need new custom controller for this test
+        ProfileController controller = new ProfileController(userProfileService, profileValidator,
+                profileAvatarValidator, userManager,
+                userProfileManager, avatarService, multipartResolver);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .addInterceptors(entandoOauth2Interceptor)
+                .setMessageConverters(getMessageConverters())
+                .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .build();
+
+        ResultActions result = mockMvc.perform(
+                post("/userProfiles/avatar")
+                        .content(new ObjectMapper().writeValueAsString(profileAvatarRequest))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isPayloadTooLarge())
+                .andExpect(jsonPath("$.errors").value("Payload Too Large"));
     }
 
     @Test
