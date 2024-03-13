@@ -36,20 +36,22 @@ public interface JpversioningSystemConstants {
      */
     public static final String VERSIONING_MANAGER = "jpversioningVersioningManager";
 
-    public final static String TRASHED_IMAGE_RESOURCE_DIR_NAME = "images";
+    public static final String TRASHED_IMAGE_RESOURCE_DIR_NAME = "images";
 
-    public final static String TRASHED_ATTACH_RESOURCE_DIR_NAME = "documents";
+    public static final String TRASHED_ATTACH_RESOURCE_DIR_NAME = "documents";
 
-    public final static String CONFIG_PARAM_DELETE_MID_VERSIONS = "jpversioning_deleteMidVersions";
+    public static final String CONFIG_PARAM_DELETE_MID_VERSIONS = "jpversioning_deleteMidVersions";
 
-    public final static String CONFIG_PARAM_CONTENTS_TO_IGNORE = "jpversioning_contentsToIgnore";
+    public static final String CONFIG_PARAM_TRASH_RESOURCE_ACTIVE = "jpversioning_trashResourceActive";
 
-    public final static String CONFIG_PARAM_CONTENT_TYPES_TO_IGNORE = "jpversioning_contentTypesToIgnore";
+    public static final String CONFIG_PARAM_CONTENTS_TO_IGNORE = "jpversioning_contentsToIgnore";
 
-    public final static String CONFIG_PARAM_RESOURCE_TRASH_FOLDER = "jpversioning_resourceTrashRootDiskFolder";
+    public static final String CONFIG_PARAM_CONTENT_TYPES_TO_IGNORE = "jpversioning_contentTypesToIgnore";
 
-    public final static String DEFAULT_RESOURCE_TRASH_FOLDER_NAME = "jpversioning/trashedresources";
+    public static final String CONFIG_PARAM_RESOURCE_TRASH_FOLDER = "jpversioning_resourceTrashRootDiskFolder";
 
-    public final static String PROTECTED_TRASH_FOLDER = "protected/trashed";
+    public static final String DEFAULT_RESOURCE_TRASH_FOLDER_NAME = "jpversioning/trashedresources";
+
+    public static final String PROTECTED_TRASH_FOLDER = "protected/trashed";
 
 }

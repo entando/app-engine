@@ -87,6 +87,27 @@
                 </div>
                 <div class="form-group">
                     <div class="row">
+                        <div class="col-xs-2 col-label">
+                            <span class="display-block"><s:text name="jpversioning.label.trashResourceActive" /></span>
+                        </div>
+                        <div class="col-xs-10 text-left">
+                            <s:set var="paramNameTrash" value="'jpversioning_trashResourceActive'" />
+                            <s:if test="%{null == systemParams[#paramNameTrash]}">
+                                <s:set var="trashResourceActiveValue" value="'true'" />
+                            </s:if>
+                            <s:else>
+                                <s:set var="trashResourceActiveValue" value="systemParams[#paramNameTrash]" />
+                            </s:else>
+                            <input type="hidden" value="<s:property value="#trashResourceActiveValue" />" id="<s:property value="#paramNameTrash"/>"
+                                   name="<s:property value="#paramNameTrash"/>" />
+                            <input type="checkbox" value="<s:property value="#trashResourceActiveValue" />" id="ch_<s:property value="#paramNameTrash"/>" class="bootstrap-switch"
+                                   <s:if test="#trashResourceActiveValue == 'true'">checked="checked"</s:if> />
+                            <wpsf:hidden name="%{#paramNameTrash + externalParamMarker}" value="true"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="row">
                         <div class="col-xs-2 ">
                             <span><s:text name="jpversioning.label.contentsToIgnore" /></span>
                         </div>

@@ -62,6 +62,7 @@ public class VersioningManager extends AbstractService implements IVersioningMan
     @Override
     public void init() throws Exception {
         initTenantAware();
+        _logger.info("{} ready", this.getClass().getName());
     }
 
     @Override
