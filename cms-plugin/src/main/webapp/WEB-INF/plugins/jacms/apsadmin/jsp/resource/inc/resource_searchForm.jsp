@@ -53,6 +53,14 @@
                                 </div>
                             </div>
 
+                            <%-- resource id --%>
+                            <div class="form-group">
+                                <label for="fileName" class="control-label col-sm-2"><s:text name="label.resourceId" /></label>
+                                <div class="col-sm-9">
+                                    <wpsf:textfield name="resourceId" id="resourceId" cssClass="form-control"/>
+                                </div>
+                            </div>
+
                             <%-- category tree --%>
                             <div class="form-group">
                                 <label for="fileName" class="control-label col-sm-2"><s:text name="label.categoriesTree" /></label>
