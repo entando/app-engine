@@ -271,6 +271,7 @@ public class ResourceFinderAction extends AbstractResourceAction {
         }
         return (this.openCollapsed || hasFilterByCat
                 || !StringUtils.isBlank(this.getFileName())
+                || !StringUtils.isBlank(this.getResourceId())
                 || !StringUtils.isBlank(this.getOwnerGroupName()));
     }
 

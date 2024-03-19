@@ -40,6 +40,7 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         assertEquals(Action.SUCCESS, result);
         ResourceFinderAction action = (ResourceFinderAction) this.getAction();
         String resourceTypeCode = action.getResourceTypeCode();
+        Assertions.assertFalse(action.isOpenCollapsed());
         assertNotNull(resourceTypeCode);
         assertEquals("Image", resourceTypeCode);
         assertEquals(3, action.getResources().size());
@@ -95,6 +96,7 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         assertEquals(Action.SUCCESS, result);
         ResourceFinderAction action = (ResourceFinderAction) this.getAction();
         Assertions.assertFalse(action.getResources().isEmpty());
+        Assertions.assertTrue(action.isOpenCollapsed());
         SearcherDaoPaginatedResult<String> pagination = action.getPaginatedResourcesId(10);
         assertEquals(2, pagination.getCount());
         assertTrue(pagination.getList().contains("82"));
