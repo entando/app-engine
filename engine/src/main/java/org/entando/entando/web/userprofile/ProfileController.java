@@ -16,7 +16,9 @@ package org.entando.entando.web.userprofile;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 /**
  * @author E.Santoboni
@@ -76,6 +81,8 @@ public class ProfileController {
     private final IUserProfileManager userProfileManager;
 
     private final IAvatarService avatarService;
+
+    private final MultipartResolver multipartResolver;
 
     public static final String PROTECTED_FOLDER = "protectedFolder";
 
@@ -203,11 +210,42 @@ public class ProfileController {
         return new ResponseEntity<>(new RestResponse<>(result, metadata), HttpStatus.OK);
     }
 
+    private long getMaxUploadSize() {
+        if (multipartResolver == null) {
+            return -1;
+        }
+        if (multipartResolver instanceof CommonsMultipartResolver) {
+            long sizeMax = ((CommonsMultipartResolver) multipartResolver).getFileUpload().getSizeMax();
+            long fileSizeMax = ((CommonsMultipartResolver) multipartResolver).getFileUpload().getFileSizeMax();
+
+            return (sizeMax >= fileSizeMax) ? sizeMax : fileSizeMax;
+        } else if (multipartResolver instanceof StandardServletMultipartResolver) {
+            logger.warn("Unknown multipart resolver implementation! Size limit ");
+            return -1;
+        } else {
+            return -1;
+        }
+    }
+
     @PostMapping(path = "/userProfiles/avatar", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<Map<String, Object>>> addAvatar(
             @Validated @RequestBody ProfileAvatarRequest request,
             @RequestAttribute("user") UserDetails user,
             BindingResult bindingResult) {
+        final long maxSize = getMaxUploadSize();
+        final long fileSize = request.getBase64() != null ? request.getBase64().length : -1;
+
+        if ((maxSize > 0)
+                && (maxSize < fileSize)) {
+            Map<String, Object> response =
+                    Map.of("max allowed size", maxSize,
+                            "currently uploaded file" , fileSize);
+            final SimpleRestResponse restResponse = new SimpleRestResponse(response);
+            final List<String> errors = Arrays.asList(new String[]{"Payload Too Large"});
+            restResponse.setErrors(errors);
+            return new ResponseEntity<>(restResponse, HttpStatus.PAYLOAD_TOO_LARGE);
+        }
+
         // validate input dto to check for consistency of input
         profileAvatarValidator.validate(request, user, bindingResult);
         if (bindingResult.hasErrors()) {
