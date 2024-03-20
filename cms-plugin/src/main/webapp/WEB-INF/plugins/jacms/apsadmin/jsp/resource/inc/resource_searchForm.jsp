@@ -57,7 +57,7 @@
                             <div class="form-group">
                                 <label for="fileName" class="control-label col-sm-2"><s:text name="label.resourceId" /></label>
                                 <div class="col-sm-9">
-                                    <wpsf:textfield name="resourceId" id="resourceId" cssClass="form-control"/>
+                                    <wpsf:textfield name="searchedResourceId" id="searchedResourceId" cssClass="form-control"/>
                                 </div>
                             </div>
 

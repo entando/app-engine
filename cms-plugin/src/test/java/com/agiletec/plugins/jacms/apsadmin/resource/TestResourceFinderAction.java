@@ -92,7 +92,7 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
 
     @Test
     void testSearchResourcesById() throws Throwable {
-        String result = this.executeSearchResources("admin", "Image", Map.of("resourceId", "2"));
+        String result = this.executeSearchResources("admin", "Image", Map.of("searchedResourceId", "2"));
         assertEquals(Action.SUCCESS, result);
         ResourceFinderAction action = (ResourceFinderAction) this.getAction();
         Assertions.assertFalse(action.getResources().isEmpty());
