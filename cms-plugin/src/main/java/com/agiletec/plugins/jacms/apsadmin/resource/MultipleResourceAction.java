@@ -27,7 +27,6 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import java.io.*;
 import java.util.*;
-import javax.servlet.http.HttpServletRequest;
 
 public class MultipleResourceAction extends ResourceAction {
 
