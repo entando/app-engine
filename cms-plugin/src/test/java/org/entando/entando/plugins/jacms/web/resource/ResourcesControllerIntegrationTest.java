@@ -55,6 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.agiletec.aps.system.services.category.Category;
+import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import org.junit.jupiter.api.Test;
 
 class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTest {
@@ -70,6 +71,9 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
 
     @Autowired
     private ResourcesService resourcesService;
+
+    @Autowired
+    private IResourceManager resourceManager;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -1096,7 +1100,6 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
             .andExpect(jsonPath("$.errors.size()", is(1)))
             .andExpect(jsonPath("$.errors[0].code", is("4")))
             .andExpect(jsonPath("$.errors[0].message", is("File type not allowed")));
-
         performGetResources(user, "file", null)
             .andDo(resultPrint())
             .andExpect(status().isOk());
@@ -1107,10 +1110,8 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
         UserDetails user = createAccessToken();
         String createdId = null;
         String clonedId = null;
-
         try {
             ResultActions result = performCreateResource(user, "file", "free", Arrays.stream(new String[]{"resCat1", "resCat2"}).collect(Collectors.toList()), "application/pdf")
-                    .andDo(resultPrint())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.payload.id", Matchers.anything()))
                     .andExpect(jsonPath("$.payload.categories.size()", is(2)))
@@ -1120,11 +1121,9 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.description", is("file_test.jpeg")))
                     .andExpect(jsonPath("$.payload.size", is("2 Kb")))
                     .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/file_test")));
-
             createdId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
-
+            
             ResultActions result2 = performCloneResource(user, createdId)
-                    .andDo(resultPrint())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.payload.id", not(createdId)))
                     .andExpect(jsonPath("$.payload.categories.size()", is(2)))
@@ -1134,9 +1133,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.description", is("file_test.jpeg")))
                     .andExpect(jsonPath("$.payload.size", is("2 Kb")))
                     .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/file_test")));
-
             clonedId = JsonPath.read(result2.andReturn().getResponse().getContentAsString(), "$.payload.id");
-
         } finally {
             if (clonedId != null) {
                 performDeleteResource(user, "file", clonedId)
@@ -1148,8 +1145,9 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                         .andDo(resultPrint())
                         .andExpect(status().isOk());
             }
-            performGetResources(user, "file", null)
-                    .andDo(resultPrint())
+            Assertions.assertNull(this.resourceManager.loadResource(clonedId));
+            Assertions.assertNull(this.resourceManager.loadResource(createdId));
+            this.performGetResources(user, "file", null)
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.payload.size()", is(2)));
         }
@@ -1599,7 +1597,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
-                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
+                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/abc/image_test")));
 
             createdId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1644,7 +1642,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.folderPath", is("abc")))
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
-                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
+                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/abc/image_test")));
 
             createdId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1661,7 +1659,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.folderPath", is("abcd")))
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
-                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
+                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/abcd/image_test")));
 
         } finally {
 
@@ -1705,7 +1703,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
-                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
+                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/folderPath123/image_test")));
 
             createdId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1722,7 +1720,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
-                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
+                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/folderPath123/image_test")));
 
             clonedId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1777,7 +1775,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
         String createdId5 = null;
 
         try {
-
+            
             String type = "image";
             String group = "free";
             String folderPath = null;
@@ -1798,9 +1796,9 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
                     .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
-
+            
             createdId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
-
+            
             performGetResourcesFolder(user, folderPath)
                     .andDo(resultPrint())
                     .andExpect(status().isOk())
@@ -1809,7 +1807,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.metaData.subfolders.size()", is(0)));
 
             folderPath = "abc";
-
+            
             result = performCreateResource(user, type, group, categories, folderPath, mimeType)
                     .andDo(resultPrint())
                     .andExpect(status().isOk())
@@ -1823,7 +1821,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
                     .andExpect(jsonPath("$.payload.versions.size()", is(4)))
                     .andExpect(jsonPath("$.payload.versions[0].size", is("2 Kb")))
-                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/image_test")));
+                    .andExpect(jsonPath("$.payload.versions[0].path", startsWith("/Entando/resources/cms/images/abc/image_test")));
 
             createdId2 = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1857,7 +1855,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.description", is("file_test.jpeg")))
                     .andExpect(jsonPath("$.payload.owner", is("jack_bauer")))
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
-                    .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/file_test")));
+                    .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/abc/def/file_test")));
 
             createdId3 = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1897,7 +1895,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.description", is("file_test.jpeg")))
                     .andExpect(jsonPath("$.payload.owner", is("jack_bauer")))
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
-                    .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/file_test")));
+                    .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/abc/ghi/file_test")));
 
             createdId4 = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1938,7 +1936,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.payload.description", is("file_test.jpeg")))
                     .andExpect(jsonPath("$.payload.owner", is("jack_bauer")))
                     .andExpect(jsonPath("$.payload.folderPath", is(folderPath)))
-                    .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/file_test")));
+                    .andExpect(jsonPath("$.payload.path", startsWith("/Entando/resources/cms/documents/abc/def/ghi/file_test")));
 
             createdId5 = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.payload.id");
 
@@ -1973,7 +1971,7 @@ class ResourcesControllerIntegrationTest extends AbstractControllerIntegrationTe
                     .andExpect(jsonPath("$.metaData.folderPath", is("abc/def")))
                     .andExpect(jsonPath("$.metaData.subfolders.size()", is(1)))
                     .andExpect(jsonPath("$.metaData.subfolders[0]", is("abc/def/ghi")));
-
+            
         } finally {
 
             if (createdId5 != null) {

@@ -212,17 +212,15 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
             String subPathDest, boolean isProtectedResourceDest) throws EntException {
         File file = this.getFile(subPathSource, isProtectedResourceSource);
         if (!file.exists()) {
-            logger.error(String.format(
-                    "Source File does not exists - path '%s' protected '%s'",
-                    subPathSource, isProtectedResourceSource));
+            logger.error("Source File does not exists - path '{}' protected '{}'",
+                    subPathSource, isProtectedResourceSource);
             return false;
         }
         String fullDestPath = this.createFullPath(subPathDest, isProtectedResourceDest);
         File fileDest = new File(fullDestPath);
         if (fileDest.exists()) {
-            logger.error(String.format(
-                    "Destination already exists - path '%s' protected '%s'",
-                    subPathDest, isProtectedResourceDest));
+            logger.error("Destination already exists - path '{}' protected '{}'",
+                    subPathDest, isProtectedResourceDest);
             return false;
         }
         File dirDest = fileDest.getParentFile();

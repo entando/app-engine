@@ -229,6 +229,8 @@ public interface ResourceInterface {
      */
     void saveResourceInstances(ResourceDataBean bean, List<String> ignoreMetadataKeys,
             boolean instancesAlreadySaved) throws EntException;
+    
+    public List<ResourceInstance> getInstanceList();
 
     /**
      * Cancella tutte le istanze associate alla risorsa.
@@ -239,7 +241,8 @@ public interface ResourceInterface {
 
     public void reloadResourceInstances() throws EntException;
 
-    //public boolean exists(String masterFormFileName) throws EntException;
+    public void moveInstances(String newFolderPath) throws EntException;
+    
     public ResourceInstance getDefaultInstance();
 
     /**

@@ -39,9 +39,14 @@ public abstract class AbstractMultiInstanceResource extends AbstractResource {
     }
 
     @Override
+    public List<ResourceInstance> getInstanceList() {
+        return new ArrayList<>(this.getInstances().values());
+    }
+
+    @Override
     public void deleteResourceInstances() throws EntException {
         try {
-            Collection<ResourceInstance> resources = this.getInstances().values();
+            Collection<ResourceInstance> resources = this.getInstanceList();
             for (ResourceInstance currentInstance : resources) {
                 String fileName = currentInstance.getFileName();
                 String subPath = this.getDiskSubFolder() + fileName;
@@ -73,7 +78,7 @@ public abstract class AbstractMultiInstanceResource extends AbstractResource {
     @Override
     public String getXML() {
         ResourceDOM resourceDom = getResourceDOM();
-        List<ResourceInstance> resources = new ArrayList<>(this.getInstances().values());
+        List<ResourceInstance> resources = this.getInstanceList();
         for (ResourceInstance currentInstance : resources) {
             resourceDom.addInstance(currentInstance.getJDOMElement());
         }

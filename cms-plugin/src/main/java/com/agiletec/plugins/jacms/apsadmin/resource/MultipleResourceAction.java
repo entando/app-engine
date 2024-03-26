@@ -160,7 +160,7 @@ public class MultipleResourceAction extends ResourceAction {
             if (StringUtils.isBlank(this.getMainGroup())) {
                 return errors;
             }
-            FieldSearchFilter<String> groupFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_OWNER_FILTER_KEY, this.getMainGroup(), false);
+            FieldSearchFilter<String> groupFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_MAIN_GROUP_FILTER_KEY, this.getMainGroup(), false);
             for (int i = 0; i < getFileUploadFileName().size(); i++) {
                 String formFileName = this.getFileUploadFileName(i);
                 if (formFileName.isEmpty()){
