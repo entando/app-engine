@@ -152,7 +152,6 @@ class CdsStorageManagerTest {
 
         CdsCreateResponseDto ret = new CdsCreateResponseDto();
         ret.setStatusOk(true);
-        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
         Mockito.when(cdsRemoteCaller.executePostCall(any(),
                 eq("/sub-path-testy/myfilename"),
                 eq(false),
@@ -558,7 +557,74 @@ class CdsStorageManagerTest {
                         eq(false));
 
     }
-
+    
+    @Test
+    void shouldMoveFile() throws Exception {
+        this.initTenantForMovement();
+        this.setExistingFileForMovement("source_file.txt", false, "test", false);
+        this.setExistingFileForMovement("dest_file.txt", true, "test_dest", true);
+        CdsCreateResponseDto ret = new CdsCreateResponseDto();
+        ret.setStatusOk(true);
+        Mockito.when(cdsRemoteCaller.executePostCall(any(),
+                eq("test_dest/dest_file.txt"),
+                eq(true),
+                any(),
+                any(),
+                eq(false))).thenReturn(ret);
+        boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", true);
+        Assertions.assertThat(result).isTrue();
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(3)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(1)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
+    }
+    
+    @Test
+    void shouldFailMovementDueMissingSource() throws Exception {
+        this.initTenantForMovement();
+        boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", false);
+        Assertions.assertThat(result).isFalse();
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(1)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(0)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
+    }
+    
+    @Test
+    void shouldFailMovementDueExistingDestination() throws Exception {
+        this.initTenantForMovement();
+        this.setExistingFileForMovement("source_file.txt", false, "test", false);
+        this.setExistingFileForMovement("dest_file.txt", true, "test_dest", false);
+        boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", true);
+        Assertions.assertThat(result).isFalse();
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(2)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(0)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
+    }
+    
+    private void initTenantForMovement() {
+        Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
+                "cdsPrivateUrl","http://cds-kube-service:8081/",
+                "cdsPath","/mytenant/api/v1/");
+        TenantConfig tc = new TenantConfig(configMap);
+        Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+    }
+    
+    private void setExistingFileForMovement(String existingFileName, boolean isProtected, String path, boolean returnEmpty) {
+        String subPath = ((isProtected) ? "protected/" : "") + path;
+        if (returnEmpty) {
+            Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
+                        "http://cds-kube-service:8081/mytenant/api/v1/list/" + subPath)),
+                any())).thenReturn(Optional.empty());
+            return;
+        }
+        CdsFileAttributeViewDto file = new CdsFileAttributeViewDto();
+        file.setName(existingFileName);
+        file.setDirectory(false);
+        CdsFileAttributeViewDto dir = new CdsFileAttributeViewDto();
+        dir.setName("test-folder");
+        dir.setDirectory(true);
+        Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
+                        "http://cds-kube-service:8081/mytenant/api/v1/list/" + subPath)),
+                any())).thenReturn(Optional.ofNullable(new CdsFileAttributeViewDto[]{file, dir}));
+    }
+    
     //@Test
     void testListAttributes() throws Throwable {
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",

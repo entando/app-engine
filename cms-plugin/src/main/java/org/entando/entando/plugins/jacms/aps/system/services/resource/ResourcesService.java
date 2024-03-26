@@ -406,9 +406,7 @@ public class ResourcesService implements IComponentExistsService {
     /****** Auxiliary Methods ******/
 
     private BaseResourceDataBean createDataBeanFromResource(ResourceInterface resourceInterface) throws EntException {
-
         AbstractResource resource = (AbstractResource) resourceInterface;
-
         BaseResourceDataBean resourceFile = new BaseResourceDataBean();
         resourceFile.setResourceType(resource.getType());
         resourceFile.setResourceId(resource.getId());
@@ -419,39 +417,31 @@ public class ResourcesService implements IComponentExistsService {
         resourceFile.setCategories(resource.getCategories());
         resourceFile.setMainGroup(resource.getMainGroup());
         resourceFile.setFileName(resource.getMasterFileName());
-
-        ResourceInstance instance = null;
-
-        if (resource.isMultiInstance()) {
-            instance = resource.getDefaultInstance();
-        } else {
-            instance = ((AbstractMonoInstanceResource) resource).getInstance();
-        }
-
+        ResourceInstance instance = resource.getDefaultInstance();
         try {
-
-            boolean isProtected = resource.isProtectedResource();
-            String absolutePath = null;
-            if (isProtected) {
-                absolutePath = resource.getFolder() + resource.getMainGroup() + "/" + instance.getFileName();
-            } else {
-                absolutePath = resource.getFolder() + instance.getFileName();
-            }
-
-            String filePath = resource.getStorageManager().createFullPath(absolutePath, isProtected);
-
+            String absolutePath = this.getDiskSubFolder(resource) + File.separator + instance.getFileName();
+            String filePath = resource.getStorageManager().createFullPath(absolutePath, resource.isProtectedResource());
             File file = new File(filePath);
             Path path = file.toPath();
             Long size = Files.size(path) / 1000;
-
             resourceFile.setInputStream(new FileInputStream(file));
             resourceFile.setFileSize(size.intValue());
             resourceFile.setMimeType(Files.probeContentType(path));
         } catch (IOException | EntException e) {
             throw new EntException("Error reading file input stream", e);
         }
-
         return resourceFile;
+    }
+    
+    private String getDiskSubFolder(AbstractResource resource) {
+        StringBuilder diskFolder = new StringBuilder(resource.getFolder());
+        if (!StringUtils.isBlank(resource.getFolderPath())) {
+            diskFolder.append(resource.getFolderPath()).append(File.separator);
+        }
+        if (resource.isProtectedResource()) {
+            diskFolder.append(resource.getMainGroup()).append(File.separator);
+        }
+        return diskFolder.toString();
     }
 
     private List<Category> convertCategories(List<String> categories) {

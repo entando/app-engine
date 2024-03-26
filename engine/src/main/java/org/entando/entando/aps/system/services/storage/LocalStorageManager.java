@@ -205,6 +205,29 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 		return new File(fullPath);
 	}
 
+    @Override
+    public boolean move(String subPathSource, boolean isProtectedResourceSource,
+            String subPathDest, boolean isProtectedResourceDest) throws EntException {
+        File file = this.getFile(subPathSource, isProtectedResourceSource);
+        if (!file.exists()) {
+            logger.error("Source File does not exists - path '{}' protected '{}'",
+                    subPathSource, isProtectedResourceSource);
+            return false;
+        }
+        String fullDestPath = this.createFullPath(subPathDest, isProtectedResourceDest);
+        File fileDest = new File(fullDestPath);
+        if (fileDest.exists()) {
+            logger.error("Destination already exists - path '{}' protected '{}'",
+                    subPathDest, isProtectedResourceDest);
+            return false;
+        }
+        File dirDest = fileDest.getParentFile();
+        if (!dirDest.exists()) {
+            dirDest.mkdirs();
+        }
+        return file.renameTo(fileDest);
+    }
+
 	@Override
 	public String getResourceUrl(String subPath, boolean isProtectedResource) {
 		subPath = (null == subPath) ? "" : subPath;

@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author E.Santoboni
  */
-class TestMultipleResourceAction extends ApsAdminBaseTestCase {
+class MultipleResourceActionIntegrationTest extends ApsAdminBaseTestCase {
 
     private IResourceManager resourceManager = null;
 

@@ -262,29 +262,27 @@ public class ResourceManager extends AbstractService
             resource.setId(String.valueOf(newId));
         }
     }
-
+    
     @Override
     public void updateResource(ResourceDataBean bean) throws EntException {
-        ResourceInterface oldResource = this.loadResource(bean.getResourceId());
         try {
-            if (null == bean.getInputStream()) {
+            ResourceInterface oldResource = this.loadResource(bean.getResourceId());
+            ResourceInterface updatedResource = null;
+            if (null != bean.getInputStream()) {
+                updatedResource = this.createResource(bean);
+                oldResource.moveInstances("todelete");
+                updatedResource.saveResourceInstances(bean, getIgnoreMetadataKeysForResourceType(bean.getResourceType()));
+                oldResource.deleteResourceInstances();
+            } else {
                 oldResource.setDescription(bean.getDescr());
                 oldResource.setCategories(bean.getCategories());
                 oldResource.setMetadata(bean.getMetadata());
                 oldResource.setMainGroup(bean.getMainGroup());
                 oldResource.setFolderPath(bean.getFolderPath());
-                this.getResourceDAO().updateResource(oldResource);
-                this.notifyResourceChanging(oldResource, ResourceChangedEvent.UPDATE_OPERATION_CODE);
-            } else {
-                ResourceInterface updatedResource = this.createResource(bean);
-                updatedResource
-                        .saveResourceInstances(bean, getIgnoreMetadataKeysForResourceType(bean.getResourceType()));
-                this.getResourceDAO().updateResource(updatedResource);
-                if (!updatedResource.getMasterFileName().equals(oldResource.getMasterFileName())) {
-                    oldResource.deleteResourceInstances();
-                }
-                this.notifyResourceChanging(updatedResource, ResourceChangedEvent.UPDATE_OPERATION_CODE);
+                updatedResource = oldResource;
             }
+            this.getResourceDAO().updateResource(updatedResource);
+            this.notifyResourceChanging(updatedResource, ResourceChangedEvent.UPDATE_OPERATION_CODE);
         } catch (Throwable t) {
             logger.error("Error updating resource", t);
             throw new EntException("Error updating resource", t);

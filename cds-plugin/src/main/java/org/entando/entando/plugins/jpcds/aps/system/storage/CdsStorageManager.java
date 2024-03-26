@@ -183,6 +183,30 @@ public class CdsStorageManager implements IStorageManager {
         return (null != filenames && isSubPathPresent(filenames,subPathParsed.getFileName()));
     }
 
+    @Override
+    public boolean move(String subPathSource, boolean isProtectedResourceSource, String subPathDest, boolean isProtectedResourceDest) throws EntException {
+        if (!this.exists(subPathSource, isProtectedResourceSource)) {
+            log.error(String.format(
+                    "Source File does not exists - path '%s' protected '%s'",
+                    subPathSource, isProtectedResourceSource));
+            return false;
+        }
+        if (this.exists(subPathDest, isProtectedResourceDest)) {
+            log.error(String.format(
+                    "Destination already exists - path '%s' protected '%s'",
+                    subPathDest, isProtectedResourceDest));
+            return false;
+        }
+        try {
+            InputStream stream = this.getStream(subPathSource, isProtectedResourceSource);
+            this.saveFile(subPathDest, isProtectedResourceDest, stream);
+            this.deleteFile(subPathSource, isProtectedResourceSource);
+        } catch (Exception e) {
+            throw new EntException("Error moving file", e);
+        }
+        return true;
+    }
+
     // when frontend  wants to retrieve public or protected folder contents it gets request with an empty subpath
     private boolean isSubPathPresent(String[] filenames, String subPath){
         if (StringUtils.isEmpty(subPath)) {

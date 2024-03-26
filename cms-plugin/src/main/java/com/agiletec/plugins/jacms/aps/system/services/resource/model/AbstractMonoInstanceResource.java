@@ -19,6 +19,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.entando.entando.ent.exception.EntResourceNotFoundException;
 import org.entando.entando.ent.exception.EntResourceNotFoundRuntimeException;
 import org.entando.entando.ent.exception.EntRuntimeException;
@@ -44,6 +47,12 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 	@Override
 	public boolean isMultiInstance() {
     	return false;
+    }
+
+    @Override
+    public List<ResourceInstance> getInstanceList() {
+        return Optional.ofNullable(this.getInstance())
+                .map(i -> new ArrayList<>(List.of(i))).orElse(new ArrayList<>());
     }
 	
 	@Override

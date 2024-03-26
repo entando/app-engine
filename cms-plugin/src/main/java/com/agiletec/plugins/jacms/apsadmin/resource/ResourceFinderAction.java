@@ -47,7 +47,7 @@ public class ResourceFinderAction extends AbstractResourceAction {
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ResourceFinderAction.class);
 
     private String text;
-    private String resourceId;
+    private String searchedResourceId;
     private String fileName;
     private String ownerGroupName;
     private String categoryCode;
@@ -109,8 +109,8 @@ public class ResourceFinderAction extends AbstractResourceAction {
             FieldSearchFilter<String> typeCodeFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_TYPE_FILTER_KEY, this.getResourceTypeCode(), false);
             filters = ArrayUtils.add(filters, typeCodeFilter);
         }
-        if (StringUtils.isNotBlank(this.getResourceId())) {
-            FieldSearchFilter<String> idFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_ID_FILTER_KEY, this.getResourceId(), true);
+        if (StringUtils.isNotBlank(this.getSearchedResourceId())) {
+            FieldSearchFilter<String> idFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_ID_FILTER_KEY, this.getSearchedResourceId(), true);
             filters = ArrayUtils.add(filters, idFilter);
         }
         if (StringUtils.isNotBlank(this.getOwnerGroupName())) {
@@ -212,12 +212,12 @@ public class ResourceFinderAction extends AbstractResourceAction {
         this.text = text;
     }
 
-    public String getResourceId() {
-        return resourceId;
+    public String getSearchedResourceId() {
+        return searchedResourceId;
     }
 
-    public void setResourceId(String resourceId) {
-        this.resourceId = resourceId;
+    public void setSearchedResourceId(String searchedResourceId) {
+        this.searchedResourceId = searchedResourceId;
     }
 
     public String getFileName() {
@@ -271,7 +271,7 @@ public class ResourceFinderAction extends AbstractResourceAction {
         }
         return (this.openCollapsed || hasFilterByCat
                 || !StringUtils.isBlank(this.getFileName())
-                || !StringUtils.isBlank(this.getResourceId())
+                || !StringUtils.isBlank(this.getSearchedResourceId())
                 || !StringUtils.isBlank(this.getOwnerGroupName()));
     }
 

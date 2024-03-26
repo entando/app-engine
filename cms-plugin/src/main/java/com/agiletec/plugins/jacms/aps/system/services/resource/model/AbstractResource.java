@@ -25,6 +25,7 @@ import org.springframework.util.Assert;
 
 import java.io.*;
 import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractResource implements ResourceInterface, Serializable {
 
@@ -365,9 +366,16 @@ public abstract class AbstractResource implements ResourceInterface, Serializabl
     }
 
     protected String getDiskSubFolder() {
-        StringBuilder diskFolder = new StringBuilder(folder);
+        return this.getDiskSubFolder(this.getFolderPath());
+    }
+
+    protected String getDiskSubFolder(String folderPath) {
+        StringBuilder diskFolder = new StringBuilder(this.folder);
+        if (!StringUtils.isBlank(folderPath)) {
+            diskFolder.append(folderPath).append(File.separator);
+        }
         if (this.isProtectedResource()) {
-            diskFolder.append(mainGroup).append("/");
+            diskFolder.append(mainGroup).append(File.separator);
         }
         return diskFolder.toString();
     }
@@ -419,6 +427,12 @@ public abstract class AbstractResource implements ResourceInterface, Serializabl
             StringBuilder subFolder = new StringBuilder(this.getFolder());
             if (!subFolder.toString().endsWith("/")) {
                 subFolder.append("/");
+            }
+            if (!StringUtils.isBlank(this.getFolderPath())) {
+                subFolder.append(this.getFolderPath());
+                if (!this.getFolderPath().endsWith("/")) {
+                    subFolder.append("/");
+                }
             }
             subFolder.append(instance.getFileName());
             String path = this.getStorageManager().getResourceUrl(subFolder.toString(), false);
@@ -504,6 +518,33 @@ public abstract class AbstractResource implements ResourceInterface, Serializabl
         }
     }
 
+    @Override
+    public void moveInstances(String newFolderPath) throws EntException {
+        Map<String, String> movements = new HashMap<>();
+        try {
+            for (ResourceInstance resourceInstance : this.getInstanceList()) {
+                String internalPath = this.getDiskSubFolder() + resourceInstance.getFileName();
+                String destInternalPath = this.getDiskSubFolder(newFolderPath) + resourceInstance.getFileName();
+                boolean result = this.getStorageManager().move(internalPath, this.isProtectedResource(), destInternalPath, this.isProtectedResource());
+                if (!result) {
+                    throw new EntException(String.format("Error moving File '%s' to '%s', protected '%s'", internalPath, destInternalPath, this.isProtectedResource()));
+                }
+                movements.put(internalPath, destInternalPath);
+            }
+            logger.warn("Move resource instances from '{}' to '{}' has no effect on the database, protected '{}'", this.getDiskSubFolder(), newFolderPath, this.isProtectedResource());
+            this.setFolderPath(newFolderPath);
+        } catch (Exception e) {
+            for (ResourceInstance resourceInstance : this.getInstanceList()) {
+                String internalPath = this.getDiskSubFolder() + resourceInstance.getFileName();
+                String dest = movements.get(internalPath);
+                if (null != dest) {
+                    this.getStorageManager().move(dest, this.isProtectedResource(), internalPath, this.isProtectedResource());
+                }
+            }
+            throw new EntException("Error moving resource instances", e);
+        }
+    }
+    
     public IStorageManager getStorageManager() {
         return storageManager;
     }
