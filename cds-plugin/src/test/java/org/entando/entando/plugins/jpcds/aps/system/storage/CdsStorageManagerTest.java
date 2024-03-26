@@ -568,9 +568,11 @@ class CdsStorageManagerTest {
                 any(),
                 any(),
                 eq(false))).thenReturn(ret);
+        Mockito.when(cdsRemoteCaller.getFile(any(), any(), 
+                eq(false))).thenReturn(Optional.ofNullable(new ByteArrayInputStream("text random".getBytes(StandardCharsets.UTF_8))));
         boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", true);
         Assertions.assertThat(result).isTrue();
-        Mockito.verify(this.cdsRemoteCaller, Mockito.times(3)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(2)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
         Mockito.verify(this.cdsRemoteCaller, Mockito.times(1)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
     }
     
@@ -604,9 +606,9 @@ class CdsStorageManagerTest {
     }
     
     private void setExistingFileForMovement(String existingFileName, boolean isProtected, String path, boolean returnEmpty) {
-        String subPath = ((isProtected) ? "protected/" : "") + path;
+        String subPath = ((isProtected) ? "protected/" : "public/") + path;
         if (returnEmpty) {
-            Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
+            Mockito.lenient().when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
                         "http://cds-kube-service:8081/mytenant/api/v1/list/" + subPath)),
                 any())).thenReturn(Optional.empty());
             return;
@@ -617,7 +619,7 @@ class CdsStorageManagerTest {
         CdsFileAttributeViewDto dir = new CdsFileAttributeViewDto();
         dir.setName("test-folder");
         dir.setDirectory(true);
-        Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
+        Mockito.lenient().when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
                         "http://cds-kube-service:8081/mytenant/api/v1/list/" + subPath)),
                 any())).thenReturn(Optional.ofNullable(new CdsFileAttributeViewDto[]{file, dir}));
     }
