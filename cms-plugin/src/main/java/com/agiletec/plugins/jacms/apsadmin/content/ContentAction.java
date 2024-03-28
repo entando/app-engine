@@ -82,6 +82,7 @@ public class ContentAction extends AbstractContentAction {
      * @return Il codice del risultato dell'azione.
      */
     public String edit() {
+        this.getRequest().getSession().removeAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP);
         try {
             Content content = this.getContentManager().loadContent(this.getContentId(), false);
             if (null == content) {
@@ -107,6 +108,7 @@ public class ContentAction extends AbstractContentAction {
      * @return Il codice del risultato dell'azione.
      */
     public String copyPaste() {
+        this.getRequest().getSession().removeAttribute("contentGroupOnSession");
         try {
             Content content = this.getContentManager().loadContent(this.getContentId(), this.isCopyPublicVersion());
             if (null == content) {

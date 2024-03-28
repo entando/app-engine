@@ -20,6 +20,7 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import java.util.Arrays;
+import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.entando.entando.aps.system.services.userpreferences.IUserPreferencesManager;
 import org.entando.entando.aps.system.services.userpreferences.UserPreferences;
@@ -80,6 +81,7 @@ public class IntroNewContentAction extends AbstractContentAction {
                 _logger.debug("Invalid content type");
                 return INPUT;
             }
+            this.getRequest().getSession().removeAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP);
             prototype.setFirstEditor(username);
             UserPreferences pref = this.getUserPreferencesManager().getUserPreferences(username);
             if (pref != null) {
@@ -94,7 +96,7 @@ public class IntroNewContentAction extends AbstractContentAction {
                             });
                 }
                 if (StringUtils.isNotBlank(defaultContentOwnerGroup) && null != this.getGroup(defaultContentOwnerGroup)) {
-                    prototype.setMainGroup(defaultContentOwnerGroup);
+                    this.getRequest().getSession().setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP, defaultContentOwnerGroup);
                     _logger.info("setting ownerGroup to {}", defaultContentOwnerGroup);
                 }
             }
@@ -107,12 +109,14 @@ public class IntroNewContentAction extends AbstractContentAction {
     }
 	
 	protected void fillSessionAttribute(Content prototype) {
-		if (this.getAuthorizationManager().isAuthOnGroup(this.getCurrentUser(), Group.FREE_GROUP_NAME)) {
-			this.getRequest().getSession().setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP, Group.FREE_GROUP_NAME);
+        HttpSession session = this.getRequest().getSession();
+		if (null == session.getAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP) 
+                && this.getAuthorizationManager().isAuthOnGroup(this.getCurrentUser(), Group.FREE_GROUP_NAME)) {
+			session.setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP, Group.FREE_GROUP_NAME);
 		}
 		String marker = buildContentOnSessionMarker(prototype, ApsAdminSystemConstants.ADD);
 		super.setContentOnSessionMarker(marker);
-		this.getRequest().getSession().setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_PREXIX + marker, prototype);
+		session.setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_PREXIX + marker, prototype);
 		_logger.debug("Created ed inserted on session content prototype of type {}", prototype.getTypeCode());
 	}
 	
