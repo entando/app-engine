@@ -100,8 +100,9 @@
                 </s:if>
                 <s:else>
                     <div class="input-group">
+                        <s:set var="contentGroupOnSessionVar">${session.contentGroupOnSession}</s:set>
                         <wpsf:select name="mainGroup" id="contentMainGroup" list="allowedGroups"
-                                     value="#session.contentGroupOnSession"
+                                     value="#contentGroupOnSessionVar"
                                      listKey="name" listValue="descr" cssClass="form-control" />
                         <span class="input-group-btn">
                             <wpsf:submit action="configureMainGroup"
