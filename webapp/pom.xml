@@ -72,6 +72,8 @@
         <mediator.object.md5>1f3c944dae1ce92d0bd3c5f736b0f4c0</mediator.object.md5>
         <mediator.object.username/>
         <mediator.object.password/>
+        <!-- Final Name Configuration -->
+        <jar.finalName>entando-de-app</jar.finalName>
     </properties>
     <dependencies>
         <dependency>
@@ -481,7 +483,7 @@
         </profile>
     </profiles>
     <build>
-        <finalName>entando-de-app</finalName>
+        <finalName>${jar.finalName}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -894,6 +896,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.2.2</version>
                 <configuration>
+                    <resourceEncoding>UTF-8</resourceEncoding>
                     <!-- This is explicitly declared in project deps.-->
                     <webResources>
                         <resource>
