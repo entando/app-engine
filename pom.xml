@@ -81,13 +81,13 @@
         <test.database.port.url>jdbc:derby:memory:testPort;create=true</test.database.port.url>
         <test.database.serv.url>jdbc:derby:memory:testServ;create=true</test.database.serv.url>
         <!--dependency versions-->
-        <spring.version>5.3.27</spring.version>
-        <springsecurity.version>5.5.7</springsecurity.version>
+        <spring.version>5.3.33</spring.version>
+        <springsecurity.version>5.7.12</springsecurity.version>
         <springsecurityoauth2.version>2.5.2.RELEASE</springsecurityoauth2.version>
-        <struts2.version>2.5.31</struts2.version>
+        <struts2.version>2.5.33</struts2.version>
         <jackson.version>2.12.7</jackson.version>
         <jackson-databind.version>2.12.7.1</jackson-databind.version>
-        <hibernate-validator-version>6.0.20.Final</hibernate-validator-version>
+        <hibernate-validator-version>6.2.0.Final</hibernate-validator-version>
         <lucene-core.version>8.9.0</lucene-core.version>
         <json-path-assert.version>2.6.0</json-path-assert.version>
         <springfox-swagger2.version>2.10.5</springfox-swagger2.version>
@@ -105,15 +105,15 @@
         <taglibs-standard-impl.version>1.2.5</taglibs-standard-impl.version>
         <assertj-core.version>3.20.2</assertj-core.version>
         <commons-digester.version>2.1</commons-digester.version>
-        <logback.version>1.2.7</logback.version>
+        <logback.version>1.2.13</logback.version>
         <logback-json.version>0.1.5</logback-json.version>
         <logback-jackson.version>0.1.5</logback-jackson.version>
         <aspectj.version>1.9.7</aspectj.version>
         <ormlite-jdbc.version>4.40</ormlite-jdbc.version>
-        <liquibase-core.version>4.4.3</liquibase-core.version>
+        <liquibase-core.version>4.8.0</liquibase-core.version>
         <slf4j.version>1.7.31</slf4j.version>
         <log4j2slf4j.version>2.20.0</log4j2slf4j.version>
-        <jettison.version>1.4.1</jettison.version>
+        <jettison.version>1.5.4</jettison.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jaxb-impl.version>3.0.1</jaxb-impl.version>
         <jaxb-xjc.version>3.0.1</jaxb-xjc.version>
@@ -167,12 +167,12 @@
         <stax-ex.version>2.0.1</stax-ex.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <activation.version>1.1.1</activation.version>
-        <commons-compress.version>1.21</commons-compress.version>
+        <commons-compress.version>1.26.0</commons-compress.version>
         <spring-data-redis.version>2.1.9.RELEASE</spring-data-redis.version>
         <spring-session-data-redis.version>2.7.0</spring-session-data-redis.version>
-        <lettuce-core.version>6.1.5.RELEASE</lettuce-core.version>
+        <lettuce-core.version>6.2.5.RELEASE</lettuce-core.version>
         <swagger-annotations.version>1.5.20</swagger-annotations.version>
-        <json-path.version>2.6.0</json-path.version>
+        <json-path.version>2.9.0</json-path.version>
         <quartz.version>2.3.2</quartz.version>
         <tallison-metadata-extractor.version>2.15.0.1</tallison-metadata-extractor.version>
         <jakarta.ws.rs-api.version>2.1.6</jakarta.ws.rs-api.version>
@@ -191,7 +191,7 @@
         <protobuf-java.version>3.19.6</protobuf-java.version>
         <xercesImpl.version>2.12.2</xercesImpl.version>
         <junrar.version>7.4.1</junrar.version>
-        <netty-common.version>4.1.77.Final</netty-common.version>
+        <netty-common.version>4.1.94.Final</netty-common.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
         <solr-solrj.version>9.4.0</solr-solrj.version>
         <spring-hateoas.version>1.5.5</spring-hateoas.version>

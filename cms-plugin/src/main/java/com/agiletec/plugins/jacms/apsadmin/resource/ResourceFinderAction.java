@@ -48,6 +48,7 @@ public class ResourceFinderAction extends AbstractResourceAction {
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ResourceFinderAction.class);
     
     private String text;
+    private String searchedResourceId;
     private String fileName;
     private String ownerGroupName;
     private String categoryCode;
@@ -107,23 +108,25 @@ public class ResourceFinderAction extends AbstractResourceAction {
     }
 
     protected FieldSearchFilter[] createSearchFilters() {
-        FieldSearchFilter typeCodeFilter;
         FieldSearchFilter[] filters = new FieldSearchFilter[] {};
-        
         if (StringUtils.isNotBlank(this.getResourceTypeCode())) {
-            typeCodeFilter = new FieldSearchFilter(IResourceManager.RESOURCE_TYPE_FILTER_KEY, this.getResourceTypeCode(), false);
-            filters = new FieldSearchFilter[] {typeCodeFilter};
-        } 
+            FieldSearchFilter<String> typeCodeFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_TYPE_FILTER_KEY, this.getResourceTypeCode(), false);
+            filters = ArrayUtils.add(filters, typeCodeFilter);
+        }
+        if (StringUtils.isNotBlank(this.getSearchedResourceId())) {
+            FieldSearchFilter<String> idFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_ID_FILTER_KEY, this.getSearchedResourceId(), true);
+            filters = ArrayUtils.add(filters, idFilter);
+        }
         if (StringUtils.isNotBlank(this.getOwnerGroupName())) {
-            FieldSearchFilter groupFilter = new FieldSearchFilter(IResourceManager.RESOURCE_MAIN_GROUP_FILTER_KEY, this.getOwnerGroupName(), false);
+            FieldSearchFilter<String> groupFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_MAIN_GROUP_FILTER_KEY, this.getOwnerGroupName(), false);
             filters = ArrayUtils.add(filters, groupFilter);
         }
         if (StringUtils.isNotBlank(this.getText())) {
-            FieldSearchFilter textFilter = new FieldSearchFilter(IResourceManager.RESOURCE_DESCR_FILTER_KEY, this.getText(), true);
+            FieldSearchFilter<String> textFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_DESCR_FILTER_KEY, this.getText(), true);
             filters = ArrayUtils.add(filters, textFilter);
         }
         if (StringUtils.isNotBlank(this.getFileName())) {
-            FieldSearchFilter filenameFilter = new FieldSearchFilter(IResourceManager.RESOURCE_FILENAME_FILTER_KEY, this.getFileName(), true);
+            FieldSearchFilter<String> filenameFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_FILENAME_FILTER_KEY, this.getFileName(), true);
             filters = ArrayUtils.add(filters, filenameFilter);
         }
         filters = ArrayUtils.add(filters, this.getOrderFilter());
@@ -212,6 +215,14 @@ public class ResourceFinderAction extends AbstractResourceAction {
         this.text = text;
     }
 
+    public String getSearchedResourceId() {
+        return searchedResourceId;
+    }
+
+    public void setSearchedResourceId(String searchedResourceId) {
+        this.searchedResourceId = searchedResourceId;
+    }
+
     public String getFileName() {
         return fileName;
     }
@@ -265,8 +276,9 @@ public class ResourceFinderAction extends AbstractResourceAction {
         }
         return (this.openCollapsed || hasFilterByCat
                 || !StringUtils.isBlank(this.getFileName())
-                || !StringUtils.isBlank(this.getOwnerGroupName()) 
-                || !StringUtils.isBlank(this.getReferenced()));
+                || !StringUtils.isBlank(this.getReferenced())
+                || !StringUtils.isBlank(this.getSearchedResourceId())
+                || !StringUtils.isBlank(this.getOwnerGroupName()));
     }
     public void setOpenCollapsed(boolean openCollapsed) {
         this.openCollapsed = openCollapsed;

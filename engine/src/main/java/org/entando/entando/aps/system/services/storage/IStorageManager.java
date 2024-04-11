@@ -41,6 +41,9 @@ public interface IStorageManager extends Serializable {
 
 	public boolean exists(String subPath, boolean isProtectedResource) throws EntException;
 	
+	public boolean move(String subPathSource, boolean isProtectedResourceSource, 
+            String subPathDest, boolean isProtectedResourceDest) throws EntException;
+	
 	public BasicFileAttributeView getAttributes(String subPath, boolean isProtectedResource) throws EntException;
 	
 	public String[] list(String subPath, boolean isProtectedResource) throws EntException;

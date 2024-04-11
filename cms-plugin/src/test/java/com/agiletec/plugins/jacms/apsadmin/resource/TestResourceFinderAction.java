@@ -25,6 +25,7 @@ import com.opensymphony.xwork2.Action;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,7 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         assertEquals(Action.SUCCESS, result);
         ResourceFinderAction action = (ResourceFinderAction) this.getAction();
         String resourceTypeCode = action.getResourceTypeCode();
+        Assertions.assertFalse(action.isOpenCollapsed());
         assertNotNull(resourceTypeCode);
         assertEquals("Image", resourceTypeCode);
         assertEquals(3, action.getResources().size());
@@ -86,6 +88,19 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         this.initAction("/do/jacms/Resource", "list");
         this.addParameter("resourceTypeCode", resourceTypeCode);
         return this.executeAction();
+    }
+
+    @Test
+    void testSearchResourcesById() throws Throwable {
+        String result = this.executeSearchResources("admin", "Image", Map.of("searchedResourceId", "2"));
+        assertEquals(Action.SUCCESS, result);
+        ResourceFinderAction action = (ResourceFinderAction) this.getAction();
+        Assertions.assertFalse(action.getResources().isEmpty());
+        Assertions.assertTrue(action.isOpenCollapsed());
+        SearcherDaoPaginatedResult<String> pagination = action.getPaginatedResourcesId(10);
+        assertEquals(2, pagination.getCount());
+        assertTrue(pagination.getList().contains("82"));
+        assertTrue(pagination.getList().contains("22"));
     }
 
     @Test
@@ -294,4 +309,13 @@ class TestResourceFinderAction extends ApsAdminBaseTestCase {
         return this.executeAction();
     }
 
+    private String executeSearchResources(String username, 
+            String resourceTypeCode, Map<String, String> parameters) throws Throwable {
+        this.setUserOnSession(username);
+        this.initAction("/do/jacms/Resource", "search");
+        this.addParameters(parameters);
+        this.addParameter("resourceTypeCode", resourceTypeCode);
+        return this.executeAction();
+    }
+    
 }

@@ -13,10 +13,12 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.resource;
 
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.entity.model.FieldError;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
+import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.BaseResourceDataBean;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import org.apache.commons.lang.StringUtils;
@@ -47,7 +49,9 @@ public class MultipleResourceAction extends ResourceAction {
     public void validate() {
         logger.debug("MultipleResourceAction validate");
         savedId.clear();
+        
         if (ApsAdminSystemConstants.EDIT == this.getStrutsAction()) {
+            this.fetchFileUploadFileNames();
             this.fetchFileDescriptions();
             addFieldErrors(validateFileDescriptions());
         } else {
@@ -57,6 +61,7 @@ public class MultipleResourceAction extends ResourceAction {
             addFieldErrors(validateFileUploadNames());
             addFieldErrors(validateFileUploadContentType());
         }
+        addFieldErrors(validateCheckDuplicateFile());
     }
 
     private void addFieldErrors(List<FieldError> fieldErrors) {
@@ -145,6 +150,36 @@ public class MultipleResourceAction extends ResourceAction {
             if (StringUtils.isEmpty(fileUploadContentType)) {
                 errors.add(new FieldError(FILE_CONTENT_TYPE_FIELD + i, getText("error.resource.filename.uploadError")));
             }
+        }
+        return errors;
+    }
+    
+    private List<FieldError>  validateCheckDuplicateFile() {
+        List<FieldError> errors = new ArrayList<>();
+        try {
+            if (StringUtils.isBlank(this.getMainGroup())) {
+                return errors;
+            }
+            FieldSearchFilter<String> groupFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_MAIN_GROUP_FILTER_KEY, this.getMainGroup(), false);
+            for (int i = 0; i < getFileUploadFileName().size(); i++) {
+                String formFileName = this.getFileUploadFileName(i);
+                if (formFileName.isEmpty()){
+                    continue;
+                }
+                FieldSearchFilter<String> fileNameFilter = new FieldSearchFilter<>(IResourceManager.RESOURCE_FILENAME_FILTER_KEY, formFileName, false);
+                FieldSearchFilter[] filters = new FieldSearchFilter[]{groupFilter, fileNameFilter};
+                List<String> resourcesId = this.getResourceManager().searchResourcesId(filters, List.of());
+                if (resourcesId.isEmpty()) {
+                    continue;
+                }
+                if ((this.getStrutsAction() == ApsAdminSystemConstants.ADD) || 
+                        (this.getStrutsAction() == ApsAdminSystemConstants.EDIT && !resourcesId.contains(this.getResourceId()))) {
+                    String[] args = {formFileName};
+                    errors.add(new FieldError(FILE_NAME_FIELD + i, getText("error.resource.file.alreadyPresent", args)));
+                }
+            }
+        } catch (EntException e) {
+            logger.error("Error on check duplicated files", e);
         }
         return errors;
     }
