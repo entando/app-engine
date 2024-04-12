@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -235,7 +236,7 @@ class ResourceManagerIntegrationTest extends BaseTestCase {
             assertEquals(1, resourcesId.size());
 
             resourceListAdded = this.resourceManager.addResources(resourceList);
-            List<String> addedIds = resourceListAdded.stream().map(ResourceInterface::getId).toList();
+            List<String> addedIds = resourceListAdded.stream().map(ResourceInterface::getId).collect(Collectors.toList());
             
             assertEquals(4, resourceListAdded.size());
             resourcesId = resourceManager.searchResourcesId(resourceType, null, categoryCodeToAdd, allowedGroups);

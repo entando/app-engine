@@ -14,7 +14,6 @@
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
 import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
-import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -180,7 +179,7 @@ public class CdsStorageManager implements IStorageManager {
             throw ert;
         } catch (Exception e) {
             String errorMessage = String.format(ERROR_EXTRACTING_DISK_INFO, Optional.ofNullable(url).map(URI::toString).orElse("null"));
-            throw new EntResourceNotFoundException(errorMessage, e);
+            throw new EntException(errorMessage, e);
         }
     }
     
