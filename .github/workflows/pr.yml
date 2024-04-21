@@ -38,6 +38,13 @@ jobs:
       - name: "PR PIPELINE START"
         id: START
         run: |
+          echo "test1"
+          echo $PPL_CLONE_URL
+          echo "test2"
+          git clone https://github.com/entando/app-engine.git
+          echo "test3"
+          git clone https://github.com/entando/entando-pipelines.git
+          echo "test4"
           ${{ secrets.ENTANDO_OPT_PPL_INSTALL_CMD }}
           ~/ppl-run \
             .. @checkout-branch --lcd "$LOCAL_CLONE_DIR" \
