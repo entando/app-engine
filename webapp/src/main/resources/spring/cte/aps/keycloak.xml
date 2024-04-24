@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <bean id="keycloakFilter" class="it.cte.keycloak.filter.CteKeycloakFilter">
+        <constructor-arg index="0" ref="keycloakConfiguration" />
+        <constructor-arg index="1" ref="oidcService" />
+        <constructor-arg index="2" ref="AuthenticationProviderManager" />
+        <constructor-arg index="3" ref="keycloakAuthorizationManager" />
+        <constructor-arg index="4" ref="UserManager" />
+    </bean>
+
+</beans>
