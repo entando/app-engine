@@ -2663,9 +2663,31 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                 delete(path)
                         .header("Authorization", "Bearer " + accessToken));
     }
-
+    
     @Test
-    void testGetContentsPaginated() throws Exception {
+    void testGetAllPaginatedContents() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        this.executeTestGetAllPaginatedContents(accessToken, IContentService.STATUS_DRAFT, 25);
+        this.executeTestGetAllPaginatedContents(accessToken, IContentService.STATUS_ONLINE, 24);
+    }
+    
+    void executeTestGetAllPaginatedContents(String accessToken, String status, int expected) throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/cms/contents?page=1&pageSize=100")
+                        .param("sort", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("direction", FieldSearchFilter.DESC_ORDER)
+                        .param("status", status)
+                        .header("Authorization", "Bearer " + accessToken));
+        String bodyResult = result.andReturn().getResponse().getContentAsString();
+        Integer payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
+        Assertions.assertEquals(expected, payloadSize.intValue());
+        result.andExpect(status().isOk());
+        result.andExpect(jsonPath("$.metaData.totalItems", is(payloadSize)));
+    }
+    
+    @Test
+    void testGetEvnContentsPaginated() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
@@ -2676,9 +2698,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                         .param("filter[0].operator", "eq")
                         .param("filter[0].value", "EVN")
                         .header("Authorization", "Bearer " + accessToken));
-        result
-                .andDo(resultPrint())
-                .andExpect(status().isOk())
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.size()", is(2)))
                 .andExpect(jsonPath("$.metaData.page", is(1)))
                 .andExpect(jsonPath("$.metaData.pageSize", is(2)))

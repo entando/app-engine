@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.ArrayUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -31,6 +32,14 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 public class PublicContentSearcherDAO extends AbstractContentSearcherDAO implements IContentSearcherDAO {
 	
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(PublicContentSearcherDAO.class);
+    
+    @Override
+    public int countContents(String[] categories, boolean orClauseCategoryFilter, 
+            EntitySearchFilter[] filters, Collection<String> userGroupCodes) {
+        EntitySearchFilter<String> onLineFilter = new EntitySearchFilter<>(IContentManager.CONTENT_ONLINE_FILTER_KEY, false);
+        EntitySearchFilter[] updatedFilters = (null != filters) ? ArrayUtils.add(filters, onLineFilter) : new EntitySearchFilter[]{onLineFilter};
+        return super.countContents(categories, orClauseCategoryFilter, updatedFilters, userGroupCodes);
+    }
 	
 	@Override
     public List<String> loadContentsId(String[] categories, 
