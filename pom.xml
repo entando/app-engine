@@ -81,7 +81,7 @@
         <test.database.port.url>jdbc:derby:memory:testPort;create=true</test.database.port.url>
         <test.database.serv.url>jdbc:derby:memory:testServ;create=true</test.database.serv.url>
         <!--dependency versions-->
-        <spring.version>5.3.33</spring.version>
+        <spring.version>5.3.34</spring.version>
         <springsecurity.version>5.7.12</springsecurity.version>
         <springsecurityoauth2.version>2.5.2.RELEASE</springsecurityoauth2.version>
         <struts2.version>2.5.33</struts2.version>
