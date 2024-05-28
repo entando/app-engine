@@ -29,13 +29,18 @@
     <br />
     <s:text name="label.disk.status" />&nbsp;:&nbsp;<s:property value="(#diskInfoVar.usedSpace / 1048576) > 0 ? (#diskInfoVar.usedSpace / 1048576) + ' Mb' : (#diskInfoVar.usedSpace / 1024) + ' Kb' " />&nbsp;<s:text name="label.disk.used" />&nbsp;/ 
     <s:property value="(#diskInfoVar.totalSize / 1048576) > 0 ? (#diskInfoVar.totalSize / 1048576) + ' Mb' : (#diskInfoVar.totalSize / 1024) + ' Kb' " />&nbsp;<s:text name="label.disk.available" />&nbsp;&ndash; 
-    <s:number name="%{(#diskInfoVar.usedSpace * 100 / #diskInfoVar.totalSize)}" type="percentage" minimumFractionDigits="2" />&nbsp;%&nbsp;<s:text name="label.disk.used.percentage" />
+    <s:set value="%{(#diskInfoVar.usedSpace * 100 / #diskInfoVar.totalSize)}" var="percentUsedVar" />
+    <s:number name="#percentUsedVar" type="percentage" minimumFractionDigits="2" />&nbsp;%&nbsp;<s:text name="label.disk.used.percentage" />
+    <div class="progress">
+        <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" style="width: <s:number name="#percentUsedVar" type="percentage" maximumFractionDigits="0" />%">
+            <span class="sr-only"><s:number name="#percentUsedVar" type="percentage" maximumFractionDigits="0" />% Complete (danger)</span>
+        </div>
+    </div>
 </s:if>
 <s:else>
     <!-- disk info null -->
 </s:else>
 
-<br>
 <div id="main">
     <s:set var="currentPath" value="%{currentPath}" />
     <s:set var="filesAttributes" value="filesAttributes" />
