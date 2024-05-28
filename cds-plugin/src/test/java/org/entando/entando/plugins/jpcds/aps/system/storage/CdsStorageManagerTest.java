@@ -13,6 +13,9 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.*;
@@ -75,7 +78,6 @@ class CdsStorageManagerTest {
 
         CdsCreateResponseDto ret = new CdsCreateResponseDto();
         ret.setStatusOk(true);
-        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
         Mockito.when(cdsRemoteCaller.executePostCall(eq(URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/")),
                 eq("/sub-path-testy"),
                 eq(false),
@@ -85,11 +87,6 @@ class CdsStorageManagerTest {
 
         ApsTenantApplicationUtils.setTenant("my-tenant");
         cdsStorageManager.createDirectory("/sub-path-testy",false);
-
-
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("path", "/sub-path-testy");
-        body.add("protected", false);
 
         Mockito.verify(cdsRemoteCaller, Mockito.times(1))
                 .executePostCall(eq(URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/")),
@@ -109,37 +106,28 @@ class CdsStorageManagerTest {
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
         ApsTenantApplicationUtils.setTenant("my-tenant");
-
         Assertions.assertThatThrownBy(
                 ()-> cdsStorageManager.createDirectory("../../sub-path-testy",false)
         ).isInstanceOf(EntRuntimeException.class).hasMessageStartingWith("Path validation failed:");
-
         Assertions.assertThatThrownBy(
                 ()-> cdsStorageManager.createDirectory(null,false)
         ).isInstanceOf(EntRuntimeException.class).hasMessageStartingWith("Error validating path");
-
-
         CdsCreateResponseDto ret = new CdsCreateResponseDto();
         ret.setStatusOk(false);
-        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
         Mockito.when(cdsRemoteCaller.executePostCall(any(),
                 eq("/sub-path-testy"),
                 eq(false),
                 any(),
                 any(),
                 eq(false))).thenReturn(ret);
-
         ApsTenantApplicationUtils.setTenant("my-tenant");
         Assertions.assertThatThrownBy(
                 ()-> cdsStorageManager.createDirectory("/sub-path-testy",false)
         ).isInstanceOf(EntRuntimeException.class).hasMessageStartingWith("Invalid status - Response");
-
-
         ApsTenantApplicationUtils.setTenant("my-notexist-tenant");
         Assertions.assertThatThrownBy(
                 ()-> cdsStorageManager.createDirectory("/sub-path-testy",false)
         ).isInstanceOf(EntRuntimeException.class).hasMessage("Error saving file/directory");
-
     }
 
     @Test
@@ -149,7 +137,6 @@ class CdsStorageManagerTest {
                 "cdsPath","/mytenant/api/v1/");
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
-
         CdsCreateResponseDto ret = new CdsCreateResponseDto();
         ret.setStatusOk(true);
         Mockito.when(cdsRemoteCaller.executePostCall(any(),
@@ -158,11 +145,9 @@ class CdsStorageManagerTest {
                 any(),
                 any(),
                 eq(false))).thenReturn(ret);
-
         ApsTenantApplicationUtils.setTenant("my-tenant");
         InputStream is = new ByteArrayInputStream("testo a casos".getBytes(StandardCharsets.UTF_8));
         cdsStorageManager.saveFile("/sub-path-testy/myfilename",false, is);
-
         Mockito.verify(cdsRemoteCaller, Mockito.times(1))
                 .executePostCall(eq(URI.create("http://cds-kube-service:8081/mytenant/api/v1/upload/")),
                         eq("/sub-path-testy/myfilename"),
@@ -170,9 +155,50 @@ class CdsStorageManagerTest {
                         any(),
                         any(),
                         eq(false));
-
     }
 
+    @Test
+    void shouldRetrieveDiskInfo() throws Exception {
+        final String baseUrl = "http://my-server/tenant1/cms-resources";
+        Map<String,String> configMap = Map.of("cdsPublicUrl", baseUrl,
+                "cdsPrivateUrl","http://tenant-cds-kube-service:8081",
+                "cdsPublicPath","/custom-path",
+                "cdsInternalPublicSection", "/custom-path",
+                "cdsPath","/api/v1");
+        TenantConfig tc = new TenantConfig(configMap);
+        Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class), Mockito.any())).thenReturn(Optional.of(Mockito.mock(DiskInfoDto.class)));
+        DiskInfoDto diskInfo = this.cdsStorageManager.getDiskInfo();
+        Assertions.assertThat(diskInfo).isNotNull();
+        ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
+        Mockito.verify(cdsRemoteCaller).getDiskInfo(uriCaptor.capture(), Mockito.any());
+        String expectedUrl = "http://tenant-cds-kube-service:8081/api/v1/utils/diskinfo";
+        Assertions.assertThat(uriCaptor.getValue()).hasToString(expectedUrl);
+    }
+    
+    @Test
+    void shouldReturnErrorCallingDiskInfo() throws Exception {
+        final String baseUrl = "http://my-server/tenant1/cms-resources";
+        Map<String,String> configMap = Map.of("cdsPublicUrl", baseUrl,
+                "cdsPrivateUrl","http://tenantx-cds-kube-service:8081",
+                "cdsPublicPath","/custom-path",
+                "cdsInternalPublicSection", "/custom-path",
+                "cdsPath","/api/v1");
+        TenantConfig tc = new TenantConfig(configMap);
+        Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class), Mockito.any())).thenThrow(new EntRuntimeException("Error"));
+        Exception ex = assertThrows(Exception.class,() -> this.cdsStorageManager.getDiskInfo());
+        Assertions.assertThat(ex).isInstanceOf(EntRuntimeException.class);
+        
+        Mockito.when(this.cdsRemoteCaller.getDiskInfo(Mockito.any(URI.class), Mockito.any())).thenReturn(Optional.empty());
+        Exception otherEx = assertThrows(Exception.class,() -> this.cdsStorageManager.getDiskInfo());
+        Assertions.assertThat(otherEx).isInstanceOf(EntResourceNotFoundException.class);
+        String expectedUrl = "http://tenantx-cds-kube-service:8081/api/v1/utils/diskinfo";
+        Assertions.assertThat(otherEx.getMessage()).contains(expectedUrl);
+    }
+    
     @Test
     void shouldNotDeleteDirectory() throws Exception {
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
@@ -529,7 +555,6 @@ class CdsStorageManagerTest {
         CdsCreateResponseDto ret = new CdsCreateResponseDto();
         ret.setStatusOk(true);
         ret.setList(Arrays.asList(new CdsCreateRowResponseDto[]{}));
-        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
         Mockito.when(cdsRemoteCaller.executePostCall(any(),
                 eq("/sub-path-testy/myfilename"),
                 eq(false),

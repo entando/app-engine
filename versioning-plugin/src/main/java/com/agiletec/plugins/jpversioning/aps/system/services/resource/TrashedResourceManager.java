@@ -42,6 +42,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.xml.sax.InputSource;
 import com.agiletec.aps.system.common.AbstractService;
+import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceDAO;
@@ -53,6 +54,7 @@ import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInt
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceRecordVO;
 import com.agiletec.plugins.jacms.aps.system.services.resource.parse.ResourceHandler;
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
+import java.util.Optional;
 
 /**
  * Manager of trashed resources.
@@ -63,15 +65,31 @@ public class TrashedResourceManager extends AbstractService implements ITrashedR
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(TrashedResourceManager.class);
 
+    private transient IResourceManager resourceManager;
+    private transient ICategoryManager categoryManager;
+
+	private transient IStorageManager storageManager;
+    private transient ConfigInterface configManager;
+
+    private transient ITrashedResourceDAO trashedResourceDAO;
+    private transient IResourceDAO resourceDAO;
+
 	@Override
 	public void init() throws Exception {
-		_logger.debug("{} ready", this.getClass().getName());
-		_logger.debug("Folder trashed resources: {}", this.getResourceTrashRootDiskSubFolder());
+		_logger.info("{} ready - Folder trashed resources: {}", this.getClass().getName(), this.getResourceTrashRootDiskSubFolder());
 	}
 
+    private boolean trashResourceActive() {
+        return Optional.ofNullable(this.getConfigManager().getParam(JpversioningSystemConstants.CONFIG_PARAM_TRASH_RESOURCE_ACTIVE))
+                .map(Boolean::parseBoolean).orElse(Boolean.TRUE);
+    }
 
 	@Before("execution(* com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager.deleteResource(..)) && args(resource)")
 	public void onDeleteResource(ResourceInterface resource) throws EntException {
+        if (!this.trashResourceActive()) {
+            _logger.debug("Trash of resources not active");
+            return;
+        }
 		this.addTrashedResource(resource);
 	}
 
@@ -313,50 +331,49 @@ public class TrashedResourceManager extends AbstractService implements ITrashedR
 	}
 
 	protected IResourceManager getResourceManager() {
-		return _resourceManager;
+		return resourceManager;
 	}
 	public void setResourceManager(IResourceManager resourceManager) {
-		this._resourceManager = resourceManager;
+		this.resourceManager = resourceManager;
 	}
 
 	protected ICategoryManager getCategoryManager() {
-		return _categoryManager;
+		return categoryManager;
 	}
 	public void setCategoryManager(ICategoryManager categoryManager) {
-		this._categoryManager = categoryManager;
+		this.categoryManager = categoryManager;
 	}
 
 	protected IStorageManager getStorageManager() {
-		return _storageManager;
+		return storageManager;
 	}
 	public void setStorageManager(IStorageManager storageManager) {
-		this._storageManager = storageManager;
+		this.storageManager = storageManager;
 	}
 
+    protected ConfigInterface getConfigManager() {
+        return configManager;
+    }
+    public void setConfigManager(ConfigInterface configManager) {
+        this.configManager = configManager;
+    }
+
     protected ITrashedResourceDAO getTrashedResourceDAO() {
-		return _trashedResourceDAO;
+		return trashedResourceDAO;
 	}
 	public void setTrashedResourceDAO(ITrashedResourceDAO trashedResourceDAO) {
-		this._trashedResourceDAO = trashedResourceDAO;
+		this.trashedResourceDAO = trashedResourceDAO;
 	}
 
 	protected IResourceDAO getResourceDAO() {
-		return _resourceDAO;
+		return resourceDAO;
 	}
 	public void setResourceDAO(IResourceDAO resourceDAO) {
-		this._resourceDAO = resourceDAO;
+		this.resourceDAO = resourceDAO;
 	}
 
 	private String getProtectedFilePathString(String folder , String mainGroup, String filename) {
 		return Paths.get(folder,mainGroup, filename).toString();
 	}
-
-    private IResourceManager _resourceManager;
-    private ICategoryManager _categoryManager;
-
-	private IStorageManager _storageManager;
-
-    private ITrashedResourceDAO _trashedResourceDAO;
-    private IResourceDAO _resourceDAO;
 
 }

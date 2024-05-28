@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
@@ -48,14 +51,14 @@ import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class CdsRemoteCallerTest {
+    
     @InjectMocks
     private CdsRemoteCaller cdsRemoteCaller;
     @Mock
     private RestTemplate restTemplate;
     @Mock
     private CdsConfiguration cdsConfiguration;
-
-
+    
     @Test
     void shouldCreateDirectoryForTenant() throws Exception {
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
@@ -168,8 +171,6 @@ class CdsRemoteCallerTest {
         Assertions.assertEquals(
                 "Invalid operation 'POST', response status:'502 BAD_GATEWAY' for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
                 ex.getMessage());
-
-
         Mockito.when(restTemplate.exchange(eq(url),eq(HttpMethod.POST),any(), eq(new ParameterizedTypeReference<List<CdsCreateRowResponseDto>>(){})))
                 .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
         Mockito.when(restTemplate.exchange(eq(auth.toString()),
@@ -177,7 +178,6 @@ class CdsRemoteCallerTest {
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
                 ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","xxxxxx")));
-
         ex = assertThrows(EntRuntimeException.class,
                 () -> cdsRemoteCaller.executePostCall(url,
                         "/sub-path-testy",
@@ -189,21 +189,10 @@ class CdsRemoteCallerTest {
         Assertions.assertEquals(
                 "Invalid operation 'POST', response status:'401 UNAUTHORIZED' for url:'http://cds-kube-service:8081/mytenant/api/v1/upload/'",
                 ex.getMessage());
-
     }
 
     @Test
     void shouldCreateFileForPrimary() throws Exception {
-        Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
-                "cdsPrivateUrl","http://cds-kube-service:8081/",
-                "cdsPath","/mytenant/api/v1",
-                "kcAuthUrl", "http://tenant1.server.com/auth",
-                "kcRealm", "tenant1",
-                "kcClientId", "id",
-                "kcClientSecret", "secret",
-                "tenantCode", "my-tenant1");
-
-        TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(cdsConfiguration.getKcAuthUrl()).thenReturn("http://auth.server.com/auth");
         Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
         Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
@@ -234,9 +223,6 @@ class CdsRemoteCallerTest {
 
         Assertions.assertTrue(ret.isStatusOk());
 
-
-        Assertions.assertTrue(ret.isStatusOk());
-
         Mockito.verify(restTemplate, Mockito.times(1))
                 .exchange(eq(authPrimary.toString()),
                 eq(HttpMethod.POST),
@@ -246,16 +232,6 @@ class CdsRemoteCallerTest {
 
     @Test
     void shouldDeleteFile() {
-        Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
-                "cdsPrivateUrl","http://cds-kube-service:8081/",
-                "cdsPath","/mytenant/api/v1",
-                "kcAuthUrl", "http://tenant1.server.com/auth",
-                "kcRealm", "tenant1",
-                "kcClientId", "id",
-                "kcClientSecret", "secret",
-                "tenantCode", "my-tenant1");
-
-        TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(cdsConfiguration.getKcAuthUrl()).thenReturn("http://auth.server.com/auth");
         Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
         Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
@@ -310,8 +286,7 @@ class CdsRemoteCallerTest {
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
                 ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"xxxxxx")));
-
-
+        
         Exception ex = assertThrows(EntRuntimeException.class,
                 () -> cdsRemoteCaller.executeDeleteCall(urlBadGateway,
                         Optional.ofNullable(tc),
@@ -322,9 +297,7 @@ class CdsRemoteCallerTest {
                 ex.getMessage());
         Mockito.verify(restTemplate, Mockito.times(1))
                 .exchange(eq(urlBadGateway),eq(HttpMethod.DELETE),any(), eq(new ParameterizedTypeReference<Map<String, String>>(){}));
-
-
-
+        
         URI urlUnAuth = URI.create("http://cds-kube-service:8081/mytenant/api/v1/delete/public/filename-unauth.txt");
         Mockito.when(restTemplate.exchange(eq(urlUnAuth),eq(HttpMethod.DELETE),any(), eq(new ParameterizedTypeReference<Map<String, String>>(){})))
                 .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
@@ -344,27 +317,54 @@ class CdsRemoteCallerTest {
                 ex.getMessage());
         Mockito.verify(restTemplate, Mockito.times(2))
                 .exchange(eq(urlUnAuth),eq(HttpMethod.DELETE),any(), eq(new ParameterizedTypeReference<Map<String, String>>(){}));
-
     }
-
+    
     @Test
-    void shouldRetrieveFileContent() throws Exception {
-        Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
-                "cdsPrivateUrl","http://cds-kube-service:8081/",
-                "cdsPath","/mytenant/api/v1",
-                "kcAuthUrl", "http://tenant1.server.com/auth",
-                "kcRealm", "tenant1",
-                "kcClientId", "id",
-                "kcClientSecret", "secret",
-                "tenantCode", "my-tenant1");
-
-        TenantConfig tc = new TenantConfig(configMap);
+    void shouldRetrieveDiskInfo() throws Exception {
         Mockito.when(cdsConfiguration.getKcAuthUrl()).thenReturn("http://auth.server.com/auth");
         Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
         Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
         Mockito.when(cdsConfiguration.getKcClientSecret()).thenReturn("sec");
+        String url = "http://cds-kube-service:8081/mytenant/api/v1/utils/diskinfo";
+        URI urlDiskInfo = URI.create(url);
+        URI authPrimary = URI.create("http://auth.server.com/auth/realms/primary/protocol/openid-connect/token");
+        Mockito.when(restTemplate.exchange(eq(authPrimary.toString()),
+                eq(HttpMethod.POST),
+                any(),
+                eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
+                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+        Mockito.when(restTemplate.exchange(eq(urlDiskInfo),eq(HttpMethod.GET),any(), eq(new ParameterizedTypeReference<DiskInfoDto>(){})))
+                .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
+        Optional<TenantConfig> config = Optional.empty();
+        System.out.println("zzzzzzzzzzzzzzzzzzzzz");
+        Exception ex = assertThrows(EntRuntimeException.class,() -> cdsRemoteCaller.getDiskInfo(urlDiskInfo, config));
+        Assertions.assertEquals(
+                String.format("Invalid operation 'GET', response status:'401 UNAUTHORIZED' for url:'%s'", url),
+                ex.getMessage());
+        DiskInfoDto diskInfo = new DiskInfoDto();
+        diskInfo.setTotalSize(10l);
+        diskInfo.setUsedSpace(5l);
+        Mockito.when(restTemplate.exchange(eq(urlDiskInfo),eq(HttpMethod.GET),any(), eq(new ParameterizedTypeReference<DiskInfoDto>(){})))
+                .thenReturn(ResponseEntity.ok().body(diskInfo));
+        Optional<DiskInfoDto> extractedOpt = this.cdsRemoteCaller.getDiskInfo(urlDiskInfo, Optional.empty());
+        Assertions.assertTrue(extractedOpt.isPresent());
+        Assertions.assertEquals(10l, extractedOpt.get().getTotalSize());
+    }
+    
+    @Test
+    void shouldDeserializeDiskInfo() throws Exception {
+        String response = "{\"total_size\": 222,\"used_space\": 111}";
+        DiskInfoDto info = new ObjectMapper().readValue(response, DiskInfoDto.class);
+        Assertions.assertEquals(222l, info.getTotalSize());
+        Assertions.assertEquals(111l, info.getUsedSpace());
+    }
 
-        Map <String, String> map = Map.of("status","OK");
+    @Test
+    void shouldRetrieveFileContent() throws Exception {
+        Mockito.when(cdsConfiguration.getKcAuthUrl()).thenReturn("http://auth.server.com/auth");
+        Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
+        Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
+        Mockito.when(cdsConfiguration.getKcClientSecret()).thenReturn("sec");
 
         //public
         URI url = URI.create("http://cds-kube-service:8081/mytenant/public/myfolder/filename.txt");
@@ -408,22 +408,11 @@ class CdsRemoteCallerTest {
 
     @Test
     void shouldManageErrorWhenRetrieveFileContent() throws Exception {
-        Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
-                "cdsPrivateUrl","http://cds-kube-service:8081/",
-                "cdsPath","/mytenant/api/v1",
-                "kcAuthUrl", "http://tenant1.server.com/auth",
-                "kcRealm", "tenant1",
-                "kcClientId", "id",
-                "kcClientSecret", "secret",
-                "tenantCode", "my-tenant1");
-
-        TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(cdsConfiguration.getKcAuthUrl()).thenReturn("http://auth.server.com/auth");
         Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
         Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
         Mockito.when(cdsConfiguration.getKcClientSecret()).thenReturn("sec");
 
-        Map <String, String> map = Map.of("status","OK");
         URI publicUrlBadGateway = URI.create("http://cds-kube-service:8081/mytenant/public/myfolder/filename-badgw.txt");
 
         //public BAD_GATEWAY
@@ -515,8 +504,7 @@ class CdsRemoteCallerTest {
         Mockito.when(cdsConfiguration.getKcRealm()).thenReturn("primary");
         Mockito.when(cdsConfiguration.getKcClientId()).thenReturn("sec1");
         Mockito.when(cdsConfiguration.getKcClientSecret()).thenReturn("sec");
-
-        Map <String, String> map = Map.of("status","OK");
+        
         URI url = URI.create("http://cds-kube-service:8081/mytenant/api/v1/list/protected/myfolder/filename.txt");
 
         // private api for resource in public or protected

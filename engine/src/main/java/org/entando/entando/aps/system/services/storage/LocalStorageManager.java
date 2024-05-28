@@ -30,6 +30,8 @@ import org.springframework.stereotype.Service;
 
 import static org.entando.entando.aps.system.services.storage.StorageManagerUtil.isSamePath;
 
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
+
 @Service("StorageManager")
 @CdsActive(false)
 public class LocalStorageManager implements IStorageManager, InitializingBean {
@@ -438,6 +440,11 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 			return new BasicFileAttributeView(file);
 		}
 	}
+    
+    @Override
+    public DiskInfoDto getDiskInfo() throws EntException {
+        throw new UnsupportedOperationException("Not supported for Local Storage");
+    }
 
 	protected String getBaseURL() {
 		return baseURL;
@@ -493,4 +500,5 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 			throw (EntRuntimeException) e;
 		}
 	}
+    
 }

@@ -18,6 +18,7 @@ import org.entando.entando.ent.exception.EntException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
 
 /**
  * @author E.Santoboni
@@ -62,5 +63,7 @@ public interface IStorageManager extends Serializable {
 	public void editFile(String subPath, boolean isProtectedResource, InputStream is) throws EntException;
 
 	public String createFullPath(String subPath, boolean isProtectedResource) throws EntException;
+    
+    public DiskInfoDto getDiskInfo() throws EntException;
 
 }

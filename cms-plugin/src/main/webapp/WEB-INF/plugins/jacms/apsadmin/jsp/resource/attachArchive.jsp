@@ -169,6 +169,7 @@
                 <wpsf:hidden name="resourceTypeCode"/>
                 <wpsf:hidden name="fileName"/>
                 <wpsf:hidden name="ownerGroupName"/>
+                <wpsf:hidden name="referenced"/>
                 <s:if test="#categoryTreeStyleVar == 'request'">
                     <s:iterator value="treeNodesToOpen" var="treeNodeToOpenVar">
                         <wpsf:hidden name="treeNodesToOpen" value="%{#treeNodeToOpenVar}"/>

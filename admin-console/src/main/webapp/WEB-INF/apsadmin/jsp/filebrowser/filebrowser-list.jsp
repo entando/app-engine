@@ -23,7 +23,24 @@
 <div class="text-right">
     <div class="form-group-separator"></div>
 </div>
-<br>
+
+<s:set var="diskInfoVar" value="%{diskInfo}" />
+<s:if test="%{null != #diskInfoVar}" >
+    <br />
+    <s:text name="label.disk.status" />&nbsp;:&nbsp;<s:property value="(#diskInfoVar.usedSpace / 1048576) > 0 ? (#diskInfoVar.usedSpace / 1048576) + ' Mb' : (#diskInfoVar.usedSpace / 1024) + ' Kb' " />&nbsp;<s:text name="label.disk.used" />&nbsp;/ 
+    <s:property value="(#diskInfoVar.totalSize / 1048576) > 0 ? (#diskInfoVar.totalSize / 1048576) + ' Mb' : (#diskInfoVar.totalSize / 1024) + ' Kb' " />&nbsp;<s:text name="label.disk.available" />&nbsp;&ndash; 
+    <s:set value="%{(#diskInfoVar.usedSpace * 100 / #diskInfoVar.totalSize)}" var="percentUsedVar" />
+    <s:number name="#percentUsedVar" type="percentage" minimumFractionDigits="2" />&nbsp;%&nbsp;<s:text name="label.disk.used.percentage" />
+    <div class="progress">
+        <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" style="width: <s:number name="#percentUsedVar" type="percentage" maximumFractionDigits="0" />%">
+            <span class="sr-only"><s:number name="#percentUsedVar" type="percentage" maximumFractionDigits="0" />% Complete (danger)</span>
+        </div>
+    </div>
+</s:if>
+<s:else>
+    <!-- disk info null -->
+</s:else>
+
 <div id="main">
     <s:set var="currentPath" value="%{currentPath}" />
     <s:set var="filesAttributes" value="filesAttributes" />
@@ -42,8 +59,7 @@
                             <s:param name="currentPath"><s:property escapeHtml="true" value="%{#currentPath}"/></s:param>
                             <s:param name="protectedFolder"><s:property value="%{getProtectedFolder()}"/></s:param>
                         </s:url>">
-                    <span class="icon fa fa-file-text"></span>&#32;<s:text
-                        name="label.addTextFile" />
+                    <span class="icon fa fa-file-text"></span>&#32;<s:text name="label.addTextFile" />
                 </a> <a class="btn btn-primary pull-right"
                         href="<s:url namespace="/do/FileBrowser" action="newDirEntry" >
                             <s:param name="currentPath"><s:property escapeHtml="true" value="%{#currentPath}"/></s:param>

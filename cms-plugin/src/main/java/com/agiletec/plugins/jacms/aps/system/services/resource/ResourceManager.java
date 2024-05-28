@@ -400,14 +400,20 @@ public class ResourceManager extends AbstractService
         }
         return resourcesId;
     }
-
+    
     @Override
     public SearcherDaoPaginatedResult<String> getPaginatedResourcesId(FieldSearchFilter[] filters,
             List<String> categories, Collection<String> userGroupCodes) throws EntException {
+        return this.getPaginatedResourcesId(filters, categories, userGroupCodes, null);
+    }
+
+    @Override
+    public SearcherDaoPaginatedResult<String> getPaginatedResourcesId(FieldSearchFilter[] filters,
+            List<String> categories, Collection<String> userGroupCodes, Boolean referenced) throws EntException {
         SearcherDaoPaginatedResult<String> pagedResult = null;
         try {
-            int count = this.getResourceDAO().countResources(filters, categories, userGroupCodes);
-            List<String> resourcesId = this.getResourceDAO().searchResourcesId(filters, categories, userGroupCodes);
+            int count = this.getResourceDAO().countResources(filters, categories, userGroupCodes, referenced);
+            List<String> resourcesId = this.getResourceDAO().searchResourcesId(filters, categories, userGroupCodes, referenced);
             pagedResult = new SearcherDaoPaginatedResult<>(count, resourcesId);
         } catch (Throwable t) {
             logger.error("Error searching paginated resources id", t);
@@ -447,8 +453,7 @@ public class ResourceManager extends AbstractService
     public ResourceInterface loadResource(String id, String correlationCode) throws EntException {
         ResourceInterface resource = null;
         try {
-            ResourceRecordVO resourceVo = loadResourceVo(id,
-                    correlationCode);
+            ResourceRecordVO resourceVo = loadResourceVo(id, correlationCode);
             if (null != resourceVo) {
                 resource = this.createResource(resourceVo);
                 resource.setMasterFileName(resourceVo.getMasterFileName());
