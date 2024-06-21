@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author E.Santoboni
  */
-class TestIntroNewContentAction extends AbstractBaseTestContentAction {
+class IntroNewContentActionIntegrationTest extends AbstractBaseTestContentAction {
 
 	@Test
     void testOpenNew() throws Throwable {
@@ -150,5 +150,7 @@ class TestIntroNewContentAction extends AbstractBaseTestContentAction {
 		result = this.executeAction();
 		assertEquals(Action.SUCCESS, result);
 	}
-
+    
+    
+    
 }
