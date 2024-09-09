@@ -11,4 +11,6 @@
 
     <changeSet id="00000000000001_jpmail_dataPort_restore" author="entando" context="restore" />
 
+    <include file="port/00000000000002_schemaPort.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>
