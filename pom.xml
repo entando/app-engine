@@ -26,6 +26,7 @@
         <module>versioning-plugin</module>
         <module>contentscheduler-plugin</module>
         <module>solr-plugin</module>
+        <module>webform-plugin</module>
         <module>webapp</module>
     </modules>
 

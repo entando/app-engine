@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+
+<bean id="jpwebformFormPluginSubMenu" class="com.agiletec.apsadmin.system.plugin.PluginSubMenuContainer" >
+		<property name="subMenuFilePath"><value>/WEB-INF/plugins/jpwebform/apsadmin/jsp/common/layouts/subMenu.jsp</value></property>
+	</bean>
+
+	<bean id="jpwebformFormAction" scope="prototype" 
+			class="it.difesa.esercito.plugins.jpwebform.apsadmin.form.FormAction" 
+			parent="abstractBaseAction" >
+		<property name="formManager" ref="jpwebformFormManager" />
+	</bean>
+
+
+	<!-- INTERNAL_SERVLET -->
+	
+	<bean id="jpwebformFormFrontEndAction" scope="prototype" 
+			class="it.difesa.esercito.plugins.jpwebform.aps.internalservlet.form.FormFrontEndAction" 
+			parent="abstractBaseAction" >
+		<property name="formManager" ref="jpwebformFormManager" />
+		<property name="mailManager" ref="jpwebformMailManager" />
+		<property name="sigeManager" ref="jpwebformSigeManager" />
+		<property name="pageManager" ref="PageManager" />
+	</bean>
+
+	<bean id="jpwebformFormConfigAction" class="it.difesa.esercito.plugins.jpwebform.apsadmin.portal.specialwidget.form.FormConfigAction"
+		parent="simpleWidgetAction" scope="prototype">
+	</bean>
+
+ 	
+</beans>

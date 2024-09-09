@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+		"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+		"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+
+	<package name="jpwebform_do/FrontEnd/jpwebform/Form" namespace="/do/FrontEnd/jpwebform/Form" extends="entando-front-default">
+
+		<global-results>
+			<result name="failure" type="guiFragment">
+				<param name="code">jpwebform_isff_front_Form_error</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/form/frontend-form-error.jsp</param>
+			</result>
+		</global-results>
+
+		<action name="render" class="jpwebformFormFrontEndAction" method="render">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_render</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/form/frontend-form-render.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+
+		<action name="deliver" class="jpwebformFormFrontEndAction" method="deliver">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_ok</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/form/frontend-form-ok.jsp</param>
+			</result>
+			<result name="input" type="guiFragment">
+				<param name="code">jpwebform_form_render</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/form/frontend-form-render.jsp</param>
+			</result>
+			<result name="not_delivered" type="guiFragment">
+				<param name="code">jpwebform_form_ko</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/form/frontend-form-ko.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeValidationStack"></interceptor-ref>
+		</action>
+
+	</package>
+
+</struts>
