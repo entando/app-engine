@@ -43,7 +43,7 @@ import org.springframework.web.context.WebApplicationContext;
 /**
  * @author W.Ambu - E.Santoboni
  */
-public class BaseTestCase {
+public abstract class BaseTestCase {
 
     private static final Logger log = LoggerFactory.getLogger(BaseTestCase.class);
 
@@ -51,6 +51,9 @@ public class BaseTestCase {
     private static MockServletContext servletContext;
     private static MockHttpServletRequest request;
     private static RequestContext reqCtx;
+
+
+
 
     @BeforeAll
     public static void setUp() throws Exception {

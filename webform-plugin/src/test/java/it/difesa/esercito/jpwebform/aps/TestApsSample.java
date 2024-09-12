@@ -1,5 +1,7 @@
 package it.difesa.esercito.jpwebform.aps;
 
+import static org.junit.Assert.assertTrue;
+
 public class TestApsSample extends ApsPluginBaseTestCase {
 	
 	@Override

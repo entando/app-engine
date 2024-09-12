@@ -39,8 +39,8 @@ public class AllTests {
 		TestSuite suite = new TestSuite("Change me with a suitable description");
 
 //		suite.addTestSuite(TestMapper.class);
-//		suite.addTestSuite(TestFormManager.class);
-		suite.addTestSuite(TestMailManager.class);
+		suite.addTestSuite(TestFormManager.class);
+//		suite.addTestSuite(TestMailManager.class);
 //		suite.addTestSuite(TestPathHelper.class);
 //		suite.addTestSuite(TestSigeManager.class);
 
