@@ -10,7 +10,7 @@ import com.agiletec.apsadmin.system.BaseAction;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.sige.ISigeManager;
+
 import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,13 +55,6 @@ public class FormAction extends BaseAction {
 		this._mailManager = mailManager;
 	}
 
-	public ISigeManager getSigeManager() {
-		return _sigeManager;
-	}
-	public void setSigeManager(ISigeManager sigeManager) {
-		this._sigeManager = sigeManager;
-	}
-
 	public IPageManager getPageManager() {
 		return _pageManager;
 	}
@@ -75,7 +68,6 @@ public class FormAction extends BaseAction {
 	
 	private IFormManager _formManager;
 	private IMailManager _mailManager;
-	private ISigeManager _sigeManager;
 	private IPageManager _pageManager;
 	
 }

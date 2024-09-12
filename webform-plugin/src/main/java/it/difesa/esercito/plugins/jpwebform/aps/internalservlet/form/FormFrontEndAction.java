@@ -11,7 +11,6 @@ import com.agiletec.aps.system.services.page.Widget;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.sige.SigeUserHelper;
 import it.difesa.esercito.plugins.jpwebform.apsadmin.form.FormAction;
 import java.util.Date;
 import java.util.HashMap;
@@ -133,15 +132,15 @@ public class FormFrontEndAction extends FormAction {
         try {
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
-            final String json = getSigeManager().getUserInfoById(currentUser);
+            final String json = null; // getSigeManager().getUserInfoById(currentUser);
 
 
             if (StringUtils.isNotBlank(json)) {
-                final String fullName = SigeUserHelper.getSigeUserFullName(json);
-                form.setQualifiedName(fullName);
-                final String email = SigeUserHelper.getUserEmail(json);
+//                final String fullName = SigeUserHelper.getSigeUserFullName(json);
+//                form.setQualifiedName(fullName);
+//                final String email = SigeUserHelper.getUserEmail(json);
 
-                form.setCc(email);
+//                form.setCc(email);
             } else {
                 log.warn("Could not get SIGE data for user '{}'", currentUser);
             }
