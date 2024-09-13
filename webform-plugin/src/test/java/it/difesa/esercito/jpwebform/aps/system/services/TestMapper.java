@@ -67,7 +67,7 @@ public class TestMapper extends TestCase {
 		final Form verify = DtoHelper.toForm(json);
 		assertNotNull(verify);
 
-		assertEquals(verify.getId(), "2677.sme");
+		assertEquals(verify.getId(), (Long)2677L);
 		assertEquals(verify.getName(), "Oettam");
 		assertEquals(verify.getSubmitted(), TODAY);
 		assertEquals("address@email.it", verify.getRecipient());
