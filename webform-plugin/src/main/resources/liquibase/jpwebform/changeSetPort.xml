@@ -5,12 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-<!--    <include file="port/00000000000001_dataPort_test.xml" relativeToChangelogFile="true" />-->
+   <!-- <include file="port/00000000000001_dataPort_test.xml" relativeToChangelogFile="true" />-->
 
 <!--    <include file="port/00000000000001_dataPort_production.xml" relativeToChangelogFile="true" />-->
 
 <!--    <changeSet id="00000000000001_jpmail_dataPort_restore" author="entando" context="restore" />-->
 
-<!--    <include file="port/00000000000002_schemaPort.xml" relativeToChangelogFile="true" />-->
+    <include file="port/000000000000018_schemaPort.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>

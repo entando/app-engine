@@ -74,12 +74,12 @@ public class Form {
 		this.subject = subject;
 	}
 
-	@Deprecated
+	//@Deprecated
 	private Long id;
 	private String name;
 	private Date submitted;
 	private FormData data;
-
+	@Deprecated
 	private String qualifiedName;
 	private String cc;
 	private String recipient;
