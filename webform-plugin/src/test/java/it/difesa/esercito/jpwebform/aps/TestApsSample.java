@@ -1,25 +1,15 @@
 package it.difesa.esercito.jpwebform.aps;
 
-import static org.junit.Assert.assertTrue;
+import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
-public class TestApsSample extends ApsPluginBaseTestCase {
+public class TestApsSample extends TestCase {
 	
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-		this.init();
-	}
-	
+
+	@Test
 	public void test() {
 		assertTrue(true);
 	}
-	
-	private void init() throws Exception {
-    	try {
-    		// init services
-		} catch (Exception e) {
-			throw e;
-		}
-    }
+
 	
 }

@@ -158,7 +158,7 @@ public abstract class BaseTestCase {
     }
 
     /**
-     * Return a user (with his autority) by username, with the password equals than username.
+     * Return a user (with his authority) by username, with the password equals than username.
      *
      * @param username The username
      * @return The required user.

@@ -12,6 +12,7 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormD
 import java.io.IOException;
 import java.util.Date;
 import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 public class TestMapper extends TestCase {
 
@@ -21,7 +22,8 @@ public class TestMapper extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 	}
-	
+
+	@Test
 	public void testFormDataMapper() throws IOException {
 		final FormData fd = getFormDataForTest();
 
@@ -57,6 +59,7 @@ public class TestMapper extends TestCase {
 		assertEquals("etichettaSel5", verify.getEtichettaSel5());
 	}
 
+	@Test
 	public void testFormMapper() throws IOException {
 		final Form form = getFormForTest();
 
@@ -107,7 +110,7 @@ public class TestMapper extends TestCase {
 	public static Form getFormForTest() {
 		Form form = new Form();
 
-		form.setId("2677.sme");
+		form.setId(2677L);
 		form.setName("Oettam");
 		form.setSubmitted(TODAY);
 		form.setData(getFormDataForTest());

@@ -5,37 +5,43 @@
  */
 package it.difesa.esercito.jpwebform.aps.system.services;
 
+import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.agiletec.aps.BaseTestCase;
-import it.difesa.esercito.jpwebform.aps.ApsPluginBaseTestCase;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.Before;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import javax.sql.DataSource;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
-import static org.junit.Assert.*;
-
-public class TestFormManager extends BaseTestCase {//ApsPluginBaseTestCase
+public class TestFormManager extends BaseTestCase {
 
 	public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
 
-/*	@BeforeAll
-	public static void setUp() throws Exception {
-		super.setUp();
-		//this.init();
-	}*/
 
+	@BeforeEach
+	public void init() {
+		this._formManager = (IFormManager) this.getService(BEAN_ID);
+		assertNotNull(_formManager);
+		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
+	}
+
+
+	@Test
 	public void testGetForm() throws Exception {
 		final String fileName = createFileForTesting(null);
 
@@ -50,6 +56,7 @@ public class TestFormManager extends BaseTestCase {//ApsPluginBaseTestCase
 		}
 	}
 
+	@Test
 	public void testGetForms() throws Exception {
 		String fileName = createFileForTesting(null);
 		try {
@@ -63,6 +70,7 @@ public class TestFormManager extends BaseTestCase {//ApsPluginBaseTestCase
 		}
 	}
 
+	@Test
 	public void testDeleteExpiredFiles() throws Exception {
 		String fileName = null;
 
@@ -80,7 +88,7 @@ public class TestFormManager extends BaseTestCase {//ApsPluginBaseTestCase
 		}
 	}
 
-
+	@Test
 	public void testAddForm() throws Exception {
 		String fileName = null;
 		try {
@@ -93,6 +101,7 @@ public class TestFormManager extends BaseTestCase {//ApsPluginBaseTestCase
 		}
 	}
 
+	@Test
 	public void testDeleteForm() throws Exception {
 		final String fileName = createFileForTesting(null);
 		assertNotNull(fileName);
@@ -123,19 +132,12 @@ public class TestFormManager extends BaseTestCase {//ApsPluginBaseTestCase
 				".sme";
 		final File file = new File(fileName);
 
-		form.setId(file.getName());
+		form.setId(2677L);
 		json = form.toJson();
 		FileUtils.writeStringToFile(file, json, StandardCharsets.UTF_8);
 		return file.getName();
 	}
 
-	private void init() {
-		this._formManager = (IFormManager) this.getService(BEAN_ID);
-	}
 
-
-	public static void setUp(){
-
-	}
 	private IFormManager _formManager;
 }

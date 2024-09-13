@@ -18,10 +18,10 @@ public class Form {
 		return mapper.writeValueAsString(this);
 	}
 
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -75,7 +75,7 @@ public class Form {
 	}
 
 	@Deprecated
-	private String id;
+	private Long id;
 	private String name;
 	private Date submitted;
 	private FormData data;

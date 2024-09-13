@@ -9,6 +9,11 @@
 
 	<bean id="jpwebformFormManager" class="it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormManager"
 			parent="abstractService">
+		<property name="formDAO" >
+			<bean class="it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormDAO">
+				<property name="dataSource" ref="portDataSource" />
+			</bean>
+		</property>
 	</bean>
 
 	<bean id="jpwebformMailManager" class="it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.MailManager"

@@ -74,36 +74,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	public List<Form> getForms() throws ApsSystemException {
 		List<Form> forms = new ArrayList<>();
 		try {
-			final IOFileFilter fileFilter = new SuffixFileFilter(".sme");
-			Collection<File> files = FileUtils.listFiles(_formPath, fileFilter, TrueFileFilter.INSTANCE);
-			// delete expired ones, collect the others
-			if (files != null && !files.isEmpty()) {
-				for (File file: files) {
-					String name = FilenameUtils.getBaseName(file.getName());
-					name = name.contains("-") ?
-							name.substring(0, name.indexOf("-")) :
-							name;
 
-					Instant instantFromMillis = Instant.ofEpochMilli(Long.parseLong(name));
-					LocalDateTime formSubmissionDate = LocalDateTime.ofInstant(instantFromMillis, ZONE_ITALY);
-					// check whether the date is older than the configured hours
-					LocalDateTime now = LocalDateTime.now();
-					LocalDateTime sixHoursAgo = now.minusHours(getAgeHours());
-					if (formSubmissionDate.isBefore(sixHoursAgo)) {
-						log.debug("deleting expired form: " + file.getName());
-						if (!file.delete()) {
-							log.error("error deleting expired file " + file.getAbsolutePath());
-						}
-					} else {
-						// read the file
-						String jsonContent = FileUtils.readFileToString(file, "UTF-8");
-						// convert the content to a form entity
-						Form form = DtoHelper.toForm(jsonContent);
-						forms.add(form);
-						log.debug("adding form " + file.getName() + " to the form list");
-					}
-				}
-			}
 		} catch (Throwable t) {
 			log.error("Error loading Form list",  t);
 			throw new ApsSystemException("Error loading Form ", t);
@@ -114,19 +85,8 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public String addForm(Form form) throws ApsSystemException {
 		try {
-			final String json;
-			final long epochMillis = form.getSubmitted().getTime();
-			final String fileName = _formPath + File.separator +
-					String.valueOf(epochMillis) +
-					"-" + generateRandomHash(8) +
-					".sme";
-			final File file = new File(fileName);
 
-			form.setId(file.getName());
-			json = form.toJson();
-			FileUtils.writeStringToFile(file, json, StandardCharsets.UTF_8);
-			log.info("successfully created file " + file.getName());
-			return file.getName();
+			return "file.getName()";
 		} catch (Throwable t) {
 			log.error("Error adding Form", t);
 			throw new ApsSystemException("Error adding Form", t);
@@ -136,12 +96,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public void deleteForm(String name) throws ApsSystemException {
 		try {
-			File form = new File(_formPath + File.separator + name);
-			if (form.exists()) {
-				if (!form.delete()) {
-					throw new RuntimeException("could not delete file " + name);
-				}
-			}
+
 		} catch (Throwable t) {
 			log.error("Error deleting Form with id {}", name, t);
 			throw new ApsSystemException("Error deleting Form with id:" + name, t);
@@ -164,7 +119,17 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _ageHours;
 	}
 
+	public IFormDAO getFormDAO() {
+		return _formDAO;
+	}
+
+	public void setFormDAO(IFormDAO formDAO) {
+		this._formDAO = formDAO;
+	}
+
 	public void setAgeHours(Integer _ageHours) {
 		this._ageHours = _ageHours;
 	}
+
+	private IFormDAO _formDAO;
 }
