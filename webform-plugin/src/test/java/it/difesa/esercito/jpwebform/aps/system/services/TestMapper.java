@@ -5,7 +5,6 @@
  */
 package it.difesa.esercito.jpwebform.aps.system.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.DtoHelper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
