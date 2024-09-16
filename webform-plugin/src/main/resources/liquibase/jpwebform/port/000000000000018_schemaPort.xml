@@ -17,10 +17,10 @@
             <constraints primaryKey="true" nullable="false"/>
         </column>
         <column name="name" type="varchar(50)">
-            <!--<constraints nullable="false" />-->
+            <constraints nullable="false" />
         </column>
         <column name="submitted" type="date">
-           <!-- <constraints nullable="false" />-->
+            <constraints nullable="false" />
         </column>
         <column name="data" type="CLOB" />
 

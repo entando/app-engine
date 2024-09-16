@@ -13,6 +13,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +44,8 @@ public class FormManager extends AbstractService implements IFormManager {
 		log.info("Form directory: " + _formPath.getAbsolutePath());
 		log.debug("{} ready.", this.getClass().getName());
 	}
- 
+
+
 	@Override
 	public Form getForm(long id) throws ApsSystemException {
 		try {
@@ -53,6 +56,7 @@ public class FormManager extends AbstractService implements IFormManager {
 			throw new ApsSystemException("Error loading form with id: " + id, t);
 		}
 	}
+
 
 	@Override
 	public List<Form> getForms() throws ApsSystemException {
@@ -69,7 +73,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public String addForm(Form form) throws ApsSystemException {
 		try {
-
+			_formDAO.insertForm(form);
 			return "file.getName()";
 		} catch (Throwable t) {
 			log.error("Error adding Form", t);

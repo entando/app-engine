@@ -12,7 +12,8 @@ public interface IFormManager {
 
 	final String BEAN_ID = "jpwebformFormManager";
 
-	/**
+
+    /**
 	 * Load a file representing a form from the disk
 	 * @param file
 	 * @return
