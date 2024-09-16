@@ -1,8 +1,10 @@
 package it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FormData {
 
     public String valore1;

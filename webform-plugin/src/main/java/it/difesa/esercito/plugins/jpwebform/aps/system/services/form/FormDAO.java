@@ -219,7 +219,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 	}
 
-	public Form loadForm(int id) {
+	public Form loadForm(long id) {
 		Form form = null;
 		Connection conn = null;
 		PreparedStatement stat = null;
@@ -236,14 +236,14 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-	public Form loadForm(int id, Connection conn) {
+	public Form loadForm(long id, Connection conn) {
 		Form form = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
 		try {
 			stat = conn.prepareStatement(LOAD_FORM);
 			int index = 1;
-			stat.setInt(index++, id);
+			stat.setLong(index++, id);
 			res = stat.executeQuery();
 			if (res.next()) {
 				form = this.buildFormFromRes(res);
@@ -283,7 +283,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 	
-	private static final String LOAD_FORM = "SELECT id, name, submitted, data  FROM jpwebform_form WHERE id = ?";
+	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\"  FROM jpwebform_form WHERE id = ?";
 	
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 

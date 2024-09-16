@@ -18,7 +18,7 @@ public interface IFormManager {
 	 * @return
 	 * @throws ApsSystemException
 	 */
-	public Form getForm(String file) throws ApsSystemException;
+	public Form getForm(long file) throws ApsSystemException;
 
 	/**
 	 * Retrieve from disk the forms not expired

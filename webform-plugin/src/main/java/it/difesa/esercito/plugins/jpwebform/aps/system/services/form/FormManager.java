@@ -13,8 +13,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,20 +44,14 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
  
 	@Override
-	public Form getForm(String name) throws ApsSystemException {
+	public Form getForm(long id) throws ApsSystemException {
 		try {
-			if (StringUtils.isNotBlank(name)) {
-				final String fileName = _formPath + File.separator + name;
-				final File file = new File(fileName);
-
-				String jsonContent = FileUtils.readFileToString(file, "UTF-8");
-				return DtoHelper.toForm(jsonContent);
-			}
+			log.debug("Loading form {}", id);
+			return _formDAO.loadForm(id);
 		} catch (Throwable t) {
-			log.error("Error loading form with id '{}'", name,  t);
-			throw new ApsSystemException("Error loading form with id: " + name, t);
+			log.error("Error loading form with id '{}'", id,  t);
+			throw new ApsSystemException("Error loading form with id: " + id, t);
 		}
-		return null;
 	}
 
 	@Override

@@ -12,7 +12,7 @@ public interface IFormDAO {
 
 	public List<Integer> searchForms(FieldSearchFilter[] filters);
 	
-	public Form loadForm(int id);
+	public Form loadForm(long id);
 
 	public List<Integer> loadForms();
 

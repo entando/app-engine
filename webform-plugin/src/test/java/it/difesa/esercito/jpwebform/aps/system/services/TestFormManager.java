@@ -7,29 +7,21 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.DtoHelper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
+import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.velocity.runtime.directive.contrib.For;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,24 +39,12 @@ public class TestFormManager extends BaseTestCase {
 
 	@Test
 	public void testGetForm() throws Exception {
-		final String fileName = createFileForTesting(null);
-		System.out.println("\t\t\t\t\tNOME GENERATO FILENAME=====> "+fileName+"\n\n\n\n\n\n\n\n\n");
+		Form form = _formManager.getForm(2677);
+		assertNotNull(form);
+		assertNotNull(form.getData());
+		// TODO da completare
+		assertEquals("setEtichetta2", form.getData().getEtichetta2());
 
-		Form form = _formManager.getForm(fileName);
-
-		System.out.println("\t\t\t\t\tFORM=====> "+form.getId()+"\n\n\n\n\n\n\n\n\n");
-
-
-/*
-		try {
-			Form form = _formManager.getForm(fileName);
-			assertNotNull(form);
-			assertEquals(fileName, form.getId());
-		} finally {
-			if (StringUtils.isNotBlank(fileName)) {
-				_formManager.deleteForm(fileName);
-			}
-		}*/
 	}
 
 	@Test
@@ -156,6 +136,39 @@ public class TestFormManager extends BaseTestCase {
 		return file.getName();
 	}
 
+	@Deprecated
+	private FormData generateFormData() {
+		FormData fd = new FormData();
+
+		fd.setEtichetta1("setEtichetta1");
+		fd.setEtichetta2("setEtichetta2");
+		fd.setEtichetta3("setEtichetta3");
+		fd.setEtichetta4("setEtichetta4");
+		fd.setEtichetta5("setEtichetta5");
+
+		fd.setTesto1("setTesto1");
+		fd.setTesto2("setTesto2");
+		fd.setTesto3("setTesto3");
+		fd.setTesto4("setTesto4");
+		fd.setTesto5("setTesto5");
+
+		fd.setEtichettaSel1("setEtichettaSel1");
+		fd.setEtichettaSel2("setEtichettaSel2");
+		fd.setEtichettaSel2("setEtichettaSel3");
+		fd.setEtichettaSel4("setEtichettaSel4");
+		fd.setEtichettaSel5("setEtichettaSel5");
+
+		fd.setValore1("setValore1");
+		fd.setValore2("setValore2");
+		fd.setValore3("setValore3");
+		fd.setValore4("setValore4");
+		fd.setValore5("setValore5");
+
+//		ObjectMapper mapper = new ObjectMapper();
+//		String json = mapper.writeValueAsString(fd);
+
+		return fd;
+	}
 
 	private IFormManager _formManager;
 }

@@ -31,13 +31,13 @@ public class FormTag extends TagSupport {
 		try {
 		Form form = null;
 			if (null != this.getKey()) {
-				form = formManager.getForm("this.getKey()");
+				form = formManager.getForm(00000L);
 			} else {
 				Widget widget = this.extractWidget(reqCtx);
 				ApsProperties widgetConfig = widget.getConfig();
 				String varid = widgetConfig.getProperty("id");
 				if (StringUtils.isNotBlank(varid)) {
-					form = formManager.getForm("new Integer(varid)");
+					form = formManager.getForm(0000L);
 				}
 			}
 			this.pageContext.setAttribute(this.getVar(), form);

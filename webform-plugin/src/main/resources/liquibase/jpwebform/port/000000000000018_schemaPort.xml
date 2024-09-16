@@ -12,8 +12,8 @@
         <addNotNullConstraint tableName="jpwebform_form" columnName="data" columnDataType="varchar(255)"></addNotNullConstraint>
     </changeSet>-->
 <changeSet id="000000000000018_jpwebform_schemaPort" author="entando">
-    <createTable tableName="form" >
-        <column name="id" type="int">
+    <createTable tableName="jpwebform_form" >
+        <column name="id" type="BIGINT">
             <constraints primaryKey="true" nullable="false"/>
         </column>
         <column name="name" type="varchar(50)">
@@ -22,7 +22,7 @@
         <column name="submitted" type="date">
            <!-- <constraints nullable="false" />-->
         </column>
-        <column name="data" type="varchar(50)" />
+        <column name="data" type="CLOB" />
 
     </createTable>
 </changeSet>
