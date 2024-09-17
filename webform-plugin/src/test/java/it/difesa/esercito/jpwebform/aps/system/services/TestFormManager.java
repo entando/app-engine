@@ -40,10 +40,38 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
 		testFormData(form.getData());
+		assertEquals(1725487200000L, form.getSubmitted().getTime());
+
 	}
 
 	private void testFormData(FormData data) {
+
+		assertNotNull(data);
+
+		assertEquals("setValore1", data.valore1);
+		assertEquals("setValore2", data.valore2);
+		assertEquals("setValore3", data.valore3);
+		assertEquals("setValore4", data.valore4);
+		assertEquals("setValore5", data.valore5);
+
+		assertEquals("setTesto1", data.testo1);
+		assertEquals("setTesto2", data.testo2);
+		assertEquals("setTesto3", data.testo3);
+		assertEquals("setTesto4", data.testo4);
+		assertEquals("setTesto5", data.testo5);
+
+		assertEquals("setEtichettaSel1", data.etichettaSel1);
+		assertEquals("setEtichettaSel3", data.etichettaSel2);
+		assertEquals(null, data.etichettaSel3);
+		assertEquals("setEtichettaSel4", data.etichettaSel4);
+		assertEquals("setEtichettaSel5", data.etichettaSel5);
+
 		assertEquals("setEtichetta1", data.etichetta1);
+		assertEquals("setEtichetta2", data.etichetta2);
+		assertEquals("setEtichetta3", data.etichetta3);
+		assertEquals("setEtichetta4", data.etichetta4);
+		assertEquals("setEtichetta5", data.etichetta5);
+
 	}
 
 
