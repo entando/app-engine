@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import javax.sql.DataSource;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,24 +48,10 @@ public class TestFormManager extends BaseTestCase {
 
 	}
 
-	@Test
-	public void testGetForms() throws Exception {
-		String fileName = createFileForTesting(null);
-
-		System.out.println("\t\t\t\t\tFILENAME=====> "+fileName+"\n\n\n\n\n\n\n\n\n");
-
-		List<Form> forms = this._formManager.getForms();
-		System.out.println("\t\t\t\t\tLIST FORMS=====> "+ forms +"\n\n\n\n\n\n\n\n\n");
-/*		try {
-			List<Form> forms = this._formManager.getForms();
-			assertNotNull(forms);
-			assertFalse(forms.isEmpty());
-		} finally {
-			if (StringUtils.isNotBlank(fileName)) {
-				_formManager.deleteForm(fileName);
-			}
-		}*/
-	}
+//	@Test
+//	public void testGetForms() throws Exception {
+//
+//	}
 
 /*	@Test
 	public void testDeleteExpiredFiles() throws Exception {
@@ -84,18 +71,20 @@ public class TestFormManager extends BaseTestCase {
 		}
 	}*/
 
-/*	@Test
+	@Test
 	public void testAddForm() throws Exception {
-		String fileName = null;
 		try {
-			fileName = createFileForTesting(null);
-			assertNotNull(fileName);
+			Form form = createFormForTesting(null, null);
+			_formManager.addForm(form);
+			assertNotNull(form.getId());
+			System.out.println("\n\n>>> " + form.getId());
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
 		} finally {
-			if (StringUtils.isNotBlank(fileName)) {
-				_formManager.deleteForm(fileName);
-			}
+
 		}
-	}*/
+	}
 
 /*	@Test
 	public void testDeleteForm() throws Exception {
@@ -115,29 +104,24 @@ public class TestFormManager extends BaseTestCase {
 
 
 
-	public static String createFileForTesting(LocalDateTime dateTime) throws Exception {
+	public Form createFormForTesting(LocalDateTime dateTime, String name) {
 		if (dateTime == null) {
 			dateTime = LocalDateTime.now();
 		}
-		Form form = TestMapper.getFormForTest();
+		if (StringUtils.isBlank(name)){
+			name = "userme";
+		}
+		Form form = new Form();
+		form.setId(null);
 		form.setSubmitted(Date.from(dateTime.atZone(ZONE_ITALY).toInstant()));
-		final String json;
-		final long epochMillis = form.getSubmitted().getTime();
-		final String fileName = System.getProperty("java.io.tmpdir") +
-				File.separator + "sme-form" + File.separator +
-				String.valueOf(epochMillis) +
-				"-" + FormManager.generateRandomHash(8) +
-				".sme";
-		final File file = new File(fileName);
-
-		form.setId(2677L);
-		json = form.toJson();
-		FileUtils.writeStringToFile(file, json, StandardCharsets.UTF_8);
-		return file.getName();
+		form.setName(name);
+		FormData data = generateFormDataForTesting();
+		form.setData(data);
+		return form;
 	}
 
-	@Deprecated
-	private FormData generateFormData() {
+
+	private FormData generateFormDataForTesting() {
 		FormData fd = new FormData();
 
 		fd.setEtichetta1("setEtichetta1");

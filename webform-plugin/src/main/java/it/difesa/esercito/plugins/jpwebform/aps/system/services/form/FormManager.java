@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public class FormManager extends AbstractService implements IFormManager {
 
 	private static final Logger log =  LoggerFactory.getLogger(FormManager.class);
-	private static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
+	public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
 	private static final int MAX_AGE_HOURS = 6;
 	static final String CHARACTERS = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789";
 	static final Random RANDOM = new SecureRandom();
@@ -67,10 +67,9 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
 
 	@Override
-	public String addForm(Form form) throws ApsSystemException {
+	public void addForm(Form form) throws ApsSystemException {
 		try {
-
-			return "file.getName()";
+			_formDAO.insertForm(form);
 		} catch (Throwable t) {
 			log.error("Error adding Form", t);
 			throw new ApsSystemException("Error adding Form", t);

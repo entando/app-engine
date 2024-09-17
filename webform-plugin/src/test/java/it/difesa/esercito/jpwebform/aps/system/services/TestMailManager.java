@@ -21,7 +21,7 @@ public class TestMailManager extends BaseTestCase {
     }
 
     public void testRetry() throws Exception {
-        TestFormManager.createFileForTesting(null);
+//        TestFormManager.createFileForTesting(null);
         _mailManager.retry();
         List<Form> forms = _formManager.getForms();
         assertNotNull(forms);

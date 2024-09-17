@@ -89,9 +89,10 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		PreparedStatement stat = null;
 		Connection conn  = null;
 		try {
-			long nextId = this.extractNextId(NEXT_ID, conn);
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
+			long nextId = this.extractNextId(NEXT_ID, conn);
+			form.setId(nextId);
 			this.insertForm(form, conn);
  			conn.commit();
 		} catch (Throwable t) {
@@ -111,7 +112,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat = conn.createStatement();
 			res = stat.executeQuery(query);
 			res.next();
-			id = res.getLong(1) + 1; // N.B.: funziona anche per il primo record
+			id = res.getLong(1) + 1;
 		} catch (Throwable t) {
 			logger.error("Error extracting next id", t);
 			throw new RuntimeException("Error extracting next id", t);
@@ -277,7 +278,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, data ) VALUES (?, ?, ?, ? )";
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, \"data\" ) VALUES (?, ?, ?, ? )";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
 

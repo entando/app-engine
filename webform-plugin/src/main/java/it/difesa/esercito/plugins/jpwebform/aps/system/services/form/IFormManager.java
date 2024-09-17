@@ -31,10 +31,9 @@ public interface IFormManager {
 	 * Persist a form that couldn't be delivered
 	 *
 	 * @param form
-	 * @return
 	 * @throws ApsSystemException
 	 */
-	public String addForm(Form form) throws ApsSystemException;
+	public void addForm(Form form) throws ApsSystemException;
 
 	/**
 	 * Delete a form from disk
