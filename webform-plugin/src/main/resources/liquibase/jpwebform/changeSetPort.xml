@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-   <!-- <include file="port/00000000000001_dataPort_test.xml" relativeToChangelogFile="true" />-->
+
 
 <!--    <include file="port/00000000000001_dataPort_production.xml" relativeToChangelogFile="true" />-->
 

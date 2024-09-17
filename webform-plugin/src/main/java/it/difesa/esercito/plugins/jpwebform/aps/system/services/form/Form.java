@@ -32,7 +32,7 @@ public class Form {
 		this.name = name;
 	}
 
-	public Date getSubmitted() {
+	public Date getSubmitted() { //Date
 		return submitted;
 	}
 	public void setSubmitted(Date submitted) {
@@ -74,12 +74,11 @@ public class Form {
 		this.subject = subject;
 	}
 
-	//@Deprecated
+	@Deprecated
 	private Long id;
 	private String name;
 	private Date submitted;
 	private FormData data;
-	@Deprecated
 	private String qualifiedName;
 	private String cc;
 	private String recipient;

@@ -42,9 +42,11 @@ public class TestFormManager extends BaseTestCase {
 	public void testGetForm() throws Exception {
 		Form form = _formManager.getForm(2677);
 		assertNotNull(form);
-		assertNotNull(form.getData());
-		// TODO da completare
-		assertEquals("setEtichetta2", form.getData().getEtichetta2());
+		assertEquals(_formManager.getForm(2677L).getId(), form.getId());
+		assertEquals(_formManager.getForm(2677L).getName(), form.getName());
+		assertEquals(_formManager.getForm(2677L).getData().etichetta1, "setEtichetta1");
+		//assertEquals(_formManager.getForm(2677L).getSubmitted(),);
+	}
 
 	}
 
@@ -148,8 +150,6 @@ public class TestFormManager extends BaseTestCase {
 		fd.setValore4("setValore4");
 		fd.setValore5("setValore5");
 
-//		ObjectMapper mapper = new ObjectMapper();
-//		String json = mapper.writeValueAsString(fd);
 
 		return fd;
 	}
