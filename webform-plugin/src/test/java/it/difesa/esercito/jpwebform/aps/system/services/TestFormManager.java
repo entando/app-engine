@@ -11,17 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.agiletec.aps.BaseTestCase;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.List;
 import javax.sql.DataSource;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,13 +37,16 @@ public class TestFormManager extends BaseTestCase {
 	public void testGetForm() throws Exception {
 		Form form = _formManager.getForm(2677);
 		assertNotNull(form);
-		assertEquals(_formManager.getForm(2677L).getId(), form.getId());
-		assertEquals(_formManager.getForm(2677L).getName(), form.getName());
-		assertEquals(_formManager.getForm(2677L).getData().etichetta1, "setEtichetta1");
-		//assertEquals(_formManager.getForm(2677L).getSubmitted(),);
+		assertEquals(2677L, form.getId());
+		assertEquals("Oettam", form.getName());
+		testFormData(form.getData());
 	}
 
+	private void testFormData(FormData data) {
+		assertEquals("setEtichetta1", data.etichetta1);
 	}
+
+
 
 //	@Test
 //	public void testGetForms() throws Exception {
@@ -76,10 +74,14 @@ public class TestFormManager extends BaseTestCase {
 	@Test
 	public void testAddForm() throws Exception {
 		try {
-			Form form = createFormForTesting(null, null);
+			Form form = createFormForTesting(null, "entando");
 			_formManager.addForm(form);
 			assertNotNull(form.getId());
-			System.out.println("\n\n>>> " + form.getId());
+			Form verify = _formManager.getForm(form.getId());
+			assertNotNull(verify.getId());
+			// TODO completare
+			assertEquals("entando", verify.getName());
+			testFormData(form.getData());
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
