@@ -15,9 +15,11 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,8 +132,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat.setLong(index++, form.getId());
  			stat.setString(index++, form.getName());
 			if(null != form.getSubmitted()) {
-				Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
-				stat.setTimestamp(index++, submittedTimestamp);	
+				//Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
+				Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
+				stat.setTimestamp(index++, submittedTimestamp);
 			} else {
 				stat.setNull(index++, Types.DATE);
 			}
@@ -268,7 +271,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			form.setName(res.getString("name"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
 			if (null != submittedValue) {
-				form.setSubmitted(new Date(submittedValue.getTime()));
+				//form.setSubmitted(new Date(submittedValue.getTime()));
+				form.setSubmitted(submittedValue.toLocalDateTime());
 			}
 			String json = res.getString("data");
 			ObjectMapper mapper = new ObjectMapper();

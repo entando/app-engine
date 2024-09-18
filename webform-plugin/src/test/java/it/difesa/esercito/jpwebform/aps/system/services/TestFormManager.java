@@ -9,8 +9,13 @@ import com.agiletec.aps.BaseTestCase;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
-import org.joda.time.LocalDate;
+
+import org.joda.time.LocalTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TestFormManager extends BaseTestCase {
 
-	public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
-	private static final Date TODAY = new Date();
+	//public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
+	private static final LocalDateTime TODAY = LocalDateTime.now();
 
 
 	@BeforeEach
@@ -44,7 +49,7 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
 		testFormData(form.getData());
-		assertEquals(new LocalDate(2024,9,5).toDate(), form.getSubmitted());
+		assertEquals( LocalDateTime.of(2024,Month.SEPTEMBER,5,0,0), form.getSubmitted());
 
 	}
 
@@ -88,7 +93,8 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals(2678L, id); //(INCREMENTALE)verifica il Max degli Id ed incrementa di uno
 		assertEquals("Plinio", verify.getName());
 		testFormData(verify.getData());
-		assertEquals(verify.getSubmitted(), new LocalDate().now().toDate());
+		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
+
 
 		_formManager.deleteForm(id);
 		verify = _formManager.getForm(id);
