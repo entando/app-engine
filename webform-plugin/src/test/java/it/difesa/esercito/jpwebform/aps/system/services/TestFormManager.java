@@ -9,25 +9,16 @@ import com.agiletec.aps.BaseTestCase;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.List;
-
-import org.joda.time.LocalTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
-import java.time.ZoneId;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.List;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestFormManager extends BaseTestCase {
 
@@ -60,23 +51,7 @@ public class TestFormManager extends BaseTestCase {
 		assertFalse(ids.isEmpty());
 	}
 
-/*	@Test
-	public void testDeleteExpiredFiles() throws Exception {
-		String fileName = null;
 
-		try {
-			LocalDateTime expiredFile = LocalDateTime.now();
-			expiredFile = expiredFile.minusHours(12);
-			fileName = createFileForTesting(expiredFile);
-			List<Form> forms = _formManager.getForms();
-			assertNotNull(forms);
-			assertTrue(forms.isEmpty());
-		} finally {
-			if (StringUtils.isNotBlank(fileName)) {
-				_formManager.deleteForm(fileName);
-			}
-		}
-	}*/
 
 	@Test
 	public void testAddDeleteForm() throws Exception {
@@ -90,7 +65,7 @@ public class TestFormManager extends BaseTestCase {
 		final Long id = verify.getId();
 
 		assertNotNull(id);
-		assertEquals(2678L, id); //(INCREMENTALE)verifica il Max degli Id ed incrementa di uno
+		assertEquals(2678L, id);
 		assertEquals("Plinio", verify.getName());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
@@ -100,72 +75,6 @@ public class TestFormManager extends BaseTestCase {
 		verify = _formManager.getForm(id);
 		assertNull(verify);
 	}
-
-/*	@Test
-	public void testDeleteForm() throws Exception {
-		final String fileName = createFileForTesting(null);
-		assertNotNull(fileName);
-		Form form = _formManager.getForm(fileName);
-		assertNotNull(form);
-		_formManager.deleteForm(fileName);
-		try {
-			form = _formManager.getForm(fileName); // this throws an exception!
-			assertNull(form); // this shouldn't be reached
-		} catch (Exception e) {
-			assertEquals("com.agiletec.aps.system.exception.ApsSystemException", e.getClass().getCanonicalName());
-			assertTrue(e.getMessage().contains("Error loading form with id"));
-		}
-	}*/
-
-
-
-/*	public Form createFormForTesting(LocalDateTime dateTime, String name) {
-		if (dateTime == null) {
-			dateTime = LocalDateTime.now();
-		}
-		if (StringUtils.isBlank(name)){
-			name = "userme";
-		}
-		Form form = new Form();
-		form.setId(null);
-		form.setSubmitted(Date.from(dateTime.atZone(ZONE_ITALY).toInstant()));
-		form.setName(name);
-		FormData data = generateFormDataForTesting();
-		form.setData(data);
-		return form;
-	}*/
-
-
-	/*private FormData generateFormDataForTesting() {
-		FormData fd = new FormData();
-
-		fd.setEtichetta1("setEtichetta1");
-		fd.setEtichetta2("setEtichetta2");
-		fd.setEtichetta3("setEtichetta3");
-		fd.setEtichetta4("setEtichetta4");
-		fd.setEtichetta5("setEtichetta5");
-
-		fd.setTesto1("setTesto1");
-		fd.setTesto2("setTesto2");
-		fd.setTesto3("setTesto3");
-		fd.setTesto4("setTesto4");
-		fd.setTesto5("setTesto5");
-
-		fd.setEtichettaSel1("setEtichettaSel1");
-		fd.setEtichettaSel2("setEtichettaSel2");
-		fd.setEtichettaSel2("setEtichettaSel3");
-		fd.setEtichettaSel4("setEtichettaSel4");
-		fd.setEtichettaSel5("setEtichettaSel5");
-
-		fd.setValore1("setValore1");
-		fd.setValore2("setValore2");
-		fd.setValore3("setValore3");
-		fd.setValore4("setValore4");
-		fd.setValore5("setValore5");
-
-
-		return fd;
-	}*/
 
 	private void testFormData(FormData data) {
 

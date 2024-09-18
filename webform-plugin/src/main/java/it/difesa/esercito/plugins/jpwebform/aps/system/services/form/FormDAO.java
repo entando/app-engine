@@ -9,19 +9,12 @@ import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
