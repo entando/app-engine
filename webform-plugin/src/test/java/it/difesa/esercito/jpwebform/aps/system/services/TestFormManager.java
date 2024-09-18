@@ -9,6 +9,7 @@ import com.agiletec.aps.BaseTestCase;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+import java.util.List;
 import org.joda.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,9 @@ import java.util.Date;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TestFormManager extends BaseTestCase {
 
@@ -45,12 +48,12 @@ public class TestFormManager extends BaseTestCase {
 
 	}
 
-
-	
-//	@Test
-//	public void testGetForms() throws Exception {
-//
-//	}
+	@Test
+	public void testGetForms() throws Exception {
+		List<Long> ids = _formManager.getForms();
+		assertNotNull(ids);
+		assertFalse(ids.isEmpty());
+	}
 
 /*	@Test
 	public void testDeleteExpiredFiles() throws Exception {
@@ -71,28 +74,25 @@ public class TestFormManager extends BaseTestCase {
 	}*/
 
 	@Test
-	public void testAddForm() throws Exception {
-		try {
+	public void testAddDeleteForm() throws Exception {
+		Form form = getFormForTest();
+		_formManager.addForm(form);
 
-			Form form = getFormForTest();
-			_formManager.addForm(form);
+		assertNotNull(form.getId());
 
-			assertNotNull(form.getId());
+		Form verify = _formManager.getForm(form.getId());
 
-			Form verify = _formManager.getForm(form.getId());
+		final Long id = verify.getId();
 
-			assertNotNull(verify.getId());
-			assertEquals(2678L, verify.getId()); //(INCREMENTALE)verifica il Max degli Id ed incrementa di uno
-			assertEquals("Plinio", verify.getName());
-			testFormData(verify.getData());
-			assertEquals(verify.getSubmitted(), new LocalDate().now().toDate());
+		assertNotNull(id);
+		assertEquals(2678L, id); //(INCREMENTALE)verifica il Max degli Id ed incrementa di uno
+		assertEquals("Plinio", verify.getName());
+		testFormData(verify.getData());
+		assertEquals(verify.getSubmitted(), new LocalDate().now().toDate());
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-
-		}
+		_formManager.deleteForm(id);
+		verify = _formManager.getForm(id);
+		assertNull(verify);
 	}
 
 /*	@Test

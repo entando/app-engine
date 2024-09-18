@@ -62,8 +62,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 
 	@Override
-	public List<Integer> loadForms() {
-		List<Integer> formsId = new ArrayList<Integer>();
+	public List<Long> loadForms() {
+		List<Long> formsId = new ArrayList<Long>();
 		Connection conn = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
@@ -72,7 +72,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat = conn.prepareStatement(LOAD_FORMS_ID);
 			res = stat.executeQuery();
 			while (res.next()) {
-				int id = res.getInt("id");
+				long id = res.getLong("id");
 				formsId.add(id);
 			}
 		} catch (Throwable t) {
@@ -188,7 +188,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 //	}
 
 	@Override
-	public void removeForm(int id) {
+	public void removeForm(long id) {
 		PreparedStatement stat = null;
 		Connection conn = null;
 		try {
@@ -205,12 +205,12 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 	}
 	
-	public void removeForm(int id, Connection conn) {
+	public void removeForm(long id, Connection conn) {
 		PreparedStatement stat = null;
 		try {
 			stat = conn.prepareStatement(DELETE_FORM);
 			int index = 1;
-			stat.setInt(index++, id);
+			stat.setLong(index++, id);
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error deleting form {}", id, t);

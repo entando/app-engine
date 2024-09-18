@@ -22,11 +22,12 @@ public interface IFormManager {
 	public Form getForm(long file) throws ApsSystemException;
 
 	/**
-	 * Retrieve from disk the forms not expired
-	 * @return
-	 * @throws ApsSystemException
-	 */
-	public List<Form> getForms() throws ApsSystemException;
+     * Retrieve from disk the forms not expired
+     *
+     * @return
+     * @throws ApsSystemException
+     */
+	public List<Long> getForms() throws ApsSystemException;
 
 	/**
 	 * Persist a form that couldn't be delivered
@@ -38,9 +39,10 @@ public interface IFormManager {
 
 	/**
 	 * Delete a form from disk
-	 * @param name the name of the form to delete
+	 *
+	 * @param id the name of the form to delete
 	 * @throws ApsSystemException in case the form file does not exist
 	 */
-	public void deleteForm(String name) throws ApsSystemException;
+	public void deleteForm(long id) throws ApsSystemException;
 
 }

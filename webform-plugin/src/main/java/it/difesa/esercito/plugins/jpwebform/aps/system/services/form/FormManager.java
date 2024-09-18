@@ -55,10 +55,10 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
 
 	@Override
-	public List<Form> getForms() throws ApsSystemException {
-		List<Form> forms = new ArrayList<>();
+	public List<Long> getForms() throws ApsSystemException {
+		List<Long> forms = new ArrayList<>();
 		try {
-
+			forms = _formDAO.loadForms();
 		} catch (Throwable t) {
 			log.error("Error loading Form list",  t);
 			throw new ApsSystemException("Error loading Form ", t);
@@ -77,12 +77,12 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
 
 	@Override
-	public void deleteForm(String name) throws ApsSystemException {
+	public void deleteForm(long id) throws ApsSystemException {
 		try {
-
+			_formDAO.removeForm(id);
 		} catch (Throwable t) {
-			log.error("Error deleting Form with id {}", name, t);
-			throw new ApsSystemException("Error deleting Form with id:" + name, t);
+			log.error("Error deleting Form with id {}", id, t);
+			throw new ApsSystemException("Error deleting Form with id:" + id, t);
 		}
 	}
 

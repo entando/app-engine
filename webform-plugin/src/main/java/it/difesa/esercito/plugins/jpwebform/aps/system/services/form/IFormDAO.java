@@ -14,9 +14,9 @@ public interface IFormDAO {
 	
 	public Form loadForm(long id);
 
-	public List<Integer> loadForms();
+	public List<Long> loadForms();
 
-	public void removeForm(int id);
+	public void removeForm(long id);
 	
 //	public void updateForm(Form form);
 
