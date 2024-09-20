@@ -13,7 +13,7 @@
             <column name="id" valueNumeric="2677"/>
             <column name="name" value="Oettam"/>
             <column name="submitted" value="2024-09-05"/>
-            <column name="data" valueClobFile="data/test/jpwebform.xml" />
+            <column name="data" valueClobFile="clob/test/jpwebform.xml" />
         </insert>
     </changeSet>
 

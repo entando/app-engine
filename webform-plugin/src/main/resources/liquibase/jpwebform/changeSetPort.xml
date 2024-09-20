@@ -15,4 +15,6 @@
 
     <include file="port/000000000000018_jpwebform_dataPort_test.xml" relativeToChangelogFile="true" />
 
+    <include file="port/000000000000018_jpwebform_dataPort_production.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>
