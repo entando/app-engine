@@ -7,9 +7,6 @@
 
 	<include file="it/difesa/esercito/plugins/jpwebform/apsadmin/portal/specialwidget/form/formSpecialWidget.xml"/>
 
-	<!-- include this snippet into your struts-plugin.xml file or rename this file 
-		edit also this file: /src/test/java/apsadmin/JpwebformApsAdminBaseTestCase.java
-	-->
 	<include file="it/difesa/esercito/plugins/jpwebform/aps/internalservlet/form/formFront.xml"/>
 
 </struts>
