@@ -99,6 +99,30 @@ public class FormManager extends AbstractService implements IFormManager {
 		return listForm;
 	}
 
+	@Override
+	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException {
+		List<Form> listForm= new ArrayList<>();
+		try {
+			listForm= _formDAO.searchByDateAfter(data, delivered);
+		} catch (Throwable t) {
+			log.error("Error to get list form",t);
+			throw new ApsSystemException("Error to get list form", t);
+		}
+		return listForm;
+	}
+
+	@Override
+	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException {
+		List<Form> listForm= new ArrayList<>();
+		try {
+			listForm= _formDAO.searchByDateBefore(data, delivered);
+		} catch (Throwable t) {
+			log.error("Error to get list form",t);
+			throw new ApsSystemException("Error to get list form", t);
+		}
+		return listForm;
+	}
+
 	public static String generateRandomHash(int length) {
 		StringBuilder hash = new StringBuilder(length);
 		for (int i = 0; i < length; i++) {

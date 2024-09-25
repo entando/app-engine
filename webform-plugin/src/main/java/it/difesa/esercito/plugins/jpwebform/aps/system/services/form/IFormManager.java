@@ -48,4 +48,7 @@ public interface IFormManager {
 
 	public List<Form> getFormList() throws ApsSystemException;
 
+	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException;
+	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException;
+
 }

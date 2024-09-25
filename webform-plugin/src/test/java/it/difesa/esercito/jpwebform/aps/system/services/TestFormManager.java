@@ -42,10 +42,6 @@ public class TestFormManager extends BaseTestCase {
 	@Test
 	public void testListForm() throws ApsSystemException {
 
-		System.out.println("\t\t\t OGGI: "+LocalDateTime.now()+"\n\n\n\n");
-		System.out.println("\t\t\t DATA1: "+LocalDateTime.of(2024,Month.SEPTEMBER,5,12,0)+"\n\n\n\n");
-		System.out.println("\t\t\t DATA2: "+LocalDateTime.of(LocalDate.of(2024, Month.AUGUST, 5), LocalTime.of(5, 30, 10))+"\n\n\n\n");
-
 		Form form0=new Form();
 		Form form1=new Form();
 		Form form2=new Form();
@@ -56,19 +52,19 @@ public class TestFormManager extends BaseTestCase {
 
 		form0.setId(2678L);
 		form0.setName("Romolo");
-		form0.setSubmitted(LocalDateTime.of(2024,Month.SEPTEMBER,5,12,0));
+		form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form0.setDelivered(true);
 		form0.setData(getFormDataForTest());
 
 		form1.setId(2679L);
 		form1.setName("Numa Pompilio");
-		form1.setSubmitted(LocalDateTime.of(2024,Month.SEPTEMBER,5,5,0));
+		form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
 		form1.setDelivered(true);
 		form1.setData(getFormDataForTest());
 
 		form2.setId(2680L);
 		form2.setName("Tullo Ostilio");
-		form2.setSubmitted(LocalDateTime.of(LocalDate.of(2024,Month.AUGUST, 5), LocalTime.of(5,30,10)));
+		form2.setSubmitted(LocalDateTime.parse("2024-05-09T03:27:50.000000"));
 		form2.setDelivered(false);
 		form2.setData(getFormDataForTest());
 
@@ -80,19 +76,19 @@ public class TestFormManager extends BaseTestCase {
 
 		form4.setId(2682L);
 		form4.setName("Tarquinio Prisco");
-		form4.setSubmitted(LocalDateTime.of(2024,Month.SEPTEMBER,5,6,0));
+		form4.setSubmitted(LocalDateTime.parse("2024-05-09T05:20:15.000000"));
 		form4.setDelivered(true);
 		form4.setData(getFormDataForTest());
 
 		form5.setId(2683L);
 		form5.setName("Servio Tullio");
-		form5.setSubmitted(LocalDateTime.of(2024,Month.SEPTEMBER,5,6,30));
+		form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
 		form5.setDelivered(false);
 		form5.setData(getFormDataForTest());
 
 		form6.setId(2684L);
 		form6.setName("Tarquinio il superbo");
-		form6.setSubmitted(LocalDateTime.of(2024,Month.SEPTEMBER,5,8,0));
+		form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
 		form6.setDelivered(true);
 		form6.setData(getFormDataForTest());
 
@@ -104,16 +100,36 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.addForm(form5);
 		_formManager.addForm(form6);
 
-
+		System.out.println("\n\n============================ALL=================================================");
 		_formManager.getFormList().forEach(form->{
-			try {
+
 				System.out.println("\n\n"+form.getId()+"\n"+
 						form.getName()+"\n"+
-						_formManager.getForm(form.getId()).getSubmitted()+"\n"+
-						form.getDelivered()+", \n\n\n\n");
-			} catch (ApsSystemException e) {
-				throw new RuntimeException(e);
-			}
+						form.getSubmitted()+"\n"+
+						form.getDelivered()+", \n\n");
+		});
+
+		System.out.println("============================TRUE(AFTER)=================================================");
+
+		List<Form> listSearchForm1 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", true);
+
+		listSearchForm1.forEach(form->{
+
+			System.out.println("\n\n"+form.getId()+"\n"+
+					form.getName()+"\n"+
+					form.getSubmitted()+"\n"+
+					form.getDelivered()+", \n\n");
+		});
+
+		System.out.println("============================FALSE(AFTER)=================================================");
+		List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
+
+		listSearchForm2.forEach(form->{
+
+			System.out.println("\n\n"+form.getId()+"\n"+
+					form.getName()+"\n"+
+					form.getSubmitted()+"\n"+
+					form.getDelivered()+", \n\n");
 		});
 	}
 
@@ -154,7 +170,6 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals(2678L, id);
 		assertEquals("Plinio", verify.getName());
 		testFormData(verify.getData());
-		System.out.println("TEST===> "+ verify.getSubmitted());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
 		assertEquals(false, verify.getDelivered());
 

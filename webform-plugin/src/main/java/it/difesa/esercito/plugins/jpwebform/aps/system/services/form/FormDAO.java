@@ -16,6 +16,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
@@ -286,6 +287,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Connection conn = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
+
 		try {
 			conn = this.getConnection();
 			stat = conn.prepareStatement(ALL_FORM);
@@ -294,6 +296,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				long id = res.getLong("id");
 				formlist.add(this.loadForm(id));
 			}
+
 		} catch (Throwable t) {
 			logger.error("Error loading Form list",  t);
 			throw new RuntimeException("Error loading Form list", t);
@@ -301,6 +304,32 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			closeDaoResources(res, stat, conn);
 		}
 		return formlist;
+	}
+
+	public List<Form> searchByDateAfter(String data, Boolean delivered){
+		List<Form> searchList = new ArrayList<Form>();
+		LocalDateTime ldt = LocalDateTime.parse(data);
+
+		searchList.addAll(
+
+				this.getFormList().stream()
+						.filter(form->ldt.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.collect(Collectors.toList())
+		);
+		return searchList;
+	}
+
+	public List<Form> searchByDateBefore(String data, Boolean delivered){
+		List<Form> searchList = new ArrayList<Form>();
+		LocalDateTime ldt = LocalDateTime.parse(data);
+
+		searchList.addAll(
+
+				this.getFormList().stream()
+						.filter(form->ldt.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.collect(Collectors.toList())
+		);
+		return searchList;
 	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
