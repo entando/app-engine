@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,8 +129,10 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				//Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
 				Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
 				stat.setTimestamp(index++, submittedTimestamp);
+				stat.setBoolean(index++, form.getDelivered()); //<=========
 			} else {
 				stat.setNull(index++, Types.DATE);
+
 			}
   			stat.setString(index++, form.getData().toJson());
 			stat.executeUpdate();
@@ -263,6 +266,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
+			form.setDelivered(res.getBoolean("delivered"));//<==========
 			if (null != submittedValue) {
 				//form.setSubmitted(new Date(submittedValue.getTime()));
 				form.setSubmitted(submittedValue.toLocalDateTime());
@@ -277,16 +281,26 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, \"data\" ) VALUES (?, ?, ?, ? )";
+	private List<Form> getSearchFormByHour(Timestamp timestamp){
+
+
+
+		return new ArrayList<>();
+	}
+
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 	
-	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\"  FROM jpwebform_form WHERE id = ?";
+	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
 	
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
+
+
+
 	
 }

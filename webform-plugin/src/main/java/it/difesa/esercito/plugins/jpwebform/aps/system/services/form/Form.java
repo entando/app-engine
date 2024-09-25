@@ -76,6 +76,11 @@ public class Form {
 		this.subject = subject;
 	}
 
+	public Boolean getDelivered(){
+		return delivered;
+	}
+	public void setDelivered(Boolean delivered){this.delivered=delivered;}
+
 	@Deprecated
 	private Long id;
 	private String name;
@@ -85,4 +90,5 @@ public class Form {
 	private String cc;
 	private String recipient;
 	private String subject;
+	private Boolean delivered;
 }

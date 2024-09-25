@@ -40,9 +40,11 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
 		testFormData(form.getData());
+		assertEquals(true, form.getDelivered());
 		assertEquals( LocalDateTime.of(2024,Month.SEPTEMBER,5,0,0), form.getSubmitted());
 
 	}
+
 
 	@Test
 	public void testGetForms() throws Exception {
@@ -69,12 +71,14 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals("Plinio", verify.getName());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
+		assertEquals(false, verify.getDelivered());
 
 
 		_formManager.deleteForm(id);
 		verify = _formManager.getForm(id);
 		assertNull(verify);
 	}
+
 
 	private void testFormData(FormData data) {
 
@@ -94,7 +98,9 @@ public class TestFormManager extends BaseTestCase {
 
 		assertEquals("setEtichettaSel1", data.etichettaSel1);
 		assertEquals("setEtichettaSel3", data.etichettaSel2);
-		assertEquals(null, data.etichettaSel3);
+
+		assertNull(data.etichettaSel3);
+
 		assertEquals("setEtichettaSel4", data.etichettaSel4);
 		assertEquals("setEtichettaSel5", data.etichettaSel5);
 
@@ -142,10 +148,12 @@ public class TestFormManager extends BaseTestCase {
 		form.setId(2677L);
 		form.setName("Plinio");
 		form.setSubmitted(TODAY);
+		form.setDelivered(false);
 		form.setData(getFormDataForTest());
 
 		return form;
 	}
+
 
 	private IFormManager _formManager;
 }
