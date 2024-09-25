@@ -281,11 +281,26 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-	private List<Form> getSearchFormByHour(Timestamp timestamp){
-
-
-
-		return new ArrayList<>();
+	public List<Form> getFormList(){
+		List<Form> formlist = new ArrayList<Form>();
+		Connection conn = null;
+		PreparedStatement stat = null;
+		ResultSet res = null;
+		try {
+			conn = this.getConnection();
+			stat = conn.prepareStatement(ALL_FORM);
+			res = stat.executeQuery();
+			while (res.next()) {
+				long id = res.getLong("id");
+				formlist.add(this.loadForm(id));
+			}
+		} catch (Throwable t) {
+			logger.error("Error loading Form list",  t);
+			throw new RuntimeException("Error loading Form list", t);
+		} finally {
+			closeDaoResources(res, stat, conn);
+		}
+		return formlist;
 	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
@@ -299,6 +314,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
+
+	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
 
 

@@ -45,4 +45,7 @@ public interface IFormManager {
 	 */
 	public void deleteForm(long id) throws ApsSystemException;
 
+
+	public List<Form> getFormList() throws ApsSystemException;
+
 }

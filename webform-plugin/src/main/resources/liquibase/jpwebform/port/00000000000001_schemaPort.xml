@@ -17,7 +17,7 @@
                 <constraints nullable="false" />
             </column>
 
-            <column name="submitted" type="date">
+            <column name="submitted" type="timestamp">
                 <constraints nullable="false" />
             </column>
 

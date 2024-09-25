@@ -23,4 +23,6 @@ public interface IFormDAO {
 	public void insertForm(Form form);
 
     public int countForms(FieldSearchFilter[] filters);
+
+	public List<Form>getFormList();
 }
