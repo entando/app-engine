@@ -9,6 +9,7 @@ import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import java.io.File;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,25 +101,25 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
 
 	@Override
-	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException {
+	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered) throws ApsSystemException {
 		List<Form> listForm= new ArrayList<>();
 		try {
 			listForm= _formDAO.searchByDateAfter(data, delivered);
 		} catch (Throwable t) {
-			log.error("Error to get list form",t);
-			throw new ApsSystemException("Error to get list form", t);
+			log.error("Error to get date list form",t);
+			throw new ApsSystemException("Error to get date list form", t);
 		}
 		return listForm;
 	}
 
 	@Override
-	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException {
+	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered) throws ApsSystemException {
 		List<Form> listForm= new ArrayList<>();
 		try {
 			listForm= _formDAO.searchByDateBefore(data, delivered);
 		} catch (Throwable t) {
-			log.error("Error to get list form",t);
-			throw new ApsSystemException("Error to get list form", t);
+			log.error("Error to get date list form",t);
+			throw new ApsSystemException("Error to get date list form", t);
 		}
 		return listForm;
 	}

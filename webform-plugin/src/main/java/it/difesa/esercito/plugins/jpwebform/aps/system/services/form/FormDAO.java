@@ -306,34 +306,33 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	}
 
 	/**/
-	public List<Form> searchByDateAfter(String data, Boolean delivered){
+	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered){
 		List<Form> searchList = new ArrayList<>();
-		LocalDateTime ldt = LocalDateTime.parse(data);
 
 		searchList.addAll(
 
 				this.getFormList().stream()
-						.filter(form->ldt.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.filter(form->data.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
 						.collect(Collectors.toList())
 		);
 		return searchList;
 	}
 
 	/**/
-	public List<Form> searchByDateBefore(String data, Boolean delivered){
+	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered){
 		List<Form> searchList = new ArrayList<>();
-		LocalDateTime ldt = LocalDateTime.parse(data);
+
 
 		searchList.addAll(
 
 				this.getFormList().stream()
-						.filter(form->ldt.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.filter(form->data.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
 						.collect(Collectors.toList())
 		);
 		return searchList;
 	}
 
-	//@Scheduled(cron = "0 */12 * * *") //ogni dodici ore
+	//@Scheduled(cron = "0 */12 * * *") //ogni 2 ore verifico quelle più vecchie di 12 ore
 	/*public void RetriveForm() {
 
 	}*/

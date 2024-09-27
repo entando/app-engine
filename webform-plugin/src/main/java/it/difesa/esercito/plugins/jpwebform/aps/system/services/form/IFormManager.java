@@ -6,6 +6,8 @@
 package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.exception.ApsSystemException;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IFormManager {
@@ -48,8 +50,8 @@ public interface IFormManager {
 
 	public List<Form> getFormList() throws ApsSystemException;
 
-	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException;
+	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered) throws ApsSystemException;
 
-	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException;
+	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered) throws ApsSystemException;
 
 }
