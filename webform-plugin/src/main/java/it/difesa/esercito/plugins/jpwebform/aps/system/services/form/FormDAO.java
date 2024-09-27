@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -237,8 +238,6 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-
-
 	public Form loadForm(long id, Connection conn) {
 		Form form = null;
 		PreparedStatement stat = null;
@@ -306,8 +305,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return formlist;
 	}
 
+	/**/
 	public List<Form> searchByDateAfter(String data, Boolean delivered){
-		List<Form> searchList = new ArrayList<Form>();
+		List<Form> searchList = new ArrayList<>();
 		LocalDateTime ldt = LocalDateTime.parse(data);
 
 		searchList.addAll(
@@ -319,8 +319,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return searchList;
 	}
 
+	/**/
 	public List<Form> searchByDateBefore(String data, Boolean delivered){
-		List<Form> searchList = new ArrayList<Form>();
+		List<Form> searchList = new ArrayList<>();
 		LocalDateTime ldt = LocalDateTime.parse(data);
 
 		searchList.addAll(
@@ -331,6 +332,11 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		);
 		return searchList;
 	}
+
+	//@Scheduled(cron = "0 */12 * * *") //ogni dodici ore
+	/*public void RetriveForm() {
+
+	}*/
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
 
@@ -344,9 +350,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
 
-	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
+	private final String ALL_FORM ="SELECT * FROM jpwebform_form"; //<========
 
+	private final String SEARCH_BY_DATE_AFTER ="SELECT * FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
 
-
-	
+	private final String SEARCH_BY_DATE_BEFORE ="SELECT * FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
 }

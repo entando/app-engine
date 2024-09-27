@@ -10,18 +10,13 @@ import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import net.minidev.json.JSONUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.Month;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +35,7 @@ public class TestFormManager extends BaseTestCase {
 	}
 
 	@Test
-	public void testListForm() throws ApsSystemException {
+	public void testListSearchFormByDateAfterBefore() throws ApsSystemException {
 
 		Form form0=new Form();
 		Form form1=new Form();
@@ -100,37 +95,26 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.addForm(form5);
 		_formManager.addForm(form6);
 
-		System.out.println("\n\n============================ALL=================================================");
-		_formManager.getFormList().forEach(form->{
+		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", true);
+		assertEquals(3,listSearchFormAfter1.size());
 
-				System.out.println("\n\n"+form.getId()+"\n"+
-						form.getName()+"\n"+
-						form.getSubmitted()+"\n"+
-						form.getDelivered()+", \n\n");
-		});
+		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
+		assertEquals(2,listSearchFormAfter2.size());
 
-		System.out.println("============================TRUE(AFTER)=================================================");
+		List<Form> listSearchFormBefore1 = _formManager.searchByDateBefore("2024-05-09T23:01:45.000000", true);
+		assertEquals(1,listSearchFormBefore1.size());
 
-		List<Form> listSearchForm1 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", true);
+		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore("2024-05-09T23:01:45.000000", false);
+		assertEquals(1,listSearchFormBefore2.size());
 
-		listSearchForm1.forEach(form->{
-
-			System.out.println("\n\n"+form.getId()+"\n"+
-					form.getName()+"\n"+
-					form.getSubmitted()+"\n"+
-					form.getDelivered()+", \n\n");
-		});
-
-		System.out.println("============================FALSE(AFTER)=================================================");
-		List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
-
-		listSearchForm2.forEach(form->{
-
-			System.out.println("\n\n"+form.getId()+"\n"+
-					form.getName()+"\n"+
-					form.getSubmitted()+"\n"+
-					form.getDelivered()+", \n\n");
-		});
+		_formManager.deleteForm(2678L);
+		_formManager.deleteForm(2679L);
+		_formManager.deleteForm(2680L);
+		_formManager.deleteForm(2681L);
+		_formManager.deleteForm(2682L);
+		_formManager.deleteForm(2683L);
+		_formManager.deleteForm(2684L);
+		
 	}
 
 	@Test
@@ -253,7 +237,6 @@ public class TestFormManager extends BaseTestCase {
 
 		return form;
 	}
-
 
 	private IFormManager _formManager;
 }
