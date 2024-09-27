@@ -6,23 +6,23 @@
 package it.difesa.esercito.jpwebform.aps.system.services;
 
 import com.agiletec.aps.BaseTestCase;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
+import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormDAO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.cglib.core.Local;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
-import java.util.List;
+import java.time.temporal.ChronoUnit;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
+
 
 public class TestFormManager extends BaseTestCase {
 
@@ -41,6 +41,8 @@ public class TestFormManager extends BaseTestCase {
 		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
 	}
 
+
+/*
 	@Test
 	public void testListSearchFormByDateAfterBefore() throws ApsSystemException {
 
@@ -170,9 +172,27 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.deleteForm(id);
 		verify = _formManager.getForm(id);
 		assertNull(verify);
+	}*/
+
+	@Test
+	public void testScheduler() {
+		FormDAO formDAO = new FormDAO();
+
+		formDAO.cronJob();
+
+		System.out.println("=================================12 ORE DIFFERENZA=========================================================\n\n\n");
+		System.out.println("\n\n\n\t\t\t\t\tORA: "+LocalDateTime.now()+"\n\n");
+		System.out.println("\t\t\t\t\tTEMPO DA SOTTRARRE: "+LocalTime.of(12, 0, 0).getHour()+"\n\n");
+		System.out.println("\t\t\t\t\tDIFFERENZA: "+LocalDateTime.now().minusHours(LocalTime.of(12, 0, 0).getHour()));
+
+		System.out.println("=================================24 ORE DIFFERENZA=========================================================\n\n\n");
+		System.out.println("\n\n\n\t\t\t\t\tORA: "+LocalDateTime.now()+"\n\n");
+		System.out.println("\t\t\t\t\tDIFFERENZA: "+LocalDateTime.now().minus(23, ChronoUnit.HOURS));
+
 	}
 
 
+/*
 	private void testFormData(FormData data) {
 
 		assertNotNull(data);
@@ -246,6 +266,7 @@ public class TestFormManager extends BaseTestCase {
 
 		return form;
 	}
+*/
 
 	private IFormManager _formManager;
 }

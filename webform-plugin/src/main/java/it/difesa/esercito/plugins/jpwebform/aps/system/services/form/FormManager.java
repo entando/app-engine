@@ -124,6 +124,7 @@ public class FormManager extends AbstractService implements IFormManager {
 		return listForm;
 	}
 
+
 	public static String generateRandomHash(int length) {
 		StringBuilder hash = new StringBuilder(length);
 		for (int i = 0; i < length; i++) {
@@ -138,6 +139,10 @@ public class FormManager extends AbstractService implements IFormManager {
 			_ageHours = MAX_AGE_HOURS;
 		}
 		return _ageHours;
+	}
+
+	public void cronJob(){
+		_formDAO.cronJob();
 	}
 
 	public IFormDAO getFormDAO() {

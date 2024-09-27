@@ -30,4 +30,6 @@ public interface IFormDAO {
 
 	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
 	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered);
+
+	public void cronJob();
 }

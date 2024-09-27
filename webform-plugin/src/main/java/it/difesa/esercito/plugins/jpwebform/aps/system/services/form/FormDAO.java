@@ -8,6 +8,7 @@ package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.xml.bind.v2.TODO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -307,35 +310,37 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	/**/
 	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered){
-		List<Form> searchList = new ArrayList<>();
 
-		searchList.addAll(
+		List<Form> formList= getFormList();
 
-				this.getFormList().stream()
-						.filter(form->data.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
-						.collect(Collectors.toList())
-		);
-		return searchList;
+		if(formList == null || formList.isEmpty()){
+			return Collections.EMPTY_LIST;
+		}
+
+		return	formList.stream()
+					.filter(form->data.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+				.collect(Collectors.toList());
 	}
 
 	/**/
 	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered){
-		List<Form> searchList = new ArrayList<>();
 
+		List<Form> formList= getFormList();
 
-		searchList.addAll(
+		if(formList == null || formList.isEmpty()){
+			return Collections.EMPTY_LIST;
+		}
 
-				this.getFormList().stream()
-						.filter(form->data.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
-						.collect(Collectors.toList())
-		);
-		return searchList;
+		return	formList.stream()
+				.filter(form->data.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+				.collect(Collectors.toList());
 	}
 
-	//@Scheduled(cron = "0 */12 * * *") //ogni 2 ore verifico quelle più vecchie di 12 ore
-	/*public void RetriveForm() {
+	@Scheduled(cron="* 5 * * * *")
+	public void cronJob(LocalDateTime data){
+		List<Form>formList = this.searchByDateAfter(data.minus(12, ChronoUnit.HOURS), false);
 
-	}*/
+	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
 
