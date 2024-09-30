@@ -20,7 +20,7 @@ public interface IFormDAO {
 
 	public void removeForm(long id);
 	
-//	public void updateForm(Form form);
+	public void updateForm(Form form);
 
 	public void insertForm(Form form);
 

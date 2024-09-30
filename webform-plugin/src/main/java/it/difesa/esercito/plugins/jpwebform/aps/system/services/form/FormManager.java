@@ -141,8 +141,23 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _ageHours;
 	}
 
+	/*
+	@Override
 	public void cronJob(){
 		_formDAO.cronJob();
+	}*/
+
+	/**/
+	@Override
+	public void updateForm(Form form) {
+		try {
+			_formDAO.updateForm(form);
+		} catch (Throwable t) {
+			log.error("Error to update form",t);
+			new ApsSystemException("Error to update form", t);
+		}
+
+
 	}
 
 	public IFormDAO getFormDAO() {

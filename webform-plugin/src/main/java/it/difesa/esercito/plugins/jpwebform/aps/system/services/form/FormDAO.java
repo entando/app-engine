@@ -149,47 +149,42 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 	}
 
-//	@Override
-//	public void updateForm(Form form) {
-//		PreparedStatement stat = null;
-//		Connection conn = null;
-//		try {
-//			conn = this.getConnection();
-//			conn.setAutoCommit(false);
-//			this.updateForm(form, conn);
-// 			conn.commit();
-//		} catch (Throwable t) {
-//			this.executeRollback(conn);
-//			logger.error("Error updating form {}", form.getId(),  t);
-//			throw new RuntimeException("Error updating form", t);
-//		} finally {
-//			this.closeDaoResources(null, stat, conn);
-//		}
-//	}
+	@Override
+	public void updateForm(Form form) {
+		PreparedStatement stat = null;
+		Connection conn = null;
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+			this.updateForm(form, conn);
+ 			conn.commit();
+		} catch (Throwable t) {
+			this.executeRollback(conn);
+			logger.error("Error updating form {}", form.getId(),  t);
+			throw new RuntimeException("Error updating form", t);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
+	}
 
-//	public void updateForm(Form form, Connection conn) {
-//		PreparedStatement stat = null;
-//		try {
-//			stat = conn.prepareStatement(UPDATE_FORM);
-//			int index = 1;
-//
-// 			stat.setString(index++, form.getName());
-//			if(null != form.getSubmitted()) {
-//				Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
-//				stat.setTimestamp(index++, submittedTimestamp);
-//			} else {
-//				stat.setNull(index++, Types.DATE);
-//			}
-//  			stat.setString(index++, form.getData());
-//			stat.setInt(index++, form.getId());
-//			stat.executeUpdate();
-//		} catch (Throwable t) {
-//			logger.error("Error updating form {}", form.getId(),  t);
-//			throw new RuntimeException("Error updating form", t);
-//		} finally {
-//			this.closeDaoResources(null, stat, null);
-//		}
-//	}
+	public void updateForm(Form form, Connection conn) {
+		PreparedStatement stat = null;
+		try {
+			stat = conn.prepareStatement(UPDATE_FORM);
+			int index = 1;
+
+			form.setDelivered(true);//<=======cambio lo stato da false a true
+			stat.setBoolean(index++, form.getDelivered());//<=======
+
+			stat.setLong(index++, form.getId());//<======
+			stat.executeUpdate();
+		} catch (Throwable t) {
+			logger.error("Error updating form {}", form.getId(),  t);
+			throw new RuntimeException("Error updating form", t);
+		} finally {
+			this.closeDaoResources(null, stat, null);
+		}
+	}
 
 	@Override
 	public void removeForm(long id) {
@@ -336,15 +331,22 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				.collect(Collectors.toList());
 	}
 
-	@Scheduled(cron="* 5 * * * *")
-	public void cronJob(LocalDateTime data){
-		List<Form>formList = this.searchByDateAfter(data.minus(12, ChronoUnit.HOURS), false);
+	@Override
+	@Scheduled(cron="* */2 * * * *")
+	public void cronJob(){
 
+		List<Form>formList = this.searchByDateAfter(LocalDateTime.now().minus(12, ChronoUnit.HOURS), false);
+
+		formList.forEach(form->{
+			updateForm(form);
+		});
+
+		//formsubmit
 	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
 
-	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
+	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  delivered=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 	
@@ -356,7 +358,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String ALL_FORM ="SELECT * FROM jpwebform_form"; //<========
 
-	private final String SEARCH_BY_DATE_AFTER ="SELECT * FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
+	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
 
-	private final String SEARCH_BY_DATE_BEFORE ="SELECT * FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
+	private final String SEARCH_BY_DATE_BEFORE ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
 }

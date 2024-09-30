@@ -56,4 +56,6 @@ public interface IFormManager {
 
 	public void cronJob();
 
+	public void updateForm(Form form);
+
 }

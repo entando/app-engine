@@ -6,6 +6,7 @@
 package it.difesa.esercito.jpwebform.aps.system.services;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormDAO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
@@ -175,20 +176,23 @@ public class TestFormManager extends BaseTestCase {
 	}*/
 
 	@Test
-	public void testScheduler() {
-		FormDAO formDAO = new FormDAO();
+	public void testUpdateForm() throws ApsSystemException {
 
-		formDAO.cronJob();
+		Form form = new Form();
 
-		System.out.println("=================================12 ORE DIFFERENZA=========================================================\n\n\n");
-		System.out.println("\n\n\n\t\t\t\t\tORA: "+LocalDateTime.now()+"\n\n");
-		System.out.println("\t\t\t\t\tTEMPO DA SOTTRARRE: "+LocalTime.of(12, 0, 0).getHour()+"\n\n");
-		System.out.println("\t\t\t\t\tDIFFERENZA: "+LocalDateTime.now().minusHours(LocalTime.of(12, 0, 0).getHour()));
+		form.setId(2678L);
+		form.setName("Romolo");
+		form.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+		form.setDelivered(false);
+		form.setData(getFormDataForTest());
 
-		System.out.println("=================================24 ORE DIFFERENZA=========================================================\n\n\n");
-		System.out.println("\n\n\n\t\t\t\t\tORA: "+LocalDateTime.now()+"\n\n");
-		System.out.println("\t\t\t\t\tDIFFERENZA: "+LocalDateTime.now().minus(23, ChronoUnit.HOURS));
+		_formManager.addForm(form);
+		assertEquals(false, form.getDelivered());
+		//devo mandare l'invio del modulo form email
+		_formManager.updateForm(form);
+		assertEquals(true, form.getDelivered());
 
+		_formManager.deleteForm(2678L);
 	}
 
 
@@ -224,7 +228,7 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals("setEtichetta5", data.etichetta5);
 
 	}
-
+*/
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();
 
@@ -255,7 +259,7 @@ public class TestFormManager extends BaseTestCase {
 		return fd;
 	}
 
-	public static Form getFormForTest() {
+/*	public static Form getFormForTest() {
 		Form form = new Form();
 
 		form.setId(2677L);
@@ -265,8 +269,8 @@ public class TestFormManager extends BaseTestCase {
 		form.setData(getFormDataForTest());
 
 		return form;
-	}
-*/
+	}*/
+
 
 	private IFormManager _formManager;
 }
