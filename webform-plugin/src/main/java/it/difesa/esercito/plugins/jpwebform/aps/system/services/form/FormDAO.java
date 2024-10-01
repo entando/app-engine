@@ -7,6 +7,7 @@ package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.exception.ApsSystemException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.xml.bind.v2.TODO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.sql.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private static final Logger logger =  LoggerFactory.getLogger(FormDAO.class);
 	private IMailManager _mailManager;
+	private static final Integer MAX_HOURS = 12;
 
     @Override
     public int countForms(FieldSearchFilter[] filters) {
@@ -339,13 +342,52 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	}
 
 	@Override
-	//@Scheduled(cron="* */2 * * * *") //ogni 2 ore
-	public void cronJob(){
+	@Scheduled(cron="* */2 * * * *")
+	public void cronJob() {
+		List<Form> formList = getFormList();
+		List<Long> delivered = new ArrayList<>();
 
-		List<Form>formList = this.searchByDateAfter(LocalDateTime.now().minus(12, ChronoUnit.HOURS), false);
+		if (formList != null && !formList.isEmpty()) {
+			formList
+					.forEach(f -> {
+						try {
+							boolean expired;
 
-		formList.forEach(form->{this.updateForm(form);});
-		//formsubmit
+							logger.info("checking form {} for delivery attempt (submitted: {})", f.getId(), f.getSubmitted());
+							if ((expired = isExpired(f))
+									||
+									_mailManager.sendMail(f)) {
+								// delete
+								if (!expired) {
+									logger.info("Successfully delivered form {}", f.getId());
+								} else {
+									logger.info("form {} included in delete list for expiration", f.getId());
+								}
+								delivered.add(f.getId());
+							}
+						} catch (Exception e) {
+							// log it
+							logger.error("Unexpected error trying to deliver the form " + f.getId(), e);
+						}
+					});
+			// mark all delivered form
+			delivered.forEach(d -> {
+				try {
+					updateForm(loadForm(d));
+					logger.info("updated form {} after delivery (or expiration!)", d);
+				} catch (Exception e) {
+					logger.error("Unexpected error trying to delete the form {}", d, e);
+				}
+			});
+		}
+	}
+
+	private boolean isExpired(Form form) {
+		final LocalDateTime submitted = form.getSubmitted();
+
+		LocalDateTime now = LocalDateTime.now();
+		Duration duration = Duration.between(submitted, now);
+		return duration.toHours() > MAX_HOURS;
 	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";

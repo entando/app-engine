@@ -219,7 +219,7 @@ public class TestFormManager extends BaseTestCase {
 
 	}
 
-	
+
 	private void testFormData(FormData data) {
 
 		assertNotNull(data);
