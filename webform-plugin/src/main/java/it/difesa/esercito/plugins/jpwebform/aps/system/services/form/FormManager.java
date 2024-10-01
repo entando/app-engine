@@ -141,11 +141,10 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _ageHours;
 	}
 
-	/*
 	@Override
 	public void cronJob(){
 		_formDAO.cronJob();
-	}*/
+	}
 
 	/**/
 	@Override

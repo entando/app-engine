@@ -11,20 +11,22 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormDAO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestFormManager extends BaseTestCase {
 
 	//public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
@@ -43,8 +45,8 @@ public class TestFormManager extends BaseTestCase {
 	}
 
 
-/*
 	@Test
+	@Order(1)
 	public void testListSearchFormByDateAfterBefore() throws ApsSystemException {
 
 		Form form0=new Form();
@@ -127,22 +129,27 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.deleteForm(2683L);
 		_formManager.deleteForm(2684L);
 
+
+
 	}
 
 	@Test
+	@Order(2)
 	public void testGetForm() throws Exception {
-		Form form = _formManager.getForm(2677);
+		Form form = _formManager.getForm(2677L);
 		assertNotNull(form);
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
 		testFormData(form.getData());
 		assertEquals(true, form.getDelivered());
-		assertEquals( LocalDateTime.of(2024,Month.SEPTEMBER,5,10,30), form.getSubmitted());
+		assertEquals( LocalDateTime.of(2024, Month.SEPTEMBER,5,10,30), form.getSubmitted());
+
 
 	}
 
 
 	@Test
+	@Order(3)
 	public void testGetForms() throws Exception {
 		List<Long> ids = _formManager.getForms();
 		assertNotNull(ids);
@@ -152,36 +159,49 @@ public class TestFormManager extends BaseTestCase {
 
 
 	@Test
+	@Order(4)
 	public void testAddDeleteForm() throws Exception {
-		Form form = getFormForTest();
+		Form form = new Form();
+
+		form.setId(2678L);
+		form.setName("Platone");
+		form.setSubmitted(TODAY);
+		form.setDelivered(true);
+		form.setData(getFormDataForTest());
+
 		_formManager.addForm(form);
 
 		assertNotNull(form.getId());
 
 		Form verify = _formManager.getForm(form.getId());
 
+
+
 		final Long id = verify.getId();
 
 		assertNotNull(id);
 		assertEquals(2678L, id);
-		assertEquals("Plinio", verify.getName());
+		assertEquals("Platone", verify.getName());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
-		assertEquals(false, verify.getDelivered());
+		assertEquals(true, verify.getDelivered());
 
 
-		_formManager.deleteForm(id);
-		verify = _formManager.getForm(id);
+		_formManager.deleteForm(2678L); //form.getId()
+		verify = _formManager.getForm(2678L);//id
 		assertNull(verify);
-	}*/
+
+
+	}
 
 	@Test
+	@Order(5)
 	public void testUpdateForm() throws ApsSystemException {
 
 		Form form = new Form();
 
 		form.setId(2678L);
-		form.setName("Romolo");
+		form.setName("UserUpdateFranco");
 		form.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());
@@ -189,14 +209,17 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.addForm(form);
 		assertEquals(false, form.getDelivered());
 		//devo mandare l'invio del modulo form email
-		_formManager.updateForm(form);
-		assertEquals(true, form.getDelivered());
+
+		_formManager.cronJob();
+
+		Form formAfterUpdate =_formManager.getForm(2678L);
+		assertEquals(true, formAfterUpdate.getDelivered());
 
 		_formManager.deleteForm(2678L);
+
 	}
 
-
-/*
+	
 	private void testFormData(FormData data) {
 
 		assertNotNull(data);
@@ -228,7 +251,6 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals("setEtichetta5", data.etichetta5);
 
 	}
-*/
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();
 
