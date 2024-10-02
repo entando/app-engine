@@ -163,16 +163,15 @@ public class FormFrontEndAction extends FormAction {
 
             if (getMailManager().sendMail(form)) {
                 form.setDelivered(true);
-                //getFormManager().addForm(form);
                 log.debug("Form successfully delivered to {}", form.getRecipient());
             } else {
-                log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
+                log.debug("Could not deliver email to {}, saving for retry later", form.getRecipient());
                 form.setDelivered(false);
-
-                return "not_delivered"; //if getdelivered==false
-
+                log.debug("not_delivered", form.getId()); //<========
             }
+
             getFormManager().addForm(form);
+
         } catch (Exception e) {
             log.error("unexpected exception while processing the form from user {}", getCurrentUser());
             return FAILURE;

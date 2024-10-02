@@ -8,20 +8,16 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormDAO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -208,12 +204,14 @@ public class TestFormManager extends BaseTestCase {
 
 		_formManager.addForm(form);
 		assertEquals(false, form.getDelivered());
-		//devo mandare l'invio del modulo form email
+
 
 		_formManager.cronJob();
 
 		Form formAfterUpdate =_formManager.getForm(2678L);
 		assertEquals(true, formAfterUpdate.getDelivered());
+
+		//System.out.println(formAfterUpdate.getId()+" "+formAfterUpdate.getName()+" "+formAfterUpdate.getDelivered()+" ");
 
 		_formManager.deleteForm(2678L);
 

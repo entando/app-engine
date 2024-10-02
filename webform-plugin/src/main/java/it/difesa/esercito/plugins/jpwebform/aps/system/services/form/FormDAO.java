@@ -7,9 +7,7 @@ package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.xml.bind.v2.TODO;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.slf4j.Logger;
@@ -344,51 +342,23 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	@Override
 	@Scheduled(cron="* */2 * * * *")
 	public void cronJob() {
-		List<Form> formList = getFormList();
-		List<Long> delivered = new ArrayList<>();
 
-		if (formList != null && !formList.isEmpty()) {
-			formList
-					.forEach(f -> {
-						try {
-							boolean expired;
+		List<Form> formListExpired = searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
 
-							logger.info("checking form {} for delivery attempt (submitted: {})", f.getId(), f.getSubmitted());
-							if ((expired = isExpired(f))
-									||
-									_mailManager.sendMail(f)) {
-								// delete
-								if (!expired) {
-									logger.info("Successfully delivered form {}", f.getId());
-								} else {
-									logger.info("form {} included in delete list for expiration", f.getId());
-								}
-								delivered.add(f.getId());
-							}
-						} catch (Exception e) {
-							// log it
-							logger.error("Unexpected error trying to deliver the form " + f.getId(), e);
-						}
-					});
-			// mark all delivered form
-			delivered.forEach(d -> {
+		if (formListExpired != null && !formListExpired.isEmpty()) {
+			formListExpired.forEach(form -> {
 				try {
-					updateForm(loadForm(d));
-					logger.info("updated form {} after delivery (or expiration!)", d);
+					updateForm(form);
+					//_mailManager.sendMail(form);
+					logger.info("updated form {} after delivery (or expiration!)", form.getId());
 				} catch (Exception e) {
-					logger.error("Unexpected error trying to delete the form {}", d, e);
+					logger.error("Unexpected error trying to delete the form {}", form.getId(), e);
 				}
 			});
 		}
 	}
 
-	private boolean isExpired(Form form) {
-		final LocalDateTime submitted = form.getSubmitted();
 
-		LocalDateTime now = LocalDateTime.now();
-		Duration duration = Duration.between(submitted, now);
-		return duration.toHours() > MAX_HOURS;
-	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
 
