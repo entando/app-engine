@@ -10,6 +10,7 @@ import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;
@@ -35,6 +36,7 @@ public class TestFormManager extends BaseTestCase {
 
 	@BeforeEach
 	public void init() {
+		this._mailManager = (IMailManager) this.getApplicationContext().getBean(IMailManager.BEAN_ID);
 		this._formManager = (IFormManager) this.getService(BEAN_ID);
 		assertNotNull(_formManager);
 		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
@@ -201,6 +203,11 @@ public class TestFormManager extends BaseTestCase {
 		form.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());
+		form.setRecipient("address@email.it");
+		form.setCc("cc@email.it");
+		form.setQualifiedName("Esq. John Doe");
+		form.setSubject("mail subject");
+
 
 		_formManager.addForm(form);
 		assertEquals(false, form.getDelivered());
@@ -293,4 +300,5 @@ public class TestFormManager extends BaseTestCase {
 
 
 	private IFormManager _formManager;
+	private IMailManager _mailManager;
 }

@@ -349,10 +349,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			formListExpired.forEach(form -> {
 				try {
 					updateForm(form);
-					//_mailManager.sendMail(form);
-					logger.info("updated form {} after delivery (or expiration!)", form.getId());
+
+					if(_mailManager.sendMail(form)){
+						logger.info("updated form {} after delivery (or expiration!)", form.getId());
+					}
+
 				} catch (Exception e) {
-					logger.error("Unexpected error trying to delete the form {}", form.getId(), e);
+					logger.error("Unexpected error trying to update the form", form.getId(), e);
 				}
 			});
 		}
