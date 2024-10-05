@@ -132,15 +132,15 @@ public class FormFrontEndAction extends FormAction {
         try {
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
-            final String json = null; // getSigeManager().getUserInfoById(currentUser);
+            final String json = "TEST TEST "; // getSigeManager().getUserInfoById(currentUser);
 
 
             if (StringUtils.isNotBlank(json)) {
-//                final String fullName = SigeUserHelper.getSigeUserFullName(json);
-//                form.setQualifiedName(fullName);
-//                final String email = SigeUserHelper.getUserEmail(json);
+                final String fullName = this.getCurrentUser().getUsername();
+                form.setQualifiedName(fullName);
+                final String email = "EMAIL@EMAIL.IT";
 
-//                form.setCc(email);
+                form.setCc(email);
             } else {
                 log.warn("Could not get SIGE data for user '{}'", currentUser);
             }
