@@ -6,6 +6,7 @@
 package it.difesa.esercito.plugins.jpwebform.aps.internalservlet.form;
 
 import com.agiletec.aps.system.SystemConstants;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
@@ -163,13 +164,27 @@ public class FormFrontEndAction extends FormAction {
 
             if (getMailManager().sendMail(form)) {
                 log.debug("Form successfully delivered to {}", form.getRecipient());
+                form.setDelivered(true);
             } else {
                 log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
-                getFormManager().addForm(form);
-                return "not_delivered";
+                form.setDelivered(false);
             }
+            getFormManager().addForm(form);
         } catch (Exception e) {
             log.error("unexpected exception while processing the form from user {}", getCurrentUser());
+            return FAILURE;
+        }
+        if (!form.getDelivered()) {
+            return "not_delivered";
+        }
+        return SUCCESS;
+    }
+
+    public String getForms() {
+        try  {
+
+
+        } catch (Throwable t) {
             return FAILURE;
         }
         return SUCCESS;
@@ -230,4 +245,12 @@ public class FormFrontEndAction extends FormAction {
     public void setSubject(String subject) {
         this._subject = subject;
     }
+
+    // search parameter
+    private Date from;
+    private Date to;
+    private String practice;
+    private String name;
+
+    private Form form;
 }

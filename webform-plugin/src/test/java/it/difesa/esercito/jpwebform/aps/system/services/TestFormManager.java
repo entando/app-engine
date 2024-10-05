@@ -6,10 +6,12 @@
 package it.difesa.esercito.jpwebform.aps.system.services;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+import java.time.ZoneId;
 import net.minidev.json.JSONUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -177,6 +179,36 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.deleteForm(id);
 		verify = _formManager.getForm(id);
 		assertNull(verify);
+	}
+
+	@Test
+	public void testFilter() throws Exception {
+		final Date to = new Date();
+		final LocalDate currentDate = LocalDate.now();
+		final LocalDate fromLd = currentDate.minusYears(10);
+		Date from = Date.from(fromLd.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+		// search by date
+		FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", from, to);
+		List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{dateFilter});
+		assertNotNull(dateRecords);
+		assertFalse(dateRecords.isEmpty());
+		assertEquals(2677L, dateRecords.get(0));
+
+		// search by name
+		FieldSearchFilter nameFilter = new FieldSearchFilter("name", "Oettam", false);
+		List<Long> nameRecords = _formManager.search(new FieldSearchFilter[]{nameFilter});
+		assertNotNull(nameRecords);
+		assertFalse(nameRecords.isEmpty());
+		assertEquals(2677L, nameRecords.get(0));
+
+        // search by delivered
+		FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", Boolean.TRUE, false);
+		List<Long> deliveredRecords = _formManager.search(new FieldSearchFilter[]{deliveredFilter});
+		assertNotNull(deliveredRecords);
+		assertFalse(deliveredRecords.isEmpty());
+		assertEquals(2677L, deliveredRecords.get(0));
+
 	}
 
 

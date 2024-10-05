@@ -22,40 +22,40 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private static final Logger logger =  LoggerFactory.getLogger(FormDAO.class);
 
-    @Override
-    public int countForms(FieldSearchFilter[] filters) {
-        Integer forms = null;
-        try {
-            forms = super.countId(filters);
-        } catch (Throwable t) {
-            logger.error("error in count forms", t);
-            throw new RuntimeException("error in count forms", t);
-        }
-        return forms;
-    }
+	@Override
+	public int countForms(FieldSearchFilter[] filters) {
+		Integer forms = null;
+		try {
+			forms = super.countId(filters);
+		} catch (Throwable t) {
+			logger.error("error in count forms", t);
+			throw new RuntimeException("error in count forms", t);
+		}
+		return forms;
+	}
 
 	@Override
 	protected String getTableFieldName(String metadataFieldKey) {
 		return metadataFieldKey;
 	}
-	
+
 	@Override
 	protected String getMasterTableName() {
 		return "jpwebform_form";
 	}
-	
+
 	@Override
 	protected String getMasterTableIdFieldName() {
 		return "id";
 	}
 
-    @Override
-    public List<Integer> searchForms(FieldSearchFilter[] filters) {
-            List<Integer> formsId = new ArrayList<>();
-        List<String> masterList = super.searchId(filters);
-        masterList.stream().forEach(idString -> formsId.add(Integer.parseInt(idString)));
-        return formsId;
-        }
+	@Override
+	public List<Long> searchForms(FieldSearchFilter[] filters) {
+		List<Long> formsId = new ArrayList<>();
+		List<String> masterList = super.searchId(filters);
+		masterList.stream().forEach(idString -> formsId.add(Long.parseLong(idString)));
+		return formsId;
+	}
 
 
 	@Override
@@ -80,7 +80,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 		return formsId;
 	}
-	
+
 	@Override
 	public void insertForm(Form form) {
 		PreparedStatement stat = null;
@@ -91,7 +91,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			long nextId = this.extractNextId(NEXT_ID, conn);
 			form.setId(nextId);
 			this.insertForm(form, conn);
- 			conn.commit();
+			conn.commit();
 		} catch (Throwable t) {
 			this.executeRollback(conn);
 			logger.error("Error on insert form",  t);
@@ -125,7 +125,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat = conn.prepareStatement(ADD_FORM);
 			int index = 1;
 			stat.setLong(index++, form.getId());
- 			stat.setString(index++, form.getName());
+			stat.setString(index++, form.getName());
 			if(null != form.getSubmitted()) {
 				//Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
 				Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
@@ -135,7 +135,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				stat.setNull(index++, Types.DATE);
 
 			}
-  			stat.setString(index++, form.getData().toJson());
+			stat.setString(index++, form.getData().toJson());
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error on insert form",  t);
@@ -195,7 +195,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
 			this.removeForm(id, conn);
- 			conn.commit();
+			conn.commit();
 		} catch (Throwable t) {
 			this.executeRollback(conn);
 			logger.error("Error deleting form {}", id, t);
@@ -204,7 +204,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			this.closeDaoResources(null, stat, conn);
 		}
 	}
-	
+
 	public void removeForm(long id, Connection conn) {
 		PreparedStatement stat = null;
 		try {
@@ -263,7 +263,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	protected Form buildFormFromRes(ResultSet res) {
 		Form form = null;
 		try {
-			form = new Form();				
+			form = new Form();
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
@@ -337,9 +337,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
-	
+
 	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
-	
+
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
@@ -348,5 +348,5 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 
 
-	
+
 }
