@@ -6,7 +6,8 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormD
 import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 
-public class DtoHelper {
+public class
+DtoHelper {
 
     public static FormData toFormData(String json) throws IOException {
         if (StringUtils.isNotBlank(json)) {

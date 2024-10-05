@@ -78,12 +78,49 @@ public class FormManager extends AbstractService implements IFormManager {
 
 	@Override
 	public void deleteForm(long id) throws ApsSystemException {
+
 		try {
 			_formDAO.removeForm(id);
 		} catch (Throwable t) {
 			log.error("Error deleting Form with id {}", id, t);
 			throw new ApsSystemException("Error deleting Form with id:" + id, t);
 		}
+	}
+
+	@Override
+	public List<Form> getFormList() throws ApsSystemException {
+		List<Form> listForm= new ArrayList<>();
+		try {
+			listForm= _formDAO.getFormList();
+		} catch (Throwable t) {
+			log.error("Error to get list form",t);
+			throw new ApsSystemException("Error to get list form", t);
+		}
+		return listForm;
+	}
+
+	@Override
+	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException {
+		List<Form> listForm= new ArrayList<>();
+		try {
+			listForm= _formDAO.searchByDateAfter(data, delivered);
+		} catch (Throwable t) {
+			log.error("Error to get list form",t);
+			throw new ApsSystemException("Error to get list form", t);
+		}
+		return listForm;
+	}
+
+	@Override
+	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException {
+		List<Form> listForm= new ArrayList<>();
+		try {
+			listForm= _formDAO.searchByDateBefore(data, delivered);
+		} catch (Throwable t) {
+			log.error("Error to get list form",t);
+			throw new ApsSystemException("Error to get list form", t);
+		}
+		return listForm;
 	}
 
 	public static String generateRandomHash(int length) {

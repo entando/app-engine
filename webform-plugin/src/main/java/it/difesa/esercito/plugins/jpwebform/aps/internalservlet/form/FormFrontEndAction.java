@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,7 +146,7 @@ public class FormFrontEndAction extends FormAction {
                 log.warn("Could not get SIGE data for user '{}'", currentUser);
             }
             form.setName(currentUser);
-            form.setSubmitted(new Date());
+            form.setSubmitted(form.getSubmitted()); //Date
             form.setData(getFormData());
 
             final String email = getMailManager().getEmailById(getIdDestinatario());

@@ -45,4 +45,10 @@ public interface IFormManager {
 	 */
 	public void deleteForm(long id) throws ApsSystemException;
 
+
+	public List<Form> getFormList() throws ApsSystemException;
+
+	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException;
+	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException;
+
 }

@@ -23,4 +23,9 @@ public interface IFormDAO {
 	public void insertForm(Form form);
 
     public int countForms(FieldSearchFilter[] filters);
+
+	public List<Form>getFormList();
+
+	public List<Form> searchByDateAfter(String data, Boolean delivered);
+	public List<Form> searchByDateBefore(String data, Boolean delivered);
 }

@@ -8,14 +8,15 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.DtoHelper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import java.io.IOException;
-import java.util.Date;
 import junit.framework.TestCase;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+
 public class TestMapper extends TestCase {
 
-	private static final Date TODAY = new Date();
+	private static final LocalDateTime TODAY = LocalDateTime.now();
 
 	@Override
 	protected void setUp() throws Exception {

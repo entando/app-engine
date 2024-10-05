@@ -9,17 +9,14 @@ import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
@@ -130,10 +127,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat.setLong(index++, form.getId());
  			stat.setString(index++, form.getName());
 			if(null != form.getSubmitted()) {
-				Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
-				stat.setTimestamp(index++, submittedTimestamp);	
+				//Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
+				Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
+				stat.setTimestamp(index++, submittedTimestamp);
+				stat.setBoolean(index++, form.getDelivered()); //<=========
 			} else {
 				stat.setNull(index++, Types.DATE);
+
 			}
   			stat.setString(index++, form.getData().toJson());
 			stat.executeUpdate();
@@ -267,8 +267,10 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
+			form.setDelivered(res.getBoolean("delivered"));//<==========
 			if (null != submittedValue) {
-				form.setSubmitted(new Date(submittedValue.getTime()));
+				//form.setSubmitted(new Date(submittedValue.getTime()));
+				form.setSubmitted(submittedValue.toLocalDateTime());
 			}
 			String json = res.getString("data");
 			ObjectMapper mapper = new ObjectMapper();
@@ -280,16 +282,71 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, \"data\" ) VALUES (?, ?, ?, ? )";
+	public List<Form> getFormList(){
+		List<Form> formlist = new ArrayList<Form>();
+		Connection conn = null;
+		PreparedStatement stat = null;
+		ResultSet res = null;
+
+		try {
+			conn = this.getConnection();
+			stat = conn.prepareStatement(ALL_FORM);
+			res = stat.executeQuery();
+			while (res.next()) {
+				long id = res.getLong("id");
+				formlist.add(this.loadForm(id));
+			}
+
+		} catch (Throwable t) {
+			logger.error("Error loading Form list",  t);
+			throw new RuntimeException("Error loading Form list", t);
+		} finally {
+			closeDaoResources(res, stat, conn);
+		}
+		return formlist;
+	}
+
+	public List<Form> searchByDateAfter(String data, Boolean delivered){
+		List<Form> searchList = new ArrayList<Form>();
+		LocalDateTime ldt = LocalDateTime.parse(data);
+
+		searchList.addAll(
+
+				this.getFormList().stream()
+						.filter(form->ldt.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.collect(Collectors.toList())
+		);
+		return searchList;
+	}
+
+	public List<Form> searchByDateBefore(String data, Boolean delivered){
+		List<Form> searchList = new ArrayList<Form>();
+		LocalDateTime ldt = LocalDateTime.parse(data);
+
+		searchList.addAll(
+
+				this.getFormList().stream()
+						.filter(form->ldt.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.collect(Collectors.toList())
+		);
+		return searchList;
+	}
+
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 	
-	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\"  FROM jpwebform_form WHERE id = ?";
+	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
 	
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
+
+	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
+
+
+
 	
 }

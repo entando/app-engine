@@ -8,7 +8,9 @@ package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import java.util.Date;
+
+import java.time.LocalDateTime;
+
 
 public class Form {
 
@@ -32,10 +34,10 @@ public class Form {
 		this.name = name;
 	}
 
-	public Date getSubmitted() { //Date
+	public LocalDateTime getSubmitted() { //Date
 		return submitted;
 	}
-	public void setSubmitted(Date submitted) {
+	public void setSubmitted(LocalDateTime submitted) {
 		this.submitted = submitted;
 	}
 
@@ -74,13 +76,19 @@ public class Form {
 		this.subject = subject;
 	}
 
+	public Boolean getDelivered(){
+		return delivered;
+	}
+	public void setDelivered(Boolean delivered){this.delivered=delivered;}
+
 	@Deprecated
 	private Long id;
 	private String name;
-	private Date submitted;
+	private LocalDateTime submitted;
 	private FormData data;
 	private String qualifiedName;
 	private String cc;
 	private String recipient;
 	private String subject;
+	private Boolean delivered;
 }
