@@ -13,11 +13,12 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import it.difesa.esercito.plugins.jpwebform.apsadmin.form.FormAction;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,12 +183,30 @@ public class FormFrontEndAction extends FormAction {
 
     public String getForms() {
         try  {
-
-
+            FieldSearchFilter[] filters = (FieldSearchFilter[]) createFilters();
+            _ids = getFormManager().search(filters);
         } catch (Throwable t) {
             return FAILURE;
         }
         return SUCCESS;
+    }
+
+    private Object[] createFilters() {
+        final List filters = new ArrayList<>();
+
+        if (getFrom() != null && getTo() != null) {
+            FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", getFrom(), getTo());
+            filters.add(dateFilter);
+        }
+        if (StringUtils.isNotBlank(getName())) {
+            FieldSearchFilter nameFilter = new FieldSearchFilter("name", getName(), false);
+            filters.add(nameFilter);
+        }
+        if (getDelivered() != null) {
+            FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", getDelivered(), false);
+            filters.add(deliveredFilter);
+        }
+        return filters.toArray(new FieldSearchFilter[0]);
     }
 
     /**
@@ -206,12 +225,6 @@ public class FormFrontEndAction extends FormAction {
         }
         return map;
     }
-
-
-    private FormData _formData;
-    private String _idDestinatario;
-    public String _pageCode;
-    public String _subject;
 
 
     public String getIdDestinatario() {
@@ -246,11 +259,68 @@ public class FormFrontEndAction extends FormAction {
         this._subject = subject;
     }
 
+    public Date getFrom() {
+        return _from;
+    }
+
+    public void setFrom(Date from) {
+        this._from = from;
+    }
+
+    public Date getTo() {
+        return _to;
+    }
+
+    public void setTo(Date to) {
+        this._to = to;
+    }
+
+    public Boolean getDelivered() {
+        return _delivered;
+    }
+
+    public void setDelivered(Boolean delivered) {
+        this._delivered = delivered;
+    }
+
+    public String getPractice() {
+        return _practice;
+    }
+
+    public void setPractice(String practice) {
+        this._practice = practice;
+    }
+
+    @Override
+    public String getName() {
+        return _name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this._name = name;
+    }
+
+    public List<Long> getIds() {
+        return _ids;
+    }
+
+    public void setIds(List<Long> ids) {
+        this._ids = ids;
+    }
+
     // search parameter
-    private Date from;
-    private Date to;
-    private String practice;
-    private String name;
+    private Date _from;
+    private Date _to;
+    private Boolean _delivered;
+    private String _practice;
+    private String _name;
 
     private Form form;
+    private List<Long> _ids;
+
+    private FormData _formData;
+    private String _idDestinatario;
+    public String _pageCode;
+    public String _subject;
 }

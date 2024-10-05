@@ -52,5 +52,11 @@ public interface IFormManager {
 	public List<Form> searchByDateAfter(String data, Boolean delivered) throws ApsSystemException;
 	public List<Form> searchByDateBefore(String data, Boolean delivered) throws ApsSystemException;
 
+	/**
+	 * Search using entity filters
+	 *
+	 * @param filter the array containing search filters
+	 * @return
+	 */
 	List<Long> search(FieldSearchFilter[] filter);
 }

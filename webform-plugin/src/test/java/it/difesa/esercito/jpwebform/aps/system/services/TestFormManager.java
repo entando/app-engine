@@ -190,25 +190,29 @@ public class TestFormManager extends BaseTestCase {
 
 		// search by date
 		FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", from, to);
-		List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{dateFilter});
+		List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{ dateFilter });
 		assertNotNull(dateRecords);
 		assertFalse(dateRecords.isEmpty());
 		assertEquals(2677L, dateRecords.get(0));
 
 		// search by name
 		FieldSearchFilter nameFilter = new FieldSearchFilter("name", "Oettam", false);
-		List<Long> nameRecords = _formManager.search(new FieldSearchFilter[]{nameFilter});
+		List<Long> nameRecords = _formManager.search(new FieldSearchFilter[]{ nameFilter });
 		assertNotNull(nameRecords);
 		assertFalse(nameRecords.isEmpty());
 		assertEquals(2677L, nameRecords.get(0));
 
         // search by delivered
 		FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", Boolean.TRUE, false);
-		List<Long> deliveredRecords = _formManager.search(new FieldSearchFilter[]{deliveredFilter});
+		List<Long> deliveredRecords = _formManager.search(new FieldSearchFilter[]{ deliveredFilter });
 		assertNotNull(deliveredRecords);
 		assertFalse(deliveredRecords.isEmpty());
 		assertEquals(2677L, deliveredRecords.get(0));
 
+		List<Long> allFilters = _formManager.search(new FieldSearchFilter[]{ deliveredFilter, dateFilter, nameFilter, deliveredFilter});
+		assertNotNull(allFilters);
+		assertFalse(allFilters.isEmpty());
+		assertEquals(2677L, allFilters.get(0));
 	}
 
 
