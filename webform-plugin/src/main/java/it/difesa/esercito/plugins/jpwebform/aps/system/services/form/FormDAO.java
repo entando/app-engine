@@ -64,6 +64,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Connection conn = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
+
 		try {
 			conn = this.getConnection();
 			stat = conn.prepareStatement(LOAD_FORMS_ID);
@@ -85,6 +86,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	public void insertForm(Form form) {
 		PreparedStatement stat = null;
 		Connection conn  = null;
+
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
@@ -105,6 +107,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		long id = 0;
 		Statement stat = null;
 		ResultSet res = null;
+
 		try {
 			stat = conn.createStatement();
 			res = stat.executeQuery(query);
@@ -121,21 +124,18 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	public void insertForm(Form form, Connection conn) {
 		PreparedStatement stat = null;
+		int index = 1;
+
 		try {
 			stat = conn.prepareStatement(ADD_FORM);
-			int index = 1;
+
 			stat.setLong(index++, form.getId());
 			stat.setString(index++, form.getName());
-			if(null != form.getSubmitted()) {
-				//Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
-				Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
-				stat.setTimestamp(index++, submittedTimestamp);
-				stat.setBoolean(index++, form.getDelivered()); //<=========
-			} else {
-				stat.setNull(index++, Types.DATE);
-
-			}
-			stat.setString(index++, form.getData().toJson());
+			stat.setString(index++, form.getCampagna());
+			Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
+			stat.setTimestamp(index++, submittedTimestamp);
+			stat.setBoolean(index++, form.getDelivered()); //<=========
+			stat.setString(index, form.getData().toJson());
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error on insert form",  t);
@@ -191,6 +191,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	public void removeForm(long id) {
 		PreparedStatement stat = null;
 		Connection conn = null;
+
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
@@ -207,6 +208,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	public void removeForm(long id, Connection conn) {
 		PreparedStatement stat = null;
+
 		try {
 			stat = conn.prepareStatement(DELETE_FORM);
 			int index = 1;
@@ -225,6 +227,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Connection conn = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
+
 		try {
 			conn = this.getConnection();
 			form = this.loadForm(id, conn);
@@ -243,6 +246,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Form form = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
+
 		try {
 			stat = conn.prepareStatement(LOAD_FORM);
 			int index = 1;
@@ -262,10 +266,12 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	protected Form buildFormFromRes(ResultSet res) {
 		Form form = null;
+
 		try {
 			form = new Form();
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
+			form.setCampagna(res.getString("campagna"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
 			form.setDelivered(res.getBoolean("delivered"));//<==========
 			if (null != submittedValue) {
@@ -332,13 +338,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return searchList;
 	}
 
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?, ?)";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 
-	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
+	private static final String LOAD_FORM = "SELECT id, name, campagna, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
 
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
@@ -346,7 +352,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
-
+	private final String GET_CAMPAINS = "SELECT DISTINCT campagna FROM jpwebform_form";
 
 
 }

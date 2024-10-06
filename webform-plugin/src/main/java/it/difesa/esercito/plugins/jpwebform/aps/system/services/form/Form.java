@@ -81,11 +81,19 @@ public class Form {
 	}
 	public void setDelivered(Boolean delivered){this.delivered=delivered;}
 
-	@Deprecated
+	public String getCampagna() {
+		return campagna;
+	}
+	public void setCampagna(String campagna) {
+		this.campagna = campagna;
+	}
+
 	private Long id;
 	private String name;
 	private LocalDateTime submitted;
 	private FormData data;
+	private String campagna;
+
 	private String qualifiedName;
 	private String cc;
 	private String recipient;

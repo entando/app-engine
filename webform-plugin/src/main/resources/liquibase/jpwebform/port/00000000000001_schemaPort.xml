@@ -17,6 +17,10 @@
                 <constraints nullable="false" />
             </column>
 
+            <column name="campagna" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+
             <column name="submitted" type="timestamp">
                 <constraints nullable="false" />
             </column>

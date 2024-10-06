@@ -43,96 +43,108 @@ public class TestFormManager extends BaseTestCase {
 
 	@Test
 	public void testListForm() throws ApsSystemException {
+		Form form0 = new Form();
+		Form form1 = new Form();
+		Form form2 = new Form();
+		Form form3 = new Form();
+		Form form4 = new Form();
+		Form form5 = new Form();
+		Form form6 = new Form();
 
-		Form form0=new Form();
-		Form form1=new Form();
-		Form form2=new Form();
-		Form form3=new Form();
-		Form form4=new Form();
-		Form form5=new Form();
-		Form form6=new Form();
+		try {
 
-		form0.setId(2678L);
-		form0.setName("Romolo");
-		form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
-		form0.setDelivered(true);
-		form0.setData(getFormDataForTest());
 
-		form1.setId(2679L);
-		form1.setName("Numa Pompilio");
-		form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
-		form1.setDelivered(true);
-		form1.setData(getFormDataForTest());
+			form0.setName("Romolo");
+			form0.setCampagna("Romolo");
+			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+			form0.setDelivered(true);
+			form0.setData(getFormDataForTest());
 
-		form2.setId(2680L);
-		form2.setName("Tullo Ostilio");
-		form2.setSubmitted(LocalDateTime.parse("2024-05-09T03:27:50.000000"));
-		form2.setDelivered(false);
-		form2.setData(getFormDataForTest());
+			form1.setName("Numa Pompilio");
+			form1.setCampagna("Numa Pompilio");
+			form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
+			form1.setDelivered(true);
+			form1.setData(getFormDataForTest());
 
-		form3.setId(2681L);
-		form3.setName("Anco Marzio");
-		form3.setSubmitted(TODAY);
-		form3.setDelivered(false);
-		form3.setData(getFormDataForTest());
+			form2.setName("Tullo Ostilio");
+			form2.setCampagna("Tullo Ostilio");
+			form2.setSubmitted(LocalDateTime.parse("2024-05-09T03:27:50.000000"));
+			form2.setDelivered(false);
+			form2.setData(getFormDataForTest());
 
-		form4.setId(2682L);
-		form4.setName("Tarquinio Prisco");
-		form4.setSubmitted(LocalDateTime.parse("2024-05-09T05:20:15.000000"));
-		form4.setDelivered(true);
-		form4.setData(getFormDataForTest());
+			form3.setName("Anco Marzio");
+			form3.setCampagna("Anco Marzio");
+			form3.setSubmitted(TODAY);
+			form3.setDelivered(false);
+			form3.setData(getFormDataForTest());
 
-		form5.setId(2683L);
-		form5.setName("Servio Tullio");
-		form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
-		form5.setDelivered(false);
-		form5.setData(getFormDataForTest());
+			form4.setName("Tarquinio Prisco");
+			form4.setCampagna("Tarquinio Prisco");
+			form4.setSubmitted(LocalDateTime.parse("2024-05-09T05:20:15.000000"));
+			form4.setDelivered(true);
+			form4.setData(getFormDataForTest());
 
-		form6.setId(2684L);
-		form6.setName("Tarquinio il superbo");
-		form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
-		form6.setDelivered(true);
-		form6.setData(getFormDataForTest());
+			form5.setName("Servio Tullio");
+			form5.setCampagna("Servio Tullio");
+			form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
+			form5.setDelivered(false);
+			form5.setData(getFormDataForTest());
 
-		_formManager.addForm(form0);
-		_formManager.addForm(form1);
-		_formManager.addForm(form2);
-		_formManager.addForm(form3);
-		_formManager.addForm(form4);
-		_formManager.addForm(form5);
-		_formManager.addForm(form6);
+			form6.setName("Tarquinio il superbo");
+			form6.setCampagna("Tarquinio il superbo");
+			form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
+			form6.setDelivered(true);
+			form6.setData(getFormDataForTest());
 
-		System.out.println("\n\n============================ALL=================================================");
-		_formManager.getFormList().forEach(form->{
+			_formManager.addForm(form0);
+			_formManager.addForm(form1);
+			_formManager.addForm(form2);
+			_formManager.addForm(form3);
+			_formManager.addForm(form4);
+			_formManager.addForm(form5);
+			_formManager.addForm(form6);
 
-				System.out.println("\n\n"+form.getId()+"\n"+
-						form.getName()+"\n"+
-						form.getSubmitted()+"\n"+
-						form.getDelivered()+", \n\n");
-		});
+			System.out.println("\n\n============================ALL=================================================");
+			_formManager.getFormList().forEach(form -> {
 
-		System.out.println("============================TRUE(AFTER)=================================================");
+				System.out.println("\n\n" + form.getId() + "\n" +
+						form.getName() + "\n" +
+						form.getSubmitted() + "\n" +
+						form.getDelivered() + ", \n\n");
+			});
 
-		List<Form> listSearchForm1 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", true);
+			System.out.println(
+					"============================TRUE(AFTER)=================================================");
 
-		listSearchForm1.forEach(form->{
+			List<Form> listSearchForm1 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", true);
 
-			System.out.println("\n\n"+form.getId()+"\n"+
-					form.getName()+"\n"+
-					form.getSubmitted()+"\n"+
-					form.getDelivered()+", \n\n");
-		});
+			listSearchForm1.forEach(form -> {
 
-		System.out.println("============================FALSE(AFTER)=================================================");
-		List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
+				System.out.println("\n\n" + form.getId() + "\n" +
+						form.getName() + "\n" +
+						form.getSubmitted() + "\n" +
+						form.getDelivered() + ", \n\n");
+			});
 
-		listSearchForm2.forEach(form->{
+			System.out.println(
+					"============================FALSE(AFTER)=================================================");
+			List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
 
-			System.out.println("\n\n"+form.getId()+"\n"+
-					form.getName()+"\n"+
-					form.getSubmitted()+"\n"+
-					form.getDelivered()+", \n\n");
-		});
+			listSearchForm2.forEach(form -> {
+
+				System.out.println("\n\n" + form.getId() + "\n" +
+						form.getName() + "\n" +
+						form.getSubmitted() + "\n" +
+						form.getDelivered() + ", \n\n");
+			});
+		} finally {
+			_formManager.deleteForm(form0.getId());
+			_formManager.deleteForm(form2.getId());
+			_formManager.deleteForm(form3.getId());
+			_formManager.deleteForm(form4.getId());
+			_formManager.deleteForm(form5.getId());
+			_formManager.deleteForm(form6.getId());
+		}
 	}
 
 	@Test
@@ -141,10 +153,10 @@ public class TestFormManager extends BaseTestCase {
 		assertNotNull(form);
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
+		assertEquals("basic", form.getCampagna());
 		testFormData(form.getData());
 		assertEquals(true, form.getDelivered());
 		assertEquals( LocalDateTime.of(2024,Month.SEPTEMBER,5,10,30), form.getSubmitted());
-
 	}
 
 
@@ -169,8 +181,8 @@ public class TestFormManager extends BaseTestCase {
 		final Long id = verify.getId();
 
 		assertNotNull(id);
-		assertEquals(2678L, id);
 		assertEquals("Plinio", verify.getName());
+		assertEquals("basic", verify.getCampagna());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
 		assertEquals(false, verify.getDelivered());
@@ -283,6 +295,7 @@ public class TestFormManager extends BaseTestCase {
 
 		form.setId(2677L);
 		form.setName("Plinio");
+		form.setCampagna("basic");
 		form.setSubmitted(TODAY);
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());

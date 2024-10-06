@@ -191,6 +191,15 @@ public class FormFrontEndAction extends FormAction {
         return SUCCESS;
     }
 
+    public Form getForm(Long id) {
+        try {
+            return getFormManager().getForm(id);
+        } catch (Exception e) {
+            log.error("error loading form {}", id, e);
+        }
+        return null;
+    }
+
     private Object[] createFilters() {
         final List filters = new ArrayList<>();
 
@@ -309,12 +318,21 @@ public class FormFrontEndAction extends FormAction {
         this._ids = ids;
     }
 
+    public String getCampagna() {
+        return _campagna;
+    }
+
+    public void setCampagna(String _campagna) {
+        this._campagna = _campagna;
+    }
+
     // search parameter
     private Date _from;
     private Date _to;
     private Boolean _delivered;
     private String _practice;
     private String _name;
+    private String _campagna;
 
     private Form form;
     private List<Long> _ids;

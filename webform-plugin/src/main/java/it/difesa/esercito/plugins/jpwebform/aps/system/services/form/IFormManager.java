@@ -15,12 +15,13 @@ public interface IFormManager {
 
 
     /**
-	 * Load a file representing a form from the disk
-	 * @param file
-	 * @return
-	 * @throws ApsSystemException
-	 */
-	public Form getForm(long file) throws ApsSystemException;
+     * Load a file representing a form from the disk
+     *
+     * @param id
+     * @return
+     * @throws ApsSystemException
+     */
+	public Form getForm(long id) throws ApsSystemException;
 
 	/**
      * Retrieve from disk the forms not expired
