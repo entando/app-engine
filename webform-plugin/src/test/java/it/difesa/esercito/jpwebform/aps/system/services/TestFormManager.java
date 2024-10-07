@@ -50,6 +50,7 @@ public class TestFormManager extends BaseTestCase {
 
 	@Test
 	public void testListForm() throws ApsSystemException {
+
 		Form form0 = new Form();
 		Form form1 = new Form();
 		Form form2 = new Form();
@@ -63,7 +64,6 @@ public class TestFormManager extends BaseTestCase {
 
 			form0.setName("Romolo");
 			form0.setCampagna("Romolo");
-			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
 			form0.setDelivered(true);
 			form0.setData(getFormDataForTest());
@@ -113,7 +113,6 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form6);
 
 
-
 		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERiFY, true);
 		assertEquals(3,listSearchFormAfter1.size());
 
@@ -126,16 +125,7 @@ public class TestFormManager extends BaseTestCase {
 		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERiFY, false);
 		assertEquals(1,listSearchFormBefore2.size());
 
-			System.out.println(
-					"============================FALSE(AFTER)=================================================");
-			List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
 
-
-				System.out.println("\n\n" + form.getId() + "\n" +
-						form.getName() + "\n" +
-						form.getSubmitted() + "\n" +
-						form.getDelivered() + ", \n\n");
-			});
 		} finally {
 			_formManager.deleteForm(form0.getId());
 			_formManager.deleteForm(form2.getId());
@@ -157,7 +147,6 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals(true, form.getDelivered());
 		assertEquals( LocalDateTime.of(2024, Month.SEPTEMBER,5,10,30), form.getSubmitted());
 
-
 	}
 
 
@@ -174,8 +163,8 @@ public class TestFormManager extends BaseTestCase {
 	public void testAddDeleteForm() throws Exception {
 		Form form = new Form();
 
-		form.setId(2678L);
 		form.setName("Platone");
+		form.setCampagna("basic");
 		form.setSubmitted(TODAY);
 		form.setDelivered(true);
 		form.setData(getFormDataForTest());
@@ -186,22 +175,21 @@ public class TestFormManager extends BaseTestCase {
 
 		Form verify = _formManager.getForm(form.getId());
 
-
-
 		final Long id = verify.getId();
 
 		assertNotNull(id);
 		assertEquals(2678L, id);
 		assertEquals("Platone", verify.getName());
-		assertEquals("Plinio", verify.getName());
 		assertEquals("basic", verify.getCampagna());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
-		assertEquals(false, verify.getDelivered());
+		assertEquals(true, verify.getDelivered());
 
 
 		_formManager.deleteForm(id);
+
 		verify = _formManager.getForm(id);
+		
 		assertNull(verify);
 	}
 

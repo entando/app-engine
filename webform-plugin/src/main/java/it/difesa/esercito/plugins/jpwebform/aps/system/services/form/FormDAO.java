@@ -294,6 +294,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			form = new Form();
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
+			form.setCampagna(res.getString("campagna"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
 			form.setDelivered(res.getBoolean("delivered"));//<==========
 			if (null != submittedValue) {
@@ -351,41 +352,18 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				try {
 					updateForm(form);
 
-					if(_mailManager.sendMail(form)){
-						logger.info("updated form {} after delivery (or expiration!)", form.getId());
-					}
+					_mailManager.sendMail(form);
+
+					logger.info("updated form {} after delivery (or expiration!)", form.getId());
+
 
 				} catch (Exception e) {
 					logger.error("Unexpected error trying to update the form", form.getId(), e);
 				}
 			});
 		}
-
-	public List<Form> searchByDateAfter(String data, Boolean delivered){
-		List<Form> searchList = new ArrayList<Form>();
-		LocalDateTime ldt = LocalDateTime.parse(data);
-
-		searchList.addAll(
-
-				this.getFormList().stream()
-						.filter(form->ldt.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
-						.collect(Collectors.toList())
-		);
-		return searchList;
 	}
 
-	public List<Form> searchByDateBefore(String data, Boolean delivered){
-		List<Form> searchList = new ArrayList<Form>();
-		LocalDateTime ldt = LocalDateTime.parse(data);
-
-		searchList.addAll(
-
-				this.getFormList().stream()
-						.filter(form->ldt.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
-						.collect(Collectors.toList())
-		);
-		return searchList;
-	}
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -399,7 +377,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
 
-	private final String ALL_FORM ="SELECT * FROM jpwebform_form"; //<========
+	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
 	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
 
