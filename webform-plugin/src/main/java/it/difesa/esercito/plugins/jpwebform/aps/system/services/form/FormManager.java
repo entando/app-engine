@@ -125,7 +125,6 @@ public class FormManager extends AbstractService implements IFormManager {
 		return listForm;
 	}
 
-
 	@Override
 	public List<Long> search(FieldSearchFilter[] filter) {
 		return _formDAO.searchForms(filter);

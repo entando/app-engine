@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.Date;
 import java.util.List;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
@@ -254,6 +255,36 @@ public class TestFormManager extends BaseTestCase {
 		fd.setEtichetta5("setEtichetta5");
 
 		return fd;
+	}
+
+	@Test
+	public void testFilter() throws Exception {
+		final Date to = new Date();
+		final LocalDate currentDate = LocalDate.now();
+		final LocalDate fromLd = currentDate.minusYears(10);
+		Date from = Date.from(fromLd.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+		// search by date
+		FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", from, to);
+		List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{dateFilter});
+		assertNotNull(dateRecords);
+		assertFalse(dateRecords.isEmpty());
+		assertEquals(2677L, dateRecords.get(0));
+
+		// search by name
+		FieldSearchFilter nameFilter = new FieldSearchFilter("name", "Oettam", false);
+		List<Long> nameRecords = _formManager.search(new FieldSearchFilter[]{nameFilter});
+		assertNotNull(nameRecords);
+		assertFalse(nameRecords.isEmpty());
+		assertEquals(2677L, nameRecords.get(0));
+
+		// search by delivered
+		FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", Boolean.TRUE, false);
+		List<Long> deliveredRecords = _formManager.search(new FieldSearchFilter[]{deliveredFilter});
+		assertNotNull(deliveredRecords);
+		assertFalse(deliveredRecords.isEmpty());
+		assertEquals(2677L, deliveredRecords.get(0));
+
 	}
 
 	public static Form getFormForTest() {
