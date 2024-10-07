@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface IFormDAO {
 
-	public List<Integer> searchForms(FieldSearchFilter[] filters);
+	public List<Long> searchForms(FieldSearchFilter[] filters);
 	
 	public Form loadForm(long id);
 

@@ -6,6 +6,7 @@
 package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.AbstractService;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import java.io.File;
 import java.security.SecureRandom;
@@ -124,6 +125,11 @@ public class FormManager extends AbstractService implements IFormManager {
 		return listForm;
 	}
 
+
+	@Override
+	public List<Long> search(FieldSearchFilter[] filter) {
+		return _formDAO.searchForms(filter);
+	}
 
 	public static String generateRandomHash(int length) {
 		StringBuilder hash = new StringBuilder(length);

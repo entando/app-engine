@@ -38,6 +38,40 @@
 			<interceptor-ref name="entandoFrontEndFreeValidationStack"></interceptor-ref>
 		</action>
 
+		<!-- Operazioni di admin -->
+		<action name="list" class="jpwebformFormFrontEndAction" method="list">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_list</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-list.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+
+		<action name="detail" class="jpwebformFormFrontEndAction" method="detail">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_detail</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-detail.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+
+		<action name="delete" class="jpwebformFormFrontEndAction" method="delete">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_detail</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-delete.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+
+		<action name="deleteConfirm" class="jpwebformFormFrontEndAction" method="deleteConfirm">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_deleted</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-deleted.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+		<!-- CAMBIARE INTERCEPTOR PER CONTROLLARE IL PERMESSO DI AMMINISTRAZIONE FORM -->
+
 	</package>
 
 </struts>

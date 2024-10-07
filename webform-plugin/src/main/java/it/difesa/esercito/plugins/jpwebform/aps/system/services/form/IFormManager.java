@@ -5,6 +5,7 @@
  */
 package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
 
 import java.time.LocalDateTime;
@@ -16,12 +17,13 @@ public interface IFormManager {
 
 
     /**
-	 * Load a file representing a form from the disk
-	 * @param file
-	 * @return
-	 * @throws ApsSystemException
-	 */
-	public Form getForm(long file) throws ApsSystemException;
+     * Load a file representing a form from the disk
+     *
+     * @param id
+     * @return
+     * @throws ApsSystemException
+     */
+	public Form getForm(long id) throws ApsSystemException;
 
 	/**
      * Retrieve from disk the forms not expired
@@ -58,4 +60,11 @@ public interface IFormManager {
 
 	public void updateForm(Form form);
 
+	/**
+	 * Search using entity filters
+	 *
+	 * @param filter the array containing search filters
+	 * @return
+	 */
+	List<Long> search(FieldSearchFilter[] filter);
 }

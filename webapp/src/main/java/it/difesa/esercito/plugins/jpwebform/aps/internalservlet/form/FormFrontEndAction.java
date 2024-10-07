@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +148,7 @@ public class FormFrontEndAction extends FormAction {
                 log.warn("Could not get SIGE data for user '{}'", currentUser);
             }
             form.setName(currentUser);
-            form.setSubmitted(form.getSubmitted());
+            form.setSubmitted(form.getSubmitted()); //Date
             form.setData(getFormData());
 
             final String email = getMailManager().getEmailById(getIdDestinatario());
@@ -165,13 +164,13 @@ public class FormFrontEndAction extends FormAction {
             form.setSubject(getSubject());
 
             if (getMailManager().sendMail(form)) {
-                form.setDelivered(true);
                 log.debug("Form successfully delivered to {}", form.getRecipient());
+                form.setDelivered(true);
             } else {
                 log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
-            getFormManager().addForm(form);
-                return "not_delivered";
+                form.setDelivered(false);
             }
+            getFormManager().addForm(form);
         } catch (Exception e) {
             log.error("unexpected exception while processing the form from user {}", getCurrentUser());
             return FAILURE;
@@ -183,18 +182,20 @@ public class FormFrontEndAction extends FormAction {
     }
 
     public List<Long> getFormsId() {
-        FieldSearchFilter[] filters = (FieldSearchFilter[]) createFilters();
-        _ids = getFormManager().search(filters);
-
-        return _ids;
+        try {
+            FieldSearchFilter[] filters = (FieldSearchFilter[]) createFilters();
+            return getFormManager().search(filters);
+        } catch (Exception e) {
+            log.error("errore caricamento forms", e);
+        }
+        return null;
     }
 
     public String list() {
-        try  {
+        return SUCCESS;
+    }
 
-        } catch (Throwable t) {
-            return FAILURE;
-        }
+    public String detail() {
         return SUCCESS;
     }
 
@@ -210,6 +211,10 @@ public class FormFrontEndAction extends FormAction {
     private Object[] createFilters() {
         final List filters = new ArrayList<>();
 
+        if (getId() != null) {
+            FieldSearchFilter idFilter = new FieldSearchFilter("id", getId(), false);
+            filters.add(idFilter);
+        }
         if (getFrom() != null && getTo() != null) {
             FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", getFrom(), getTo());
             filters.add(dateFilter);
@@ -317,12 +322,12 @@ public class FormFrontEndAction extends FormAction {
         this._name = name;
     }
 
-    public List<Long> getIds() {
-        return _ids;
+    public Long getId() {
+        return _id;
     }
 
-    public void setIds(List<Long> ids) {
-        this._ids = ids;
+    public void setId(Long id) {
+        this._id = id;
     }
 
     public String getCampagna() {
@@ -334,6 +339,7 @@ public class FormFrontEndAction extends FormAction {
     }
 
     // search parameter
+    private Long _id;
     private Date _from;
     private Date _to;
     private Boolean _delivered;
@@ -342,7 +348,7 @@ public class FormFrontEndAction extends FormAction {
     private String _campagna;
 
     private Form form;
-    private List<Long> _ids;
+
 
     private FormData _formData;
     private String _idDestinatario;

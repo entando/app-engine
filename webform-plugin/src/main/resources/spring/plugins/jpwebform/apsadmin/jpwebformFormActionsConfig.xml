@@ -25,7 +25,6 @@
 			parent="abstractBaseAction" >
 		<property name="formManager" ref="jpwebformFormManager" />
 		<property name="mailManager" ref="jpwebformMailManager" />
-		<property name="sigeManager" ref="jpwebformSigeManager" />
 		<property name="pageManager" ref="PageManager" />
 	</bean>
 

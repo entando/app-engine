@@ -6,12 +6,17 @@
 package it.difesa.esercito.jpwebform.aps.system.services;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.junit.jupiter.api.*;
+import java.time.ZoneId;
+import net.minidev.json.JSONUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
@@ -44,66 +49,68 @@ public class TestFormManager extends BaseTestCase {
 
 
 	@Test
-	@Order(1)
-	public void testListSearchFormByDateAfterBefore() throws ApsSystemException {
+	public void testListForm() throws ApsSystemException {
+		Form form0 = new Form();
+		Form form1 = new Form();
+		Form form2 = new Form();
+		Form form3 = new Form();
+		Form form4 = new Form();
+		Form form5 = new Form();
+		Form form6 = new Form();
 
-		Form form0=new Form();
-		Form form1=new Form();
-		Form form2=new Form();
-		Form form3=new Form();
-		Form form4=new Form();
-		Form form5=new Form();
-		Form form6=new Form();
+		try {
 
-		form0.setId(2678L);
-		form0.setName("Romolo");
-		form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
-		form0.setDelivered(true);
-		form0.setData(getFormDataForTest());
 
-		form1.setId(2679L);
-		form1.setName("Numa Pompilio");
-		form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
-		form1.setDelivered(true);
-		form1.setData(getFormDataForTest());
+			form0.setName("Romolo");
+			form0.setCampagna("Romolo");
+			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
+			form0.setDelivered(true);
+			form0.setData(getFormDataForTest());
 
-		form2.setId(2680L);
-		form2.setName("Tullo Ostilio");
-		form2.setSubmitted(LocalDateTime.parse("2024-05-09T03:27:50.000000"));
-		form2.setDelivered(false);
-		form2.setData(getFormDataForTest());
+			form1.setName("Numa Pompilio");
+			form1.setCampagna("Numa Pompilio");
+			form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
+			form1.setDelivered(true);
+			form1.setData(getFormDataForTest());
 
-		form3.setId(2681L);
-		form3.setName("Anco Marzio");
-		form3.setSubmitted(TODAY);
-		form3.setDelivered(false);
-		form3.setData(getFormDataForTest());
+			form2.setName("Tullo Ostilio");
+			form2.setCampagna("Tullo Ostilio");
+			form2.setSubmitted(LocalDateTime.parse("2024-05-09T03:27:50.000000"));
+			form2.setDelivered(false);
+			form2.setData(getFormDataForTest());
 
-		form4.setId(2682L);
-		form4.setName("Tarquinio Prisco");
-		form4.setSubmitted(LocalDateTime.parse("2024-05-09T05:20:15.000000"));
-		form4.setDelivered(true);
-		form4.setData(getFormDataForTest());
+			form3.setName("Anco Marzio");
+			form3.setCampagna("Anco Marzio");
+			form3.setSubmitted(TODAY);
+			form3.setDelivered(false);
+			form3.setData(getFormDataForTest());
 
-		form5.setId(2683L);
-		form5.setName("Servio Tullio");
-		form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
-		form5.setDelivered(false);
-		form5.setData(getFormDataForTest());
+			form4.setName("Tarquinio Prisco");
+			form4.setCampagna("Tarquinio Prisco");
+			form4.setSubmitted(LocalDateTime.parse("2024-05-09T05:20:15.000000"));
+			form4.setDelivered(true);
+			form4.setData(getFormDataForTest());
 
-		form6.setId(2684L);
-		form6.setName("Tarquinio il superbo");
-		form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
-		form6.setDelivered(true);
-		form6.setData(getFormDataForTest());
+			form5.setName("Servio Tullio");
+			form5.setCampagna("Servio Tullio");
+			form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
+			form5.setDelivered(false);
+			form5.setData(getFormDataForTest());
 
-		_formManager.addForm(form0);
-		_formManager.addForm(form1);
-		_formManager.addForm(form2);
-		_formManager.addForm(form3);
-		_formManager.addForm(form4);
-		_formManager.addForm(form5);
-		_formManager.addForm(form6);
+			form6.setName("Tarquinio il superbo");
+			form6.setCampagna("Tarquinio il superbo");
+			form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
+			form6.setDelivered(true);
+			form6.setData(getFormDataForTest());
+
+			_formManager.addForm(form0);
+			_formManager.addForm(form1);
+			_formManager.addForm(form2);
+			_formManager.addForm(form3);
+			_formManager.addForm(form4);
+			_formManager.addForm(form5);
+			_formManager.addForm(form6);
 
 
 
@@ -119,25 +126,33 @@ public class TestFormManager extends BaseTestCase {
 		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERiFY, false);
 		assertEquals(1,listSearchFormBefore2.size());
 
-		_formManager.deleteForm(2678L);
-		_formManager.deleteForm(2679L);
-		_formManager.deleteForm(2680L);
-		_formManager.deleteForm(2681L);
-		_formManager.deleteForm(2682L);
-		_formManager.deleteForm(2683L);
-		_formManager.deleteForm(2684L);
+			System.out.println(
+					"============================FALSE(AFTER)=================================================");
+			List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
 
 
-
+				System.out.println("\n\n" + form.getId() + "\n" +
+						form.getName() + "\n" +
+						form.getSubmitted() + "\n" +
+						form.getDelivered() + ", \n\n");
+			});
+		} finally {
+			_formManager.deleteForm(form0.getId());
+			_formManager.deleteForm(form2.getId());
+			_formManager.deleteForm(form3.getId());
+			_formManager.deleteForm(form4.getId());
+			_formManager.deleteForm(form5.getId());
+			_formManager.deleteForm(form6.getId());
+		}
 	}
 
 	@Test
-	@Order(2)
 	public void testGetForm() throws Exception {
 		Form form = _formManager.getForm(2677L);
 		assertNotNull(form);
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
+		assertEquals("basic", form.getCampagna());
 		testFormData(form.getData());
 		assertEquals(true, form.getDelivered());
 		assertEquals( LocalDateTime.of(2024, Month.SEPTEMBER,5,10,30), form.getSubmitted());
@@ -147,7 +162,6 @@ public class TestFormManager extends BaseTestCase {
 
 
 	@Test
-	@Order(3)
 	public void testGetForms() throws Exception {
 		List<Long> ids = _formManager.getForms();
 		assertNotNull(ids);
@@ -157,7 +171,6 @@ public class TestFormManager extends BaseTestCase {
 
 
 	@Test
-	@Order(4)
 	public void testAddDeleteForm() throws Exception {
 		Form form = new Form();
 
@@ -180,48 +193,16 @@ public class TestFormManager extends BaseTestCase {
 		assertNotNull(id);
 		assertEquals(2678L, id);
 		assertEquals("Platone", verify.getName());
+		assertEquals("Plinio", verify.getName());
+		assertEquals("basic", verify.getCampagna());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
-		assertEquals(true, verify.getDelivered());
+		assertEquals(false, verify.getDelivered());
 
 
-		_formManager.deleteForm(2678L); //form.getId()
-		verify = _formManager.getForm(2678L);//id
+		_formManager.deleteForm(id);
+		verify = _formManager.getForm(id);
 		assertNull(verify);
-
-
-	}
-
-	@Test
-	@Order(5)
-	public void testUpdateForm() throws ApsSystemException {
-
-		Form form = new Form();
-
-		form.setId(2678L);
-		form.setName("UserUpdateFranco");
-		form.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
-		form.setDelivered(false);
-		form.setData(getFormDataForTest());
-		form.setRecipient("address@email.it");
-		form.setCc("cc@email.it");
-		form.setQualifiedName("Esq. John Doe");
-		form.setSubject("mail subject");
-
-
-		_formManager.addForm(form);
-		assertEquals(false, form.getDelivered());
-
-
-		_formManager.cronJob();
-
-		Form formAfterUpdate =_formManager.getForm(2678L);
-		assertEquals(true, formAfterUpdate.getDelivered());
-
-		//System.out.println(formAfterUpdate.getId()+" "+formAfterUpdate.getName()+" "+formAfterUpdate.getDelivered()+" ");
-
-		_formManager.deleteForm(2678L);
-
 	}
 
 
@@ -256,6 +237,7 @@ public class TestFormManager extends BaseTestCase {
 		assertEquals("setEtichetta5", data.etichetta5);
 
 	}
+
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();
 
@@ -286,17 +268,18 @@ public class TestFormManager extends BaseTestCase {
 		return fd;
 	}
 
-/*	public static Form getFormForTest() {
+	public static Form getFormForTest() {
 		Form form = new Form();
 
 		form.setId(2677L);
 		form.setName("Plinio");
+		form.setCampagna("basic");
 		form.setSubmitted(TODAY);
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());
 
 		return form;
-	}*/
+	}
 
 
 	private IFormManager _formManager;

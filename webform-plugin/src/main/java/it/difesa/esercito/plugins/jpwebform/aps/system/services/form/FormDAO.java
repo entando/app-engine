@@ -29,17 +29,17 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	private IMailManager _mailManager;
 	private static final Integer MAX_HOURS = 12;
 
-    @Override
-    public int countForms(FieldSearchFilter[] filters) {
-        Integer forms = null;
-        try {
-            forms = super.countId(filters);
-        } catch (Throwable t) {
-            logger.error("error in count forms", t);
-            throw new RuntimeException("error in count forms", t);
-        }
-        return forms;
-    }
+	@Override
+	public int countForms(FieldSearchFilter[] filters) {
+		Integer forms = null;
+		try {
+			forms = super.countId(filters);
+		} catch (Throwable t) {
+			logger.error("error in count forms", t);
+			throw new RuntimeException("error in count forms", t);
+		}
+		return forms;
+	}
 
 	@Override
 	protected String getTableFieldName(String metadataFieldKey) {
@@ -56,13 +56,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return "id";
 	}
 
-    @Override
-    public List<Integer> searchForms(FieldSearchFilter[] filters) {
-            List<Integer> formsId = new ArrayList<>();
-        List<String> masterList = super.searchId(filters);
-        masterList.stream().forEach(idString -> formsId.add(Integer.parseInt(idString)));
-        return formsId;
-        }
+	@Override
+	public List<Long> searchForms(FieldSearchFilter[] filters) {
+		List<Long> formsId = new ArrayList<>();
+		List<String> masterList = super.searchId(filters);
+		masterList.stream().forEach(idString -> formsId.add(Long.parseLong(idString)));
+		return formsId;
+	}
 
 
 	@Override
@@ -87,7 +87,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 		return formsId;
 	}
-
+	
 	@Override
 	public List<Form> getFormList(){
 		List<Form> formlist = new ArrayList<Form>();
@@ -112,7 +112,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 		return formlist;
 	}
-	
+
 	@Override
 	public void insertForm(Form form) {
 		PreparedStatement stat = null;
@@ -123,7 +123,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			long nextId = this.extractNextId(NEXT_ID, conn);
 			form.setId(nextId);
 			this.insertForm(form, conn);
- 			conn.commit();
+			conn.commit();
 		} catch (Throwable t) {
 			this.executeRollback(conn);
 			logger.error("Error on insert form",  t);
@@ -153,21 +153,18 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	public void insertForm(Form form, Connection conn) {
 		PreparedStatement stat = null;
+		int index = 1;
+
 		try {
 			stat = conn.prepareStatement(ADD_FORM);
-			int index = 1;
-			stat.setLong(index++, form.getId());
- 			stat.setString(index++, form.getName());
-			if(null != form.getSubmitted()) {
-				//Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
-				Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
-				stat.setTimestamp(index++, submittedTimestamp);
-				stat.setBoolean(index++, form.getDelivered()); //<=========
-			} else {
-				stat.setNull(index++, Types.DATE);
 
-			}
-  			stat.setString(index++, form.getData().toJson());
+			stat.setLong(index++, form.getId());
+			stat.setString(index++, form.getName());
+			stat.setString(index++, form.getCampagna());
+			Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
+			stat.setTimestamp(index++, submittedTimestamp);
+			stat.setBoolean(index++, form.getDelivered()); //<=========
+			stat.setString(index, form.getData().toJson());
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error on insert form",  t);
@@ -222,7 +219,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
 			this.removeForm(id, conn);
- 			conn.commit();
+			conn.commit();
 		} catch (Throwable t) {
 			this.executeRollback(conn);
 			logger.error("Error deleting form {}", id, t);
@@ -231,9 +228,10 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			this.closeDaoResources(null, stat, conn);
 		}
 	}
-	
+
 	public void removeForm(long id, Connection conn) {
 		PreparedStatement stat = null;
+
 		try {
 			stat = conn.prepareStatement(DELETE_FORM);
 			int index = 1;
@@ -252,6 +250,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Connection conn = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
+
 		try {
 			conn = this.getConnection();
 			form = this.loadForm(id, conn);
@@ -270,6 +269,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Form form = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
+
 		try {
 			stat = conn.prepareStatement(LOAD_FORM);
 			int index = 1;
@@ -289,8 +289,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	protected Form buildFormFromRes(ResultSet res) {
 		Form form = null;
+
 		try {
-			form = new Form();				
+			form = new Form();
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
@@ -359,18 +360,41 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				}
 			});
 		}
+
+	public List<Form> searchByDateAfter(String data, Boolean delivered){
+		List<Form> searchList = new ArrayList<Form>();
+		LocalDateTime ldt = LocalDateTime.parse(data);
+
+		searchList.addAll(
+
+				this.getFormList().stream()
+						.filter(form->ldt.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.collect(Collectors.toList())
+		);
+		return searchList;
 	}
 
+	public List<Form> searchByDateBefore(String data, Boolean delivered){
+		List<Form> searchList = new ArrayList<Form>();
+		LocalDateTime ldt = LocalDateTime.parse(data);
 
+		searchList.addAll(
 
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?)";
+				this.getFormList().stream()
+						.filter(form->ldt.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+						.collect(Collectors.toList())
+		);
+		return searchList;
+	}
+
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?, ?)";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  delivered=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
-	
-	private static final String LOAD_FORM = "SELECT id, name, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
-	
+
+	private static final String LOAD_FORM = "SELECT id, name, campagna, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
+
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
 	private final String NEXT_ID = "SELECT MAX(id) FROM jpwebform_form";
