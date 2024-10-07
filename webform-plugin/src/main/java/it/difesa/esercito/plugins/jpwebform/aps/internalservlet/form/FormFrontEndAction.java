@@ -181,7 +181,7 @@ public class FormFrontEndAction extends FormAction {
         return SUCCESS;
     }
 
-    public String getForms() {
+    public String list() {
         try  {
             FieldSearchFilter[] filters = (FieldSearchFilter[]) createFilters();
             _ids = getFormManager().search(filters);

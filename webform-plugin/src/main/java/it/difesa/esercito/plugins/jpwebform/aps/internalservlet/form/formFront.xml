@@ -38,6 +38,16 @@
 			<interceptor-ref name="entandoFrontEndFreeValidationStack"></interceptor-ref>
 		</action>
 
+		<!-- Operazioni di admin -->
+		<action name="list" class="jpwebformFormFrontEndAction" method="list">
+			<result type="guiFragment">
+				<param name="code">jpwebform_form_list</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-list.jsp</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+
+
 	</package>
 
 </struts>

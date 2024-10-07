@@ -25,6 +25,19 @@
             <column name="icon" value="font-awesome:fa-bars" />
         </insert>
 
+        <insert tableName="widgetcatalog">
+            <column name="code" value="jpwebformadmin" />
+            <column name="titles" valueClobFile="clob/production/widgetcatalog_2.xml" />
+            <column name="plugincode" value="jpwebform" />
+            <column name="parenttypecode" value="formAction" />
+            <column name="locked" valueNumeric="1 " />
+            <column name="readonlypagewidgetconfig" valueNumeric="0" />
+            <column name="defaultconfig" valueClobFile="clob/production/widgetcatalog_3.xml" />
+            <column name="widgetcategory" value="webform" />
+            <column name="maingroup" value="free" />
+            <column name="icon" value="font-awesome:fa-bars" />
+        </insert>
+
         <insert tableName="guifragment">
             <column name="code" value="jpwebform_form_render" />
 <!--            <column name="widgettypecode" value="jpseo_content_viewer" />-->
