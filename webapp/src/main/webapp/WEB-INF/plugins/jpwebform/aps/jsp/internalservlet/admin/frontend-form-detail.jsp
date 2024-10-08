@@ -21,7 +21,7 @@
 
 <br/>
 <a
-        href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/list.action"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
+        href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/list.action" escapeAmp="false" ><wp:parameter name="id" ><s:property value="#formVar.id" /></wp:parameter></wp:action>"
         title="<wp:i18n key="FORM_LIST" />"
         class="label label-info display-block">
     <s:property value="#formVar.id" />&#32;<span class="icon-edit icon-white"></span>

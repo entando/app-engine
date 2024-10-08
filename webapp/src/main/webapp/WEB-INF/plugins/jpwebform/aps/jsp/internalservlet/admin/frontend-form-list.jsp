@@ -106,7 +106,7 @@
                 <tr>
                     <td>
                         <a
-                                href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/formDetail.action"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
+                                href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/formDetail.action" escapeAmp="false"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
                                 title="<wp:i18n key="DETAIL" />: <s:property value="#formVar.id" />"
                                 class="label label-info display-block">
                             <s:property value="#formVar.id" />&#32;
@@ -128,7 +128,7 @@
 
                     <td class="text-center">
                         <a
-                                href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/trash.action"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
+                                href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/trash.action" escapeAmp="false"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
                                 title="<wp:i18n key="TRASH" />: <s:property value="#formVar.id" />"
                                 class="btn btn-warning btn-small">
                             <span class="icon-trash icon-white"></span>&#32;

@@ -61,6 +61,9 @@ public class ActionURLTag extends TagSupport implements IParameterParentTag {
 			pageUrl.setPage(currPage);
 			pageUrl.addParam(InternalServletTag.REQUEST_PARAM_ACTIONPATH, this.getPath());
 			pageUrl.addParam(InternalServletTag.REQUEST_PARAM_FRAMEDEST, currentFrame.toString());
+			if (getEscapeAmp() != null) {
+				pageUrl.setEscapeAmp(getEscapeAmp());
+			}
 			if (null != this.getParameters()) {
 				Iterator<String> iter = this.getParameters().keySet().iterator();
 				while (iter.hasNext()) {
@@ -106,7 +109,15 @@ public class ActionURLTag extends TagSupport implements IParameterParentTag {
 	public void setPath(String path) {
 		this._path = path;
 	}
-	
+
+	/**
+	 * Decide whether to encode the '&'
+	 * @param escapeAmp
+	 */
+	public void setEscapeAmp(Boolean escapeAmp) {
+		this._escapeAmp = escapeAmp;
+	}
+
 	public Map<String, String> getParameters() {
 		return this._parameters;
 	}
@@ -125,9 +136,14 @@ public class ActionURLTag extends TagSupport implements IParameterParentTag {
 	public void setVar(String var) {
 		this._var = var;
 	}
-	
+
+	public Boolean getEscapeAmp() {
+		return _escapeAmp;
+	}
+
 	private String _path;
 	private String _var;
+	private Boolean _escapeAmp;
 	
 	private Map<String, String> _parameters;
 	

@@ -24,6 +24,12 @@
 			<required>no</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<description><![CDATA[Encodes the ampersand '&' character.]]></description>
+			<name>escapeAmp</name>
+			<required>no</required>
+			<rtexprvalue>false</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<description><![CDATA[Return the list of the system categories on SelectItem objects.]]></description>
