@@ -106,7 +106,7 @@
                 <tr>
                     <td>
                         <a
-                                href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/detail.action"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
+                                href="<wp:action path="/ExtStr2/do/FrontEnd/jpwebform/Form/formDetail.action"><wp:parameter name="id"><s:property value="#formVar.id" /></wp:parameter></wp:action>"
                                 title="<wp:i18n key="DETAIL" />: <s:property value="#formVar.id" />"
                                 class="label label-info display-block">
                             <s:property value="#formVar.id" />&#32;
@@ -145,5 +145,6 @@
             </div>
 
             </wpsa:subset>
+
     </form>
 </section>

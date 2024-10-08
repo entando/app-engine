@@ -191,11 +191,8 @@ public class FormFrontEndAction extends FormAction {
         return null;
     }
 
-    public String list() {
-        return SUCCESS;
-    }
 
-    public String detail() {
+    public String formDetail() {
         System.out.println("**** DETTAGLIO " + getId());
         return SUCCESS;
     }
