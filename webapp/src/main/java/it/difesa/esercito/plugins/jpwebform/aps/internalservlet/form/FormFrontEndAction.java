@@ -196,6 +196,7 @@ public class FormFrontEndAction extends FormAction {
     }
 
     public String detail() {
+        System.out.println("**** DETTAGLIO " + getId());
         return SUCCESS;
     }
 
@@ -209,7 +210,7 @@ public class FormFrontEndAction extends FormAction {
     }
 
     private Object[] createFilters() {
-        final List filters = new ArrayList<>();
+        final List<FieldSearchFilter> filters = new ArrayList<>();
 
         if (getId() != null) {
             FieldSearchFilter idFilter = new FieldSearchFilter("id", getId(), false);
@@ -220,18 +221,23 @@ public class FormFrontEndAction extends FormAction {
             filters.add(dateFilter);
         }
         if (StringUtils.isNotBlank(getName())) {
-            FieldSearchFilter nameFilter = new FieldSearchFilter("name", getName(), false);
+            FieldSearchFilter nameFilter = new FieldSearchFilter("name", getName(), true);
             filters.add(nameFilter);
         }
-        if (getDelivered() != null) {
-            FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", getDelivered(), false);
+        if (StringUtils.isNotBlank(getCampagna())) {
+            FieldSearchFilter nameFilter = new FieldSearchFilter("campagna", getCampagna(), true);
+            filters.add(nameFilter);
+        }
+        if (StringUtils.isNotBlank(getDelivered()) && !getDelivered().equals("--")) {
+            Boolean delivered = Boolean.parseBoolean(getDelivered());
+            FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", delivered, false);
             filters.add(deliveredFilter);
         }
-        return filters.toArray(new FieldSearchFilter[0]);
+        return filters.toArray(new FieldSearchFilter[filters.size()]);
     }
 
     /**
-     * Genera la lista delle opzioni dato l'input della configurazione del widget
+     * Genera la lista delle opzioni dato l'ingresso della configurazione del widget
      * @param options CSV inserito in configurazione con le opzioni
      * @return lista delle opzioni come richiesto dal tag di Struts
      */
@@ -296,11 +302,11 @@ public class FormFrontEndAction extends FormAction {
         this._to = to;
     }
 
-    public Boolean getDelivered() {
+    public String getDelivered() {
         return _delivered;
     }
 
-    public void setDelivered(Boolean delivered) {
+    public void setDelivered(String delivered) {
         this._delivered = delivered;
     }
 
@@ -342,7 +348,7 @@ public class FormFrontEndAction extends FormAction {
     private Long _id;
     private Date _from;
     private Date _to;
-    private Boolean _delivered;
+    private String _delivered;
     private String _practice;
     private String _name;
     private String _campagna;

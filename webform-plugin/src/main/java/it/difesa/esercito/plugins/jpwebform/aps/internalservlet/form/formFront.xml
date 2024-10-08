@@ -38,7 +38,7 @@
 			<interceptor-ref name="entandoFrontEndFreeValidationStack"></interceptor-ref>
 		</action>
 
-		<!-- Operazioni di admin -->
+		<!-- Operazioni di amministrazione  -->
 		<action name="list" class="jpwebformFormFrontEndAction" method="list">
 			<result type="guiFragment">
 				<param name="code">jpwebform_form_list</param>
@@ -55,18 +55,18 @@
 			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
 		</action>
 
-		<action name="delete" class="jpwebformFormFrontEndAction" method="delete">
+		<action name="trash" class="jpwebformFormFrontEndAction" method="trash">
 			<result type="guiFragment">
-				<param name="code">jpwebform_form_detail</param>
-				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-delete.jsp</param>
+				<param name="code">jpwebform_form_trash</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-trash.jsp</param>
 			</result>
 			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
 		</action>
 
-		<action name="deleteConfirm" class="jpwebformFormFrontEndAction" method="deleteConfirm">
+		<action name="delete" class="jpwebformFormFrontEndAction" method="delete">
 			<result type="guiFragment">
-				<param name="code">jpwebform_form_deleted</param>
-				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-deleted.jsp</param>
+				<param name="code">jpwebform_form_delete</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-delete.jsp</param>
 			</result>
 			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
 		</action>

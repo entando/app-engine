@@ -93,10 +93,10 @@ public class Form {
 	private LocalDateTime submitted;
 	private FormData data;
 	private String campagna;
+	private Boolean delivered;
 
 	private String qualifiedName;
 	private String cc;
 	private String recipient;
 	private String subject;
-	private Boolean delivered;
 }
