@@ -9,18 +9,25 @@ import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.sql.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private static final Logger logger =  LoggerFactory.getLogger(FormDAO.class);
+	private IMailManager _mailManager;
+	private static final Integer MAX_HOURS = 12;
 
 	@Override
 	public int countForms(FieldSearchFilter[] filters) {
@@ -38,12 +45,12 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	protected String getTableFieldName(String metadataFieldKey) {
 		return metadataFieldKey;
 	}
-
+	
 	@Override
 	protected String getMasterTableName() {
 		return "jpwebform_form";
 	}
-
+	
 	@Override
 	protected String getMasterTableIdFieldName() {
 		return "id";
@@ -64,7 +71,6 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		Connection conn = null;
 		PreparedStatement stat = null;
 		ResultSet res = null;
-
 		try {
 			conn = this.getConnection();
 			stat = conn.prepareStatement(LOAD_FORMS_ID);
@@ -81,12 +87,36 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 		return formsId;
 	}
+	
+	@Override
+	public List<Form> getFormList(){
+		List<Form> formlist = new ArrayList<Form>();
+		Connection conn = null;
+		PreparedStatement stat = null;
+		ResultSet res = null;
+
+		try {
+			conn = this.getConnection();
+			stat = conn.prepareStatement(ALL_FORM);
+			res = stat.executeQuery();
+			while (res.next()) {
+				long id = res.getLong("id");
+				formlist.add(this.loadForm(id));
+			}
+
+		} catch (Throwable t) {
+			logger.error("Error loading Form list",  t);
+			throw new RuntimeException("Error loading Form list", t);
+		} finally {
+			closeDaoResources(res, stat, conn);
+		}
+		return formlist;
+	}
 
 	@Override
 	public void insertForm(Form form) {
 		PreparedStatement stat = null;
 		Connection conn  = null;
-
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
@@ -107,7 +137,6 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		long id = 0;
 		Statement stat = null;
 		ResultSet res = null;
-
 		try {
 			stat = conn.createStatement();
 			res = stat.executeQuery(query);
@@ -145,53 +174,47 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 	}
 
-//	@Override
-//	public void updateForm(Form form) {
-//		PreparedStatement stat = null;
-//		Connection conn = null;
-//		try {
-//			conn = this.getConnection();
-//			conn.setAutoCommit(false);
-//			this.updateForm(form, conn);
-// 			conn.commit();
-//		} catch (Throwable t) {
-//			this.executeRollback(conn);
-//			logger.error("Error updating form {}", form.getId(),  t);
-//			throw new RuntimeException("Error updating form", t);
-//		} finally {
-//			this.closeDaoResources(null, stat, conn);
-//		}
-//	}
+	@Override
+	public void updateForm(Form form) {
+		PreparedStatement stat = null;
+		Connection conn = null;
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+			this.updateForm(form, conn);
+ 			conn.commit();
+		} catch (Throwable t) {
+			this.executeRollback(conn);
+			logger.error("Error updating form {}", form.getId(),  t);
+			throw new RuntimeException("Error updating form", t);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
+	}
 
-//	public void updateForm(Form form, Connection conn) {
-//		PreparedStatement stat = null;
-//		try {
-//			stat = conn.prepareStatement(UPDATE_FORM);
-//			int index = 1;
-//
-// 			stat.setString(index++, form.getName());
-//			if(null != form.getSubmitted()) {
-//				Timestamp submittedTimestamp = new Timestamp(form.getSubmitted().getTime());
-//				stat.setTimestamp(index++, submittedTimestamp);
-//			} else {
-//				stat.setNull(index++, Types.DATE);
-//			}
-//  			stat.setString(index++, form.getData());
-//			stat.setInt(index++, form.getId());
-//			stat.executeUpdate();
-//		} catch (Throwable t) {
-//			logger.error("Error updating form {}", form.getId(),  t);
-//			throw new RuntimeException("Error updating form", t);
-//		} finally {
-//			this.closeDaoResources(null, stat, null);
-//		}
-//	}
+	public void updateForm(Form form, Connection conn) {
+		PreparedStatement stat = null;
+		try {
+			stat = conn.prepareStatement(UPDATE_FORM);
+			int index = 1;
+
+			form.setDelivered(true);//<=======cambio lo stato da false a true
+			stat.setBoolean(index++, form.getDelivered());//<=======
+
+			stat.setLong(index++, form.getId());//<======
+			stat.executeUpdate();
+		} catch (Throwable t) {
+			logger.error("Error updating form {}", form.getId(),  t);
+			throw new RuntimeException("Error updating form", t);
+		} finally {
+			this.closeDaoResources(null, stat, null);
+		}
+	}
 
 	@Override
 	public void removeForm(long id) {
 		PreparedStatement stat = null;
 		Connection conn = null;
-
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
@@ -288,59 +311,63 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-	public List<Form> getFormList(){
-		List<Form> formlist = new ArrayList<Form>();
-		Connection conn = null;
-		PreparedStatement stat = null;
-		ResultSet res = null;
 
-		try {
-			conn = this.getConnection();
-			stat = conn.prepareStatement(ALL_FORM);
-			res = stat.executeQuery();
-			while (res.next()) {
-				long id = res.getLong("id");
-				formlist.add(this.loadForm(id));
-			}
 
-		} catch (Throwable t) {
-			logger.error("Error loading Form list",  t);
-			throw new RuntimeException("Error loading Form list", t);
-		} finally {
-			closeDaoResources(res, stat, conn);
+	/**/
+	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered){
+
+		List<Form> formList= getFormList();
+
+		if(formList == null || formList.isEmpty()){
+			return Collections.EMPTY_LIST;
 		}
-		return formlist;
+
+		return	formList.stream()
+					.filter(form->data.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+				.collect(Collectors.toList());
 	}
 
-	public List<Form> searchByDateAfter(String data, Boolean delivered){
-		List<Form> searchList = new ArrayList<Form>();
-		LocalDateTime ldt = LocalDateTime.parse(data);
+	/**/
+	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered){
 
-		searchList.addAll(
+		List<Form> formList= getFormList();
 
-				this.getFormList().stream()
-						.filter(form->ldt.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
-						.collect(Collectors.toList())
-		);
-		return searchList;
+		if(formList == null || formList.isEmpty()){
+			return Collections.EMPTY_LIST;
+		}
+
+		return	formList.stream()
+				.filter(form->data.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+				.collect(Collectors.toList());
 	}
 
-	public List<Form> searchByDateBefore(String data, Boolean delivered){
-		List<Form> searchList = new ArrayList<Form>();
-		LocalDateTime ldt = LocalDateTime.parse(data);
+	@Override
+	@Scheduled(cron="* */2 * * * *")
+	public void cronJob() {
 
-		searchList.addAll(
+		List<Form> formListExpired = searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
 
-				this.getFormList().stream()
-						.filter(form->ldt.isBefore(form.getSubmitted()) && delivered.equals(form.getDelivered()))
-						.collect(Collectors.toList())
-		);
-		return searchList;
+		if (formListExpired != null && !formListExpired.isEmpty()) {
+			formListExpired.forEach(form -> {
+				try {
+					updateForm(form);
+
+					_mailManager.sendMail(form);
+
+					logger.info("updated form {} after delivery (or expiration!)", form.getId());
+
+
+				} catch (Exception e) {
+					logger.error("Unexpected error trying to update the form", form.getId(), e);
+				}
+			});
+		}
 	}
+
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?, ?)";
 
-	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  name=?,  submitted=?, data=? WHERE id = ?";
+	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  delivered=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 
@@ -352,7 +379,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
-	private final String GET_CAMPAINS = "SELECT DISTINCT campagna FROM jpwebform_form";
+	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
 
-
+	private final String SEARCH_BY_DATE_BEFORE ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
 }

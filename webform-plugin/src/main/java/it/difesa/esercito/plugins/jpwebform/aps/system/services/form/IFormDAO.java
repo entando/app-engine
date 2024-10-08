@@ -6,6 +6,8 @@
 package it.difesa.esercito.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.FieldSearchFilter;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IFormDAO {
@@ -18,7 +20,7 @@ public interface IFormDAO {
 
 	public void removeForm(long id);
 	
-//	public void updateForm(Form form);
+	public void updateForm(Form form);
 
 	public void insertForm(Form form);
 
@@ -26,6 +28,8 @@ public interface IFormDAO {
 
 	public List<Form>getFormList();
 
-	public List<Form> searchByDateAfter(String data, Boolean delivered);
-	public List<Form> searchByDateBefore(String data, Boolean delivered);
+	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
+	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered);
+
+	public void cronJob();
 }

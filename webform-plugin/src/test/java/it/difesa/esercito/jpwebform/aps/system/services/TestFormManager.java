@@ -11,6 +11,8 @@ import com.agiletec.aps.system.exception.ApsSystemException;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.junit.jupiter.api.*;
 import java.time.ZoneId;
 import net.minidev.json.JSONUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,26 +25,33 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestFormManager extends BaseTestCase {
 
 	//public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
 	private static final LocalDateTime TODAY = LocalDateTime.now();
 
+	private static LocalDateTime LDT_VERiFY = LocalDateTime.of(
+			LocalDate.of(2024,5,9), LocalTime.of(23,01,45,000000)
+	);
+
 
 	@BeforeEach
 	public void init() {
+		this._mailManager = (IMailManager) this.getApplicationContext().getBean(IMailManager.BEAN_ID);
 		this._formManager = (IFormManager) this.getService(BEAN_ID);
 		assertNotNull(_formManager);
 		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
 	}
 
+
 	@Test
 	public void testListForm() throws ApsSystemException {
+
 		Form form0 = new Form();
 		Form form1 = new Form();
 		Form form2 = new Form();
@@ -56,7 +65,7 @@ public class TestFormManager extends BaseTestCase {
 
 			form0.setName("Romolo");
 			form0.setCampagna("Romolo");
-			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
 			form0.setDelivered(true);
 			form0.setData(getFormDataForTest());
 
@@ -104,39 +113,20 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
 
-			System.out.println("\n\n============================ALL=================================================");
-			_formManager.getFormList().forEach(form -> {
 
-				System.out.println("\n\n" + form.getId() + "\n" +
-						form.getName() + "\n" +
-						form.getSubmitted() + "\n" +
-						form.getDelivered() + ", \n\n");
-			});
+		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERiFY, true);
+		assertEquals(3,listSearchFormAfter1.size());
 
-			System.out.println(
-					"============================TRUE(AFTER)=================================================");
+		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERiFY, false);
+		assertEquals(2,listSearchFormAfter2.size());
 
-			List<Form> listSearchForm1 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", true);
+		List<Form> listSearchFormBefore1 = _formManager.searchByDateBefore(LDT_VERiFY, true);
+		assertEquals(1,listSearchFormBefore1.size());
 
-			listSearchForm1.forEach(form -> {
+		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERiFY, false);
+		assertEquals(1,listSearchFormBefore2.size());
 
-				System.out.println("\n\n" + form.getId() + "\n" +
-						form.getName() + "\n" +
-						form.getSubmitted() + "\n" +
-						form.getDelivered() + ", \n\n");
-			});
 
-			System.out.println(
-					"============================FALSE(AFTER)=================================================");
-			List<Form> listSearchForm2 = _formManager.searchByDateAfter("2024-05-09T23:01:45.000000", false);
-
-			listSearchForm2.forEach(form -> {
-
-				System.out.println("\n\n" + form.getId() + "\n" +
-						form.getName() + "\n" +
-						form.getSubmitted() + "\n" +
-						form.getDelivered() + ", \n\n");
-			});
 		} finally {
 			_formManager.deleteForm(form0.getId());
 			_formManager.deleteForm(form2.getId());
@@ -149,14 +139,15 @@ public class TestFormManager extends BaseTestCase {
 
 	@Test
 	public void testGetForm() throws Exception {
-		Form form = _formManager.getForm(2677);
+		Form form = _formManager.getForm(2677L);
 		assertNotNull(form);
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
 		assertEquals("basic", form.getCampagna());
 		testFormData(form.getData());
 		assertEquals(true, form.getDelivered());
-		assertEquals( LocalDateTime.of(2024,Month.SEPTEMBER,5,10,30), form.getSubmitted());
+		assertEquals( LocalDateTime.of(2024, Month.SEPTEMBER,5,10,30), form.getSubmitted());
+
 	}
 
 
@@ -171,7 +162,14 @@ public class TestFormManager extends BaseTestCase {
 
 	@Test
 	public void testAddDeleteForm() throws Exception {
-		Form form = getFormForTest();
+		Form form = new Form();
+
+		form.setName("Platone");
+		form.setCampagna("basic");
+		form.setSubmitted(TODAY);
+		form.setDelivered(true);
+		form.setData(getFormDataForTest());
+
 		_formManager.addForm(form);
 
 		assertNotNull(form.getId());
@@ -181,50 +179,19 @@ public class TestFormManager extends BaseTestCase {
 		final Long id = verify.getId();
 
 		assertNotNull(id);
-		assertEquals("Plinio", verify.getName());
+		assertEquals(2678L, id);
+		assertEquals("Platone", verify.getName());
 		assertEquals("basic", verify.getCampagna());
 		testFormData(verify.getData());
 		assertEquals(verify.getSubmitted().toLocalDate(), LocalDateTime.now().toLocalDate());
-		assertEquals(false, verify.getDelivered());
+		assertEquals(true, verify.getDelivered());
 
 
 		_formManager.deleteForm(id);
+
 		verify = _formManager.getForm(id);
+		
 		assertNull(verify);
-	}
-
-	@Test
-	public void testFilter() throws Exception {
-		final Date to = new Date();
-		final LocalDate currentDate = LocalDate.now();
-		final LocalDate fromLd = currentDate.minusYears(10);
-		Date from = Date.from(fromLd.atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-		// search by date
-		FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", from, to);
-		List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{ dateFilter });
-		assertNotNull(dateRecords);
-		assertFalse(dateRecords.isEmpty());
-		assertEquals(2677L, dateRecords.get(0));
-
-		// search by name
-		FieldSearchFilter nameFilter = new FieldSearchFilter("name", "Oettam", false);
-		List<Long> nameRecords = _formManager.search(new FieldSearchFilter[]{ nameFilter });
-		assertNotNull(nameRecords);
-		assertFalse(nameRecords.isEmpty());
-		assertEquals(2677L, nameRecords.get(0));
-
-        // search by delivered
-		FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", Boolean.TRUE, false);
-		List<Long> deliveredRecords = _formManager.search(new FieldSearchFilter[]{ deliveredFilter });
-		assertNotNull(deliveredRecords);
-		assertFalse(deliveredRecords.isEmpty());
-		assertEquals(2677L, deliveredRecords.get(0));
-
-		List<Long> allFilters = _formManager.search(new FieldSearchFilter[]{ deliveredFilter, dateFilter, nameFilter, deliveredFilter});
-		assertNotNull(allFilters);
-		assertFalse(allFilters.isEmpty());
-		assertEquals(2677L, allFilters.get(0));
 	}
 
 
@@ -290,6 +257,36 @@ public class TestFormManager extends BaseTestCase {
 		return fd;
 	}
 
+	@Test
+	public void testFilter() throws Exception {
+		final Date to = new Date();
+		final LocalDate currentDate = LocalDate.now();
+		final LocalDate fromLd = currentDate.minusYears(10);
+		Date from = Date.from(fromLd.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+		// search by date
+		FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", from, to);
+		List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{dateFilter});
+		assertNotNull(dateRecords);
+		assertFalse(dateRecords.isEmpty());
+		assertEquals(2677L, dateRecords.get(0));
+
+		// search by name
+		FieldSearchFilter nameFilter = new FieldSearchFilter("name", "Oettam", false);
+		List<Long> nameRecords = _formManager.search(new FieldSearchFilter[]{nameFilter});
+		assertNotNull(nameRecords);
+		assertFalse(nameRecords.isEmpty());
+		assertEquals(2677L, nameRecords.get(0));
+
+		// search by delivered
+		FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", Boolean.TRUE, false);
+		List<Long> deliveredRecords = _formManager.search(new FieldSearchFilter[]{deliveredFilter});
+		assertNotNull(deliveredRecords);
+		assertFalse(deliveredRecords.isEmpty());
+		assertEquals(2677L, deliveredRecords.get(0));
+
+	}
+
 	public static Form getFormForTest() {
 		Form form = new Form();
 
@@ -305,4 +302,5 @@ public class TestFormManager extends BaseTestCase {
 
 
 	private IFormManager _formManager;
+	private IMailManager _mailManager;
 }

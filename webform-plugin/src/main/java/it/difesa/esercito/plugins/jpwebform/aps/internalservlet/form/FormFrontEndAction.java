@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,7 +149,7 @@ public class FormFrontEndAction extends FormAction {
                 log.warn("Could not get SIGE data for user '{}'", currentUser);
             }
             form.setName(currentUser);
-            form.setSubmitted(form.getSubmitted()); //Date
+            form.setSubmitted(form.getSubmitted());
             form.setData(getFormData());
 
             final String email = getMailManager().getEmailById(getIdDestinatario());
@@ -164,13 +165,13 @@ public class FormFrontEndAction extends FormAction {
             form.setSubject(getSubject());
 
             if (getMailManager().sendMail(form)) {
-                log.debug("Form successfully delivered to {}", form.getRecipient());
                 form.setDelivered(true);
+                log.debug("Form successfully delivered to {}", form.getRecipient());
             } else {
                 log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
-                form.setDelivered(false);
-            }
             getFormManager().addForm(form);
+                return "not_delivered";
+            }
         } catch (Exception e) {
             log.error("unexpected exception while processing the form from user {}", getCurrentUser());
             return FAILURE;
