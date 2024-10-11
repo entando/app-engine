@@ -163,7 +163,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat.setString(index++, form.getCampagna());
 			Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
 			stat.setTimestamp(index++, submittedTimestamp);
-			stat.setBoolean(index++, form.getDelivered()); //<=========
+			stat.setBoolean(index++, form.getDelivered());
 			stat.setString(index, form.getData().toJson());
 			stat.executeUpdate();
 		} catch (Throwable t) {

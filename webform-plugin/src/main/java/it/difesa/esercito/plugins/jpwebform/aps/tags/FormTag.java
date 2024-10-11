@@ -31,13 +31,13 @@ public class FormTag extends TagSupport {
 		try {
 		Form form = null;
 			if (null != this.getKey()) {
-				form = formManager.getForm(00000L);
+				form = formManager.getForm(this.getKey());
 			} else {
 				Widget widget = this.extractWidget(reqCtx);
 				ApsProperties widgetConfig = widget.getConfig();
 				String varid = widgetConfig.getProperty("id");
 				if (StringUtils.isNotBlank(varid)) {
-					form = formManager.getForm(0000L);
+					form = formManager.getForm(Long.parseLong(varid));
 				}
 			}
 			this.pageContext.setAttribute(this.getVar(), form);
@@ -77,13 +77,13 @@ public class FormTag extends TagSupport {
 		this._var = var;
 	}
 
-	public Integer getKey() {
+	public Long getKey() {
 		return _key;
 	}
-	public void setKey(Integer key) {
+	public void setKey(Long key) {
 		this._key = key;
 	}
 
 	private String _var;
-	private Integer _key;
+	private Long _key;
 }

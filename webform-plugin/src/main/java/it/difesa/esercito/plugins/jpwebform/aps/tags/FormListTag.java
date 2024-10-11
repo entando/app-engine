@@ -8,6 +8,7 @@ package it.difesa.esercito.plugins.jpwebform.aps.tags;
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
+import java.util.List;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -24,13 +25,8 @@ public class FormListTag extends TagSupport {
 		IFormManager formManager = (IFormManager) ApsWebApplicationUtils.getBean("jpwebformFormManager", this.pageContext);
 		RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
 		try {
-			/*
-			List<Integer> list = formManager.getForms();
-
-			Widget widget = this.extractWidget(reqCtx);
-			ApsProperties widgetConfig = widget.getConfig();
-			*/
-			this.pageContext.setAttribute(this.getVar(), null);// list);
+			List<Long> list = formManager.getForms();
+			this.pageContext.setAttribute(this.getVar(), list);
 		} catch (Throwable t) {
 			_logger.error("Error in doStartTag", t);
 			throw new JspException("Error in FormListTag doStartTag", t);

@@ -13,6 +13,7 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import it.difesa.esercito.plugins.jpwebform.apsadmin.form.FormAction;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,9 +29,7 @@ public class FormFrontEndAction extends FormAction {
 
     @Override
     public void validate() {
-        final IPage page = this.getPageManager().getOnlinePage(getPageCode());
-        final String currentFrame = this.getRequest().getParameterMap().get("internalServletFrameDest")[0];
-        final Widget widget = page.getWidgets()[Integer.parseInt(currentFrame)];
+        final Widget widget = getWidgetConfig();
 
         if (getCurrentUser().getUsername().equals(SystemConstants.GUEST_USER_NAME)) {
             addActionError("Solo gli utenti loggati possono fare il submit del form");
@@ -125,6 +124,13 @@ public class FormFrontEndAction extends FormAction {
         }
     }
 
+    private Widget getWidgetConfig() {
+        final IPage page = this.getPageManager().getOnlinePage(getPageCode());
+        final String currentFrame = this.getRequest().getParameterMap().get("internalServletFrameDest")[0];
+        final Widget widget = page.getWidgets()[Integer.parseInt(currentFrame)];
+        return widget;
+    }
+
     public String render() {
         return SUCCESS;
     }
@@ -133,22 +139,30 @@ public class FormFrontEndAction extends FormAction {
         Form form = new Form();
 
         try {
+            Widget widget = getWidgetConfig();
+
+            if (widget == null) {
+                log.error("couldn't find the widget configuration");
+                return INPUT;
+            }
+
+            form.setCampagna((String) widget.getConfig().get("titolo"));
+
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
-            final String json = "TEST TEST "; // getSigeManager().getUserInfoById(currentUser);
+            final String json = null; // getSigeManager().getUserInfoById(currentUser);
 
+            final String fullName = this.getCurrentUser().getUsername();
+            form.setQualifiedName(fullName);
 
-            if (StringUtils.isNotBlank(json)) {
-                final String fullName = this.getCurrentUser().getUsername();
-                form.setQualifiedName(fullName);
-                final String email = "EMAIL@EMAIL.IT";
-
-                form.setCc(email);
-            } else {
-                log.warn("Could not get SIGE data for user '{}'", currentUser);
-            }
+//            if (StringUtils.isNotBlank(json)) {
+                final String emailFromSPID = "email@email.it";
+                form.setCc(emailFromSPID);
+//            } else {
+//                log.warn("Could not get SIGE data for user '{}'", currentUser);
+//            }
             form.setName(currentUser);
-            form.setSubmitted(form.getSubmitted()); //Date
+            form.setSubmitted(LocalDateTime.now());
             form.setData(getFormData());
 
             final String email = getMailManager().getEmailById(getIdDestinatario());
@@ -192,8 +206,21 @@ public class FormFrontEndAction extends FormAction {
     }
 
 
-    public String formDetail() {
-        System.out.println("**** DETTAGLIO " + getId());
+    public String detail() {
+        return SUCCESS;
+    }
+    public String trash() {
+        return SUCCESS;
+    }
+
+    public String delete() {
+        try {
+            this.getFormManager().deleteForm(getId());
+            log.error("deleted form id {}", getId());
+        } catch (Exception e) {
+            log.error("error deleting form id {}", getId(), e);
+            return FAILURE;
+        }
         return SUCCESS;
     }
 

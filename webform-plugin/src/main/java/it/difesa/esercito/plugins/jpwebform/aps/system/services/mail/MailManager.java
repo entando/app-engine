@@ -8,7 +8,11 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -227,7 +231,11 @@ public class MailManager extends AbstractService implements IMailManager {
             }
             // date
             if (form.getSubmitted() != null) {
-                String formattedDate = formatter.format(form.getSubmitted());
+                LocalDateTime localDateTime = form.getSubmitted();
+                ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+                Date date = Date.from(zonedDateTime.toInstant());
+
+                String formattedDate = formatter.format(date);
                 template = template.replace("${DATA}", formattedDate);
             }
             // user qualified name
