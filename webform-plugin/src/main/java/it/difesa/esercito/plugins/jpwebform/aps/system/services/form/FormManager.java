@@ -71,6 +71,8 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public void addForm(Form form) throws ApsSystemException {
 		try {
+			// generate HASH
+			// form.setSeriale(generateRandomHash(18));
 			_formDAO.insertForm(form);
 		} catch (Throwable t) {
 			log.error("Error adding Form", t);
