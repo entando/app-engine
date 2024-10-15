@@ -14,6 +14,7 @@
             <column name="submitted" value="2024-09-05-10.30.00.000000"/>
             <column name="delivered" value="true" />
             <column name="data" valueClobFile="clob/test/jpwebform.xml" />
+            <column name="seriale" value="AAAAbbAeAR4Akl1234" />
         </insert>
 
     </changeSet>

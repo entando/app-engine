@@ -15,6 +15,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +73,10 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public void addForm(Form form) throws ApsSystemException {
 		try {
-			// generate HASH
-			// form.setSeriale(generateRandomHash(18));
+
+			form.setSeriale(RandomStringUtils.randomAlphanumeric(18));
 			_formDAO.insertForm(form);
+
 		} catch (Throwable t) {
 			log.error("Error adding Form", t);
 			throw new ApsSystemException("Error adding Form", t);
@@ -165,6 +168,20 @@ public class FormManager extends AbstractService implements IFormManager {
 
 
 	}
+
+/*	protected String generateRandomHash() {
+
+		StringBuilder sb = new StringBuilder();
+		Random rnd = new Random();
+		while (sb.length() < 18) { // length of the random string.
+			int index = (int) (rnd.nextFloat() * CHARACTERS.length());
+			sb.append(CHARACTERS.charAt(index));
+		}
+		String saltStr = sb.toString();
+
+		return saltStr;
+
+	}*/
 
 	public IFormDAO getFormDAO() {
 		return _formDAO;

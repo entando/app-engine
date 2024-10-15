@@ -164,7 +164,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
 			stat.setTimestamp(index++, submittedTimestamp);
 			stat.setBoolean(index++, form.getDelivered());
-			stat.setString(index, form.getData().toJson());
+			stat.setString(index++, form.getData().toJson());
+			stat.setString(index, form.getSeriale());
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error on insert form",  t);
@@ -305,6 +306,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			ObjectMapper mapper = new ObjectMapper();
 			FormData data = mapper.readValue(json, FormData.class);
 			form.setData(data);
+			form.setSeriale(res.getString("seriale")); //<========
 		} catch (Throwable t) {
 			logger.error("Error in buildFormFromRes", t);
 		}
@@ -365,13 +367,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	}
 
 
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\") VALUES (?, ?, ?, ?, ?, ?)";
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\", seriale) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  delivered=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 
-	private static final String LOAD_FORM = "SELECT id, name, campagna, submitted, \"data\", delivered  FROM jpwebform_form WHERE id = ?";
+	private static final String LOAD_FORM = "SELECT id, name, campagna, submitted, delivered, \"data\", seriale  FROM jpwebform_form WHERE id = ?";
 
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
@@ -379,7 +381,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
-	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
+	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
 
-	private final String SEARCH_BY_DATE_BEFORE ="SELECT id, name, submitted, \"data\", delivered FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
+	private final String SEARCH_BY_DATE_BEFORE ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
 }

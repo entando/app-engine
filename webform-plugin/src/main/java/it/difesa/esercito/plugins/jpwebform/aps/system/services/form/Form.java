@@ -88,12 +88,21 @@ public class Form {
 		this.campagna = campagna;
 	}
 
+	public String getSeriale() {
+		return seriale;
+	}
+
+	public void setSeriale(String seriale) {
+		this.seriale = seriale;
+	}
+
 	private Long id;
 	private String name;
 	private LocalDateTime submitted;
 	private FormData data;
 	private String campagna;
 	private Boolean delivered;
+	private String seriale; //<======
 
 	private String qualifiedName;
 	private String cc;

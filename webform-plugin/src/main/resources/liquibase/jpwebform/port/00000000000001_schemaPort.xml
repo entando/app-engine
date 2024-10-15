@@ -29,6 +29,10 @@
 
             <column name="delivered" type ="BOOLEAN"/>
 
+            <column name="seriale" type="varchar(18)">
+                <constraints nullable="false" />
+            </column>
+
         </createTable>
         
     </changeSet>

@@ -12,6 +12,7 @@ import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
 import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.*;
 import java.time.ZoneId;
 import net.minidev.json.JSONUtil;
@@ -25,6 +26,7 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,11 +71,13 @@ public class TestFormManager extends BaseTestCase {
 			form0.setDelivered(true);
 			form0.setData(getFormDataForTest());
 
+
 			form1.setName("Numa Pompilio");
 			form1.setCampagna("Numa Pompilio");
 			form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
 			form1.setDelivered(true);
 			form1.setData(getFormDataForTest());
+
 
 			form2.setName("Tullo Ostilio");
 			form2.setCampagna("Tullo Ostilio");
@@ -81,11 +85,13 @@ public class TestFormManager extends BaseTestCase {
 			form2.setDelivered(false);
 			form2.setData(getFormDataForTest());
 
+
 			form3.setName("Anco Marzio");
 			form3.setCampagna("Anco Marzio");
 			form3.setSubmitted(TODAY);
 			form3.setDelivered(false);
 			form3.setData(getFormDataForTest());
+
 
 			form4.setName("Tarquinio Prisco");
 			form4.setCampagna("Tarquinio Prisco");
@@ -93,17 +99,20 @@ public class TestFormManager extends BaseTestCase {
 			form4.setDelivered(true);
 			form4.setData(getFormDataForTest());
 
+
 			form5.setName("Servio Tullio");
 			form5.setCampagna("Servio Tullio");
 			form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
 			form5.setDelivered(false);
 			form5.setData(getFormDataForTest());
 
+
 			form6.setName("Tarquinio il superbo");
 			form6.setCampagna("Tarquinio il superbo");
 			form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
 			form6.setDelivered(true);
 			form6.setData(getFormDataForTest());
+
 
 			_formManager.addForm(form0);
 			_formManager.addForm(form1);
@@ -113,6 +122,9 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
 
+/*			_formManager.getFormList().forEach(form -> {
+				System.out.println("\n"+form.getId()+" "+form.getName()+" "+form.getSeriale()+"\n=======================\n");
+			});*/
 
 		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERiFY, true);
 		assertEquals(3,listSearchFormAfter1.size());
@@ -147,6 +159,7 @@ public class TestFormManager extends BaseTestCase {
 		testFormData(form.getData());
 		assertEquals(true, form.getDelivered());
 		assertEquals( LocalDateTime.of(2024, Month.SEPTEMBER,5,10,30), form.getSubmitted());
+		assertEquals(form.getSeriale(), "AAAAbbAeAR4Akl1234");
 
 	}
 
@@ -169,6 +182,7 @@ public class TestFormManager extends BaseTestCase {
 		form.setSubmitted(TODAY);
 		form.setDelivered(true);
 		form.setData(getFormDataForTest());
+
 
 		_formManager.addForm(form);
 
@@ -287,7 +301,20 @@ public class TestFormManager extends BaseTestCase {
 
 	}
 
-	public static Form getFormForTest() {
+	@Test
+	public void randomHashTest() throws ApsSystemException {
+
+		Form form = _formManager.getForm(2677L);
+
+		System.out.println(form.getSeriale());
+
+		assertNotNull(form.getSeriale());
+
+
+
+	}
+
+/*	private Form getFormForTest() {
 		Form form = new Form();
 
 		form.setId(2677L);
@@ -296,10 +323,14 @@ public class TestFormManager extends BaseTestCase {
 		form.setSubmitted(TODAY);
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());
+		form.setSeriale(this.generateRandomHash2());
 
 		return form;
-	}
+	}*/
 
+/*	private String generateRandomHash2() {
+		return RandomStringUtils.randomAlphanumeric(18);
+	}*/
 
 	private IFormManager _formManager;
 	private IMailManager _mailManager;
