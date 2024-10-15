@@ -23,10 +23,11 @@ import org.slf4j.LoggerFactory;
 public class FormManager extends AbstractService implements IFormManager {
 
 	private static final Logger log =  LoggerFactory.getLogger(FormManager.class);
-	public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
+//	public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
 	private static final int MAX_AGE_HOURS = 6;
-	static final String CHARACTERS = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789";
-	static final Random RANDOM = new SecureRandom();
+	private static final int MAX_NUMBER_HASH_CODE = 18;
+//	static final String CHARACTERS = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789";
+//	static final Random RANDOM = new SecureRandom();
 
 	private File _formPath;
 	private Integer _ageHours;
@@ -74,7 +75,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	public void addForm(Form form) throws ApsSystemException {
 		try {
 
-			form.setSeriale(RandomStringUtils.randomAlphanumeric(18));
+			form.setSeriale(RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE));
 			_formDAO.insertForm(form);
 
 		} catch (Throwable t) {
@@ -135,14 +136,14 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _formDAO.searchForms(filter);
 	}
 
-	public static String generateRandomHash(int length) {
+/*	public static String generateRandomHash(int length) {
 		StringBuilder hash = new StringBuilder(length);
 		for (int i = 0; i < length; i++) {
 			int index = RANDOM.nextInt(CHARACTERS.length());
 			hash.append(CHARACTERS.charAt(index));
 		}
 		return hash.toString();
-	}
+	}*/
 
 	public Integer getAgeHours() {
 		if (_ageHours == null) {
@@ -168,20 +169,6 @@ public class FormManager extends AbstractService implements IFormManager {
 
 
 	}
-
-/*	protected String generateRandomHash() {
-
-		StringBuilder sb = new StringBuilder();
-		Random rnd = new Random();
-		while (sb.length() < 18) { // length of the random string.
-			int index = (int) (rnd.nextFloat() * CHARACTERS.length());
-			sb.append(CHARACTERS.charAt(index));
-		}
-		String saltStr = sb.toString();
-
-		return saltStr;
-
-	}*/
 
 	public IFormDAO getFormDAO() {
 		return _formDAO;
