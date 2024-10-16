@@ -6,16 +6,16 @@
 			  http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
 
-	<bean id="jpwebformFormManager" class="it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormManager"
+	<bean id="jpwebformFormManager" class="org.entando.entando.plugins.jpwebform.aps.system.services.form.FormManager"
 			parent="abstractService">
 		<property name="formDAO" >
-			<bean class="it.difesa.esercito.plugins.jpwebform.aps.system.services.form.FormDAO">
+			<bean class="org.entando.entando.plugins.jpwebform.aps.system.services.form.FormDAO">
 				<property name="dataSource" ref="portDataSource" />
 			</bean>
 		</property>
 	</bean>
 
-	<bean id="jpwebformMailManager" class="it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.MailManager"
+	<bean id="jpwebformMailManager" class="org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailManager"
 			parent="abstractService">
 		<property name="formManager" ref="jpwebformFormManager" />
 		<property name="mailHost" value="${SME_SMTP_HOST}"/>

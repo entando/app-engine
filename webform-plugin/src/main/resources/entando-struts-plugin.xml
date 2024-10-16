@@ -5,8 +5,8 @@
 
 <struts>
 
-	<include file="it/difesa/esercito/plugins/jpwebform/apsadmin/portal/specialwidget/form/formSpecialWidget.xml"/>
+	<include file="org/entando/entando/plugins/jpwebform/apsadmin/portal/specialwidget/form/formSpecialWidget.xml"/>
 
-	<include file="it/difesa/esercito/plugins/jpwebform/aps/internalservlet/form/formFront.xml"/>
+	<include file="org/entando/entando/plugins/jpwebform/aps/internalservlet/form/formFront.xml"/>
 
 </struts>

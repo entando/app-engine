@@ -5,10 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import java.util.List;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.junit.jupiter.api.BeforeEach;
 
 

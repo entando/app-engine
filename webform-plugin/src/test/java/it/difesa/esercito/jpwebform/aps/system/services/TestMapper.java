@@ -5,9 +5,9 @@
  */
 package it.difesa.esercito.jpwebform.aps.system.services;
 
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.DtoHelper;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.DtoHelper;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import junit.framework.TestCase;
 import org.junit.jupiter.api.Test;
 

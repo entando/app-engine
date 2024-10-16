@@ -12,7 +12,7 @@
 	</bean>
 
 	<bean id="jpwebformFormAction" scope="prototype" 
-			class="it.difesa.esercito.plugins.jpwebform.apsadmin.form.FormAction" 
+			class="org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction"
 			parent="abstractBaseAction" >
 		<property name="formManager" ref="jpwebformFormManager" />
 	</bean>
@@ -21,14 +21,14 @@
 	<!-- INTERNAL_SERVLET -->
 	
 	<bean id="jpwebformFormFrontEndAction" scope="prototype" 
-			class="it.difesa.esercito.plugins.jpwebform.aps.internalservlet.form.FormFrontEndAction" 
+			class="org.entando.entando.plugins.jpwebform.aps.internalservlet.form.FormFrontEndAction"
 			parent="abstractBaseAction" >
 		<property name="formManager" ref="jpwebformFormManager" />
 		<property name="mailManager" ref="jpwebformMailManager" />
 		<property name="pageManager" ref="PageManager" />
 	</bean>
 
-	<bean id="jpwebformFormConfigAction" class="it.difesa.esercito.plugins.jpwebform.apsadmin.portal.specialwidget.form.FormConfigAction"
+	<bean id="jpwebformFormConfigAction" class="org.entando.entando.plugins.jpwebform.apsadmin.portal.specialwidget.form.FormConfigAction"
 		parent="simpleWidgetAction" scope="prototype">
 	</bean>
 

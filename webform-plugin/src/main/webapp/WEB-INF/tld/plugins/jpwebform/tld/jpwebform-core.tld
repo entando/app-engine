@@ -9,7 +9,7 @@
 	<tag>
 		<description>Loads and returns the list of the Forms available in the system.</description>
 		<name>forms</name>
-		<tag-class>it.difesa.esercito.plugins.jpwebform.aps.tags.FormListTag</tag-class>
+		<tag-class>org.entando.entando.plugins.jpwebform.aps.tags.FormListTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>The name of the variable setted in the pagecontext.</description>
@@ -22,7 +22,7 @@
 	<tag>
 		<description>Loads and returns an Form given a key.</description>
 		<name>form</name>
-		<tag-class>it.difesa.esercito.plugins.jpwebform.aps.tags.FormTag</tag-class>
+		<tag-class>org.entando.entando.plugins.jpwebform.aps.tags.FormTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>Identifier of the Form to load</description>

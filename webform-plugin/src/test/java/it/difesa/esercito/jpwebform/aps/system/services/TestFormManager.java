@@ -8,14 +8,12 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.Form;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.form.model.FormData;
-import it.difesa.esercito.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.junit.jupiter.api.*;
 import java.time.ZoneId;
-import net.minidev.json.JSONUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +24,8 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
-import static it.difesa.esercito.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
+import static org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
