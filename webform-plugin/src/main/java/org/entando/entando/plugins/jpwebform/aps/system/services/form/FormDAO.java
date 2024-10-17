@@ -348,20 +348,25 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 		List<Form> formListExpired = searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
 
-		if (formListExpired != null && !formListExpired.isEmpty()) {
+		if (formListExpired != null || !formListExpired.isEmpty()) {
 			formListExpired.forEach(form -> {
+
 				try {
-					updateForm(form);
 
-					_mailManager.sendMail(form);
-
-					logger.info("updated form {} after delivery (or expiration!)", form.getId());
+					if(_mailManager.sendMail(form)){ //metodo retry??
+						updateForm(form);
+						logger.info("updated form {} after delivery (or expiration!)", form.getId());
+					}
 
 
 				} catch (Exception e) {
 					logger.error("Unexpected error trying to update the form", form.getId(), e);
 				}
+
 			});
+
+		}else{
+			logger.info("Non ci sono elementi nuovi da reinviare");
 		}
 	}
 

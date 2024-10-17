@@ -97,7 +97,7 @@ public class FormListTag extends TagSupport {
 		return calendar.getTime();
 	}
 
-	private Widget extractWidget(RequestContext reqCtx) {
+/*	private Widget extractWidget(RequestContext reqCtx) {
 		Widget widget = null;
 		widget = (Widget) reqCtx.getExtraParam((SystemConstants.EXTRAPAR_CURRENT_WIDGET));
 		return widget;
@@ -105,7 +105,7 @@ public class FormListTag extends TagSupport {
 
 	protected String extractWidgetParameter(String parameterName, ApsProperties widgetConfig, RequestContext reqCtx) {
 		return (String) widgetConfig.get(parameterName);
-	}
+	}*/
 
 	@Override
 	public int doEndTag() throws JspException {
