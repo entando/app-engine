@@ -168,7 +168,7 @@ public class TestFormManager extends BaseTestCase {
 	}
 
 	@Test
-	public void testUpdateForm() throws ApsSystemException {
+	public void testUpdateDeliveredForm() throws ApsSystemException {
 		Form form = new Form();
 
 		form.setName("Aristotele");
@@ -179,13 +179,15 @@ public class TestFormManager extends BaseTestCase {
 
 		_formManager.addForm(form);
 
-		FieldSearchFilter nameFilter = new FieldSearchFilter("name", "Aristotele", true);
-		System.out.println("\t\t\t\t\t\t"+nameFilter+"\n\n\n\n\n\n");
+		assertFalse(form.getDelivered());
 
-		//System.out.println(nameRecords);
-		//Form verify= _formManager.getForm()
+		Form verify= _formManager.getForm(form.getId());
+
+		_formManager.updateForm(verify);
+		assertTrue(verify.getDelivered());
 
 		_formManager.deleteForm(form.getId());
+
 	}
 
 
