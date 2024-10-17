@@ -7,6 +7,7 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.exception.ApsSystemException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
@@ -348,26 +349,27 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 		List<Form> formListExpired = searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
 
+		logger.info("retry service triggered");
 		if (formListExpired != null || !formListExpired.isEmpty()) {
+
 			formListExpired.forEach(form -> {
 
 				try {
+					logger.debug("delivering mail originally intended for {}", form.getSubmitted());
 
-					if(_mailManager.sendMail(form)){ //metodo retry??
+					if (_mailManager.sendMail(form)) {
 						updateForm(form);
 						logger.info("updated form {} after delivery (or expiration!)", form.getId());
+					} else {
+						logger.error("Could not deliver the form {} again", form.getId());
 					}
-
-
 				} catch (Exception e) {
 					logger.error("Unexpected error trying to update the form", form.getId(), e);
 				}
-
 			});
-
-		}else{
-			logger.info("Non ci sono elementi nuovi da reinviare");
 		}
+
+		logger.info("retry service completed execution");
 	}
 
 
