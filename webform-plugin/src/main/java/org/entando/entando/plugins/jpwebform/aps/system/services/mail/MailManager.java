@@ -23,6 +23,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 
 public class MailManager extends AbstractService implements IMailManager {
 
@@ -250,27 +251,29 @@ public class MailManager extends AbstractService implements IMailManager {
      */
     @Override
     public void retry() throws ApsSystemException {
+
+        FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
+
         log.info("retry service triggered");
 
-                List<Form> formListExpired = getFormManager().searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
+        List<Long> forms = getFormManager().search(new FieldSearchFilter[]{dateFilter});
 
-                if (formListExpired != null || !formListExpired.isEmpty()) {
+        if (forms != null || !forms.isEmpty()) {
 
-                    formListExpired.forEach(f -> {
-                        try {
-                            log.debug("delivering mail originally intended for {}", f.getSubmitted());
-                            if (sendMail(f)) {
-                                getFormManager().updateForm(f);
-                            } else {
-                                log.error("Could not deliver the form {} again", f.getId());
-                            }
-                        } catch (Exception e) {
-                            log.error("error while delivering email ", e);
-                        }
-                    });
-
-                log.info("retry service completed execution");
-            }
+            forms.forEach(f -> {
+                try {
+                    Form form = getFormManager().getForm(f);
+                    log.debug("delivering mail originally intended for {}", form.getSubmitted());
+                    if (sendMail(form)) {
+                        getFormManager().updateForm(form);
+                    } else {
+                        log.error("Could not deliver the form {} again", form.getId());
+                    }
+                } catch (Exception e) {
+                    log.error("error while delivering email ", e);
+                }
+            });
+        }
     }
 
 

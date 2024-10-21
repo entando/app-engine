@@ -23,8 +23,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.temporal.TemporalField;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,30 +117,12 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form2);
 			_formManager.addForm(form3);
 			_formManager.addForm(form4);
-			T
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
-
-	/*		_formManager.getFormList().forEach(form -> {
-				System.out.println("\n"+form.getId()+" "+form.getName()+" "+form.getSeriale()+"\n=======================\n");
-			});*/
 
 		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERIFY, true);
 		assertEquals(3,listSearchFormAfter1.size());
 
-/*			listSearchFormAfter1.forEach(form -> {
-				System.out.println("\n"+form.getId()+" "+form.getName()+" "+form.getSeriale()+"\n=======================\n");
-			});*/
-	/**-----------------------------------------------------------------------------------------------------------------------**/
-
-/*
-			FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", LDT_VERIFY, TODAY);
-			List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{dateFilter});
-
-			System.out.println(dateRecords);
-*/
-
-	/**-----------------------------------------------------------------------------------------------------------------------**/
 		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERIFY, false);
 		assertEquals(2,listSearchFormAfter2.size());
 
@@ -148,7 +132,7 @@ public class TestFormManager extends BaseTestCase {
 		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERIFY, false);
 		assertEquals(1,listSearchFormBefore2.size());
 		
-		} finally {
+		}finally {
 			_formManager.deleteForm(form0.getId());
 			_formManager.deleteForm(form2.getId());
 			_formManager.deleteForm(form3.getId());
