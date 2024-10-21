@@ -11,8 +11,6 @@ import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,8 +20,8 @@ import java.util.List;
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
-
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,16 +33,11 @@ public class FormListTag extends TagSupport {
 	public int doStartTag() throws JspException {
 		ServletRequest request =  this.pageContext.getRequest();
 		IFormManager formManager = (IFormManager) ApsWebApplicationUtils.getBean("jpwebformFormManager", this.pageContext);
-//		RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
-//
-//		Widget widget = extractWidget(reqCtx);
-//		ApsProperties prop = widget.getConfig();
 
 		try {
 			List<FieldSearchFilter> filterList = new ArrayList<>();
-			if (StringUtils.isNotBlank(getId())) {
-				final Long id = Long.parseLong(getId());
-				final FieldSearchFilter idFilter = new FieldSearchFilter("id", id, false);
+			if (getFormId() != null) {
+				final FieldSearchFilter idFilter = new FieldSearchFilter("id", getFormId(), false);
 				filterList.add(idFilter);
 			}
 			if (StringUtils.isNotBlank(getName())) {
@@ -58,9 +51,8 @@ public class FormListTag extends TagSupport {
 				FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", fromDate, toDate);
 				filterList.add(dateFilter);
 			}
-			if (StringUtils.isNotBlank(getDelivered())) {
-				final Boolean delivered = Boolean.parseBoolean(getDelivered());
-				FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", delivered, false);
+			if (getDelivered() != null) {
+				FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", getDelivered(), false);
 				filterList.add(deliveredFilter);
 			}
 			if (StringUtils.isNotBlank(getSeriale())) {
@@ -122,6 +114,7 @@ public class FormListTag extends TagSupport {
 	public String getVar() {
 		return _var;
 	}
+
 	public void setVar(String var) {
 		this._var = var;
 	}
@@ -142,16 +135,6 @@ public class FormListTag extends TagSupport {
 		this._to = _to;
 	}
 
-	@Override
-	public String getId() {
-		return _id;
-	}
-
-	@Override
-	public void setId(String id) {
-		this._id = id;
-	}
-
 	public String getName() {
 		return _name;
 	}
@@ -168,12 +151,20 @@ public class FormListTag extends TagSupport {
 		this._seriale = _seriale;
 	}
 
-	public String getDelivered() {
+	public Boolean getDelivered() {
 		return _delivered;
 	}
 
-	public void setDelivered(String _delivered) {
+	public void setDelivered(Boolean _delivered) {
 		this._delivered = _delivered;
+	}
+
+	public Long getFormId() {
+		return _formId;
+	}
+
+	public void setFormId(Long _formId) {
+		this._formId = _formId;
 	}
 
 	private String _var;
@@ -181,9 +172,9 @@ public class FormListTag extends TagSupport {
 	// search param
 	private String _from;
 	private String _to;
-	private String _id;
+	private Long _formId;
 	private String _name;
 	private String _seriale;
-	private String _delivered;
+	private Boolean _delivered;
 
 }

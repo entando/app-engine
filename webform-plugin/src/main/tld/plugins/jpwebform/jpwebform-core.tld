@@ -17,21 +17,58 @@
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<description>Identifier of the Form to load</description>
+			<name>formId</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Search by starting date</description>
+			<name>from</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Search by ending date</description>
+			<name>to</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Search by name</description>
+			<name>name</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Search by serial</description>
+			<name>seriale</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Search by delivery status</description>
+			<name>delivered</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+
 	</tag>
 
 	<tag>
-		<description>Loads and returns an Form given a key.</description>
+		<description>Loads and returns a Form given a key.</description>
 		<name>form</name>
 		<tag-class>org.entando.entando.plugins.jpwebform.aps.tags.FormTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>Identifier of the Form to load</description>
-			<name>key</name>
-			<required>false</required>
+			<name>formId</name>
+			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>The name of the variable setted in the pagecontext.</description>
+			<description>The name of the variable set in the pagecontext.</description>
 			<name>var</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
