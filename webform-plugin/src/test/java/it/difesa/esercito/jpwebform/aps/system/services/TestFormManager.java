@@ -34,7 +34,7 @@ public class TestFormManager extends BaseTestCase {
 	//public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
 	private static final LocalDateTime TODAY = LocalDateTime.now();
 
-	private static LocalDateTime LDT_VERiFY = LocalDateTime.of(
+	private static LocalDateTime LDT_VERIFY = LocalDateTime.of(
 			LocalDate.of(2024,5,9), LocalTime.of(23,01,45,000000)
 	);
 
@@ -60,7 +60,6 @@ public class TestFormManager extends BaseTestCase {
 		Form form6 = new Form();
 
 		try {
-
 
 			form0.setName("Romolo");
 			form0.setCampagna("Romolo");
@@ -119,23 +118,22 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
 
-/*			_formManager.getFormList().forEach(form -> {
+	/*		_formManager.getFormList().forEach(form -> {
 				System.out.println("\n"+form.getId()+" "+form.getName()+" "+form.getSeriale()+"\n=======================\n");
 			});*/
 
-		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERiFY, true);
+		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERIFY, true);
 		assertEquals(3,listSearchFormAfter1.size());
 
-		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERiFY, false);
+		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERIFY, false);
 		assertEquals(2,listSearchFormAfter2.size());
 
-		List<Form> listSearchFormBefore1 = _formManager.searchByDateBefore(LDT_VERiFY, true);
+		List<Form> listSearchFormBefore1 = _formManager.searchByDateBefore(LDT_VERIFY, true);
 		assertEquals(1,listSearchFormBefore1.size());
 
-		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERiFY, false);
+		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERIFY, false);
 		assertEquals(1,listSearchFormBefore2.size());
-
-
+		
 		} finally {
 			_formManager.deleteForm(form0.getId());
 			_formManager.deleteForm(form2.getId());
@@ -149,6 +147,7 @@ public class TestFormManager extends BaseTestCase {
 	@Test
 	public void testGetForm() throws Exception {
 		Form form = _formManager.getForm(2677L);
+		
 		assertNotNull(form);
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
@@ -166,6 +165,29 @@ public class TestFormManager extends BaseTestCase {
 		List<Long> ids = _formManager.getForms();
 		assertNotNull(ids);
 		assertFalse(ids.isEmpty());
+	}
+
+	@Test
+	public void testUpdateDeliveredForm() throws ApsSystemException {
+		Form form = new Form();
+
+		form.setName("Aristotele");
+		form.setCampagna("basic");
+		form.setSubmitted(TODAY);
+		form.setDelivered(false);
+		form.setData(getFormDataForTest());
+
+		_formManager.addForm(form);
+
+		assertFalse(form.getDelivered());
+
+		Form verify= _formManager.getForm(form.getId());
+
+		_formManager.updateForm(verify);
+		assertTrue(verify.getDelivered());
+
+		_formManager.deleteForm(form.getId());
+
 	}
 
 
@@ -205,69 +227,6 @@ public class TestFormManager extends BaseTestCase {
 		assertNull(verify);
 	}
 
-
-	private void testFormData(FormData data) {
-
-		assertNotNull(data);
-
-		assertEquals("setValore1", data.valore1);
-		assertEquals("setValore2", data.valore2);
-		assertEquals("setValore3", data.valore3);
-		assertEquals("setValore4", data.valore4);
-		assertEquals("setValore5", data.valore5);
-
-		assertEquals("setTesto1", data.testo1);
-		assertEquals("setTesto2", data.testo2);
-		assertEquals("setTesto3", data.testo3);
-		assertEquals("setTesto4", data.testo4);
-		assertEquals("setTesto5", data.testo5);
-
-		assertEquals("setEtichettaSel1", data.etichettaSel1);
-		assertEquals("setEtichettaSel3", data.etichettaSel2);
-
-		assertNull(data.etichettaSel3);
-
-		assertEquals("setEtichettaSel4", data.etichettaSel4);
-		assertEquals("setEtichettaSel5", data.etichettaSel5);
-
-		assertEquals("setEtichetta1", data.etichetta1);
-		assertEquals("setEtichetta2", data.etichetta2);
-		assertEquals("setEtichetta3", data.etichetta3);
-		assertEquals("setEtichetta4", data.etichetta4);
-		assertEquals("setEtichetta5", data.etichetta5);
-
-	}
-
-	public static FormData getFormDataForTest() {
-		FormData fd = new FormData();
-
-		fd.setValore1("setValore1");
-		fd.setValore2("setValore2");
-		fd.setValore3("setValore3");
-		fd.setValore4("setValore4");
-		fd.setValore5("setValore5");
-
-		fd.setTesto1("setTesto1");
-		fd.setTesto2("setTesto2");
-		fd.setTesto3("setTesto3");
-		fd.setTesto4("setTesto4");
-		fd.setTesto5("setTesto5");
-
-		fd.setEtichettaSel1("setEtichettaSel1");
-		fd.setEtichettaSel2("setEtichettaSel3");
-		fd.setEtichettaSel3(null);
-		fd.setEtichettaSel4("setEtichettaSel4");
-		fd.setEtichettaSel5("setEtichettaSel5");
-
-		fd.setEtichetta1("setEtichetta1");
-		fd.setEtichetta2("setEtichetta2");
-		fd.setEtichetta3("setEtichetta3");
-		fd.setEtichetta4("setEtichetta4");
-		fd.setEtichetta5("setEtichetta5");
-
-		return fd;
-	}
-
 	@Test
 	public void testFilter() throws Exception {
 		final Date to = new Date();
@@ -301,13 +260,88 @@ public class TestFormManager extends BaseTestCase {
 	@Test
 	public void randomHashTest() throws ApsSystemException {
 
-		Form form = _formManager.getForm(2677L);
+		Form form0 = _formManager.getForm(2677L);
 
-		System.out.println(form.getSeriale());
+		assertNotNull(form0.getSeriale());
 
-		assertNotNull(form.getSeriale());
+		Form form1 = new Form();
 
+		form1.setName("Romolo");
+		form1.setCampagna("Romolo");
+		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
+		form1.setDelivered(true);
+		form1.setData(getFormDataForTest());
 
+		_formManager.addForm(form1);
+
+		Form verify = _formManager.getForm(form1.getId());
+
+		assertNotNull(verify.getSeriale());
+		assertNotEquals(form0.getSeriale(), form1.getSeriale());
+
+		_formManager.deleteForm(form1.getId());
+
+	}
+
+	public static FormData getFormDataForTest() {
+		FormData fd = new FormData();
+
+		fd.setValore1("setValore1");
+		fd.setValore2("setValore2");
+		fd.setValore3("setValore3");
+		fd.setValore4("setValore4");
+		fd.setValore5("setValore5");
+
+		fd.setTesto1("setTesto1");
+		fd.setTesto2("setTesto2");
+		fd.setTesto3("setTesto3");
+		fd.setTesto4("setTesto4");
+		fd.setTesto5("setTesto5");
+
+		fd.setEtichettaSel1("setEtichettaSel1");
+		fd.setEtichettaSel2("setEtichettaSel3");
+		fd.setEtichettaSel3(null);
+		fd.setEtichettaSel4("setEtichettaSel4");
+		fd.setEtichettaSel5("setEtichettaSel5");
+
+		fd.setEtichetta1("setEtichetta1");
+		fd.setEtichetta2("setEtichetta2");
+		fd.setEtichetta3("setEtichetta3");
+		fd.setEtichetta4("setEtichetta4");
+		fd.setEtichetta5("setEtichetta5");
+
+		return fd;
+	}
+
+	private void testFormData(FormData data) {
+
+		assertNotNull(data);
+
+		assertEquals("setValore1", data.valore1);
+		assertEquals("setValore2", data.valore2);
+		assertEquals("setValore3", data.valore3);
+		assertEquals("setValore4", data.valore4);
+		assertEquals("setValore5", data.valore5);
+
+		assertEquals("setTesto1", data.testo1);
+		assertEquals("setTesto2", data.testo2);
+		assertEquals("setTesto3", data.testo3);
+		assertEquals("setTesto4", data.testo4);
+		assertEquals("setTesto5", data.testo5);
+
+		assertEquals("setEtichettaSel1", data.etichettaSel1);
+		assertEquals("setEtichettaSel3", data.etichettaSel2);
+
+		assertNull(data.etichettaSel3);
+
+		assertEquals("setEtichettaSel4", data.etichettaSel4);
+		assertEquals("setEtichettaSel5", data.etichettaSel5);
+
+		assertEquals("setEtichetta1", data.etichetta1);
+		assertEquals("setEtichetta2", data.etichetta2);
+		assertEquals("setEtichetta3", data.etichetta3);
+		assertEquals("setEtichetta4", data.etichetta4);
+		assertEquals("setEtichetta5", data.etichetta5);
 
 	}
 
@@ -323,10 +357,6 @@ public class TestFormManager extends BaseTestCase {
 		form.setSeriale(this.generateRandomHash2());
 
 		return form;
-	}*/
-
-/*	private String generateRandomHash2() {
-		return RandomStringUtils.randomAlphanumeric(18);
 	}*/
 
 	private IFormManager _formManager;

@@ -8,19 +8,22 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 
 public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
@@ -348,21 +351,27 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 		List<Form> formListExpired = searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
 
-		if (formListExpired != null && !formListExpired.isEmpty()) {
+		logger.info("retry service triggered");
+		if (formListExpired != null || !formListExpired.isEmpty()) {
+
 			formListExpired.forEach(form -> {
+
 				try {
-					updateForm(form);
+					logger.debug("delivering mail originally intended for {}", form.getSubmitted());
 
-					_mailManager.sendMail(form);
-
-					logger.info("updated form {} after delivery (or expiration!)", form.getId());
-
-
+					if (_mailManager.sendMail(form)) {
+						updateForm(form);
+						logger.info("updated form {} after delivery (or expiration!)", form.getId());
+					} else {
+						logger.error("Could not deliver the form {} again", form.getId());
+					}
 				} catch (Exception e) {
 					logger.error("Unexpected error trying to update the form", form.getId(), e);
 				}
 			});
 		}
+
+		logger.info("retry service completed execution");
 	}
 
 

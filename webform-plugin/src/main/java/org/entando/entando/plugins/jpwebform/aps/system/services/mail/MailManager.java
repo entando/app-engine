@@ -250,24 +250,24 @@ public class MailManager extends AbstractService implements IMailManager {
      */
     @Override
     public void retry() {
-        log.info("retry service triggered");
-//        try {
-//            List<Form> forms = getFormManager().getForms();
-//            forms.forEach(f -> {
-//                try {
-//                    log.debug("delivering mail originally intended for {}", f.getSubmitted());
-//                    if (sendMail(f)) {
-//                        getFormManager().deleteForm(String.valueOf(f.getId()));
-//                    } else {
-//                        log.error("Could not deliver the form {} again", f.getId());
-//                    }
-//                } catch (Exception e) {
-//                    log.error("error while delivering email ", e);
-//                }
-//            });
-//        } catch (ApsSystemException e) {
-//            log.error("Unexpected error while delivering non expired mail", e);
-//        }
+       /* log.info("retry service triggered");
+        try {
+            List<Form> forms = getFormManager().getForms();
+            forms.forEach(f -> {
+                try {
+                    log.debug("delivering mail originally intended for {}", f.getSubmitted());
+                    if (sendMail(f)) {
+                        getFormManager().deleteForm(String.valueOf(f.getId()));
+                    } else {
+                        log.error("Could not deliver the form {} again", f.getId());
+                    }
+                } catch (Exception e) {
+                    log.error("error while delivering email ", e);
+                }
+            });
+        } catch (ApsSystemException e) {
+            log.error("Unexpected error while delivering non expired mail", e);
+        }*/
         log.info("retry service completed execution");
     }
 
