@@ -3,6 +3,7 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 import static org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate.EMAIL_TEMPLATE;
 
 import com.agiletec.aps.system.common.AbstractService;
+import com.agiletec.aps.system.exception.ApsSystemException;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
@@ -10,10 +11,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.mail.Message;
 import javax.mail.PasswordAuthentication;
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 public class MailManager extends AbstractService implements IMailManager {
 
     private static final Logger log =  LoggerFactory.getLogger(MailManager.class);
+    private static final Integer MAX_HOURS = 12;
 
     private String _mailHost;
     private boolean _debug;
@@ -249,26 +249,28 @@ public class MailManager extends AbstractService implements IMailManager {
      * del progetto!
      */
     @Override
-    public void retry() {
-       /* log.info("retry service triggered");
-        try {
-            List<Form> forms = getFormManager().getForms();
-            forms.forEach(f -> {
-                try {
-                    log.debug("delivering mail originally intended for {}", f.getSubmitted());
-                    if (sendMail(f)) {
-                        getFormManager().deleteForm(String.valueOf(f.getId()));
-                    } else {
-                        log.error("Could not deliver the form {} again", f.getId());
-                    }
-                } catch (Exception e) {
-                    log.error("error while delivering email ", e);
-                }
-            });
-        } catch (ApsSystemException e) {
-            log.error("Unexpected error while delivering non expired mail", e);
-        }*/
-        log.info("retry service completed execution");
+    public void retry() throws ApsSystemException {
+        log.info("retry service triggered");
+
+                List<Form> formListExpired = getFormManager().searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
+
+                if (formListExpired != null || !formListExpired.isEmpty()) {
+
+                    formListExpired.forEach(f -> {
+                        try {
+                            log.debug("delivering mail originally intended for {}", f.getSubmitted());
+                            if (sendMail(f)) {
+                                getFormManager().updateForm(f);
+                            } else {
+                                log.error("Could not deliver the form {} again", f.getId());
+                            }
+                        } catch (Exception e) {
+                            log.error("error while delivering email ", e);
+                        }
+                    });
+
+                log.info("retry service completed execution");
+            }
     }
 
 

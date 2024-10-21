@@ -8,6 +8,7 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
+import liquibase.pro.packaged.T;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
@@ -41,7 +42,6 @@ public class TestFormManager extends BaseTestCase {
 
 	@BeforeEach
 	public void init() {
-		this._mailManager = (IMailManager) this.getApplicationContext().getBean(IMailManager.BEAN_ID);
 		this._formManager = (IFormManager) this.getService(BEAN_ID);
 		assertNotNull(_formManager);
 		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
@@ -115,6 +115,7 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form2);
 			_formManager.addForm(form3);
 			_formManager.addForm(form4);
+			T
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
 
@@ -125,6 +126,19 @@ public class TestFormManager extends BaseTestCase {
 		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERIFY, true);
 		assertEquals(3,listSearchFormAfter1.size());
 
+/*			listSearchFormAfter1.forEach(form -> {
+				System.out.println("\n"+form.getId()+" "+form.getName()+" "+form.getSeriale()+"\n=======================\n");
+			});*/
+	/**-----------------------------------------------------------------------------------------------------------------------**/
+
+/*
+			FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", LDT_VERIFY, TODAY);
+			List<Long> dateRecords = _formManager.search(new FieldSearchFilter[]{dateFilter});
+
+			System.out.println(dateRecords);
+*/
+
+	/**-----------------------------------------------------------------------------------------------------------------------**/
 		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERIFY, false);
 		assertEquals(2,listSearchFormAfter2.size());
 
@@ -360,5 +374,5 @@ public class TestFormManager extends BaseTestCase {
 	}*/
 
 	private IFormManager _formManager;
-	private IMailManager _mailManager;
+
 }
