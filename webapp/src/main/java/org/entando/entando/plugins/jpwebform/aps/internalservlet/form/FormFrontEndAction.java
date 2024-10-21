@@ -38,7 +38,6 @@ public class FormFrontEndAction extends FormAction {
 
         if (widget != null) {
             String etichettaSel1 = (String) widget.getConfig().get("opzione1");
-            //String etichettaSel1 = (String) widget.gettagConfig().get("opzione1");
             String etichettaSel2 = (String) widget.getConfig().get("opzione2");
             String etichettaSel3 = (String) widget.getConfig().get("opzione3");
             String etichettaSel4 = (String) widget.getConfig().get("opzione4");

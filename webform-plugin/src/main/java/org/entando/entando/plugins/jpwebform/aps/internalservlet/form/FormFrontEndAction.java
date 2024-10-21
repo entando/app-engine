@@ -9,10 +9,6 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,6 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +69,7 @@ public class FormFrontEndAction extends FormAction {
             getFormData().setEtichetta3(etichetta3);
             getFormData().setEtichetta4(etichetta4);
             getFormData().setEtichetta5(etichetta5);
-
+            
             if (StringUtils.isNotBlank(etichettaSel1)
                     && StringUtils.isBlank(getFormData().getValore1())) {
                 addFieldError(etichettaSel1, "Deve essere specificato un valore");
@@ -156,8 +156,8 @@ public class FormFrontEndAction extends FormAction {
             form.setQualifiedName(fullName);
 
 //            if (StringUtils.isNotBlank(json)) {
-            final String emailFromSPID = "email@email.it";
-            form.setCc(emailFromSPID);
+                final String emailFromSPID = "email@email.it";
+                form.setCc(emailFromSPID);
 //            } else {
 //                log.warn("Could not get SIGE data for user '{}'", currentUser);
 //            }
@@ -251,6 +251,10 @@ public class FormFrontEndAction extends FormAction {
         if (StringUtils.isNotBlank(getCampagna())) {
             FieldSearchFilter nameFilter = new FieldSearchFilter("campagna", getCampagna(), true);
             filters.add(nameFilter);
+        }
+        if (StringUtils.isNotBlank(getSeriale())) {
+            FieldSearchFilter serialeFilter = new FieldSearchFilter("seriale", getSeriale(), false);
+            filters.add(serialeFilter);
         }
         if (StringUtils.isNotBlank(getDelivered()) && !getDelivered().equals("--")) {
             Boolean delivered = Boolean.parseBoolean(getDelivered());
@@ -368,6 +372,14 @@ public class FormFrontEndAction extends FormAction {
         this._campagna = _campagna;
     }
 
+    public String getSeriale() {
+        return _seriale;
+    }
+
+    public void setSeriale(String _seriale) {
+        this._seriale = _seriale;
+    }
+
     // search parameter
     private Long _id;
     private Date _from;
@@ -376,6 +388,7 @@ public class FormFrontEndAction extends FormAction {
     private String _practice;
     private String _name;
     private String _campagna;
+    private String _seriale;
 
     private Form form;
 
