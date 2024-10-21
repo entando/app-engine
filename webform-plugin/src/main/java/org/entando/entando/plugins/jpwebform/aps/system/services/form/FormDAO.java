@@ -297,7 +297,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			form.setName(res.getString("name"));
 			form.setCampagna(res.getString("campagna"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
-			form.setDelivered(res.getBoolean("delivered"));//<==========
+			form.setDelivered(res.getBoolean("delivered"));
 			if (null != submittedValue) {
 				//form.setSubmitted(new Date(submittedValue.getTime()));
 				form.setSubmitted(submittedValue.toLocalDateTime());
@@ -306,7 +306,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			ObjectMapper mapper = new ObjectMapper();
 			FormData data = mapper.readValue(json, FormData.class);
 			form.setData(data);
-			form.setSeriale(res.getString("seriale")); //<========
+			form.setSeriale(res.getString("seriale"));
 		} catch (Throwable t) {
 			logger.error("Error in buildFormFromRes", t);
 		}
@@ -325,7 +325,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		}
 
 		return	formList.stream()
-					.filter(form->data.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
+				.filter(form->data.isAfter(form.getSubmitted()) && delivered.equals(form.getDelivered()))
 				.collect(Collectors.toList());
 	}
 
@@ -345,31 +345,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	@Override
 	@Scheduled(cron="* */2 * * * *")
-	public void cronJob() {
-
-		List<Form> formListExpired = searchByDateAfter(LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
-
-		logger.info("retry service triggered");
-		if (formListExpired != null || !formListExpired.isEmpty()) {
-
-			formListExpired.forEach(form -> {
-
-				try {
-					logger.debug("delivering mail originally intended for {}", form.getSubmitted());
-
-					if (_mailManager.sendMail(form)) {
-						updateForm(form);
-						logger.info("updated form {} after delivery (or expiration!)", form.getId());
-					} else {
-						logger.error("Could not deliver the form {} again", form.getId());
-					}
-				} catch (Exception e) {
-					logger.error("Unexpected error trying to update the form", form.getId(), e);
-				}
-			});
-		}
-
-		logger.info("retry service completed execution");
+	public void cronJob() throws ApsSystemException {
+			_mailManager.retry();
 	}
 
 

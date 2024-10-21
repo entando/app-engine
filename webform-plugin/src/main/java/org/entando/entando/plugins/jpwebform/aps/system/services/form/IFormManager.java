@@ -56,7 +56,7 @@ public interface IFormManager {
 
 	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered) throws ApsSystemException;
 
-	public void cronJob();
+	public void cronJob() throws ApsSystemException;
 
 	public void updateForm(Form form);
 

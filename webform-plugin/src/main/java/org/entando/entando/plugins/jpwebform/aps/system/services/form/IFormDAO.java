@@ -6,6 +6,7 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.exception.ApsSystemException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,5 +32,5 @@ public interface IFormDAO {
 	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
 	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered);
 
-	public void cronJob();
+	public void cronJob() throws ApsSystemException;
 }

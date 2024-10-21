@@ -150,7 +150,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
 
 	@Override
-	public void cronJob(){
+	public void cronJob() throws ApsSystemException {
 		_formDAO.cronJob();
 	}
 

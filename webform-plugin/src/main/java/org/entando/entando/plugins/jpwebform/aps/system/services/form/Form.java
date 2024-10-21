@@ -102,7 +102,7 @@ public class Form {
 	private FormData data;
 	private String campagna;
 	private Boolean delivered;
-	private String seriale; //<======
+	private String seriale;
 
 	private String qualifiedName;
 	private String cc;
