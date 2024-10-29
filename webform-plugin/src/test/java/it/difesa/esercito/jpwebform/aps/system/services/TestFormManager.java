@@ -256,7 +256,7 @@ public class TestFormManager extends BaseTestCase {
 	}
 
 	@Test
-	public void randomHashTest() throws ApsSystemException {
+	public void randomSerialeTest() throws ApsSystemException {
 
 		Form form0 = _formManager.getForm(2677L);
 
@@ -280,6 +280,56 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.deleteForm(form1.getId());
 
 	}
+
+
+	@Test
+	public void generateAndNullSerialeTest() throws ApsSystemException {
+
+
+
+/** caso in cui il seriale non è presente **/
+
+
+		Form form1 = new Form();
+
+		form1.setName("Romolo");
+		form1.setCampagna("Romolo");
+		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
+		form1.setDelivered(true);
+		form1.setSeriale("");
+		form1.setData(getFormDataForTest());
+
+		assertEquals("", form1.getSeriale());
+
+		_formManager.addForm(form1);
+
+		Form verify = _formManager.getForm(form1.getId());
+
+		assertNotNull(verify.getSeriale()); //generato in automatico perchè non presente durante l'aggiunta
+
+		_formManager.deleteForm(form1.getId());
+
+
+/** caso in cui il seriale è presente **/
+
+
+		Form form2 = new Form();
+
+		form2.setName("Tarquinio Prisco");
+		form2.setCampagna("Tarquinio Prisco");
+		form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
+		form2.setDelivered(true);
+		form2.setSeriale("AAACBvwEA14AJl1834");
+		form2.setData(getFormDataForTest());
+
+		_formManager.addForm(form2);
+
+		assertEquals(form2.getSeriale(),"AAACBvwEA14AJl1834");
+
+		_formManager.deleteForm(form2.getId());
+
+	}
+
 
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();
