@@ -346,12 +346,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				.collect(Collectors.toList());
 	}
 
-	@Override
-	@Scheduled(cron="* */2 * * * *")
+//	@Override
+//	@Scheduled(cron="* */2 * * * *")
+/*
 	public void cronJob() throws ApsSystemException {
 			_mailManager.retry();
 	}
-
+*/
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\", seriale) VALUES (?, ?, ?, ?, ?, ?, ?)";
 

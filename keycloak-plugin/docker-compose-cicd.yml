@@ -10,7 +10,7 @@ services:
       KEYCLOAK_PASSWORD: qwe123
       DB_VENDOR: h2
       PROXY_ADDRESS_FORWARDING: "true"
-    healthcheck:
+    healthcheck
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 3s
       timeout: 10s

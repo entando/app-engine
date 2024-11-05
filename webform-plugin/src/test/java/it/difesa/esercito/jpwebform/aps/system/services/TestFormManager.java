@@ -294,7 +294,7 @@ public class TestFormManager extends BaseTestCase {
 
 		form1.setName("Romolo");
 		form1.setCampagna("Romolo");
-		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
+		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form1.setDelivered(true);
 		form1.setSeriale("");
 		form1.setData(getFormDataForTest());
@@ -317,7 +317,7 @@ public class TestFormManager extends BaseTestCase {
 
 		form2.setName("Tarquinio Prisco");
 		form2.setCampagna("Tarquinio Prisco");
-		form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
+		form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form2.setDelivered(true);
 		form2.setSeriale("AAACBvwEA14AJl1834");
 		form2.setData(getFormDataForTest());

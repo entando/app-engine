@@ -198,6 +198,7 @@ public class MailManager extends AbstractService implements IMailManager {
                 }
                 selectText = sb.toString();
                 template = template.replace("${DROPDOWN}", selectText);
+
                 // reset the builder
                 sb.setLength(0);
 
@@ -241,6 +242,21 @@ public class MailManager extends AbstractService implements IMailManager {
             if (StringUtils.isNotBlank(form.getQualifiedName())) {
                 template = template.replace("${UTENTE}", form.getQualifiedName());
             }
+
+
+            sb.setLength(0);
+            // user campagna
+            if (StringUtils.isNotBlank(form.getCampagna())) {
+
+                sb.append("campagna").append(":\n\t");
+                template = template.replace("${CAMPAGNA}", form.getCampagna());
+                sb.append(template+"\n");
+
+            }
+
+            sb.setLength(0);
+
+
         }
         return template;
     }

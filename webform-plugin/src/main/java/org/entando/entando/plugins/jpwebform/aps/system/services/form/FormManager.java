@@ -153,10 +153,10 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _ageHours;
 	}
 
-	@Override
-	public void cronJob() throws ApsSystemException {
+	//@Override
+/*	public void cronJob() throws ApsSystemException {
 		_formDAO.cronJob();
-	}
+	}*/
 
 	/**/
 	@Override
