@@ -41,39 +41,12 @@ public class Form {
 		this.submitted = submitted;
 	}
 
+	// TODO cambiare da FormData a FormPayload
 	public FormData getData() {
 		return data;
 	}
 	public void setData(FormData data) {
 		this.data = data;
-	}
-
-	public String getQualifiedName() {
-		return qualifiedName;
-	}
-	public void setQualifiedName(String qualifiedName) {
-		this.qualifiedName = qualifiedName;
-	}
-
-	public String getCc() {
-		return cc;
-	}
-	public void setCc(String cc) {
-		this.cc = cc;
-	}
-
-	public String getRecipient() {
-		return recipient;
-	}
-	public void setRecipient(String recipient) {
-		this.recipient = recipient;
-	}
-
-	public String getSubject() {
-		return subject;
-	}
-	public void setSubject(String subject) {
-		this.subject = subject;
 	}
 
 	public Boolean getDelivered(){
@@ -96,6 +69,42 @@ public class Form {
 		this.seriale = seriale;
 	}
 
+	@Deprecated
+	public String getQualifiedName() {
+		return qualifiedName;
+	}
+	@Deprecated
+	public void setQualifiedName(String qualifiedName) {
+		this.qualifiedName = qualifiedName;
+	}
+
+	@Deprecated
+	public String getCc() {
+		return cc;
+	}
+	@Deprecated
+	public void setCc(String cc) {
+		this.cc = cc;
+	}
+
+	@Deprecated
+	public String getRecipient() {
+		return recipient;
+	}
+	@Deprecated
+	public void setRecipient(String recipient) {
+		this.recipient = recipient;
+	}
+
+	@Deprecated
+	public String getSubject() {
+		return subject;
+	}
+	@Deprecated
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+
 	private Long id;
 	private String name;
 	private LocalDateTime submitted;
@@ -104,8 +113,12 @@ public class Form {
 	private Boolean delivered;
 	private String seriale;
 
+	@Deprecated
 	private String qualifiedName;
+	@Deprecated
 	private String cc;
+	@Deprecated
 	private String recipient;
+	@Deprecated
 	private String subject;
 }
