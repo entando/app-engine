@@ -70,9 +70,13 @@ public class FormManager extends AbstractService implements IFormManager {
 
 	@Override
 	public void addForm(Form form) throws ApsSystemException {
+
 		try {
 
-			form.setSeriale(RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE));
+			if(form.getSeriale() == null || form.getSeriale().isBlank()){
+				form.setSeriale(RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE));
+			}
+
 			_formDAO.insertForm(form);
 
 		} catch (Throwable t) {
@@ -149,10 +153,10 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _ageHours;
 	}
 
-	@Override
-	public void cronJob(){
+	//@Override
+/*	public void cronJob() throws ApsSystemException {
 		_formDAO.cronJob();
-	}
+	}*/
 
 	/**/
 	@Override

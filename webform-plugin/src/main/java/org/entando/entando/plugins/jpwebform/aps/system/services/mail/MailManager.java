@@ -3,6 +3,7 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 import static org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate.EMAIL_TEMPLATE;
 
 import com.agiletec.aps.system.common.AbstractService;
+import com.agiletec.aps.system.exception.ApsSystemException;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
@@ -10,10 +11,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.mail.Message;
 import javax.mail.PasswordAuthentication;
@@ -24,10 +23,12 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 
 public class MailManager extends AbstractService implements IMailManager {
 
     private static final Logger log =  LoggerFactory.getLogger(MailManager.class);
+    private static final Integer MAX_HOURS = 12;
 
     private String _mailHost;
     private boolean _debug;
@@ -197,6 +198,7 @@ public class MailManager extends AbstractService implements IMailManager {
                 }
                 selectText = sb.toString();
                 template = template.replace("${DROPDOWN}", selectText);
+
                 // reset the builder
                 sb.setLength(0);
 
@@ -240,6 +242,21 @@ public class MailManager extends AbstractService implements IMailManager {
             if (StringUtils.isNotBlank(form.getQualifiedName())) {
                 template = template.replace("${UTENTE}", form.getQualifiedName());
             }
+
+
+            sb.setLength(0);
+            // user campagna
+            if (StringUtils.isNotBlank(form.getCampagna())) {
+
+                sb.append("campagna").append(":\n\t");
+                template = template.replace("${CAMPAGNA}", form.getCampagna());
+                sb.append(template+"\n");
+
+            }
+
+            sb.setLength(0);
+
+
         }
         return template;
     }
@@ -249,26 +266,30 @@ public class MailManager extends AbstractService implements IMailManager {
      * del progetto!
      */
     @Override
-    public void retry() {
-       /* log.info("retry service triggered");
-        try {
-            List<Form> forms = getFormManager().getForms();
+    public void retry() throws ApsSystemException {
+
+        FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
+
+        log.info("retry service triggered");
+
+        List<Long> forms = getFormManager().search(new FieldSearchFilter[]{dateFilter});
+
+        if (forms != null || !forms.isEmpty()) {
+
             forms.forEach(f -> {
                 try {
-                    log.debug("delivering mail originally intended for {}", f.getSubmitted());
-                    if (sendMail(f)) {
-                        getFormManager().deleteForm(String.valueOf(f.getId()));
+                    Form form = getFormManager().getForm(f);
+                    log.debug("delivering mail originally intended for {}", form.getSubmitted());
+                    if (sendMail(form)) {
+                        getFormManager().updateForm(form);
                     } else {
-                        log.error("Could not deliver the form {} again", f.getId());
+                        log.error("Could not deliver the form {} again", form.getId());
                     }
                 } catch (Exception e) {
                     log.error("error while delivering email ", e);
                 }
             });
-        } catch (ApsSystemException e) {
-            log.error("Unexpected error while delivering non expired mail", e);
-        }*/
-        log.info("retry service completed execution");
+        }
     }
 
 

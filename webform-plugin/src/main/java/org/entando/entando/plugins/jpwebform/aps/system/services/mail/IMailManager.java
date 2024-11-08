@@ -1,6 +1,9 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 
+import com.agiletec.aps.system.exception.ApsSystemException;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+
+import java.util.List;
 
 public interface IMailManager {
 
@@ -29,5 +32,5 @@ public interface IMailManager {
      * Try to deliver again forms submitted no longer than 6 hours before.
      * If the delivery is successful, the form is deleted
      */
-    void retry();
+    void retry() throws ApsSystemException;
 }

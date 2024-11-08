@@ -8,6 +8,7 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
+import liquibase.pro.packaged.T;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
@@ -22,8 +23,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.temporal.TemporalField;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager.BEAN_ID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,7 +44,6 @@ public class TestFormManager extends BaseTestCase {
 
 	@BeforeEach
 	public void init() {
-		this._mailManager = (IMailManager) this.getApplicationContext().getBean(IMailManager.BEAN_ID);
 		this._formManager = (IFormManager) this.getService(BEAN_ID);
 		assertNotNull(_formManager);
 		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
@@ -118,10 +120,6 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
 
-	/*		_formManager.getFormList().forEach(form -> {
-				System.out.println("\n"+form.getId()+" "+form.getName()+" "+form.getSeriale()+"\n=======================\n");
-			});*/
-
 		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERIFY, true);
 		assertEquals(3,listSearchFormAfter1.size());
 
@@ -134,7 +132,7 @@ public class TestFormManager extends BaseTestCase {
 		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERIFY, false);
 		assertEquals(1,listSearchFormBefore2.size());
 		
-		} finally {
+		}finally {
 			_formManager.deleteForm(form0.getId());
 			_formManager.deleteForm(form2.getId());
 			_formManager.deleteForm(form3.getId());
@@ -258,7 +256,7 @@ public class TestFormManager extends BaseTestCase {
 	}
 
 	@Test
-	public void randomHashTest() throws ApsSystemException {
+	public void randomSerialeTest() throws ApsSystemException {
 
 		Form form0 = _formManager.getForm(2677L);
 
@@ -282,6 +280,56 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.deleteForm(form1.getId());
 
 	}
+
+
+	@Test
+	public void generateAndNullSerialeTest() throws ApsSystemException {
+
+
+
+/** caso in cui il seriale non è presente **/
+
+
+		Form form1 = new Form();
+
+		form1.setName("Romolo");
+		form1.setCampagna("Romolo");
+		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+		form1.setDelivered(true);
+		form1.setSeriale("");
+		form1.setData(getFormDataForTest());
+
+		assertEquals("", form1.getSeriale());
+
+		_formManager.addForm(form1);
+
+		Form verify = _formManager.getForm(form1.getId());
+
+		assertNotNull(verify.getSeriale()); //generato in automatico perchè non presente durante l'aggiunta
+
+		_formManager.deleteForm(form1.getId());
+
+
+/** caso in cui il seriale è presente **/
+
+
+		Form form2 = new Form();
+
+		form2.setName("Tarquinio Prisco");
+		form2.setCampagna("Tarquinio Prisco");
+		form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+		form2.setDelivered(true);
+		form2.setSeriale("AAACBvwEA14AJl1834");
+		form2.setData(getFormDataForTest());
+
+		_formManager.addForm(form2);
+
+		assertEquals(form2.getSeriale(),"AAACBvwEA14AJl1834");
+
+		_formManager.deleteForm(form2.getId());
+
+	}
+
 
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();
@@ -360,5 +408,5 @@ public class TestFormManager extends BaseTestCase {
 	}*/
 
 	private IFormManager _formManager;
-	private IMailManager _mailManager;
+
 }
