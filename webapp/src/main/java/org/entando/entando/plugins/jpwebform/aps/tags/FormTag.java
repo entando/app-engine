@@ -30,8 +30,8 @@ public class FormTag extends TagSupport {
 		RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
 		try {
 		Form form = null;
-			if (null != this.getKey()) {
-				form = formManager.getForm(this.getKey());
+			if (null != this.getFormId()) {
+				form = formManager.getForm(this.getFormId());
 			} else {
 				Widget widget = this.extractWidget(reqCtx);
 				ApsProperties widgetConfig = widget.getConfig();
@@ -57,7 +57,7 @@ public class FormTag extends TagSupport {
 	@Override
 	public void release() {
 		this.setVar(null);
-		this.setKey(null);
+		this.setFormId(null);
 	}
 
 	private Widget extractWidget(RequestContext reqCtx) {
@@ -77,13 +77,13 @@ public class FormTag extends TagSupport {
 		this._var = var;
 	}
 
-	public Long getKey() {
-		return _key;
+	public Long getFormId() {
+		return _formId;
 	}
-	public void setKey(Long key) {
-		this._key = key;
+	public void setFormId(Long _formId) {
+		this._formId = _formId;
 	}
 
 	private String _var;
-	private Long _key;
+	private Long _formId;
 }
