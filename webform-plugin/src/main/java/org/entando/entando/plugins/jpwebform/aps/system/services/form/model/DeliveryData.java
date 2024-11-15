@@ -1,6 +1,8 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.form.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DeliveryData {
@@ -40,5 +42,11 @@ public class DeliveryData {
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+    public String toJson() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        return mapper.writeValueAsString(this);
     }
 }

@@ -6,8 +6,6 @@ public interface MailTemplate {
             "Buongiorno,\n" +
                     "in data ${DATA} l'utente ${UTENTE} ha inviato i seguenti dati:\n" +
                     "\n"+
-                    "${CAMPAGNA}\n"+
-                    "\n"+
                     "${DROPDOWN}" +
                     "\n"+
                     "${TESTO}"+

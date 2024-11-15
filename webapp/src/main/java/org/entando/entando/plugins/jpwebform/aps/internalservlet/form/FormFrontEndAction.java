@@ -163,7 +163,8 @@ public class FormFrontEndAction extends FormAction {
 //            }
             form.setName(currentUser);
             form.setSubmitted(LocalDateTime.now());
-            form.setData(getFormData());
+            //form.setData(getFormData()); <=========
+            form.setFormPayload(form.getFormPayload());
 
             final String email = getMailManager().getEmailById(getIdDestinatario());
             if (StringUtils.isBlank(email)) {

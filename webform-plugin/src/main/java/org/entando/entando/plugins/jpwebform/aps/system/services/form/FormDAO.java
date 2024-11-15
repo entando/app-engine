@@ -9,11 +9,8 @@ import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Timestamp;
+
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -21,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	private static final Logger logger =  LoggerFactory.getLogger(FormDAO.class);
 	private IMailManager _mailManager;
 	private static final Integer MAX_HOURS = 12;
+
+
 
 	@Override
 	public int countForms(FieldSearchFilter[] filters) {
@@ -159,6 +159,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		int index = 1;
 
 		try {
+
 			stat = conn.prepareStatement(ADD_FORM);
 
 			stat.setLong(index++, form.getId());
@@ -166,12 +167,17 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat.setString(index++, form.getCampagna());
 			Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
 			stat.setTimestamp(index++, submittedTimestamp);
+
+			Clob clob= conn.createClob();
+			clob.setString(1, form.getFormPayload().toJson());
 			stat.setBoolean(index++, form.getDelivered());
-			stat.setString(index++, form.getData().toJson());
+			stat.setClob(index++, clob);
+
+			//stat.setString(index++, form.getFormPayload().toJson()); //<=========
 			stat.setString(index, form.getSeriale());
 			stat.executeUpdate();
 		} catch (Throwable t) {
-			logger.error("Error on insert form",  t);
+
 			throw new RuntimeException("Error on insert form", t);
 		} finally {
 			this.closeDaoResources(null, stat, null);
@@ -202,10 +208,10 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat = conn.prepareStatement(UPDATE_FORM);
 			int index = 1;
 
-			form.setDelivered(true);//<=======cambio lo stato da false a true
-			stat.setBoolean(index++, form.getDelivered());//<=======
+			form.setDelivered(true);
+			stat.setBoolean(index++, form.getDelivered());
 
-			stat.setLong(index++, form.getId());//<======
+			stat.setLong(index++, form.getId());
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error updating form {}", form.getId(),  t);
@@ -306,10 +312,14 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				form.setSubmitted(submittedValue.toLocalDateTime());
 			}
 			String json = res.getString("data");
+			//Clob json = res.getClob("data");
 			ObjectMapper mapper = new ObjectMapper();
-			FormData data = mapper.readValue(json, FormData.class);
-			form.setData(data);
+			//FormPayload formPayload = mapper.readValue(json.getSubString(1, 500), FormPayload.class);*/
+			FormPayload formPayload = mapper.readValue(json, FormPayload.class);
+			//form.setData(data);
+			form.setFormPayload(formPayload);
 			form.setSeriale(res.getString("seriale"));
+
 		} catch (Throwable t) {
 			logger.error("Error in buildFormFromRes", t);
 		}
@@ -346,13 +356,7 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				.collect(Collectors.toList());
 	}
 
-//	@Override
-//	@Scheduled(cron="* */2 * * * *")
-/*
-	public void cronJob() throws ApsSystemException {
-			_mailManager.retry();
-	}
-*/
+
 
 	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\", seriale) VALUES (?, ?, ?, ?, ?, ?, ?)";
 

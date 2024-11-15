@@ -87,7 +87,7 @@
         <springsecurity.version>5.5.7</springsecurity.version>
         <springsecurityoauth2.version>2.5.2.RELEASE</springsecurityoauth2.version>
         <struts2.version>2.5.31</struts2.version>
-        <jackson.version>2.11.4</jackson.version> <!-- Jackson 2.12.* is not compatible with logback-jackson 0.1.5 -->
+        <jackson.version>2.13.3</jackson.version> <!-- Jackson 2.12.* is not compatible with logback-jackson 0.1.5 -->
         <hibernate-validator-version>6.0.20.Final</hibernate-validator-version>
         <lucene-core.version>8.9.0</lucene-core.version>
         <json-path-assert.version>2.6.0</json-path-assert.version>
@@ -530,6 +530,18 @@
                 <groupId>ch.qos.logback.contrib</groupId>
                 <artifactId>logback-json-classic</artifactId>
                 <version>${logback-json.version}</version>
+
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                </exclusions>
+
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback.contrib</groupId>

@@ -21,6 +21,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.agiletec.aps.system.common.FieldSearchFilter;
@@ -96,16 +97,16 @@ public class MailManager extends AbstractService implements IMailManager {
             // recipients TO, BCC
             message.setRecipients(
                     Message.RecipientType.TO,
-                    InternetAddress.parse(form.getCc())
+                    InternetAddress.parse(form.getFormPayload().getDeliveryData().getCc()) //form.getCc()
             );
-            log.info("Mail TO: {}", form.getCc());
+            log.info("Mail TO: {}", form.getFormPayload().getDeliveryData().getCc());
             message.setRecipients(
                     Message.RecipientType.BCC,
-                    InternetAddress.parse(form.getRecipient())
+                    InternetAddress.parse(form.getFormPayload().getDeliveryData().getRecipient())
             );
-            log.info("Mail BCC: {}", form.getRecipient());
-            if (StringUtils.isNotBlank(form.getSubject())) {
-                message.setSubject(form.getSubject());
+            log.info("Mail BCC: {}", form.getFormPayload().getDeliveryData().getRecipient());
+            if (StringUtils.isNotBlank(form.getFormPayload().getDeliveryData().getSubject())) {
+                message.setSubject(form.getFormPayload().getDeliveryData().getSubject());
             } else {
                 message.setSubject("Mail automatizzata");
             }
@@ -166,9 +167,11 @@ public class MailManager extends AbstractService implements IMailManager {
                 && form != null) {
             // process select options
             final StringBuilder sb = new StringBuilder();
-            final FormData fd = form.getData();
+            final FormPayload fp = form.getFormPayload();
+            final FormData fd = fp.getFormData();
             final SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
             String selectText = null;
+
 
             if (fd != null) {
                 // dropdown #1
@@ -239,23 +242,9 @@ public class MailManager extends AbstractService implements IMailManager {
                 template = template.replace("${DATA}", formattedDate);
             }
             // user qualified name
-            if (StringUtils.isNotBlank(form.getQualifiedName())) {
-                template = template.replace("${UTENTE}", form.getQualifiedName());
+            if (StringUtils.isNotBlank(form.getFormPayload().getDeliveryData().getQualifiedName())) {
+                template = template.replace("${UTENTE}", form.getFormPayload().getDeliveryData().getQualifiedName());
             }
-
-
-            sb.setLength(0);
-            // user campagna
-            if (StringUtils.isNotBlank(form.getCampagna())) {
-
-                sb.append("campagna").append(":\n\t");
-                template = template.replace("${CAMPAGNA}", form.getCampagna());
-                sb.append(template+"\n");
-
-            }
-
-            sb.setLength(0);
-
 
         }
         return template;

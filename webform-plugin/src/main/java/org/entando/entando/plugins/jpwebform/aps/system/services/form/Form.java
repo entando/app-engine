@@ -7,7 +7,7 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 
 import java.time.LocalDateTime;
 
@@ -41,11 +41,12 @@ public class Form {
 		this.submitted = submitted;
 	}
 
-	// TODO cambiare da FormData a FormPayload
-	public FormData getData() {
-		return data;
+
+	public FormPayload getFormPayload() {
+		return this.data;
 	}
-	public void setData(FormData data) {
+
+	public void setFormPayload(FormPayload data) {
 		this.data = data;
 	}
 
@@ -107,8 +108,11 @@ public class Form {
 
 	private Long id;
 	private String name;
+
 	private LocalDateTime submitted;
-	private FormData data;
+
+
+	private FormPayload data; //formPayload
 	private String campagna;
 	private Boolean delivered;
 	private String seriale;

@@ -18,7 +18,6 @@ public class FormData {
     public String testo3;
     public String testo4;
     public String testo5;
-
     public String etichettaSel1;
     public String etichettaSel2;
     public String etichettaSel3;

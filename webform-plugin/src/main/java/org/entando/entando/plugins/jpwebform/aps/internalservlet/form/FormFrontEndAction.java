@@ -18,6 +18,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
@@ -153,17 +154,19 @@ public class FormFrontEndAction extends FormAction {
             final String json = null; // getSigeManager().getUserInfoById(currentUser);
 
             final String fullName = this.getCurrentUser().getUsername();
-            form.setQualifiedName(fullName);
-
+            //form.setQualifiedName(fullName);
+            form.getFormPayload().getDeliveryData().setQualifiedName(fullName);
 //            if (StringUtils.isNotBlank(json)) {
                 final String emailFromSPID = "email@email.it";
-                form.setCc(emailFromSPID);
+                //form.setCc(emailFromSPID);
+            form.getFormPayload().getDeliveryData().setCc(emailFromSPID);
 //            } else {
 //                log.warn("Could not get SIGE data for user '{}'", currentUser);
 //            }
             form.setName(currentUser);
             form.setSubmitted(LocalDateTime.now());
-            form.setData(getFormData());
+            //form.setData(getFormData());
+            form.setFormPayload(getFormPayload());
 
             final String email = getMailManager().getEmailById(getIdDestinatario());
             if (StringUtils.isBlank(email)) {
@@ -174,14 +177,20 @@ public class FormFrontEndAction extends FormAction {
                 log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
             }
 
-            form.setRecipient(email);
-            form.setSubject(getSubject());
+            //form.setRecipient(email);
+            form.getFormPayload().getDeliveryData().setRecipient(email);
+            //form.setSubject(getSubject());
+            form.getFormPayload().getDeliveryData().setSubject(getSubject());
+
+
 
             if (getMailManager().sendMail(form)) {
-                log.debug("Form successfully delivered to {}", form.getRecipient());
+                //log.debug("Form successfully delivered to {}", form.getRecipient());
+                log.debug("Form successfully delivered to {}", form.getFormPayload().getDeliveryData().getRecipient());
                 form.setDelivered(true);
             } else {
-                log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
+                //log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
+                log.warn("Could not deliver email to {}, saving for later", form.getFormPayload().getDeliveryData().getRecipient());
                 form.setDelivered(false);
             }
             getFormManager().addForm(form);
@@ -380,6 +389,13 @@ public class FormFrontEndAction extends FormAction {
         this._seriale = _seriale;
     }
 
+    public FormPayload getFormPayload() {
+        return _formPayload;
+    }
+
+    public void setFormPayload(FormPayload _formPayload) {
+        this._formPayload = _formPayload;
+    }
     // search parameter
     private Long _id;
     private Date _from;
@@ -393,6 +409,8 @@ public class FormFrontEndAction extends FormAction {
     private Form form;
 
 
+
+    private FormPayload _formPayload; //<======
     private FormData _formData;
     private String _idDestinatario;
     public String _pageCode;

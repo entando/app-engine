@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.exception.ApsSystemException;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
@@ -31,16 +32,20 @@ public class TestMailManager extends BaseTestCase {
 
 
         form3.setName("Anco Marzio");
-        form3.setData(getFormForTest().getData());
+        form3.setFormPayload(TestFormManager.getFormPayloadForTest());
         form3.setSubmitted(LocalDateTime.now());
-        form3.setCampagna("fiera campionara di strozzamento di galli");
-        form3.setRecipient("address@email.it");
-        form3.setQualifiedName("Marzio Anco"); //Esq. John Doe
-        form3.setCc("cc@email.it");
-        form3.setSubject("mail subject");
+        form3.setCampagna("campagna");
 
+        form3.setDelivered(true);
+        form3.setSeriale("");
 
-        assertTrue(_mailManager.sendMail(form3));
+        _formManager.addForm(form3);
+
+        Form verify = _formManager.getForm(form3.getId());
+        
+        assertTrue(_mailManager.sendMail(verify));
+
+        _formManager.deleteForm(form3.getId());
 
     }
 
