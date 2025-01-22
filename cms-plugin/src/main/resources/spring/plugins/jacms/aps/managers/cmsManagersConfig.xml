@@ -70,6 +70,8 @@
         </property>
         <property name="publicContentSearcherDAO" ref="jacmsPublicContentSearcherDAO" />
         <property name="workContentSearcherDAO" ref="jacmsWorkContentSearcherDAO" />
+        <property name="langManager" ref="LangManager" />
+        <property name="contentModelManager" ref="jacmsContentModelManager" />
     </bean>
     
     <bean id="jacmsPublicContentSearcherDAO" class="com.agiletec.plugins.jacms.aps.system.services.content.PublicContentSearcherDAO">

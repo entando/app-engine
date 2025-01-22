@@ -14,6 +14,7 @@
 package com.agiletec.plugins.jacms.aps.system.services.content;
 
 import com.agiletec.aps.system.ApsSystemUtils;
+import com.agiletec.aps.system.ApsSystemUtils.ApsDeepDebug;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.ApsEntityManager;
 import com.agiletec.aps.system.common.entity.IEntityDAO;
@@ -25,6 +26,8 @@ import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
 import com.agiletec.aps.system.services.category.CategoryUtilizer;
 import com.agiletec.aps.system.services.group.GroupUtilizer;
 import com.agiletec.aps.system.services.keygenerator.IKeyGeneratorManager;
+import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.system.services.page.PageUtilizer;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.cache.CmsCacheWrapperManager;
@@ -32,6 +35,8 @@ import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicConten
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
+import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
+import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.ResourceUtilizer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.entando.entando.aps.system.services.cache.ICacheInfoManager;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
@@ -72,6 +78,9 @@ public class ContentManager extends ApsEntityManager
     
     private ICacheInfoManager cacheInfoManager;
     private transient IKeyGeneratorManager keyGeneratorManager;
+
+    private IContentModelManager contentModelManager;
+    private ILangManager langManager;
 
 
     @Override
@@ -355,6 +364,29 @@ public class ContentManager extends ApsEntityManager
             id = content.getId();
             this.notifyPublicContentChanging(content, operationEventCode);
             this.flushGroups(content.getId(), content.getTypeCode());
+            // ECS-378 estensione per DLAB (stessa patch ECS-373)
+            try {
+                List<ContentModel> models = this.getContentModelManager()
+                        .getModelsForContentType(content.getTypeCode());
+                List<Lang> languages = getLangManager().getLangs();
+                if (models != null && !models.isEmpty() && languages != null && !languages.isEmpty()) {
+                    // compose KEY
+                    Set<String> cacheKeys = models
+                            .stream()
+                            .flatMap(m -> languages
+                                    .stream()
+                                    .map(l ->
+                                            content.getId() + "_" + m.getId() + "_" + l.getCode() + "_RENDER_INFO_CacheKey"))
+                            .collect(Collectors.toSet());
+                    cacheKeys.forEach(k -> cacheInfoManager.flushEntry(ICacheInfoManager.DEFAULT_CACHE_NAME, k));
+                    cacheKeys.forEach(k -> ApsDeepDebug.print(ICacheInfoManager.DEFAULT_CACHE_NAME, "evicting " + k));
+                } else {
+                    logger.warn("Cannot build target keys for the cache!");
+                }
+            } catch (Throwable t) {
+                logger.error("error evicting cache: " + t.getLocalizedMessage());
+            }
+            // fine estensione per DLAB
         } catch (Throwable t) {
             logger.error("Error while inserting content on line", t);
             throw new EntException("Error while inserting content on line", t);
@@ -785,5 +817,23 @@ public class ContentManager extends ApsEntityManager
     public void setKeyGeneratorManager(IKeyGeneratorManager keyGeneratorManager) {
         this.keyGeneratorManager = keyGeneratorManager;
     }
+
+    // ECS-378 estensione per DLAB inizio importa patch ECS-373
+    public IContentModelManager getContentModelManager() {
+        return contentModelManager;
+    }
+
+    public void setContentModelManager(
+            IContentModelManager contentModelManager) {
+        this.contentModelManager = contentModelManager;
+    }
+    public ILangManager getLangManager() {
+        return langManager;
+    }
+
+    public void setLangManager(ILangManager langManager) {
+        this.langManager = langManager;
+    }
+    // estensione per DLAB fine
 
 }
