@@ -330,5 +330,8 @@ public final class SystemConstants {
     public static final String SYSTEM_PROP_KEYCLOAK_AUTH_URL = "keycloak.auth.url";
     public static final String SYSTEM_PROP_KEYCLOAK_ENABLED = "keycloak.enabled";
     public static final String SYSTEM_PROP_KEYCLOAK_REALM = "keycloak.realm";
-    
+
+    // virtual context
+    public static final String ENTANDO_VIRTUAL_CONTEXTS = "ENTANDO_VIRTUAL_CONTEXTS";
+    public static final String SEPARATOR_CONTEXTS = ",";
 }

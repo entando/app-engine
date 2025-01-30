@@ -32,6 +32,7 @@ class TenantManagerTest {
             + "    \"tenantCode\": \"TE_nant1\",\n"
             + "    \"kcEnabled\": true,\n"
             + "    \"fqdns\": \"tenant1.com,tenant2.com\",\n"
+            + "    \"context\": \"common-context\"\n,"
             + "    \"kcAuthUrl\": \"http://tenant1.test.nip.io/auth\",\n"
             + "    \"kcRealm\": \"tenant1\",\n"
             + "    \"kcClientId\": \"quickstart\",\n"
@@ -74,6 +75,7 @@ class TenantManagerTest {
             + "    \"dbUsername\": \"db_user_2\",\n"
             + "    \"dbPassword\": \"db_password_2\",\n"
             + "    \"fqdns\": \"tenant1.com\"\n,"
+            + "    \"context\": \"context1\"\n,"
             + "    \"customField1\": \"custom_value_1\"\n,"
             + "    \"customField2\": \"custom_value_2\""
             + "}]";
@@ -94,6 +96,41 @@ class TenantManagerTest {
             + "    \"dbUsername\": \"db_user_1\",\n"
             + "    \"dbPassword\": \"db_password_1\"\n"
             + "}]\n";
+
+    private String tenantConfigsWithoutContextField="[{\n"
+            + "    \"tenantCode\": \"TE_nant1\",\n"
+            + "    \"kcEnabled\": true,\n"
+            + "    \"kcAuthUrl\": \"http://tenant1.test.nip.io/auth\",\n"
+            + "    \"kcRealm\": \"tenant1\",\n"
+            + "    \"kcClientId\": \"quickstart\",\n"
+            + "    \"kcClientSecret\": \"secret1\",\n"
+            + "    \"kcPublicClientId\": \"entando-web\",\n"
+            + "    \"kcSecureUris\": \"\",\n"
+            + "    \"kcDefaultAuthorizations\": \"\",\n"
+            + "    \"dbDriverClassName\": \"org.postgresql.Driver\",\n"
+            + "    \"dbUrl\": \"jdbc:postgresql://testDbServer:5432/tenantDb1\",\n"
+            + "    \"dbUsername\": \"db_user_2\",\n"
+            + "    \"dbPassword\": \"db_password_2\",\n"
+            + "    \"fqdns\": \"tenant1.com\"\n"
+            + "}]";
+
+    private String tenantConfigsWithEmptyContextField="[{\n"
+            + "    \"tenantCode\": \"TE_nant1\",\n"
+            + "    \"kcEnabled\": true,\n"
+            + "    \"kcAuthUrl\": \"http://tenant1.test.nip.io/auth\",\n"
+            + "    \"kcRealm\": \"tenant1\",\n"
+            + "    \"kcClientId\": \"quickstart\",\n"
+            + "    \"kcClientSecret\": \"secret1\",\n"
+            + "    \"kcPublicClientId\": \"entando-web\",\n"
+            + "    \"kcSecureUris\": \"\",\n"
+            + "    \"kcDefaultAuthorizations\": \"\",\n"
+            + "    \"dbDriverClassName\": \"org.postgresql.Driver\",\n"
+            + "    \"dbUrl\": \"jdbc:postgresql://testDbServer:5432/tenantDb1\",\n"
+            + "    \"dbUsername\": \"db_user_2\",\n"
+            + "    \"dbPassword\": \"db_password_2\",\n"
+            + "    \"fqdns\": \"tenant1.com\",\n"
+            + "    \"context\": \"\"\n"
+            + "}]";
 
     private String errorToCheck = "Error status for tenant with code '%s' is not ready please visit health status endpoint to check";
 
@@ -131,10 +168,11 @@ class TenantManagerTest {
         Assertions.assertThat(otc).isNotEmpty();
         TenantConfig tc = otc.get();
         Assertions.assertThat(tc.isKcEnabled()).isTrue();
-        otc = tm.getTenantConfigByDomain("tenant1.com");
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", "context1");
         Assertions.assertThat(otc).isNotEmpty();
         tc = otc.get();
         Assertions.assertThat(tc.getFqdns()).contains("tenant1.com");
+        Assertions.assertThat(tc.getContext()).isEqualTo("context1");
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant1");
         Assertions.assertThat(ds.getDriverClassName()).isEqualTo("org.postgresql.Driver");
         Assertions.assertThat(tm.exists("pippo")).isFalse();
@@ -153,7 +191,7 @@ class TenantManagerTest {
         Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
         Assertions.assertThat(otc).isEmpty();
 
-        otc = tm.getTenantConfigByDomain("tenant2.com");
+        otc = tm.getTenantConfigByDomainAndContext("tenant2.com", "context2");
         Assertions.assertThat(otc).isEmpty();
 
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant_not_found");
@@ -169,7 +207,7 @@ class TenantManagerTest {
         Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
         Assertions.assertThat(otc).isEmpty();
 
-        otc = tm.getTenantConfigByDomain("tenant2.com");
+        otc = tm.getTenantConfigByDomainAndContext("tenant2.com", "context2");
         Assertions.assertThat(otc).isEmpty();
 
         BasicDataSource ds = (BasicDataSource)tm.getDatasource("TE_nant_not_found");
@@ -186,7 +224,7 @@ class TenantManagerTest {
         RuntimeException ex = Assertions.catchThrowableOfType(() -> tm.getConfigOfReadyTenant("TE_nant1"), RuntimeException.class);
         Assertions.assertThat(ex.getMessage()).isEqualTo(String.format(errorToCheck,"TE_nant1"));
 
-        ex = Assertions.catchThrowableOfType(() -> tm.getTenantConfigByDomain("tenant2.com"), RuntimeException.class);
+        ex = Assertions.catchThrowableOfType(() -> tm.getTenantConfigByDomainAndContext("tenant2.com", "common-context"), RuntimeException.class);
         Assertions.assertThat(ex.getMessage()).isEqualTo(String.format(errorToCheck,"TE_nant1"));
         
         Optional<TenantConfig> otc1 = tm.getConfig("TE_nant1");
@@ -201,11 +239,61 @@ class TenantManagerTest {
         Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_pippo123");
         Assertions.assertThat(otc).isEmpty();
 
-        otc = tm.getTenantConfigByDomain("pippo123.com");
+        otc = tm.getTenantConfigByDomainAndContext("pippo123.com", "pippo");
         Assertions.assertThat(otc).isEmpty();
 
         ds = (BasicDataSource)tm.getDatasource("TE_nant_not_found");
         Assertions.assertThat(ds).isNull();
+    }
+
+    @Test
+    void shouldAllOperationWorkFineWithConfigMapsWithoutContextField() throws Throwable {
+        TenantDataAccessor data = new TenantDataAccessor();
+        TenantManager tm = new TenantManager(tenantConfigsWithoutContextField, new ObjectMapper(), data);
+        tm.afterPropertiesSet();
+        Map<String, TenantStatus> statuses = data.getTenantStatuses();
+        data.getTenantStatuses().keySet().stream().forEach(k -> statuses.put(k, TenantStatus.READY));
+
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
+        Assertions.assertThat(otc).isNotEmpty();
+        TenantConfig tc = otc.get();
+
+        Optional<String> contextValue = tc.getProperty("context");
+        Assertions.assertThat(contextValue).isEmpty();
+
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", null);
+        Assertions.assertThat(otc).isNotEmpty();
+
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", "");
+        Assertions.assertThat(otc).isNotEmpty();
+
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", "something");
+        Assertions.assertThat(otc).isNotEmpty();
+    }
+
+    @Test
+    void shouldAllOperationWorkFineWithConfigMapsWithEmptyContextField() throws Throwable {
+        TenantDataAccessor data = new TenantDataAccessor();
+        TenantManager tm = new TenantManager(tenantConfigsWithEmptyContextField, new ObjectMapper(), data);
+        tm.afterPropertiesSet();
+        Map<String, TenantStatus> statuses = data.getTenantStatuses();
+        data.getTenantStatuses().keySet().stream().forEach(k -> statuses.put(k, TenantStatus.READY));
+
+        Optional<TenantConfig> otc = tm.getConfigOfReadyTenant("TE_nant1");
+        Assertions.assertThat(otc).isNotEmpty();
+        TenantConfig tc = otc.get();
+
+        Optional<String> contextValue = tc.getProperty("context");
+        Assertions.assertThat(contextValue).isNotEmpty().hasValue("");
+
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", null);
+        Assertions.assertThat(otc).isEmpty();
+
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", "");
+        Assertions.assertThat(otc).isNotEmpty();
+
+        otc = tm.getTenantConfigByDomainAndContext("tenant1.com", "something");
+        Assertions.assertThat(otc).isEmpty();
     }
 
 }

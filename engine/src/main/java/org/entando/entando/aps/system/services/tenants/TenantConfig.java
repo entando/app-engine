@@ -29,6 +29,7 @@ public class TenantConfig {
     private static final String TENANT_CODE_PROPERTY = "tenantCode";
     private static final String INIT_AT_START_REQUIRED_PROPERTY = "initializationAtStartRequired";
     private static final String FQDNS_PROPERTY = "fqdns";
+    private static final String CONTEXT_PROPERTY = "context";
     private static final String KC_ENABLED_PROPERTY = "kcEnabled";
     private static final String KC_AUTH_URL_PROPERTY = "kcAuthUrl";
     private static final String KC_REALM_PROPERTY = "kcRealm";
@@ -137,6 +138,10 @@ public class TenantConfig {
         return Optional.ofNullable(configs.get(FQDNS_PROPERTY))
                 .map(s -> s.split(","))
                 .map(Arrays::asList).orElse(new ArrayList<>());
+    }
+
+    public String getContext() {
+        return configs.get(CONTEXT_PROPERTY);
     }
 
     public Optional<String> getProperty(String name) {
