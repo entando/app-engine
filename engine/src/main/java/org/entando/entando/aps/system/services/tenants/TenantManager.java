@@ -97,8 +97,28 @@ public class TenantManager implements ITenantManager, InitializingBean {
     }
 
     @Override
+    public String getTenantCodeByDomainAndContext(String domain, String context) {
+        String tenantCode = tenantDataAccessor.getTenantConfigs().values().stream()
+                .filter(v -> v.getFqdns().contains(domain) && (StringUtils.equals(v.getContext(), context) || v.getContext() == null) )
+                .map(tc -> tc.getTenantCode())
+                .filter(StringUtils::isNotBlank)
+                .findFirst()
+                .orElse(getCodes().stream().filter(code -> StringUtils.equals(code, domain)).findFirst().orElse(null));
+        if (logger.isDebugEnabled()) {
+            logger.debug("From domain/context:'{}{}' retrieved tenantCode:'{}' from codes:'{}'",
+                    domain, context, tenantCode, getCodes().stream().collect(Collectors.joining(",")));
+        }
+        return identityIfStatusReadyOrThrow(tenantCode);
+    }
+
+    @Override
     public Optional<TenantConfig> getTenantConfigByDomain(String domain) {
         return this.getConfigOfReadyTenant(this.getTenantCodeByDomain(domain));
+    }
+
+    @Override
+    public Optional<TenantConfig> getTenantConfigByDomainAndContext(String domain, String context) {
+        return this.getConfigOfReadyTenant(this.getTenantCodeByDomainAndContext(domain, context));
     }
 
     @Override
