@@ -32,7 +32,7 @@ public final class ApsTenantApplicationUtils {
 
 	public static Optional<String> extractCurrentTenantCode(HttpServletRequest request) {
 		String tenantCode = fetchTenantCodeFromEntandoHeader(request);
-		logger.error(" *** REQUEST CLASS: {}", request.getClass().getName());
+		System.out.println(" *** REQUEST CLASS: " + request.getClass().getName());
 		if(StringUtils.isNotBlank(tenantCode)) {
 			if(StringUtils.equalsIgnoreCase(tenantCode, PRIMARY_CODE)) {
 				logger.debug("the tenantCode:'{}' contains primary code, return empty", tenantCode);
@@ -44,11 +44,12 @@ public final class ApsTenantApplicationUtils {
 		} else {
 			logger.debug("the custom header:'{}' is empty or blank, skip it", UrlUtils.ENTANDO_TENANT_CODE_CUSTOM_HEADER);
 			String domain = getDomainFromRequest(request);
-			String context = request.getParameter("virtual-context");
-			logger.error(" *** VIRTUAL CONTEXT: {}", context);
+			String contextPath = request.getContextPath();
+			String context = contextPath.startsWith("/") ? contextPath.replaceFirst("/", "") : contextPath;
+			System.out.println(" *** CONTEXT: `" + context + "`");
 			ITenantManager tenantManager = ApsWebApplicationUtils.getBean(ITenantManager.class, request);
 			String tenantCodeFromDomainAndContext = tenantManager.getTenantCodeByDomainAndContext(domain, context);
-			logger.error(" *** TENANT CODE: '{}', return it", tenantCodeFromDomainAndContext);
+			System.out.println(" *** TENANT CODE: `" + tenantCodeFromDomainAndContext + "`");
 			return Optional.ofNullable(tenantCodeFromDomainAndContext);
 		}
 	}

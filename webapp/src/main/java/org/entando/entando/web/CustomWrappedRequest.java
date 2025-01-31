@@ -9,6 +9,9 @@ import java.util.TreeMap;
 
 public class CustomWrappedRequest extends HttpServletRequestWrapper
 {
+
+    public static final String VIRTUAL_CONTEXT = "virtual";
+
     private final Map<String, String[]> modifiableParameters;
     private Map<String, String[]> allParameters = null;
 
@@ -66,22 +69,30 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
 
     @Override
     public String getContextPath() {
-        System.out.println("\n\n ** getContextPath ** " + super.getContextPath() + " ****");
-        return super.getContextPath();
+        String origContextPath = super.getContextPath();
+
+        if(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT) != null) {
+            String virtualContextPath = getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT)[0];
+            System.out.println(" ** context path: `" + virtualContextPath + "`");
+            return virtualContextPath;
+        }
+
+        System.out.println(" ** context path: `" + origContextPath + "`");
+        return origContextPath;
     }
 
     @Override
     public String getServletPath() {
-        String currentPath = super.getServletPath();
-        System.out.println("\n ** currentPath ** " + currentPath + " ****");
+        String origPath = super.getServletPath();
 
-        if (getParameter("virtual-context") != null && currentPath.startsWith("/" + getParameter("virtual-context"))) {
-            String wrappedPath = currentPath.replaceFirst("/" + getParameter("virtual-context"), "");
-            System.out.println("\n ** wrappedPath ** " + wrappedPath + " ****");
-            return wrappedPath;
+        if(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT) != null) {
+            String virtualPath = origPath.replaceFirst(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT)[0], "");
+            System.out.println(" ** virtualPath: " + virtualPath );
+            return virtualPath;
         }
+        System.out.println(" ** currentPath: " + origPath);
 
-        return currentPath;
+        return origPath;
     }
 
 }

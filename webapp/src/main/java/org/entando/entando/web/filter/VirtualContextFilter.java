@@ -28,8 +28,6 @@ public class VirtualContextFilter implements Filter {
 
     private static final EntLogger log = EntLogFactory.getSanitizedLogger(VirtualContextFilter.class);
 
-    public static final String VIRTUAL_CONTEXT = "virtual-context";
-
     public VirtualContextFilter() {
     }
 
@@ -40,8 +38,10 @@ public class VirtualContextFilter implements Filter {
         try {
             EntThreadLocal.clear();
 
-            HttpServletRequest request = (HttpServletRequest) servletRequest;
-            HttpServletRequest customRequest = customizeRequest(request);
+            System.out.println(" * FILTER: ContextPath: `" + ((HttpServletRequest)servletRequest).getContextPath() + "`");
+            System.out.println(" * FILTER: ServletPath: " + ((HttpServletRequest)servletRequest).getServletPath());
+
+            HttpServletRequest customRequest = customizeRequest((HttpServletRequest) servletRequest);
 
             chain.doFilter(customRequest, servletResponse);
         } finally {
@@ -59,23 +59,15 @@ public class VirtualContextFilter implements Filter {
     private HttpServletRequest customizeRequest(HttpServletRequest request) {
         Map<String, String[]> param = new TreeMap<>();
 
-        // Virtual Context
-        log.error("request.getContextPath(): `{}`", request.getContextPath());
-        if(request.getContextPath().equals("")) {
+        // ENV VARIABLE
+        boolean vHosts = true;
 
+        if(vHosts) {
             String[] parts = request.getServletPath().split("/");
-            if(parts.length > 0) {
-                log.error("parts[1]: {}", parts[1]);
-                switch (parts[1]) {
-                    case "api":
-                    case "altro_path_noto_1":
-                    case "altro_path_noto_2":
-                        break;
-                    case "opendata":
-                        param.put(VIRTUAL_CONTEXT, new String[]{parts[1]});
-                    default:
-                        System.out.println("#### " + request.getContextPath());
-                }
+            if (parts.length >= 3) {
+                String virtualContextPath = "/" + parts[1];
+                System.out.println(" ** virtualContextPath: " + virtualContextPath);
+                param.put(CustomWrappedRequest.VIRTUAL_CONTEXT, new String[]{virtualContextPath});
             }
         }
 
