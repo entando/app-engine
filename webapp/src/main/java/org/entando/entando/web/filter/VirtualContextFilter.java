@@ -14,6 +14,7 @@
 package org.entando.entando.web.filter;
 
 import com.agiletec.aps.system.EntThreadLocal;
+import com.agiletec.aps.system.SystemConstants;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.web.CustomWrappedRequest;
@@ -21,8 +22,7 @@ import org.entando.entando.web.CustomWrappedRequest;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class VirtualContextFilter implements Filter {
 
@@ -59,19 +59,30 @@ public class VirtualContextFilter implements Filter {
     private HttpServletRequest customizeRequest(HttpServletRequest request) {
         Map<String, String[]> param = new TreeMap<>();
 
-        // ENV VARIABLE
-        boolean vHosts = true;
+        List<String> virtualContexts = getVirtualContexts();
+        System.out.println(" * FILTER: Virtual Contexts Enabled: " + virtualContexts);
 
-        if(vHosts) {
+        if(!virtualContexts.isEmpty()) {
             String[] parts = request.getServletPath().split("/");
-            if (parts.length >= 3) {
+            if (parts.length >= 3 && virtualContexts.contains(parts[1])) {
                 String virtualContextPath = "/" + parts[1];
-                System.out.println(" ** virtualContextPath: " + virtualContextPath);
+                System.out.println(" * FILTER: virtualContextPath: " + virtualContextPath);
                 param.put(CustomWrappedRequest.VIRTUAL_CONTEXT, new String[]{virtualContextPath});
+            } else {
+                // Lanciare special error
+                System.out.println(" * * * * * * * * * * * * PATH NON GESTITO * * * * * * * * * * * * ");
             }
         }
 
         return new CustomWrappedRequest(request, param);
+    }
+
+    private List<String> getVirtualContexts() {
+        String virtualContextsAsString = System.getenv(SystemConstants.ENTANDO_VIRTUAL_CONTEXTS);
+        if(virtualContextsAsString != null) {
+            return Arrays.asList(virtualContextsAsString.split(SystemConstants.SEPARATOR_CONTEXTS));
+        }
+        return Collections.emptyList();
     }
 
 }

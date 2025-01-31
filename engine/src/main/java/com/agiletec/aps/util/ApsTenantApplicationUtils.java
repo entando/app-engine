@@ -32,7 +32,7 @@ public final class ApsTenantApplicationUtils {
 
 	public static Optional<String> extractCurrentTenantCode(HttpServletRequest request) {
 		String tenantCode = fetchTenantCodeFromEntandoHeader(request);
-		System.out.println(" *** REQUEST CLASS: " + request.getClass().getName());
+		System.out.println(" *** TenantApplicationUtils *** REQUEST CLASS: " + request.getClass().getName());
 		if(StringUtils.isNotBlank(tenantCode)) {
 			if(StringUtils.equalsIgnoreCase(tenantCode, PRIMARY_CODE)) {
 				logger.debug("the tenantCode:'{}' contains primary code, return empty", tenantCode);
@@ -46,10 +46,10 @@ public final class ApsTenantApplicationUtils {
 			String domain = getDomainFromRequest(request);
 			String contextPath = request.getContextPath();
 			String context = contextPath.startsWith("/") ? contextPath.replaceFirst("/", "") : contextPath;
-			System.out.println(" *** CONTEXT: `" + context + "`");
+			System.out.println(" *** TenantApplicationUtils *** CONTEXT: `" + context + "`");
 			ITenantManager tenantManager = ApsWebApplicationUtils.getBean(ITenantManager.class, request);
 			String tenantCodeFromDomainAndContext = tenantManager.getTenantCodeByDomainAndContext(domain, context);
-			System.out.println(" *** TENANT CODE: `" + tenantCodeFromDomainAndContext + "`");
+			System.out.println(" *** TenantApplicationUtils *** TENANT CODE: `" + tenantCodeFromDomainAndContext + "`");
 			return Optional.ofNullable(tenantCodeFromDomainAndContext);
 		}
 	}

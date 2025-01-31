@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class CustomWrappedRequest extends HttpServletRequestWrapper
 {
 
-    public static final String VIRTUAL_CONTEXT = "virtual";
+    public static final String VIRTUAL_CONTEXT = "virtual-context";
 
     private final Map<String, String[]> modifiableParameters;
     private Map<String, String[]> allParameters = null;
@@ -73,11 +73,11 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
 
         if(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT) != null) {
             String virtualContextPath = getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT)[0];
-            System.out.println(" ** context path: `" + virtualContextPath + "`");
+            System.out.println(" ** WrappedRequest ** virtual context path: `" + virtualContextPath + "`");
             return virtualContextPath;
         }
 
-        System.out.println(" ** context path: `" + origContextPath + "`");
+        System.out.println(" ** WrappedRequest ** real context path: `" + origContextPath + "`");
         return origContextPath;
     }
 
@@ -87,10 +87,10 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
 
         if(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT) != null) {
             String virtualPath = origPath.replaceFirst(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT)[0], "");
-            System.out.println(" ** virtualPath: " + virtualPath );
+            System.out.println(" ** WrappedRequest ** virtual servlet path: " + virtualPath );
             return virtualPath;
         }
-        System.out.println(" ** currentPath: " + origPath);
+        System.out.println(" ** WrappedRequest ** real servlet path: " + origPath);
 
         return origPath;
     }
