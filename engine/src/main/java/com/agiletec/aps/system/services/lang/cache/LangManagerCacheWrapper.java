@@ -16,6 +16,8 @@ package com.agiletec.aps.system.services.lang.cache;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.springframework.cache.Cache;
@@ -35,13 +37,17 @@ public class LangManagerCacheWrapper extends AbstractGenericCacheWrapper<Lang> i
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(LangManagerCacheWrapper.class);
 
     @Override
-    public void initCache(String xmlConfig) throws EntException {
+    public void initCache(String xmlConfig, List<Lang> assignableLanguages) throws EntException {
         try {
             Cache cache = this.getCache();
             LangDOM langDom = new LangDOM(xmlConfig);
             Map<String, Lang> langMap = new HashMap<>();
             List<Lang> systemLangs = langDom.getLangs();
+            // Builds a map of assignable languages in order to speed up the search by language code
+            Map<String, Lang> assignableLangMap = computeAssignableLangMap(assignableLanguages);
             for (Lang lang : systemLangs) {
+                // replace custom description with the official one from ISO 639-1
+                replaceDescription(assignableLangMap, lang);
                 if (lang.isDefault()) {
                     cache.put(LANG_DEFAULT_CACHE_NAME, lang);
                 }
@@ -112,4 +118,14 @@ public class LangManagerCacheWrapper extends AbstractGenericCacheWrapper<Lang> i
         return LANG_MANAGER_CACHE_NAME;
     }
 
+    private static Map<String, Lang> computeAssignableLangMap(List<Lang> assignableLanguages) {
+        return assignableLanguages.stream()
+                .collect(Collectors.toMap(Lang::getCode, Function.identity()));
+    }
+
+    private static void replaceDescription(Map<String, Lang> assignableLangMap, Lang lang) {
+        if (assignableLangMap.containsKey(lang.getCode())) {
+            lang.setDescr(assignableLangMap.get(lang.getCode()).getDescr());
+        }
+    }
 }

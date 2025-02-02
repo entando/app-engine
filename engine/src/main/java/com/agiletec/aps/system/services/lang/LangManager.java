@@ -57,7 +57,8 @@ public class LangManager extends AbstractService implements ILangManager, Refres
 	@Override
 	public void initTenantAware() throws Exception {
 		String xmlConfig = this.getConfigManager().getConfigItem(SystemConstants.CONFIG_ITEM_LANGS);
-		this.getCacheWrapper().initCache(xmlConfig);
+		List<Lang> assignableLanguages = getAssignableLangs();
+		this.getCacheWrapper().initCache(xmlConfig, assignableLanguages);
 	}
 
 	/**

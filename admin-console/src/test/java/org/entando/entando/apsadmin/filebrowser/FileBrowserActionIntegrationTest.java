@@ -33,9 +33,9 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class TestFileBrowserAction extends ApsAdminBaseTestCase {
+class FileBrowserActionIntegrationTest extends ApsAdminBaseTestCase {
 
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(TestFileBrowserAction.class);
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(FileBrowserActionIntegrationTest.class);
 
     private IStorageManager localStorageManager;
 

@@ -17,19 +17,17 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.model.attribute.*;
 import com.agiletec.aps.util.DateConverter;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.validation.BindingResult;
 
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.entando.entando.aps.system.common.entity.model.attribute.EnumeratorMapAttribute;
 
 /**
  * @author E.Santoboni
  */
 public class EntityAttributeDto {
-    private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 
     private String code;
 
@@ -57,6 +55,9 @@ public class EntityAttributeDto {
         if (src.isSimple()) {
             if ((value instanceof String) || (value instanceof Number)) {
                 this.setValue(value.toString());
+                if (EnumeratorMapAttribute.class.isAssignableFrom(src.getClass())) {
+                    this.setValues(Map.of("mapKey", value, "mapValue", ((EnumeratorMapAttribute) src).getMapValue()));
+                }
             } else if (value instanceof Boolean) {
                 this.setValue(value);
             } else if (value instanceof Date) {

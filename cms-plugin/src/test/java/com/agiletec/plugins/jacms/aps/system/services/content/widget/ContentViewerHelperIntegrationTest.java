@@ -22,10 +22,13 @@ import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageManager;
 import com.agiletec.aps.system.services.page.Widget;
+import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 
 import com.agiletec.plugins.jacms.aps.system.services.Jdk11CompatibleDateFormatter;
+import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.ContentRenderizationInfo;
@@ -109,6 +112,18 @@ class ContentViewerHelperIntegrationTest extends BaseTestCase {
     
     private void executeGetRenderedContent(boolean useExtraTitle, int frame, 
             String contentId, String expected, boolean nullExtraParam, boolean intoWidget) throws Throwable {
+        this.initRequestContext(useExtraTitle, frame, contentId, intoWidget);
+        String renderedContent = this._helper.getRenderedContent(null, null, true, _requestContext);
+        assertEquals(replaceNewLine(expected.trim()), replaceNewLine(renderedContent.trim()));
+        if (intoWidget) {
+            assertEquals(nullExtraParam, null != this._requestContext.getExtraParam(SystemConstants.EXTRAPAR_EXTRA_PAGE_TITLES));
+        } else {
+            Assertions.assertNull(this._requestContext.getExtraParam(SystemConstants.EXTRAPAR_EXTRA_PAGE_TITLES));
+        }
+    }
+    
+    private void initRequestContext(boolean useExtraTitle, int frame, 
+            String contentId, boolean intoWidget) throws Throwable {
         this._requestContext.removeExtraParam(SystemConstants.EXTRAPAR_EXTRA_PAGE_TITLES); //clean
         ((MockHttpServletRequest) this._requestContext.getRequest()).removeParameter(SystemConstants.K_CONTENT_ID_PARAM); //clean
         IPage page = this.pageManager.getOnlineRoot();
@@ -121,13 +136,6 @@ class ContentViewerHelperIntegrationTest extends BaseTestCase {
         if (!intoWidget) {
             this._requestContext.removeExtraParam(SystemConstants.EXTRAPAR_CURRENT_FRAME);
             this._requestContext.removeExtraParam(SystemConstants.EXTRAPAR_CURRENT_WIDGET);
-        }
-        String renderedContent = this._helper.getRenderedContent(null, null, true, _requestContext);
-        assertEquals(replaceNewLine(expected.trim()), replaceNewLine(renderedContent.trim()));
-        if (intoWidget) {
-            assertEquals(nullExtraParam, null != this._requestContext.getExtraParam(SystemConstants.EXTRAPAR_EXTRA_PAGE_TITLES));
-        } else {
-            Assertions.assertNull(this._requestContext.getExtraParam(SystemConstants.EXTRAPAR_EXTRA_PAGE_TITLES));
         }
     }
     
@@ -212,8 +220,47 @@ class ContentViewerHelperIntegrationTest extends BaseTestCase {
         this._contentModelManager.addContentModel(model);
     }
     
+    @Test
+    void testGetRenderedContent() throws Throwable {
+        Content content = this.contentManager.loadContent("ART1", true);
+        content.setId(null);
+        String newContentId = null;
+        try {
+            RequestContext reqCtx = getRequestContext();
+            setUserOnSession("admin");
+            UserDetails currentUser = (UserDetails) reqCtx.getRequest().getSession().getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
+            assertEquals("admin", currentUser.getUsername());
+            newContentId = this.contentManager.insertOnLineContent(content);
+            this.initRequestContext(false, 0, newContentId, true);
+            
+            ContentRenderizationInfo info = this._helper.getRenderizationInfo(null, null, true, reqCtx);
+            Assertions.assertNotNull(info);
+            
+            this.contentManager.removeOnLineContent(content);
+            info = this._helper.getRenderizationInfo(null, null, true, reqCtx);   
+            Assertions.assertNull(info);
+            
+            this.contentManager.insertOnLineContent(content);
+            info = this._helper.getRenderizationInfo(null, null, true, reqCtx);
+            Assertions.assertNotNull(info);
+            
+            this.contentManager.removeOnLineContent(content);
+            info = this._helper.getRenderizationInfo(null, null, true, reqCtx);   
+            Assertions.assertNull(info);
+            
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            if (null != newContentId) {
+                Content newContent = this.contentManager.loadContent(newContentId, false);
+                this.contentManager.removeOnLineContent(newContent);
+                this.contentManager.deleteContent(newContent);
+            }
+        }
+    }
+    
     @BeforeEach
-    private void init() throws Exception {
+    void init() throws Exception {
         try {
             this._requestContext = this.getRequestContext();
             Lang lang = new Lang();
@@ -222,6 +269,7 @@ class ContentViewerHelperIntegrationTest extends BaseTestCase {
             this._requestContext.addExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG, lang);
             this.configureCurrentWidget(null, null);
             this._helper = (IContentViewerHelper) this.getApplicationContext().getBean("jacmsContentViewerHelper");
+            this.contentManager = this.getApplicationContext().getBean(IContentManager.class);
         } catch (Throwable t) {
             throw new Exception(t);
         }
@@ -248,6 +296,7 @@ class ContentViewerHelperIntegrationTest extends BaseTestCase {
     private RequestContext _requestContext;
     private IPageManager pageManager;
     private IContentViewerHelper _helper;
+    private IContentManager contentManager;
     private IContentModelManager _contentModelManager = null;
 
 }

@@ -235,31 +235,35 @@ class ResourceManagerIntegrationTest extends BaseTestCase {
             assertEquals(1, resourcesId.size());
 
             resourceListAdded = this.resourceManager.addResources(resourceList);
+            List<String> addedIds = resourceListAdded.stream().map(ResourceInterface::getId).toList();
+            
             assertEquals(4, resourceListAdded.size());
             resourcesId = resourceManager.searchResourcesId(resourceType, null, categoryCodeToAdd, allowedGroups);
             assertEquals(5, resourcesId.size());
-            FieldSearchFilter<String> filterType = new FieldSearchFilter(IResourceManager.RESOURCE_TYPE_FILTER_KEY, resourceType, false);
-            FieldSearchFilter<String> filterOrder = new FieldSearchFilter(IResourceManager.RESOURCE_DESCR_FILTER_KEY);
+            FieldSearchFilter<String> filterType = new FieldSearchFilter<>(IResourceManager.RESOURCE_TYPE_FILTER_KEY, resourceType, false);
+            FieldSearchFilter<String> filterOrder = new FieldSearchFilter<>(IResourceManager.RESOURCE_DESCR_FILTER_KEY);
             filterOrder.setOrder(FieldSearchFilter.ASC_ORDER);
             FieldSearchFilter pagerFilter = new FieldSearchFilter(2, 0);
             FieldSearchFilter[] filters = new FieldSearchFilter[]{filterType, filterOrder, pagerFilter};
             SearcherDaoPaginatedResult<String> result = this.resourceManager.getPaginatedResourcesId(filters, Arrays.asList(categoryCodeToAdd), allowedGroups);
             assertEquals(5, result.getCount().intValue());
             assertEquals(2, result.getList().size());
-            assertEquals(resourceListAdded.get(0).getId(), result.getList().get(0));
-            assertEquals(resourceListAdded.get(1).getId(), result.getList().get(1));
+            assertEquals(addedIds.subList(0, 2), result.getList());
+            result = this.resourceManager.getPaginatedResourcesId(filters, Arrays.asList(categoryCodeToAdd), allowedGroups, Boolean.FALSE);
+            assertEquals(4, result.getCount().intValue());
+            assertEquals(addedIds.subList(0, 2), result.getList());
             
             // Image 1
             resourcesId = resourceManager.searchResourcesId(resourceType, resDescrToAdd1, null, allowedGroups);
             assertEquals(resourcesId.size(), 1);
             resourcesId = resourceManager.searchResourcesId(resourceType, resDescrToAdd1, categoryCodeToAdd, allowedGroups);
             assertEquals(resourcesId.size(), 1);
-            ResourceInterface res1 = this.resourceManager.loadResource(resourceListAdded.get(0).getId());
+            ResourceInterface res1 = this.resourceManager.loadResource(addedIds.get(0));
             assertTrue(res1 instanceof ImageResource);
             assertEquals("entando_logo.jpg", res1.getMasterFileName());
             assertEquals(res1.getCategories().size(), 1);
             assertEquals(res1.getDescription(), resDescrToAdd1);
-            assertTrue(res1.getMetadata().size() > 0);
+            assertTrue(!res1.getMetadata().isEmpty());
             
             ResourceInstance instance01 = ((ImageResource) res1).getInstance(0, null);
             String fileNameInstance01 = instance01.getFileName();
@@ -276,7 +280,7 @@ class ResourceManagerIntegrationTest extends BaseTestCase {
             resourcesId = resourceManager.searchResourcesId(resourceType, resDescrToAdd2, categoryCodeToAdd, allowedGroups);
             assertEquals(resourcesId.size(), 1);
             
-            ResourceInterface res2 = this.resourceManager.loadResource(resourceListAdded.get(1).getId());
+            ResourceInterface res2 = this.resourceManager.loadResource(addedIds.get(1));
             assertTrue(res2 instanceof ImageResource);
             assertEquals(res2.getCategories().size(), 1);
             assertEquals(res2.getDescription(), resDescrToAdd2);
@@ -295,7 +299,7 @@ class ResourceManagerIntegrationTest extends BaseTestCase {
             assertEquals(resourcesId.size(), 1);
             resourcesId = resourceManager.searchResourcesId(resourceType, resDescrToAdd3, categoryCodeToAdd, allowedGroups);
             assertEquals(resourcesId.size(), 1);
-            ResourceInterface res3 = this.resourceManager.loadResource(resourceListAdded.get(2).getId());
+            ResourceInterface res3 = this.resourceManager.loadResource(addedIds.get(2));
             assertEquals("entando_logo.jpg", res3.getMasterFileName());
             assertEquals(res1.getMasterFileName(), res3.getMasterFileName());
             assertTrue(res3 instanceof ImageResource);
@@ -308,7 +312,7 @@ class ResourceManagerIntegrationTest extends BaseTestCase {
             assertFalse(fileNameInstance03.equals(fileNameInstance01));
             assertEquals("image/jpeg", instance03.getMimeType());
             
-            ResourceInterface res4 = this.resourceManager.loadResource(resourceListAdded.get(3).getId());
+            ResourceInterface res4 = this.resourceManager.loadResource(addedIds.get(3));
             assertEquals("&n%ndo logo.jpg", res4.getMasterFileName());
             assertTrue(res4 instanceof ImageResource);
             assertEquals(res4.getCategories().size(), 1);

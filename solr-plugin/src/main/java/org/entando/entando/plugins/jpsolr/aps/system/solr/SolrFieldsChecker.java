@@ -1,3 +1,16 @@
+/*
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_MULTIVALUED;
@@ -14,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields;
 
@@ -89,7 +103,9 @@ public class SolrFieldsChecker {
     private void checkAttribute(AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
         if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
+                || ((attribute instanceof DateAttribute
+                || attribute instanceof NumberAttribute 
+                || attribute instanceof BooleanAttribute)
                 && attribute.isSearchable())) {
             String type;
             if (attribute instanceof DateAttribute) {
@@ -124,7 +140,6 @@ public class SolrFieldsChecker {
         newField.put(SOLR_FIELD_NAME, fieldName);
         newField.put(SOLR_FIELD_TYPE, type);
         newField.put(SOLR_FIELD_MULTIVALUED, multiValue);
-
         fields.stream()
                 .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
                 .findFirst().ifPresentOrElse(
@@ -134,20 +149,18 @@ public class SolrFieldsChecker {
 
     private void replaceField(Map<String, ?> currentField, Map<String, ?> newField,
             String fieldName, String type, boolean multiValue) {
+        Boolean cfmv = Optional.ofNullable(currentField.get(SOLR_FIELD_MULTIVALUED)).map(o -> Boolean.valueOf(o.toString())).orElse(null);
         if (currentField.get(SOLR_FIELD_TYPE).equals(type)
-                && ((null == currentField.get(SOLR_FIELD_MULTIVALUED) && multiValue) || (
-                null != currentField.get(SOLR_FIELD_MULTIVALUED) && currentField.get(SOLR_FIELD_MULTIVALUED)
-                        .equals(multiValue)))) {
+                && ((null == cfmv && multiValue) || (null != cfmv && Boolean.valueOf(multiValue).equals(cfmv)))) {
             return;
         } else {
             log.warn(
                     "Field '{}' already exists but with different configuration! - type '{}' to '{}' - multiValued '{}' to '{}'",
-                    fieldName, currentField.get(SOLR_FIELD_TYPE), type, currentField.get(SOLR_FIELD_MULTIVALUED),
-                    multiValue);
+                    fieldName, currentField.get(SOLR_FIELD_TYPE), type, cfmv, multiValue);
         }
-        if (!type.equals(currentField.get(SOLR_FIELD_TYPE)) || !Boolean.valueOf(multiValue)
-                .equals(currentField.get(SOLR_FIELD_MULTIVALUED))) {
+        if (!type.equals(currentField.get(SOLR_FIELD_TYPE)) || !Boolean.valueOf(multiValue).equals(cfmv)) {
             schemaUpdateRequest.replaceField(fieldName, newField);
         }
     }
+    
 }

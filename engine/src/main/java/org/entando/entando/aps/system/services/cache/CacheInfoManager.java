@@ -137,70 +137,58 @@ public class CacheInfoManager extends AbstractService implements ICacheInfoManag
         Cache cache = this.getCache(targetCache);
         cache.put(key, obj);
     }
+    
     @Override
     public void putInCache(String targetCache, String key, Object obj, String[] groups) {
-        Cache cache = this.getCache(targetCache);
-        cache.put(key, obj);
-        this.accessOnGroupMapping(targetCache, 1, groups, key);
+        this.putInCache(targetCache, key, obj);
+        this.accessOnGroupMapping(targetCache, true, groups, key);
     }
 
     @Override
     public void putInGroup(String targetCache, String key, String[] groups) {
-        this.accessOnGroupMapping(targetCache, 1, groups, key);
+        this.accessOnGroupMapping(targetCache, true, groups, key);
     }
 
     @Override
     public void flushGroup(String targetCache, String group) {
         String[] groups = {group};
-        this.accessOnGroupMapping(targetCache, -1, groups, null);
+        this.accessOnGroupMapping(targetCache, false, groups, null);
     }
-
-    protected synchronized void accessOnGroupMapping(String targetCache, int operationId, String[] groups, String key) {
+    
+    protected synchronized void accessOnGroupMapping(String targetCache, boolean addInGroup, String[] groups, String key) {
         Cache cache = this.getCache(CACHE_INFO_MANAGER_CACHE_NAME);
-        Map<String, List<String>> objectsByGroup = this.get(cache, GROUP_CACHE_NAME_PREFIX + targetCache, Map.class);
-        if (objectsByGroup != null) {
-            objectsByGroup = new HashMap<>(objectsByGroup);
+        if (groups == null) {
+            return;
         }
-        boolean updateMapInCache = false;
-        if (operationId > 0) {
-            //add
-            if (null == objectsByGroup) {
-                objectsByGroup = new HashMap<>();
-            }
-            for (String group : groups) {
-                List<String> objectKeys = objectsByGroup.get(group);
-                if (null == objectKeys) {
-                    objectKeys = new ArrayList<>();
-                    objectsByGroup.put(group, objectKeys);
+        for (String group : groups) {
+            String groupKey = GROUP_CACHE_NAME_PREFIX + targetCache + "__GR__" + group;
+            List<String> keysByGroup = this.get(cache, groupKey, List.class);
+            if (addInGroup) {
+                if (null == keysByGroup) {
+                    keysByGroup = new ArrayList<>();
                 }
-                if (!objectKeys.contains(key)) {
-                    objectKeys.add(key);
-                    updateMapInCache = true;
+                boolean updateListInCache = false;
+                if (!keysByGroup.contains(key)) {
+                    keysByGroup.add(key);
+                    updateListInCache = true;
                 }
-            }
-        } else {
-            //remove
-            if (null == objectsByGroup) {
-                return;
-            }
-            for (String group : groups) {
-                List<String> objectKeys = objectsByGroup.get(group);
-                if (null != objectKeys) {
-                    for (String extractedKey : objectKeys) {
-                        this.flushEntry(targetCache, extractedKey);
-                    }
-                    objectsByGroup.remove(group);
-                    updateMapInCache = true;
+                if (updateListInCache) {
+                    cache.put(groupKey, keysByGroup);
                 }
+            } else {
+                if (null == keysByGroup) {
+                    continue;
+                }
+                for (String extractedKey : keysByGroup) {
+                    this.flushEntry(targetCache, extractedKey);
+                }
+                cache.evict(groupKey);
             }
-        }
-        if (updateMapInCache) {
-            cache.put(GROUP_CACHE_NAME_PREFIX + targetCache, objectsByGroup);
         }
     }
-
+    
     protected Collection<Cache> getCaches() {
-        Collection<Cache> caches = new ArrayList<Cache>();
+        Collection<Cache> caches = new ArrayList<>();
         Iterator<String> iter = this.getSpringCacheManager().getCacheNames().iterator();
         while (iter.hasNext()) {
             String cacheName = iter.next();

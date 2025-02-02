@@ -13,12 +13,9 @@
  */
 package com.agiletec.aps.system;
 
-import com.agiletec.aps.system.services.page.IPageManager;
-import com.agiletec.aps.system.services.user.IUserManager;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.entando.entando.aps.system.services.guifragment.IGuiFragmentManager;
 
 /**
  * Interfaccia con le principali costanti di sistema.
@@ -298,11 +295,6 @@ public final class SystemConstants {
     public static final String USER_PROFILE_ATTRIBUTE_ROLE_SURNAME = "userprofile:surname";
 
     public static final String USER_PROFILE_ATTRIBUTE_DISABLING_CODE_ON_EDIT = "userprofile:onEdit";
-
-    /**
-     * The name of the role for attribute attribute that contains the profile picture file name
-     */
-    public static final String USER_PROFILE_ATTRIBUTE_ROLE_PROFILE_PICTURE = "userprofile:profilepicture";
 
     public static final String ENTANDO_THREAD_NAME_PREFIX = "EntandoThread_";
 

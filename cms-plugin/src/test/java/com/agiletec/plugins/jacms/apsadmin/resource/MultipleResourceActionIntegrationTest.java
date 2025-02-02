@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author E.Santoboni
  */
-class TestMultipleResourceAction extends ApsAdminBaseTestCase {
+class MultipleResourceActionIntegrationTest extends ApsAdminBaseTestCase {
 
     private IResourceManager resourceManager = null;
 
@@ -106,6 +106,7 @@ class TestMultipleResourceAction extends ApsAdminBaseTestCase {
         this.addParameter("resourceTypeCode", "Image");
         this.addParameter("mainGroup", "test");
         this.addParameter("descr_0", "test");
+        this.addParameter("fileUploadName_0", "test".repeat(100));
         String result = this.executeAction();
         ActionSupport action = this.getAction();
         Map<String, List<String>> actionFieldErrors = action.getFieldErrors();

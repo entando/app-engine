@@ -33,7 +33,7 @@
                         </p>
                     </div>
                     <div id="collapseOne" class="panel-collapse collapse <s:if test="%{#attr['openCollapsed'] || #attr['openCollapsed'].equals('\\'true\\'') || openCollapsed}">in</s:if>">
-                            <div class="panel-body">
+                        <div class="panel-body">
                             <%-- groups --%>
                             <s:set var="allowedGroupsVar" value="allowedGroups"></s:set>
                             <s:if test="null != #allowedGroupsVar && #allowedGroupsVar.size()>1">
@@ -50,6 +50,14 @@
                                 <label for="fileName" class="control-label col-sm-2"><s:text name="label.filename" /></label>
                                 <div class="col-sm-9">
                                     <wpsf:textfield name="fileName" id="fileName" cssClass="form-control"/>
+                                </div>
+                            </div>
+
+                            <%-- resource id --%>
+                            <div class="form-group">
+                                <label for="fileName" class="control-label col-sm-2"><s:text name="label.resourceId" /></label>
+                                <div class="col-sm-9">
+                                    <wpsf:textfield name="searchedResourceId" id="searchedResourceId" cssClass="form-control"/>
                                 </div>
                             </div>
 
@@ -95,6 +103,28 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <div class="form-group">
+                                <div class="btn-group col-sm-9 col-sm-offset-2"
+                                     data-toggle="buttons">
+                                    <label class="btn btn-default <s:if test="(null == referenced || '' == referenced || 'all' == referenced)"> active </s:if>">
+                                            <input type="radio" name="referenced" id="all" 
+                                            <s:if test="(null == referenced || '' == referenced || 'all' == referenced)">checked="checked"</s:if>
+                                            value="" />&#32; <s:text name="label.resources.all" />
+                                    </label>
+                                    <label class="btn btn-default <s:if test="('yes' == referenced)"> active </s:if>">
+                                            <input type="radio" name="referenced" id="yes" 
+                                            <s:if test="('yes' == referenced)">checked="checked"</s:if>
+                                            value="yes" />&#32; <s:text name="label.resources.referenced" />
+                                    </label>
+                                    <label class="btn btn-default <s:if test="('no' == referenced)"> active </s:if>">
+                                            <input type="radio" name="referenced" id="no" 
+                                            <s:if test="('no' == referenced))">checked="checked"</s:if>
+                                            value="no" />&#32; <s:text name="label.resources.notReferenced" />
+                                    </label>
+                                </div>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>

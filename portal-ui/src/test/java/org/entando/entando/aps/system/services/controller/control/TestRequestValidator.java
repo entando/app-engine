@@ -102,7 +102,7 @@ class TestRequestValidator extends BaseTestCase {
     }
 
     @Test
-    void testServiceFailure_1() throws EntException {
+    void testServiceFailureWhenRequestPageThatDoesNotExist() throws EntException {
         String notFoundPageCode = this.pageManager.getConfig(IPageManager.CONFIG_PARAM_NOT_FOUND_PAGE_CODE);
         Map<String, String> paramsToUpgrade = new HashMap<>();
         try {
@@ -130,23 +130,25 @@ class TestRequestValidator extends BaseTestCase {
     }
 
     @Test
-    void testServiceFailure_2() throws EntException {
+    void testServiceFailureWhenRequestAWrongPath() throws EntException {
+        String notFoundPageCode = this.pageManager.getConfig(IPageManager.CONFIG_PARAM_NOT_FOUND_PAGE_CODE);
         RequestContext reqCtx = this.getRequestContext();
         ((MockHttpServletRequest) reqCtx.getRequest()).setServletPath("/wrongpath.wp");//wrong path
         int status = this.requestValidator.service(reqCtx, ControllerManager.CONTINUE);
-        assertEquals(ControllerManager.REDIRECT, status);
-        String redirectUrl = (String) reqCtx.getExtraParam(RequestContext.EXTRAPAR_REDIRECT_URL);
-        assertEquals("http://www.entando.com/Entando/it/errorpage.page?redirectflag=1", redirectUrl);
+        IPage page = (IPage) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE);
+        assertEquals(notFoundPageCode, page.getCode());
+        assertEquals(ControllerManager.CONTINUE, status);
     }
 
     @Test
-    void testServiceFailure_3() throws EntException {
+    void testServiceFailureWhenRequestLangThatDoesNotExist() throws EntException {
+        String notFoundPageCode = this.pageManager.getConfig(IPageManager.CONFIG_PARAM_NOT_FOUND_PAGE_CODE);
         RequestContext reqCtx = this.getRequestContext();
         ((MockHttpServletRequest) reqCtx.getRequest()).setServletPath("/cc/homepage.wp");//lang does not exist
         int status = this.requestValidator.service(reqCtx, ControllerManager.CONTINUE);
-        assertEquals(ControllerManager.REDIRECT, status);
-        String redirectUrl = (String) reqCtx.getExtraParam(RequestContext.EXTRAPAR_REDIRECT_URL);
-        assertEquals("http://www.entando.com/Entando/it/errorpage.page?redirectflag=1", redirectUrl);
+        IPage page = (IPage) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE);
+        assertEquals(notFoundPageCode, page.getCode());
+        assertEquals(ControllerManager.CONTINUE, status);
     }
     
     @BeforeEach
@@ -155,6 +157,9 @@ class TestRequestValidator extends BaseTestCase {
             this.requestValidator = (ControlServiceInterface) this.getApplicationContext().getBean("RequestValidatorControlService");
             this.pageManager = this.getApplicationContext().getBean(SystemConstants.PAGE_MANAGER, IPageManager.class);
             this.pageModelManager = this.getApplicationContext().getBean(IPageModelManager.class);
+            RequestContext reqCtx = this.getRequestContext();
+            reqCtx.removeExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE);
+            reqCtx.removeExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG);
         } catch (Throwable e) {
             throw new Exception(e);
         }

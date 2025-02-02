@@ -21,13 +21,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.net.HttpHeaders;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.entando.entando.aps.util.UrlUtils.EntUrlBuilder;
-import org.entando.entando.test_utils.UnitTestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,11 +32,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, SystemStubsExtension.class})
 class UrlUtilsTest {
 
     @Mock private HttpServletRequest requestMock;
+    
+    @SystemStub
+    private EnvironmentVariables environmentVariables;
 
     @BeforeEach
     private void init() throws Exception {
@@ -51,33 +53,26 @@ class UrlUtilsTest {
     public void afterAll() throws Exception {
         Mockito.reset(requestMock);
     }
-
+    
     @Test
     void shouldFetchSchemeWorksFineWithDifferentInputs() throws Exception {
-        // case1
-        Map<String,String> envsOrig = System.getenv().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        Map<String,String> envs = (HashMap<String, String>) envsOrig.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        envs.put("ENTANDO_APP_USE_TLS", "true");
-        UnitTestUtils.setEnv(envs);
-        when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PROTO)).thenReturn(HTTP_SCHEME);
-        when(requestMock.getScheme()).thenReturn(HTTP_SCHEME);
-        Assertions.assertEquals(HTTPS_SCHEME, UrlUtils.fetchScheme(requestMock));
-        UnitTestUtils.setEnv(envsOrig);
-
-        // case2
+        // case0
         Mockito.reset(requestMock);
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PROTO)).thenReturn(HTTPS_SCHEME);
         when(requestMock.getScheme()).thenReturn(HTTP_SCHEME);
         Assertions.assertEquals(HTTPS_SCHEME, UrlUtils.fetchScheme(requestMock));
 
-        // case3
+        // case1
         Mockito.reset(requestMock);
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PROTO)).thenReturn(HTTP_SCHEME);
         when(requestMock.getScheme()).thenReturn(HTTP_SCHEME);
         Assertions.assertEquals(HTTP_SCHEME, UrlUtils.fetchScheme(requestMock));
+        
+        // case3
+        environmentVariables.set("ENTANDO_APP_USE_TLS", "true");
+        when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PROTO)).thenReturn(HTTP_SCHEME);
+        when(requestMock.getScheme()).thenReturn(HTTP_SCHEME);
+        Assertions.assertEquals(HTTPS_SCHEME, UrlUtils.fetchScheme(requestMock));
 
     }
 
@@ -114,31 +109,15 @@ class UrlUtilsTest {
 
     @Test
     void shouldFetchPortWorksFineWithDifferentInputs() throws Exception {
-        // case 0
-        Map<String,String> envsOrig = System.getenv().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        Map<String,String> envs = (HashMap<String, String>) envsOrig.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        envs.put("ENTANDO_APP_ENGINE_EXTERNAL_PORT", "8888");
-        UnitTestUtils.setEnv(envs);
+        // case0
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn("443");
         when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn("test.com:4443");
         when(requestMock.getServerPort()).thenReturn(8443);
-        Optional<Integer> port = UrlUtils.fetchPort(requestMock);
-        Assertions.assertTrue(port.isPresent());
-        Assertions.assertEquals(8888, port.get());
-        UnitTestUtils.setEnv(envsOrig);
-
-        // case1
-        when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn("443");
-        when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn("test.com:4443");
-        when(requestMock.getServerPort()).thenReturn(8443);
-        port = UrlUtils.fetchPort(requestMock);
+        Optional<Integer> port = port = UrlUtils.fetchPort(requestMock);
         Assertions.assertTrue(port.isPresent());
         Assertions.assertEquals(443, port.get());
 
-        // case2-a
+        // case1-a
         Mockito.reset(requestMock);
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn(null);
         when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn("test.com:4443");
@@ -148,7 +127,7 @@ class UrlUtilsTest {
         Assertions.assertTrue(port.isPresent());
         Assertions.assertEquals(4443, port.get());
 
-        // case2-b
+        // case1-b
         Mockito.reset(requestMock);
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn(null);
         when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn("test.com:4443");
@@ -158,7 +137,7 @@ class UrlUtilsTest {
         Assertions.assertTrue(port.isPresent());
         Assertions.assertEquals(8443, port.get());
 
-        // case3
+        // case2
         Mockito.reset(requestMock);
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn(null);
         when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn(null);
@@ -167,7 +146,7 @@ class UrlUtilsTest {
         Assertions.assertTrue(port.isPresent());
         Assertions.assertEquals(8443, port.get());
 
-        // case4
+        // case3
         Mockito.reset(requestMock);
         when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn(null);
         when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn(null);
@@ -175,6 +154,14 @@ class UrlUtilsTest {
         port = UrlUtils.fetchPort(requestMock);
         Assertions.assertTrue(port.isEmpty());
 
+        // case 4
+        environmentVariables.set("ENTANDO_APP_ENGINE_EXTERNAL_PORT", "8888");
+        when(requestMock.getHeader(HttpHeaders.X_FORWARDED_PORT)).thenReturn("443");
+        when(requestMock.getHeader(HttpHeaders.HOST)).thenReturn("test.com:4443");
+        when(requestMock.getServerPort()).thenReturn(8443);
+        port = UrlUtils.fetchPort(requestMock);
+        Assertions.assertTrue(port.isPresent());
+        Assertions.assertEquals(8888, port.get());
     }
 
     @Test

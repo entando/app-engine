@@ -92,10 +92,16 @@ public interface IResourceDAO {
     public List<String> searchResourcesId(FieldSearchFilter[] filters, String categoryCode, Collection<String> groupCodes);
     
     public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories);
+    
+    public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories, Boolean referenced);
 
     public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes);
 
+    public List<String> searchResourcesId(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes, Boolean referenced);
+
     public Integer countResources(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes);
+
+    public Integer countResources(FieldSearchFilter[] filters, List<String> categories, Collection<String> groupCodes, Boolean referenced);
 
     /**
      * Carica un record di risorse in funzione dell'idRisorsa. Questo record è

@@ -95,6 +95,9 @@ public class UserPreferencesService implements IUserPreferencesService {
                 if (request.getDisableContentMenu() != null) {
                     userPreferences.setDisableContentMenu(request.getDisableContentMenu());
                 }
+                if (request.getGravatar() != null) {
+                    userPreferences.setGravatar(request.getGravatar());
+                }
                 userPreferencesManager.updateUserPreferences(userPreferences);
                 return new UserPreferencesDto(userPreferencesManager.getUserPreferences(username));
             } else {
@@ -109,12 +112,8 @@ public class UserPreferencesService implements IUserPreferencesService {
 
     private void createNewDefaultUserPreferences(String username) {
         try {
-            UserPreferences userPreferences = new UserPreferences();
-            userPreferences.setUsername(username);
-            userPreferences.setWizard(true);
-            userPreferences.setTranslationWarning(true);
-            userPreferences.setLoadOnPageSelect(true);
-            userPreferencesManager.addUserPreferences(userPreferences);
+            UserPreferences userPreferences = this.userPreferencesManager.createDefaultUserPreferences(username);
+            this.userPreferencesManager.addUserPreferences(userPreferences);
         } catch (EntException e) {
             logger.error("Error in creating new default userPreferences for {}", username, e);
             throw new RestServerError("Error creating new default userPreferences", e);

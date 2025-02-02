@@ -26,6 +26,7 @@
     <include file="port/20230407000000_disable_content_menu.xml" relativeToChangelogFile="true" />
 
     <include file="port/20230626000000_mfe_communication_mediator_object.xml" relativeToChangelogFile="true" />
-
-
+    
+    <include file="port/20240112000000_user_preference_avatar.xml" relativeToChangelogFile="true" />
+    
 </databaseChangeLog>

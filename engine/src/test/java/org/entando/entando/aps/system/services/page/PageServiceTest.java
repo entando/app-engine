@@ -195,10 +195,6 @@ class PageServiceTest {
         };
 
         // Test truth tables generation
-        String[] parentOwnerGroup = new String[]{                   // Parent OWNER GROUPS
-                FREE_GROUP_NAME, ADMIN_GROUP_NAME, A_GROUP_THAT_IS_PRESENT, "GROUP2"
-        };
-        List<List<List<String>>> map = new ArrayList<>();
 
         List<String> pSubCase1 = Arrays.asList(FREE_GROUP_NAME);
         List<String> pSubCase2 = Arrays.asList(ADMIN_GROUP_NAME);
@@ -254,37 +250,41 @@ class PageServiceTest {
      * PAGE USAGE DETAILS
      *********************************************************************************/
 
-
+    @Test
+    void shouldPublishPageRoot() throws Exception {
+        Page requestedPage = Mockito.mock(Page.class);
+        when(requestedPage.isRoot()).thenReturn(true);
+        when(pageManager.getDraftPage("page_code")).thenReturn(requestedPage);
+        Page onlinePage = Mockito.mock(Page.class);
+        when(pageManager.getOnlinePage("page_code")).thenReturn(onlinePage);
+        Mockito.when(dtoBuilder.convert(onlinePage)).thenReturn(Mockito.mock(PageDto.class));
+        PageDto dto = this.pageService.updatePageStatus("page_code", IPageService.STATUS_ONLINE);
+        Assertions.assertNotNull(dto);
+        verify(pageManager, times(1)).setPageOnline("page_code");
+    }
+    
     @Test
     void getPageUsageForNonExistingCodeShouldReturnZero() {
-
         int componentUsage = pageService.getComponentUsage("non_existing");
         assertEquals(0, componentUsage);
     }
 
     @Test
     void getPageUsageDetailsWithPublishedPageShouldAddItself() {
-
         PageDto pageDto = PageMockHelper.mockPageDto();
-
         this.testSinglePageUsageDetails(pageDto);
     }
 
     @Test
     void getPageUsageDetailsWithPaginationAndWithPublishedPageShouldAddItself() {
-
         PageDto pageDto = PageMockHelper.mockPageDto();
-
         this.testPagedPageUsageDetails(pageDto);
     }
 
-
     @Test
     void getPageUsageDetailsWithInvalidCodeShouldThrowResourceNotFoundException() {
-
         PageDto pageDto = PageMockHelper.mockPageDto();
         mockForSinglePage(PageMockHelper.mockTestPage(PageMockHelper.PAGE_CODE), pageDto, PageMockHelper.UTILIZERS);
-
         Arrays.stream(new String[]{"not existing", null, ""})
                 .forEach(code -> {
                     try {
@@ -296,37 +296,26 @@ class PageServiceTest {
                 });
     }
 
-
     @Test
     void getPageUsageDetailsWithDraftPageShouldNOTAddItself() {
-
         PageDto pageDto = PageMockHelper.mockPageDto();
         pageDto.setStatus(IPageService.STATUS_DRAFT);
-
         this.testSinglePageUsageDetails(pageDto);
     }
 
-
     @Test
     void getPageUsageDetailsWithPaginationAndWithDraftPageShouldNOTAddItself() {
-
         PageDto pageDto = PageMockHelper.mockPageDto();
         pageDto.setStatus(IPageService.STATUS_DRAFT);
-
         this.testPagedPageUsageDetails(pageDto);
     }
 
-
     @Test
     void getPageUsageDetailsWithNoChildrenShouldReturnItself() {
-
         PageDto pageDto = PageMockHelper.mockPageDto();
         pageDto.setChildren(new ArrayList<>());
-
         mockForSinglePage(PageMockHelper.mockTestPage(PageMockHelper.PAGE_CODE), pageDto, new String[0]);
-
         PagedMetadata<ComponentUsageEntity> pageUsageDetails = pageService.getComponentUsageDetails(PageMockHelper.PAGE_CODE, new PageSearchRequest(PageMockHelper.PAGE_CODE));
-
         PageAssertionHelper.assertUsageDetails(pageUsageDetails, new String[0], 0, 1, pageDto.getStatus());
     }
     
@@ -344,13 +333,9 @@ class PageServiceTest {
      * @throws Exception
      */
     private void testSinglePageUsageDetails(PageDto pageDto) {
-
         Page page = PageMockHelper.mockTestPage(PageMockHelper.PAGE_CODE);
-
         mockForSinglePage(page, pageDto, PageMockHelper.UTILIZERS);
-
         PagedMetadata<ComponentUsageEntity> pageUsageDetails = pageService.getComponentUsageDetails(PageMockHelper.PAGE_CODE, new PageSearchRequest(PageMockHelper.PAGE_CODE));
-
         PageAssertionHelper.assertUsageDetails(pageUsageDetails, pageDto.getStatus());
     }
 
@@ -402,7 +387,6 @@ class PageServiceTest {
      * init mock for a single paged request
      */
     private void mockForSinglePage(Page page, PageDto pageDto, String[] utilizers) {
-
         mockPagedMetadata(page, pageDto, utilizers, 1, 1, 100,
                 utilizers.length + (pageDto.getStatus().equals(IPageService.STATUS_ONLINE) ? 1 : 0));
     }
@@ -411,7 +395,6 @@ class PageServiceTest {
      * init mock for a multipaged request
      */
     private void mockPagedMetadata(Page page, PageDto pageDto, String[] utilizers, int currPage, int lastPage, int pageSize, int totalSize) {
-
         try {
             pageDto.getChildren().stream().forEach(childCode -> {
                 IPage mockChild = Mockito.mock(IPage.class);

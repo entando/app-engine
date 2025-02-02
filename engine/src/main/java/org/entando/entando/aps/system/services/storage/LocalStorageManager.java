@@ -17,8 +17,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 import java.io.*;
 import java.util.Arrays;
@@ -31,6 +29,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import static org.entando.entando.aps.system.services.storage.StorageManagerUtil.isSamePath;
+
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
 
 @Service("StorageManager")
 @CdsActive(false)
@@ -52,7 +52,7 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 	private String protectedBaseURL;
 	private String allowedEditExtensions;
 
-
+    @Override
 	public void afterPropertiesSet() throws Exception {
 		logger.info("** Enabled Local Storage Manager **");
 	}
@@ -206,6 +206,29 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 		String fullPath = this.createFullPath(subPath, isProtectedResource);
 		return new File(fullPath);
 	}
+
+    @Override
+    public boolean move(String subPathSource, boolean isProtectedResourceSource,
+            String subPathDest, boolean isProtectedResourceDest) throws EntException {
+        File file = this.getFile(subPathSource, isProtectedResourceSource);
+        if (!file.exists()) {
+            logger.error("Source File does not exists - path '{}' protected '{}'",
+                    subPathSource, isProtectedResourceSource);
+            return false;
+        }
+        String fullDestPath = this.createFullPath(subPathDest, isProtectedResourceDest);
+        File fileDest = new File(fullDestPath);
+        if (fileDest.exists()) {
+            logger.error("Destination already exists - path '{}' protected '{}'",
+                    subPathDest, isProtectedResourceDest);
+            return false;
+        }
+        File dirDest = fileDest.getParentFile();
+        if (!dirDest.exists()) {
+            dirDest.mkdirs();
+        }
+        return file.renameTo(fileDest);
+    }
 
 	@Override
 	public String getResourceUrl(String subPath, boolean isProtectedResource) {
@@ -417,6 +440,11 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 			return new BasicFileAttributeView(file);
 		}
 	}
+    
+    @Override
+    public DiskInfoDto getDiskInfo() throws EntException {
+        throw new UnsupportedOperationException("Not supported for Local Storage");
+    }
 
 	protected String getBaseURL() {
 		return baseURL;
@@ -472,4 +500,5 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 			throw (EntRuntimeException) e;
 		}
 	}
+    
 }

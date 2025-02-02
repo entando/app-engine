@@ -20,6 +20,9 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import com.agiletec.aps.system.services.user.AbstractUser;
 import com.agiletec.aps.system.services.user.UserDetails;
+import org.entando.entando.aps.system.services.userpreferences.IUserPreferencesManager;
+import org.entando.entando.ent.exception.EntException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Implementation of ProfileManager Aspect. This class join a user with his
@@ -28,11 +31,21 @@ import com.agiletec.aps.system.services.user.UserDetails;
  * @author E.Santoboni
  */
 @Aspect
-public class UserProfileManagerAspect {
+public class UserManagementAspect {
 
-    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(UserProfileManagerAspect.class);
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(UserManagementAspect.class);
     
-    private IUserProfileManager userProfileManager;
+    private final IUserProfileManager userProfileManager;
+    private final IAvatarService avatarService;
+    private final IUserPreferencesManager userPreferencesManager;
+    
+    @Autowired
+    public UserManagementAspect(IUserProfileManager userProfileManager, 
+            IAvatarService avatarService, IUserPreferencesManager userPreferencesManager) {
+        this.userProfileManager = userProfileManager;
+        this.userPreferencesManager = userPreferencesManager;
+        this.avatarService = avatarService;
+    }
     
     @AfterReturning(pointcut = "execution(* com.agiletec.aps.system.services.user.IUserManager.getUser(..))", returning = "user")
     public void injectProfile(Object user) {
@@ -80,7 +93,7 @@ public class UserProfileManagerAspect {
     }
 
     @AfterReturning(pointcut = "execution(* com.agiletec.aps.system.services.user.IUserManager.removeUser(..)) && args(key)")
-    public void deleteProfile(Object key) {
+    public void deleteUserData(Object key) {
         String username = null;
         if (key instanceof String) {
             username = key.toString();
@@ -91,18 +104,24 @@ public class UserProfileManagerAspect {
         if (username != null) {
             try {
                 this.getUserProfileManager().deleteProfile(username);
-            } catch (Throwable t) {
-                logger.error("Error deleting profile. user: {}", username, t);
+            } catch (EntException t) {
+                logger.error("Error deleting user profile. user: {}", username, t);
+            }
+            try {
+                this.avatarService.deleteAvatar(username);
+            } catch (EntException t) {
+                logger.error("Error deleting user avatar. user: {}", username, t);
+            }
+            try {
+                this.userPreferencesManager.deleteUserPreferences(username);
+            } catch (EntException t) {
+                logger.error("Error deleting user preverences. user: {}", username, t);
             }
         }
     }
 
     protected IUserProfileManager getUserProfileManager() {
         return userProfileManager;
-    }
-
-    public void setUserProfileManager(IUserProfileManager userProfileManager) {
-        this.userProfileManager = userProfileManager;
     }
     
 }

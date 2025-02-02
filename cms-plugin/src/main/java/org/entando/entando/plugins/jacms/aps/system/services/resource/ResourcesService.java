@@ -51,6 +51,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +62,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
@@ -406,9 +406,7 @@ public class ResourcesService implements IComponentExistsService {
     /****** Auxiliary Methods ******/
 
     private BaseResourceDataBean createDataBeanFromResource(ResourceInterface resourceInterface) throws EntException {
-
         AbstractResource resource = (AbstractResource) resourceInterface;
-
         BaseResourceDataBean resourceFile = new BaseResourceDataBean();
         resourceFile.setResourceType(resource.getType());
         resourceFile.setResourceId(resource.getId());
@@ -419,39 +417,31 @@ public class ResourcesService implements IComponentExistsService {
         resourceFile.setCategories(resource.getCategories());
         resourceFile.setMainGroup(resource.getMainGroup());
         resourceFile.setFileName(resource.getMasterFileName());
-
-        ResourceInstance instance = null;
-
-        if (resource.isMultiInstance()) {
-            instance = resource.getDefaultInstance();
-        } else {
-            instance = ((AbstractMonoInstanceResource) resource).getInstance();
-        }
-
+        ResourceInstance instance = resource.getDefaultInstance();
         try {
-
-            boolean isProtected = resource.isProtectedResource();
-            String absolutePath = null;
-            if (isProtected) {
-                absolutePath = resource.getFolder() + resource.getMainGroup() + "/" + instance.getFileName();
-            } else {
-                absolutePath = resource.getFolder() + instance.getFileName();
-            }
-
-            String filePath = resource.getStorageManager().createFullPath(absolutePath, isProtected);
-
+            String absolutePath = this.getDiskSubFolder(resource) + File.separator + instance.getFileName();
+            String filePath = resource.getStorageManager().createFullPath(absolutePath, resource.isProtectedResource());
             File file = new File(filePath);
             Path path = file.toPath();
             Long size = Files.size(path) / 1000;
-
             resourceFile.setInputStream(new FileInputStream(file));
             resourceFile.setFileSize(size.intValue());
             resourceFile.setMimeType(Files.probeContentType(path));
         } catch (IOException | EntException e) {
             throw new EntException("Error reading file input stream", e);
         }
-
         return resourceFile;
+    }
+    
+    private String getDiskSubFolder(AbstractResource resource) {
+        StringBuilder diskFolder = new StringBuilder(resource.getFolder());
+        if (!StringUtils.isBlank(resource.getFolderPath())) {
+            diskFolder.append(resource.getFolderPath()).append(File.separator);
+        }
+        if (resource.isProtectedResource()) {
+            diskFolder.append(resource.getMainGroup()).append(File.separator);
+        }
+        return diskFolder.toString();
     }
 
     private List<Category> convertCategories(List<String> categories) {
@@ -523,8 +513,7 @@ public class ResourcesService implements IComponentExistsService {
     private List<ImageResourceDimension> getImageDimensions() {
         Map<Integer, ImageResourceDimension> master = imageDimensionManager.getImageDimensions();
         List<ImageResourceDimension> dimensions = new ArrayList<>(master.values());
-        BeanComparator comparator = new BeanComparator("dimx");
-        Collections.sort(dimensions, comparator);
+        Collections.sort(dimensions, Comparator.comparing(ImageResourceDimension::getDimx));
         return dimensions;
     }
 
@@ -532,7 +521,7 @@ public class ResourcesService implements IComponentExistsService {
         List<FieldSearchFilter> filters = new ArrayList<>();
         if (requestList.getType() != null) {
             filters.add(
-                    new FieldSearchFilter(IResourceManager.RESOURCE_TYPE_FILTER_KEY,
+                    new FieldSearchFilter<>(IResourceManager.RESOURCE_TYPE_FILTER_KEY,
                             convertResourceType(requestList.getType()), false)
             );
         }
@@ -582,7 +571,7 @@ public class ResourcesService implements IComponentExistsService {
     private FieldSearchFilter[] createFolderPathSearchFilter(String folderPath) {
         List<FieldSearchFilter> filters = new ArrayList<>();
         if (folderPath != null) {
-            filters.add(new FieldSearchFilter(IResourceManager.RESOURCE_FOLDER_PATH_FILTER_KEY, folderPath, true));
+            filters.add(new FieldSearchFilter<>(IResourceManager.RESOURCE_FOLDER_PATH_FILTER_KEY, folderPath, true));
         }
         return filters.stream().toArray(FieldSearchFilter[]::new);
     }
@@ -593,10 +582,10 @@ public class ResourcesService implements IComponentExistsService {
         Object start = original.getStart();
         Object end = original.getEnd();
         if (null != value) {
-            dateFilter = new FieldSearchFilter(original.getKey(), this.checkDate(value, original), false);
+            dateFilter = new FieldSearchFilter<>(original.getKey(), this.checkDate(value, original), false);
             dateFilter.setValueDateDelay(original.getValueDateDelay());
         } else if (null != start || null != end) {
-            dateFilter = new FieldSearchFilter(original.getKey(), this.checkDate(start, original), this.checkDate(end, original));
+            dateFilter = new FieldSearchFilter<>(original.getKey(), this.checkDate(start, original), this.checkDate(end, original));
             dateFilter.setStartDateDelay(original.getStartDateDelay());
             dateFilter.setEndDateDelay(original.getEndDateDelay());
         } else {

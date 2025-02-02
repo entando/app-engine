@@ -77,11 +77,38 @@
                         </div>
                         <div class="col-xs-10 text-left">
                             <s:set var="paramName" value="'jpversioning_deleteMidVersions'" />
-                            <input type="hidden" value="<s:property value="systemParams[#paramName]" />" id="<s:property value="#paramName"/>"
+                            <s:if test="%{null == systemParams[#paramName]}">
+                                <s:set var="deleteMidVersionsValue" value="'true'" />
+                            </s:if>
+                            <s:else>
+                                <s:set var="deleteMidVersionsValue" value="systemParams[#paramName]" />
+                            </s:else>
+                            <input type="hidden" value="<s:property value="#deleteMidVersionsValue" />" id="<s:property value="#paramName"/>"
                                    name="<s:property value="#paramName"/>" />
-                            <input type="checkbox" value="<s:property value="systemParams[#paramName]" />" id="ch_<s:property value="#paramName"/>" class="bootstrap-switch"
-                                   <s:if test="systemParams[#paramName] == 'true'">checked="checked"</s:if> />
+                            <input type="checkbox" value="<s:property value="#deleteMidVersionsValue" />" id="ch_<s:property value="#paramName"/>" class="bootstrap-switch"
+                                   <s:if test="#deleteMidVersionsValue == 'true'">checked="checked"</s:if> />
                             <wpsf:hidden name="%{#paramName + externalParamMarker}" value="true"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-xs-2 col-label">
+                            <span class="display-block"><s:text name="jpversioning.label.trashResourceActive" /></span>
+                        </div>
+                        <div class="col-xs-10 text-left">
+                            <s:set var="paramNameTrash" value="'jpversioning_trashResourceActive'" />
+                            <s:if test="%{null == systemParams[#paramNameTrash]}">
+                                <s:set var="trashResourceActiveValue" value="'true'" />
+                            </s:if>
+                            <s:else>
+                                <s:set var="trashResourceActiveValue" value="systemParams[#paramNameTrash]" />
+                            </s:else>
+                            <input type="hidden" value="<s:property value="#trashResourceActiveValue" />" id="<s:property value="#paramNameTrash"/>"
+                                   name="<s:property value="#paramNameTrash"/>" />
+                            <input type="checkbox" value="<s:property value="#trashResourceActiveValue" />" id="ch_<s:property value="#paramNameTrash"/>" class="bootstrap-switch"
+                                   <s:if test="#trashResourceActiveValue == 'true'">checked="checked"</s:if> />
+                            <wpsf:hidden name="%{#paramNameTrash + externalParamMarker}" value="true"/>
                         </div>
                     </div>
                 </div>

@@ -59,6 +59,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentDto;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.SymbolicLink;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ImageAttribute;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.LinkAttribute;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
@@ -397,7 +398,6 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload.size()", is(1)))
                     .andExpect(jsonPath("$.errors.size()", is(0)))
                     .andExpect(jsonPath("$.metaData.size()", is(0)))
-
                     .andExpect(jsonPath("$.payload[0].id", Matchers.anything()))
                     .andExpect(jsonPath("$.payload[0].attributes[0].code", is("link1")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value", Matchers.isEmptyOrNullString()));
@@ -412,7 +412,6 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload.size()", is(1)))
                     .andExpect(jsonPath("$.errors.size()", is(0)))
                     .andExpect(jsonPath("$.metaData.size()", is(0)))
-
                     .andExpect(jsonPath("$.payload[0].id", Matchers.anything()))
                     .andExpect(jsonPath("$.payload[0].attributes[0].code", is("link1")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.destType", is(SymbolicLink.PAGE_TYPE)))
@@ -420,8 +419,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.symbolicDestination", is("#!P;pagina_11!#")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.rel", is("alternate")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.target", is("_blank")))
-                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hreflang", is("it")))
-
+                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hrefLang", is("it")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].values.it", is("pagina_11")));
 
             this.executeContentPut("1_PUT_invalid_with_link.json", newContentId, accessToken, status().isBadRequest())
@@ -522,7 +520,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.urlDest", is("https://myurl.com")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.rel", is("rel")))
                     .andExpect(jsonPath("$.payload[0].attributes[0].value.target", is("_blank")))
-                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hreflang", is("it")))
+                    .andExpect(jsonPath("$.payload[0].attributes[0].value.hrefLang", is("it")))
                     .andExpect(jsonPath("$.payload[0].attributes[1].code", is("link2")))
                     .andExpect(jsonPath("$.payload[0].attributes[1].value.pageDest", is("pagina_11")))
                     .andExpect(jsonPath("$.payload[0].attributes[2].code", is("link3")))
@@ -535,9 +533,13 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             String bodyResult = result.andReturn().getResponse().getContentAsString();
             newContentId = JsonPath.read(bodyResult, "$.payload[0].id");
             Content newContent = this.contentManager.loadContent(newContentId, false);
-
             Assertions.assertNotNull(newContent);
-
+            LinkAttribute linkAttribute = (LinkAttribute) newContent.getAttribute("link1");
+            Assertions.assertNotNull(linkAttribute);
+            Assertions.assertEquals("_blank", linkAttribute.getTarget());
+            Assertions.assertEquals("rel", linkAttribute.getRel());
+            Assertions.assertEquals("it", linkAttribute.getHrefLang());
+            
             this.executeContentPut("1_PUT_valid_with_some_more_links.json", newContentId, accessToken, status().isOk())
                     .andExpect(jsonPath("$.payload.size()", is(1)))
                     .andExpect(jsonPath("$.errors.size()", is(0)))
@@ -1103,19 +1105,27 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             String bodyResult = result.andReturn().getResponse().getContentAsString();
 
             newContentId1 = JsonPath.read(bodyResult, "$.payload[0].id");
+            newContentId2 = JsonPath.read(bodyResult, "$.payload[1].id");
+            
             Content newContent1 = this.contentManager.loadContent(newContentId1, false);
             Assertions.assertNotNull(newContent1);
-
-            newContentId2 = JsonPath.read(bodyResult, "$.payload[1].id");
+            ImageAttribute imageAttribute1 = (ImageAttribute) newContent1.getAttribute("img1");
+            Assertions.assertNotNull(imageAttribute1);
+            Assertions.assertEquals("alt img en1", imageAttribute1.getMetadataForLang(IResourceManager.ALT_METADATA_KEY, "en"));
+            Assertions.assertEquals("legend img en1", imageAttribute1.getMetadataForLang(IResourceManager.LEGEND_METADATA_KEY, "en"));
+            Assertions.assertNull(imageAttribute1.getMetadataForLang(IResourceManager.DESCRIPTION_METADATA_KEY, "it"));
+            Assertions.assertEquals("alt img it1", imageAttribute1.getMetadataForLang(IResourceManager.ALT_METADATA_KEY, "it"));
+            Assertions.assertEquals("legend img it1", imageAttribute1.getMetadataForLang(IResourceManager.LEGEND_METADATA_KEY, "it"));
+            
             Content newContent2 = this.contentManager.loadContent(newContentId2, false);
             Assertions.assertNotNull(newContent2);
-
+            ImageAttribute imageAttribute2 = (ImageAttribute) newContent2.getAttribute("img1");
+            Assertions.assertNotNull(imageAttribute2);
+            Assertions.assertEquals("legend img it2", imageAttribute2.getMetadataForLang(IResourceManager.LEGEND_METADATA_KEY, "it"));
+            Assertions.assertEquals("alt img it2", imageAttribute2.getMetadataForLang(IResourceManager.ALT_METADATA_KEY, "it"));
+            
 
         } finally {
-            if (null != imageResourceId) {
-                performDeleteResource(accessToken, "image", imageResourceId)
-                        .andExpect(status().isOk());
-            }
             if (null != newContentId1) {
                 Content newContent = this.contentManager.loadContent(newContentId1, false);
                 if (null != newContent) {
@@ -1130,6 +1140,10 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             }
             if (null != this.contentManager.getEntityPrototype("IAT")) {
                 ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype("IAT");
+            }
+            if (null != imageResourceId) {
+                performDeleteResource(accessToken, "image", imageResourceId)
+                        .andExpect(status().isOk());
             }
         }
     }
@@ -5026,6 +5040,47 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             if (null != this.contentManager.getEntityPrototype(contentType)) {
                 ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype(contentType);
             }
+        }
+    }
+    
+    @Test
+    void testGetImageAttributeWithMetadata() throws Exception {
+        String newContentId = null;
+        String accessToken = this.createAccessToken();
+        try {
+            Content content = this.contentManager.loadContent("ART1", true);
+            content.setId(null);
+            ImageAttribute picture = (ImageAttribute) content.getAttribute("Foto");
+            picture.setMetadata(IResourceManager.ALT_METADATA_KEY, "it", "Alt ita Value");
+            picture.setMetadata(IResourceManager.LEGEND_METADATA_KEY, "it", "Legend Ita Value");
+            newContentId = this.contentManager.addContent(content);
+            this.contentManager.insertOnLineContent(content);
+            Content addedContent = this.contentManager.loadContent(newContentId, true);
+            ImageAttribute addedPicture = (ImageAttribute) addedContent.getAttribute("Foto");
+            Assertions.assertEquals("Alt ita Value", addedPicture.getResourceAltForLang("it"));
+            Assertions.assertEquals("Legend Ita Value", addedPicture.getResourceLegendForLang("it"));
+            ResultActions result = mockMvc
+                    .perform(get("/plugins/cms/contents/{code}", newContentId)
+                            .param("status", IContentService.STATUS_DRAFT)
+                            .header("Authorization", "Bearer " + accessToken));
+            String bodyResult = result.andReturn().getResponse().getContentAsString();
+            result.andExpect(jsonPath("$.payload.size()", is(20)))
+                    .andExpect(jsonPath("$.errors.size()", is(0)))
+                    .andExpect(jsonPath("$.metaData.size()", is(0)))
+                    .andExpect(jsonPath("$.payload.id", is(newContentId)));
+            int attributeSize = JsonPath.read(bodyResult, "$.payload.attributes.size()");
+            Assertions.assertEquals(7, attributeSize);
+            for (int i = 0; i < attributeSize; i++) {
+                String attributeName = JsonPath.read(bodyResult, "$.payload.attributes[" + i + "].code");
+                if (attributeName.equals("Foto")) {
+                    result.andExpect(jsonPath("$.payload.attributes[" + i + "].values.it.metadata.legend", is("Legend Ita Value")));
+                    result.andExpect(jsonPath("$.payload.attributes[" + i + "].values.it.metadata.alt", is("Alt ita Value")));
+                }
+            }
+        } finally {
+            Content onlineContent = this.contentManager.loadContent(newContentId, false);
+            this.contentManager.removeOnLineContent(onlineContent);
+            this.contentManager.deleteContent(newContentId);
         }
     }
     

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -54,4 +54,18 @@ public interface IUserPreferencesManager {
      * @throws EntException the ent exception
      */
     void deleteUserPreferences(String username) throws EntException;
+    
+    boolean isUserGravatarEnabled(String username) throws EntException;
+    
+    void updateUserGravatarPreference(String username, boolean enabled) throws EntException;
+    
+    public default UserPreferences createDefaultUserPreferences(String username) {
+        UserPreferences userPreferences = new UserPreferences();
+        userPreferences.setUsername(username);
+        userPreferences.setWizard(true);
+        userPreferences.setTranslationWarning(true);
+        userPreferences.setLoadOnPageSelect(true);
+        return userPreferences;
+    }
+    
 }

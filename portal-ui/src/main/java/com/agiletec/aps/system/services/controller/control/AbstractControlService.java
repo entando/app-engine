@@ -39,6 +39,11 @@ public abstract class AbstractControlService implements ControlServiceInterface 
 	
 	private transient IURLManager urlManager;
     private transient IPageManager pageManager;
+    
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        _logger.debug("{} ready", this.getClass().getName());
+    }
 	
 	/**
 	 * Imposta i parametri di una redirezione.

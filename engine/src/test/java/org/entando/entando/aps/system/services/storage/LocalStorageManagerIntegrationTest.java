@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Functions;
+import org.entando.entando.aps.system.services.storage.model.DiskInfoDto;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -132,7 +133,6 @@ class LocalStorageManagerIntegrationTest extends BaseTestCase {
     @Test
     void testGetStream_ShouldBlockPathTraversal() throws Throwable {
         String testFilePath = "../testfolder/test.txt";
-
         try {
             localStorageManager.getStream(testFilePath, false);
         } catch (EntRuntimeException e) {
@@ -182,7 +182,65 @@ class LocalStorageManagerIntegrationTest extends BaseTestCase {
                 localStorageManager.deleteFile("non-existent", false)
         );
     }
-
+    
+    @Test
+    void testSuccessfullAddMoveFile() throws Throwable {
+        String testFileSourcePath = "testfolder_move/testMove.txt";
+        String testFileDestPath = "testfolder_move/subfolder/testMoved.txt";
+        InputStream streamDest = null;
+        assertFalse(this.localStorageManager.exists(testFileSourcePath, false));
+        try {
+            String content = "Content of new text file to move";
+            localStorageManager.saveFile(testFileSourcePath, false, new ByteArrayInputStream(content.getBytes()));
+            assertTrue(this.localStorageManager.exists(testFileSourcePath, false));
+            boolean result = this.localStorageManager.move(testFileSourcePath, false, testFileDestPath, false);
+            assertTrue(result);
+            assertFalse(this.localStorageManager.exists(testFileSourcePath, false));
+            streamDest = localStorageManager.getStream(testFileDestPath, false);
+            assertNotNull(streamDest);
+            String extractedString = IOUtils.toString(streamDest, "UTF-8");
+            assertEquals(content, extractedString);
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            if (null != streamDest) {
+                streamDest.close();
+            }
+            localStorageManager.deleteDirectory("testfolder_move/", false);
+        }
+        assertFalse(this.localStorageManager.exists(testFileSourcePath, false));
+        assertFalse(this.localStorageManager.exists(testFileDestPath, false));
+    }
+    
+    @Test
+    void testShowldGetErrorMovingFile() throws Throwable {
+        String testFileSourcePath = "test_move_wrong/testToMove.txt";
+        String testFileDestPath = "test_move_wrong/testMoved.txt";
+        assertFalse(this.localStorageManager.exists(testFileSourcePath, false));
+        try {
+            String content = "Content of new text file to move";
+            localStorageManager.saveFile(testFileDestPath, false, new ByteArrayInputStream(content.getBytes())); // create dest file
+            
+            boolean result = this.localStorageManager.move(testFileSourcePath, false, testFileDestPath, false);
+            assertFalse(result); // source file does not exists
+            assertFalse(this.localStorageManager.exists(testFileSourcePath, false));
+            
+            localStorageManager.saveFile(testFileSourcePath, false, new ByteArrayInputStream(content.getBytes())); // create source file
+            result = this.localStorageManager.move(testFileSourcePath, false, testFileDestPath, false);
+            assertFalse(result); // dest file already exists
+            
+            localStorageManager.deleteFile(testFileDestPath, false);
+            result = this.localStorageManager.move(testFileSourcePath, false, testFileDestPath, false);
+            assertTrue(result);
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            localStorageManager.deleteDirectory("test_move_wrong/", false);
+        }
+        assertFalse(this.localStorageManager.exists(testFileSourcePath, false));
+        assertFalse(this.localStorageManager.exists(testFileDestPath, false));
+    }
+    
     @Test
     void testCreateDeleteFile_ShouldBlockPathTraversals() throws Throwable {
         String testFilePath = "../../testfolder/test.txt";
@@ -255,9 +313,23 @@ class LocalStorageManagerIntegrationTest extends BaseTestCase {
         this.localStorageManager.deleteDirectory("target/mydir", false);
         this.localStorageManager.deleteDirectory("target", false);
     }
-
+    
+    @Test
+    void testGetDiskInfo() throws Throwable {
+        DiskInfoDto dto = null;
+        try {
+            dto = this.localStorageManager.getDiskInfo();
+            Assertions.fail();
+        } catch (Exception e) {
+            Assertions.assertTrue(UnsupportedOperationException.class.isAssignableFrom(e.getClass()));
+            Assertions.assertEquals("Not supported for Local Storage", e.getMessage());
+        } finally {
+            assertNull(dto);
+        }
+    }
+    
     @BeforeEach
-    private void init() throws Exception {
+    void init() throws Exception {
         try {
             localStorageManager = (IStorageManager) this.getApplicationContext().getBean(SystemConstants.STORAGE_MANAGER);
         } catch (Throwable t) {

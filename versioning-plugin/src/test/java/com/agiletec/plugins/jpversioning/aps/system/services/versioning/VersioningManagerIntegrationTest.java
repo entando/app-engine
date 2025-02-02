@@ -47,17 +47,19 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author G.Cocco
  */
-public class TestVersioningManager extends BaseTestCase {
+class VersioningManagerIntegrationTest extends BaseTestCase {
 
     private ConfigInterface configManager;
     private IContentManager contentManager;
     private IVersioningManager versioningManager;
     private JpversioningTestHelper helper;
 
+    @Test
     void testGetVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getVersions("CNG12");
         assertNull(versions);
@@ -66,6 +68,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{1, 2, 3}, versions);
     }
 
+    @Test
     void testGetLastVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getLastVersions("CNG", null);
         assertTrue(versions.isEmpty());
@@ -74,6 +77,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{3}, versions);
     }
 
+    @Test
     void testGetVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getVersion(10000);
         assertNull(contentVersion);
@@ -92,6 +96,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("admin", contentVersion.getUsername());
     }
 
+    @Test
     void testGetLastVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getLastVersion("CNG12");
         assertNull(contentVersion);
@@ -109,6 +114,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("mainEditor", contentVersion.getUsername());
     }
 
+    @Test
     void testSaveGetDeleteVersion() throws Throwable {
         ((VersioningManager) this.versioningManager).saveContentVersion("ART102");
         ContentVersion contentVersion = this.versioningManager.getLastVersion("ART102");
@@ -128,7 +134,8 @@ public class TestVersioningManager extends BaseTestCase {
         assertNull(this.versioningManager.getLastVersion("ART102"));
     }
 
-    public void deleteWorkVersions() throws Throwable {
+    @Test
+    void deleteWorkVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getVersions("ART1");
         this.checkVersionIds(new long[]{1, 2, 3}, versions);
         this.versioningManager.deleteWorkVersions("ART1", 0);
@@ -145,11 +152,13 @@ public class TestVersioningManager extends BaseTestCase {
         }
     }
 
+    @Test
     void testContentVersionToIgnore_1() throws Exception {
         this.testContentVersionToIgnore(false, true);
         this.testContentVersionToIgnore(true, true);
     }
 
+    @Test
     void testContentVersionToIgnore_2() throws Exception {
         this.testContentVersionToIgnore(false, false);
         this.testContentVersionToIgnore(true, false);
