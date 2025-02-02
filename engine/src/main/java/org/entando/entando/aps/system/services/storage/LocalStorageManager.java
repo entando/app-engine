@@ -17,8 +17,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 import java.io.*;
 import java.util.Arrays;
@@ -52,7 +50,7 @@ public class LocalStorageManager implements IStorageManager, InitializingBean {
 	private String protectedBaseURL;
 	private String allowedEditExtensions;
 
-
+    @Override
 	public void afterPropertiesSet() throws Exception {
 		logger.info("** Enabled Local Storage Manager **");
 	}

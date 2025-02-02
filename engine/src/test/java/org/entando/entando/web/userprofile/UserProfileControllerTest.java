@@ -14,34 +14,52 @@
 package org.entando.entando.web.userprofile;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.stream.Stream;
+import org.apache.commons.fileupload.FileUpload;
+import org.apache.commons.io.IOUtils;
+import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
+import org.entando.entando.aps.system.services.userprofile.IAvatarService;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileService;
+import org.entando.entando.aps.system.services.userprofile.model.AvatarDto;
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 import org.entando.entando.web.AbstractControllerTest;
+import org.entando.entando.web.userprofile.model.ProfileAvatarRequest;
+import org.entando.entando.web.userprofile.validator.ProfileAvatarValidator;
 import org.entando.entando.web.userprofile.validator.ProfileValidator;
 import org.entando.entando.web.utils.OAuth2TestUtils;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 @ExtendWith(MockitoExtension.class)
 class UserProfileControllerTest extends AbstractControllerTest {
@@ -58,12 +76,21 @@ class UserProfileControllerTest extends AbstractControllerTest {
     @Mock
     private IUserProfileManager userProfileManager;
 
-    @InjectMocks
-    private ProfileController controller;
+    private ProfileAvatarValidator profileAvatarValidator;
+
+    @Mock
+    private MultipartResolver multipartResolver;
+
+    @Mock
+    private IAvatarService avatarService;
 
     @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        profileAvatarValidator = new ProfileAvatarValidator(userProfileManager);
+
+        ProfileController controller = new ProfileController(userProfileService, profileValidator,
+                profileAvatarValidator, userManager,
+                userProfileManager, avatarService, multipartResolver);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
@@ -81,8 +108,8 @@ class UserProfileControllerTest extends AbstractControllerTest {
 
     @Test
     void shouldGetNewlyCreatedProfile() throws Exception {
-        when(this.userManager.getUser("user_without_profile")).thenReturn(Mockito.mock(UserDetails.class));
-        when(this.userProfileManager.getDefaultProfileType()).thenReturn(Mockito.mock(IUserProfile.class));
+        when(this.userManager.getUser("user_without_profile")).thenReturn(mock(UserDetails.class));
+        when(this.userProfileManager.getDefaultProfileType()).thenReturn(mock(IUserProfile.class));
         ResultActions result = performGetUserProfiles("user_without_profile");
         result.andExpect(status().isOk());
     }
@@ -127,6 +154,169 @@ class UserProfileControllerTest extends AbstractControllerTest {
         result.andExpect(status().isOk());
     }
 
+    @Test
+    void shouldGetAvatarReturn404IfImageNotExists() throws Exception {
+        String accessToken = this.createAccessToken();
+        // simulate an image not found
+        when(avatarService.getAvatarData(any())).thenThrow(
+                new ResourceNotFoundException("1", "image", "static/profile/jack_bauer.png"));
+
+        ResultActions result = mockMvc.perform(
+                get("/userProfiles/avatar?fileName=myFile.png")
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errors[0].message").value(
+                        "a image with static/profile/jack_bauer.png code could not be found"));
+    }
+
+    @Test
+    void shouldGetAvatarReturn200AndWellFormedResponseIfImageExists() throws Exception {
+        String accessToken = this.createAccessToken();
+        AvatarDto avatarDto = AvatarDto.builder()
+                .base64(new byte[0])
+                .protectedFolder(false)
+                .currentPath("static/profile/jack_bauer.png")
+                .filename("jack_bauer.png")
+                .prevPath("static/profile")
+                .build();
+        when(avatarService.getAvatarData(any())).thenReturn(avatarDto);
+
+        ResultActions result = mockMvc.perform(
+                get("/userProfiles/avatar?fileName=myFile.png")
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.protectedFolder").value(avatarDto.isProtectedFolder()))
+                .andExpect(jsonPath("$.payload.isDirectory").value(false))
+                .andExpect(jsonPath("$.payload.path").value(avatarDto.getCurrentPath()))
+                .andExpect(jsonPath("$.payload.filename").value(avatarDto.getFilename()))
+                .andExpect(jsonPath("$.payload.base64").value(""))
+                .andExpect(jsonPath("$.metaData.prevPath").value(avatarDto.getPrevPath()));
+
+    }
+
+    @Test
+    void shouldPostAvatarReturn400OnIllegalInput() throws Exception {
+        String accessToken = this.createAccessToken();
+        Answer<Void> ans = invocation -> {
+            Object[] args = invocation.getArguments();
+            ((BindingResult) args[1]).rejectValue("filename", "1", new String[]{"fileName_without_extension"},
+                    "fileBrowser.filename.invalidFilename");
+            return null;
+        };
+        ProfileAvatarRequest profileAvatarRequest = new ProfileAvatarRequest("fileName_without_extension",
+                new byte[1], false);
+        ResultActions result = mockMvc.perform(
+                post("/userProfiles/avatar")
+                        .content(new ObjectMapper().writeValueAsString(profileAvatarRequest))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldPostAvatarReturn200OnRightInput() throws Exception {
+        String accessToken = this.createAccessToken();
+        ProfileAvatarRequest profileAvatarRequest = new ProfileAvatarRequest("myFile.png", 
+                IOUtils.toByteArray(new ClassPathResource("userprofile/image.png").getInputStream()), false);
+        when(avatarService.updateAvatar(any(), any(), any())).thenReturn("jack_bauer.png");
+        ResultActions result = mockMvc.perform(
+                post("/userProfiles/avatar")
+                        .content(new ObjectMapper().writeValueAsString(profileAvatarRequest))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.filename").value("jack_bauer.png"));
+    }
+
+    @Test
+    void shouldPostAvatarReturnErrorWhenPayloadTooBig() throws Exception {
+        String accessToken = this.createAccessToken();
+        ProfileAvatarRequest profileAvatarRequest = new ProfileAvatarRequest("myFile.png",
+                IOUtils.toByteArray(new ClassPathResource("userprofile/image.png").getInputStream()), false);
+
+        multipartResolver = mock(CommonsMultipartResolver.class);
+        FileUpload fileUpload = mock(FileUpload.class);
+
+        when(fileUpload.getSizeMax()).thenReturn(20L);
+        when(fileUpload.getFileSizeMax()).thenReturn(20L);
+        when(((CommonsMultipartResolver)multipartResolver).getFileUpload()).thenReturn(fileUpload);
+
+        // need new custom controller for this test
+        ProfileController controller = new ProfileController(userProfileService, profileValidator,
+                profileAvatarValidator, userManager,
+                userProfileManager, avatarService, multipartResolver);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .addInterceptors(entandoOauth2Interceptor)
+                .setMessageConverters(getMessageConverters())
+                .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .build();
+
+        ResultActions result = mockMvc.perform(
+                post("/userProfiles/avatar")
+                        .content(new ObjectMapper().writeValueAsString(profileAvatarRequest))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isPayloadTooLarge())
+                .andExpect(jsonPath("$.errors").value("Payload Too Large"));
+    }
+
+    @Test
+    void shouldPostAvatarReturn400OnFileServiceAddFailureIfFileAlreadyPresent() throws Exception {
+        String accessToken = this.createAccessToken();
+        Answer<Void> ans = invocation -> {
+            Object[] args = invocation.getArguments();
+            ((BindingResult) args[2]).reject("2", new String[]{"static/profile/jack-bauer.png", "false"},
+                    "fileBrowser.file.exists");
+            return null;
+        };
+        Mockito.lenient().doAnswer(ans).when(avatarService).updateAvatar(any(), any(), any());
+        ProfileAvatarRequest profileAvatarRequest = new ProfileAvatarRequest("image.png",
+                new byte[1], false);
+        ResultActions result = mockMvc.perform(
+                post("/userProfiles/avatar")
+                        .content(new ObjectMapper().writeValueAsString(profileAvatarRequest))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isBadRequest());
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("provideValuesFor400")
+    void shouldPostAvatarReturn400(String request, String expectedErrorCode) throws Exception {
+        String accessToken = this.createAccessToken();
+        ResultActions result = mockMvc.perform(
+                post("/userProfiles/avatar")
+                        .content(request)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].code").value(expectedErrorCode));
+    }
+    
+    @Test
+    void shouldDeleteAvatarReturn200() throws Exception {
+        String accessToken = this.createAccessToken();
+        ResultActions result = mockMvc.perform(
+                delete("/userProfiles/avatar")
+                        .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.username").value("jack_bauer"))
+                .andExpect(jsonPath("$.errors.size()", CoreMatchers.is(0)))
+                .andExpect(jsonPath("$.metaData.size()", CoreMatchers.is(0)));
+    }
+    
+    private static Stream<Arguments> provideValuesFor400() {
+        return Stream.of(
+                Arguments.of("{\"filenam\":\"image.png\",\"base64\":\"AA==\"}", "52"),
+                Arguments.of("{\"base64\":\"AA==\"}", "52"),
+                Arguments.of("{\"filename\":\"\",\"base64\":\"AA==\"}", "52"),
+                Arguments.of("{\"filename\":\"image.png\",\"base6\":\"AA==\"}", "53"),
+                Arguments.of("{\"filename\":\"image.png\"}", "53"),
+                Arguments.of("{\"filename\":\"image.png\",\"base64\":\"\"}", "2")
+        );
+    }
+
     private ResultActions performGetUserProfiles(String username) throws Exception {
         String accessToken = this.createAccessToken();
         return mockMvc.perform(
@@ -157,4 +347,5 @@ class UserProfileControllerTest extends AbstractControllerTest {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         return mockOAuthInterceptor(user);
     }
+    
 }

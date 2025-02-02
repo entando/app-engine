@@ -306,8 +306,7 @@ class PageControllerTest extends AbstractControllerTest {
                 .content(mockJsonResult)
                 .header("Authorization", "Bearer " + accessToken)
         );
-
-        String response = result.andReturn().getResponse().getContentAsString();
+        
         result.andExpect(status().isBadRequest());
         result.andExpect(jsonPath("$.errors", hasSize(1)));
         result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_URINAME_MISMATCH)));
@@ -366,7 +365,6 @@ class PageControllerTest extends AbstractControllerTest {
                 .header("Authorization", "Bearer " + accessToken));
 
         result.andExpect(status().isBadRequest());
-        String response = result.andReturn().getResponse().getContentAsString();
         result.andExpect(jsonPath("$.errors", hasSize(1)));
         result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_ONLINE_PAGE)));
     }
@@ -378,6 +376,7 @@ class PageControllerTest extends AbstractControllerTest {
 
         Page page = new Page();
         page.setCode("page_with_children");
+        page.setParentCode("parent_page");
         page.addChildCode("child");
         when(authorizationService.canEdit(any(UserDetails.class), any(String.class))).thenReturn(true);
         when(this.controller.getPageValidator().getPageManager().getDraftPage(any(String.class))).thenReturn(page);
@@ -386,9 +385,28 @@ class PageControllerTest extends AbstractControllerTest {
                 .header("Authorization", "Bearer " + accessToken));
 
         result.andExpect(status().isBadRequest());
-        String response = result.andReturn().getResponse().getContentAsString();
         result.andExpect(jsonPath("$.errors", hasSize(1)));
         result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_PAGE_HAS_CHILDREN)));
+    }
+
+    @Test
+    void shouldValidateDeletePageRoot() throws EntException, Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        Page page = Mockito.mock(Page.class);
+        when(page.getChildrenCodes()).thenReturn(new String[]{});
+        when(page.isRoot()).thenReturn(true);
+        
+        when(authorizationService.canEdit(any(UserDetails.class), any(String.class))).thenReturn(true);
+        when(this.controller.getPageValidator().getPageManager().getDraftPage(any(String.class))).thenReturn(page);
+        ResultActions result = mockMvc.perform(
+                delete("/pages/{pageCode}", "page_root")
+                .header("Authorization", "Bearer " + accessToken));
+        
+        result.andExpect(status().isBadRequest());
+        result.andExpect(jsonPath("$.errors", hasSize(1)));
+        result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_PAGE_ROOT)));
     }
 
     @Test
@@ -408,7 +426,6 @@ class PageControllerTest extends AbstractControllerTest {
                 .header("Authorization", "Bearer " + accessToken));
 
         result.andExpect(status().isBadRequest());
-        String response = result.andReturn().getResponse().getContentAsString();
         result.andExpect(jsonPath("$.errors", hasSize(1)));
         result.andExpect(jsonPath("$.errors[0].code", is("NotBlank")));
     }
@@ -585,7 +602,6 @@ class PageControllerTest extends AbstractControllerTest {
                 .header("Authorization", "Bearer " + accessToken));
 
         result.andExpect(status().isBadRequest());
-        String response = result.andReturn().getResponse().getContentAsString();
         result.andExpect(jsonPath("$.errors", hasSize(1)));
         result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_STATUS_PAGE_MISMATCH)));
     }

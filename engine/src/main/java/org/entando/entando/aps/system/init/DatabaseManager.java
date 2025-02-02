@@ -70,6 +70,7 @@ import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.ServletContextAware;
 
@@ -96,6 +97,9 @@ public class DatabaseManager extends AbstractInitializerManager
     private int lockFallbackMinutes;
 
     private ServletContext servletContext;
+    
+    @Autowired
+    private ITenantManager tenantManager;
 
     public void init() {
         logger.debug("DatabaseManager ready");
@@ -568,7 +572,7 @@ public class DatabaseManager extends AbstractInitializerManager
                 return false;
             }
             //TODO future improvement - execute 'lifeline' backup
-            this.getDatabaseRestorer().dropAndRestoreBackup(subFolderName);
+            this.getDatabaseRestorer().dropAndRestoreBackup(subFolderName, this.tenantManager);
             ApsWebApplicationUtils.executeSystemRefresh(this.getServletContext());
             return true;
         } catch (Throwable t) {
@@ -586,7 +590,7 @@ public class DatabaseManager extends AbstractInitializerManager
                 logger.error("backup not available - subfolder '{}'", subFolderName);
                 return false;
             }
-            this.getDatabaseRestorer().restoreBackup(subFolderName);
+            this.getDatabaseRestorer().restoreBackup(subFolderName, this.tenantManager);
             return true;
         } catch (Throwable t) {
             logger.error("Error while restoring local backup", t);
@@ -594,10 +598,16 @@ public class DatabaseManager extends AbstractInitializerManager
         }
     }
 
-    private String[] extractBeanNames(Class beanClass) {
+    private String[] extractBeanNames(Class<?> beanClass) {
         ListableBeanFactory factory = (ListableBeanFactory) this.getBeanFactory();
         return factory.getBeanNamesForType(beanClass);
     }
+    
+    
+    
+    
+    
+    
 
     @Override
     public InputStream getTableDump(String tableName, String dataSourceName, String subFolderName) throws EntException {

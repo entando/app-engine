@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jacms.web.content;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,6 +32,8 @@ import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -38,6 +42,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
 
 @ExtendWith(MockitoExtension.class)
 class ContentControllerTest extends AbstractControllerTest {
@@ -93,7 +98,6 @@ class ContentControllerTest extends AbstractControllerTest {
         ResultActions result = this.performPostContent(mockJson, user);
         result.andExpect(status().isOk());
     }
-
     @Test
     void testUpdateContent() throws Exception {
         UserDetails user = this.createUser(true);
@@ -108,6 +112,27 @@ class ContentControllerTest extends AbstractControllerTest {
                 + "    ]}";
         ResultActions result = this.performPutContent("user", mockJson, user);
         result.andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturn422OnInvalidTypeCode() throws Exception {
+        UserDetails user = this.createUser(true);
+
+        doAnswer(invocation -> {
+            Errors errors = invocation.getArgument(1);
+            errors.reject("5", "entity.typeCode.invalid");
+            return null;
+        }).when(contentValidator).validateTypeCode(any(), any(Errors.class));
+
+        String mockJson = "[{\n"
+                + "    \"id\": \"ART123\",\n"
+                + "    \"typeCode\": \"XXX\",\n"
+                + "    \"attributes\": [\n"
+                + "         {\"code\": \"code1\", \"value\": \"value1\"},\n"
+                + "         {\"code\": \"code2\", \"value\": \"value2\"}\n"
+                + "    ]}]";
+        ResultActions result = this.performPostContent(mockJson, user);
+        result.andExpect(status().isUnprocessableEntity());
     }
 
     private ResultActions performGetContent(String code, String modelId,

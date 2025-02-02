@@ -35,6 +35,7 @@ public class UserPreferencesDto {
     private String defaultWidgetOwnerGroup;
     private List<String> defaultWidgetJoinGroups;
     private Boolean disableContentMenu;
+    private Boolean gravatar;
 
     public UserPreferencesDto(UserPreferences userPreferences) {
         wizard = userPreferences.isWizard();

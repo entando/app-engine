@@ -16,69 +16,81 @@ package org.entando.entando.web.userprofile;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
+import org.entando.entando.aps.system.services.userprofile.IAvatarService;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileService;
+import org.entando.entando.aps.system.services.userprofile.model.AvatarDto;
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.web.common.annotation.RestAccessControl;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
+import org.entando.entando.web.common.model.RestResponse;
 import org.entando.entando.web.common.model.SimpleRestResponse;
 import org.entando.entando.web.entity.validator.EntityValidator;
+import org.entando.entando.web.userprofile.model.ProfileAvatarRequest;
+import org.entando.entando.web.userprofile.validator.ProfileAvatarValidator;
 import org.entando.entando.web.userprofile.validator.ProfileValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
+import org.springframework.validation.MapBindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 /**
  * @author E.Santoboni
  */
 @RestController
+@RequiredArgsConstructor
 public class ProfileController {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(this.getClass());
 
-    @Autowired
-    private IUserProfileService userProfileService;
+    private final IUserProfileService userProfileService;
 
-    @Autowired
-    private ProfileValidator profileValidator;
+    private final ProfileValidator profileValidator;
 
-    @Autowired
-    private IUserManager userManager;
+    private final ProfileAvatarValidator profileAvatarValidator;
 
-    @Autowired
-    private IUserProfileManager userProfileManager;
+    private final IUserManager userManager;
 
-    protected IUserProfileService getUserProfileService() {
-        return userProfileService;
-    }
+    private final IUserProfileManager userProfileManager;
 
-    public void setUserProfileService(IUserProfileService userProfileService) {
-        this.userProfileService = userProfileService;
-    }
+    private final IAvatarService avatarService;
 
-    public ProfileValidator getProfileValidator() {
-        return profileValidator;
-    }
+    private final MultipartResolver multipartResolver;
 
-    public void setProfileValidator(ProfileValidator profileValidator) {
-        this.profileValidator = profileValidator;
-    }
+    public static final String PROTECTED_FOLDER = "protectedFolder";
+
+    public static final String PREV_PATH = "prevPath";
 
     @RestAccessControl(permission = {Permission.MANAGE_USER_PROFILES, Permission.MANAGE_USERS})
     @RequestMapping(value = "/userProfiles/{username}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SimpleRestResponse<EntityDto>> getUserProfile(@PathVariable String username) throws JsonProcessingException {
+    public ResponseEntity<SimpleRestResponse<EntityDto>> getUserProfile(@PathVariable String username) {
         logger.debug("Requested profile -> {}", username);
         final EntityDto dto = getUserProfileEntityDto(username);
         logger.debug("Main Response -> {}", dto);
@@ -95,7 +107,7 @@ public class ProfileController {
 
     private EntityDto getUserProfileEntityDto(final String username) {
         EntityDto dto;
-        if (!this.getProfileValidator().existProfile(username)) {
+        if (!profileValidator.existProfile(username)) {
             if (userExists(username)) {
                 // if the user exists but the profile doesn't, creates an empty profile
                 IUserProfile userProfile = createNewEmptyUserProfile(username);
@@ -104,7 +116,7 @@ public class ProfileController {
                 throw new ResourceNotFoundException(EntityValidator.ERRCODE_ENTITY_DOES_NOT_EXIST, "Profile", username);
             }
         } else {
-            dto = this.getUserProfileService().getUserProfile(username);
+            dto = userProfileService.getUserProfile(username);
         }
         return dto;
     }
@@ -131,16 +143,17 @@ public class ProfileController {
 
     @RestAccessControl(permission = Permission.MANAGE_USER_PROFILES)
     @RequestMapping(value = "/userProfiles", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SimpleRestResponse<EntityDto>> addUserProfile(@Valid @RequestBody EntityDto bodyRequest, BindingResult bindingResult) {
+    public ResponseEntity<SimpleRestResponse<EntityDto>> addUserProfile(@Valid @RequestBody EntityDto bodyRequest,
+            BindingResult bindingResult) {
         logger.debug("Add new user profile -> {}", bodyRequest);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
-        this.getProfileValidator().validate(bodyRequest, bindingResult);
+        profileValidator.validate(bodyRequest, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
-        EntityDto response = this.getUserProfileService().addUserProfile(bodyRequest, bindingResult);
+        EntityDto response = userProfileService.addUserProfile(bodyRequest, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
@@ -155,8 +168,8 @@ public class ProfileController {
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
-        this.getProfileValidator().validateBodyName(username, bodyRequest, bindingResult);
-        EntityDto response = this.getUserProfileService().updateUserProfile(bodyRequest, bindingResult);
+        profileValidator.validateBodyName(username, bodyRequest, bindingResult);
+        EntityDto response = userProfileService.updateUserProfile(bodyRequest, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
@@ -166,17 +179,92 @@ public class ProfileController {
     @PutMapping(value = "/myUserProfile", produces = MediaType.APPLICATION_JSON_VALUE)
     @RestAccessControl(permission = Permission.ENTER_BACKEND)
     public ResponseEntity<SimpleRestResponse<EntityDto>> updateMyUserProfile(@RequestAttribute("user") UserDetails user,
-                                                                         @Valid @RequestBody EntityDto bodyRequest, BindingResult bindingResult) {
+            /*@Valid*/ @RequestBody EntityDto bodyRequest, BindingResult bindingResult) {
         logger.debug("Update profile for the logged user {} -> {}", user.getUsername(), bodyRequest);
-        this.getProfileValidator().validateBodyName(user.getUsername(), bodyRequest, bindingResult);
+        profileValidator.validateBodyName(user.getUsername(), bodyRequest, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
-        EntityDto response = this.getUserProfileService().updateUserProfile(bodyRequest, bindingResult);
+        EntityDto response = userProfileService.updateUserProfile(bodyRequest, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
         return new ResponseEntity<>(new SimpleRestResponse<>(response), HttpStatus.OK);
     }
+    
+    @GetMapping(path = "/userProfiles/avatar", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RestResponse<Map<String, Object>, Map<String, Object>>> getAvatar(
+            @RequestAttribute("user") UserDetails userDetails) {
+        // request user profile picture
+        AvatarDto avatarData = avatarService.getAvatarData(userDetails);
+        // fill output
+        Map<String, Object> result = new HashMap<>();
+        result.put(PROTECTED_FOLDER, avatarData.isProtectedFolder());
+        result.put("isDirectory", false);
+        result.put("path", avatarData.getCurrentPath());
+        result.put("filename", avatarData.getFilename());
+        result.put("useGravatar", avatarData.isGravatar());
+        result.put("base64", avatarData.getBase64());
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put(PREV_PATH, avatarData.getPrevPath());
+        return new ResponseEntity<>(new RestResponse<>(result, metadata), HttpStatus.OK);
+    }
 
+    private long getMaxUploadSize() {
+        if (multipartResolver == null) {
+            return -1;
+        }
+        if (multipartResolver instanceof CommonsMultipartResolver) {
+            long sizeMax = ((CommonsMultipartResolver) multipartResolver).getFileUpload().getSizeMax();
+            long fileSizeMax = ((CommonsMultipartResolver) multipartResolver).getFileUpload().getFileSizeMax();
+
+            return (sizeMax >= fileSizeMax) ? sizeMax : fileSizeMax;
+        } else if (multipartResolver instanceof StandardServletMultipartResolver) {
+            logger.warn("Unknown multipart resolver implementation! Size limit ");
+            return -1;
+        } else {
+            return -1;
+        }
+    }
+
+    @PostMapping(path = "/userProfiles/avatar", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SimpleRestResponse<Map<String, Object>>> addAvatar(
+            @Validated @RequestBody ProfileAvatarRequest request,
+            @RequestAttribute("user") UserDetails user,
+            BindingResult bindingResult) {
+        final long maxSize = getMaxUploadSize();
+        final long fileSize = request.getBase64() != null ? request.getBase64().length : -1;
+
+        if ((maxSize > 0)
+                && (maxSize < fileSize)) {
+            Map<String, Object> response =
+                    Map.of("max allowed size", maxSize,
+                            "currently uploaded file" , fileSize);
+            final SimpleRestResponse restResponse = new SimpleRestResponse(response);
+            final List<String> errors = Arrays.asList(new String[]{"Payload Too Large"});
+            restResponse.setErrors(errors);
+            return new ResponseEntity<>(restResponse, HttpStatus.PAYLOAD_TOO_LARGE);
+        }
+
+        // validate input dto to check for consistency of input
+        profileAvatarValidator.validate(request, user, bindingResult);
+        if (bindingResult.hasErrors()) {
+            throw new ValidationGenericException(bindingResult);
+        }
+        String pictureFileName = avatarService.updateAvatar(request, user, bindingResult);
+        if (bindingResult.hasErrors()) {
+            throw new ValidationGenericException(bindingResult);
+        }
+        Map<String, Object> response = null != pictureFileName ? Map.of("filename", pictureFileName) : Map.of("useGravatar", true);
+        return new ResponseEntity<>(new SimpleRestResponse<>(response), HttpStatus.OK);
+    }
+
+    @DeleteMapping(path = "/userProfiles/avatar")
+    public ResponseEntity<SimpleRestResponse<Map<String, String>>> deleteAvatar(@RequestAttribute("user") UserDetails user) {
+        avatarService.deleteAvatar(user, new MapBindingResult(new HashMap<>(), "user"));
+        Map<String, String> payload = new HashMap<>();
+        payload.put("username", user.getUsername());
+        return new ResponseEntity<>(new SimpleRestResponse<>(payload), HttpStatus.OK);
+    }
+    
 }

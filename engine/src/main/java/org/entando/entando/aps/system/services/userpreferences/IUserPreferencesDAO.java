@@ -54,4 +54,5 @@ public interface IUserPreferencesDAO {
      * @throws EntException the ent exception
      */
     void deleteUserPreferences(String username) throws EntException;
+    
 }

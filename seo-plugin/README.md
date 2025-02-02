@@ -15,19 +15,6 @@ entando-plugin-jpseo
 
 The SEO plugin enables some functionality inside the page configuration (new parameters and friendly url), in the content handling (new role attribute to pilot friendly url) and to extract the sitemap.
 
-## Installation
-
-In order to install the SEO plugin, you must insert the following dependency in the pom.xml file of your project:
-
-```  
-<dependency>
-	<groupId>org.entando.entando.plugins</groupId>
-    <artifactId>entando-plugin-jpseo</artifactId>
-    <version>${entando.version}</version>
-    <type>war</type>
-</dependency>
-```
-
 ## How to use
 
 ###### Modify of web.xml

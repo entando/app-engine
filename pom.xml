@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-maven-root</artifactId>
-        <version>7.2.0</version>
+        <version>7.3.1-ENG-5347-PR-22</version>
     </parent>
     <groupId>org.entando</groupId>
 
     <artifactId>app-engine</artifactId>
-    <version>7.3.0</version>
+    <version>7.3.1</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -64,13 +64,14 @@
         <tag>HEAD</tag>
     </scm>
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <checkstyle.skip>true</checkstyle.skip>
         <allTestsSuiteClass/>
         <preDeploymentTestGroups/>
         <postDeploymentTestGroups/>
         <sonar.coverage.exclusions>**/*.js</sonar.coverage.exclusions>
+        <sonar.scanner.force-deprecated-java-version>true</sonar.scanner.force-deprecated-java-version>
         <!--test database default settings -->
         <test.database.driver>org.apache.derby.jdbc.EmbeddedDriver</test.database.driver>
         <test.database.hostname>localhost</test.database.hostname>
@@ -79,8 +80,6 @@
         <test.database.password>agile</test.database.password>
         <test.database.port.url>jdbc:derby:memory:testPort;create=true</test.database.port.url>
         <test.database.serv.url>jdbc:derby:memory:testServ;create=true</test.database.serv.url>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven.compiler.source>11</maven.compiler.source>
         <!--dependency versions-->
         <spring.version>5.3.27</spring.version>
         <springsecurity.version>5.5.7</springsecurity.version>
@@ -131,6 +130,7 @@
         <mockito.version>3.11.2</mockito.version>
         <junit-jupiter.version>5.7.2</junit-jupiter.version>
         <testcontainers.version>1.17.6</testcontainers.version>
+        <system-stubs-jupiter.version>2.1.3</system-stubs-jupiter.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
         <jdom.version>1.1.3</jdom.version>
@@ -154,7 +154,7 @@
         <vorbis-java-tika.version>0.8</vorbis-java-tika.version>
         <drewnoakes-metadata-extractor.version>2.18.0</drewnoakes-metadata-extractor.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <lombok.version>1.18.20</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <maven-dependency-plugin.version>3.3.0</maven-dependency-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
         <maven-resources-plugin.version>2.5</maven-resources-plugin.version>
@@ -193,7 +193,7 @@
         <junrar.version>7.4.1</junrar.version>
         <netty-common.version>4.1.77.Final</netty-common.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
-        <solr-solrj.version>8.11.1</solr-solrj.version>
+        <solr-solrj.version>9.4.0</solr-solrj.version>
         <spring-hateoas.version>1.5.5</spring-hateoas.version>
     </properties>
     <issueManagement>
@@ -1012,6 +1012,12 @@
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-all</artifactId>
                 <version>${hamcrest-all.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>uk.org.webcompere</groupId>
+                <artifactId>system-stubs-jupiter</artifactId>
+                <version>${system-stubs-jupiter.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

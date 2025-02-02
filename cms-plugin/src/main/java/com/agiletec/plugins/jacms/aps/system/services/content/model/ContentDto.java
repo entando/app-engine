@@ -294,6 +294,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         if (AbstractResourceAttribute.class.isAssignableFrom(attribute.getClass())) {
             AbstractResourceAttribute resourceAttribute = (AbstractResourceAttribute) attribute;
             for (Entry<String, Object> resourceEntry : attributeDto.getValues().entrySet()) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> resourceMap = (Map<String, Object>) resourceEntry.getValue();
                 this.setResourceAttribute(resourceAttribute, resourceMap, resourceEntry.getKey());
             }
@@ -312,27 +313,27 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         resourceInterface.setId(resourceId);
         resourceInterface.setCorrelationCode(correlationCode);
         resourceAttribute.setResource(resourceInterface, langCode);
+        @SuppressWarnings("unchecked")
         Map<String, Object> values = (Map<String, Object>) resource.get("metadata");
         if (values != null) {
-            Map<String, String> metadata = values.entrySet().stream()
-                    .collect(Collectors.toMap(Entry::getKey, e -> (String) e.getValue()));
-            resourceAttribute.setMetadataMap(langCode, metadata);
+            values.entrySet().stream()
+                    .forEach(e -> resourceAttribute.setMetadata(e.getKey(), langCode, (String) e.getValue()));
         }
     }
 
     private Map<String, String> getAdditionalLinkAttributes(final EntityAttributeDto attributeDto) {
         final Map<String, String> linkProperties = new HashMap<>();
-        final String rel = (String) ((Map) attributeDto.getValue()).get("rel");
+        final String rel = (String) ((Map) attributeDto.getValue()).get(LinkAttribute.REL_ATTRIBUTE);
         if (rel != null) {
-            linkProperties.put("rel", rel);
+            linkProperties.put(LinkAttribute.REL_ATTRIBUTE, rel);
         }
-        final String target = (String) ((Map) attributeDto.getValue()).get("target");
+        final String target = (String) ((Map) attributeDto.getValue()).get(LinkAttribute.TARGET_ATTRIBUTE);
         if (target != null) {
-            linkProperties.put("target", target);
+            linkProperties.put(LinkAttribute.TARGET_ATTRIBUTE, target);
         }
-        final String hreflang = (String) ((Map) attributeDto.getValue()).get("hreflang");
+        final String hreflang = (String) ((Map) attributeDto.getValue()).get(LinkAttribute.HREFLANG_ATTRIBUTE);
         if (hreflang != null) {
-            linkProperties.put("hreflang", hreflang);
+            linkProperties.put(LinkAttribute.HREFLANG_ATTRIBUTE, hreflang);
         }
         return linkProperties;
     }
@@ -341,7 +342,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         if (LinkAttribute.class.isAssignableFrom(attribute.getClass())) {
             LinkAttribute linkAttribute = (LinkAttribute) attribute;
             String defaultLangCode = linkAttribute.getDefaultLangCode();
-            if (attributeDto.getValue() != null && attributeDto.getValue() instanceof SymbolicLink) {
+            if (attributeDto.getValue() instanceof SymbolicLink) {
                 linkAttribute.setSymbolicLink(defaultLangCode, (SymbolicLink) attributeDto.getValue());
             } else {
                 SymbolicLink link = new SymbolicLink();

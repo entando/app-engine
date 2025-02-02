@@ -45,7 +45,7 @@ class LangManagerIntegrationTest extends BaseTestCase {
 		String langCode = lang.getCode();
 		String langDescr = lang.getDescr();
 		assertEquals("it", langCode);
-		assertEquals("Italiano", langDescr);
+		assertEquals("Italian", langDescr);
 	}
 
 	@Test
@@ -55,7 +55,7 @@ class LangManagerIntegrationTest extends BaseTestCase {
 		for (Lang lang : langs) {
 			String code = lang.getCode();
 			if (code.equals("it")) {
-				assertEquals("Italiano", lang.getDescr());
+				assertEquals("Italian", lang.getDescr());
 			} else if (code.equals("en")) {
 				assertEquals("English", lang.getDescr());
 			} else {

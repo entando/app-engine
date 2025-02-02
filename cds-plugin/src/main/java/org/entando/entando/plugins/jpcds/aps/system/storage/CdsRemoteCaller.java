@@ -64,7 +64,8 @@ public class CdsRemoteCaller  {
     private Map<String, String> tenantsToken = new WeakHashMap<>();
 
     @Autowired
-    public CdsRemoteCaller(@Qualifier("keycloakRestTemplate")RestTemplate restTemplate,@Qualifier("keycloakRestTemplateWithRedirect")RestTemplate restTemplateWithRedirect,
+    public CdsRemoteCaller(@Qualifier("keycloakRestTemplate")RestTemplate restTemplate,
+            @Qualifier("keycloakRestTemplateWithRedirect")RestTemplate restTemplateWithRedirect,
             CdsConfiguration configuration) {
         this.restTemplate = restTemplate;
         this.restTemplateWithRedirect = restTemplateWithRedirect;

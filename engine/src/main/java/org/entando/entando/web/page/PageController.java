@@ -347,13 +347,7 @@ public class PageController {
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }
-        //business validations
-        getPageValidator().validateOnlinePage(pageCode, bindingResult);
-        if (bindingResult.hasErrors()) {
-            throw new ValidationGenericException(bindingResult);
-        }
-        //business validations
-        getPageValidator().validateChildren(pageCode, bindingResult);
+        this.getPageValidator().validateDeletePageRequest(pageCode, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);
         }

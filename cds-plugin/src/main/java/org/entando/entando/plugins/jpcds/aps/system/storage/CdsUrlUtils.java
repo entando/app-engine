@@ -29,28 +29,34 @@ public final class CdsUrlUtils {
 
     private static final String CDS_PUBLIC_URL_TENANT_PARAM = "cdsPublicUrl";
     private static final String CDS_PRIVATE_URL_TENANT_PARAM = "cdsPrivateUrl";
+    private static final String CDS_PUBLIC_PATH_TENANT_PARAM = "cdsPublicPath";
+    private static final String CDS_INTERNAL_PUBLIC_SECTION_TENANT_PARAM = "cdsInternalPublicSection";
     private static final String CDS_PATH_TENANT_PARAM = "cdsPath";
     private static final String URL_SEP = "/";
-    private static final String SECTION_PUBLIC = "/public";
-    private static final String SECTION_PRIVATE = "/protected";
+    private static final String DEFAULT_SECTION_PUBLIC = "";
+    private static final String DEFAULT_SECTION_PRIVATE = "/protected";
 
     private CdsUrlUtils(){
     }
-
-    public static String getInternalSection(boolean isProtectedResource) {
-        return (isProtectedResource) ? SECTION_PRIVATE : SECTION_PUBLIC;
+    
+    public static String getSection(boolean isProtectedResource, Optional<TenantConfig> config, CdsConfiguration configuration, boolean internalCall) {
+        if (isProtectedResource) {
+            return DEFAULT_SECTION_PRIVATE;
+        }
+        if (internalCall) {
+            return config.map(c -> c.getProperty(CDS_INTERNAL_PUBLIC_SECTION_TENANT_PARAM).orElse(DEFAULT_SECTION_PUBLIC)).orElse(configuration.getCdsInternalPublicSection());
+        } else {
+            return config.map(c -> c.getProperty(CDS_PUBLIC_PATH_TENANT_PARAM).orElse(DEFAULT_SECTION_PUBLIC)).orElse(configuration.getCdsPublicPath());
+        }
     }
-
+    
     public static URI buildCdsExternalPublicResourceUrl(Optional<TenantConfig> config, CdsConfiguration configuration, String ... paths){
         log.debug("Trying to build CDS external public url with  is tenant config empty:'{}', CDS primary configuration public url:'{}' and paths:'{}'",
                 config.isEmpty(),
                 configuration.getCdsPublicUrl(),
                 paths);
-
         String publicUrl = config.flatMap(c -> c.getProperty(CDS_PUBLIC_URL_TENANT_PARAM)).orElse(configuration.getCdsPublicUrl());
-
         return EntUrlBuilder.builder().url(publicUrl).paths(paths).build();
-
     }
 
     public static URI buildCdsInternalApiUrl(Optional<TenantConfig> config, CdsConfiguration configuration, String ... paths){
@@ -59,10 +65,8 @@ public final class CdsUrlUtils {
                 configuration.getCdsPrivateUrl(),
                 configuration.getCdsPath(),
                 paths);
-
         String apiUrl = config.flatMap(c -> c.getProperty(CDS_PRIVATE_URL_TENANT_PARAM)).orElse(configuration.getCdsPrivateUrl());
         String basePath = config.flatMap(c -> c.getProperty(CDS_PATH_TENANT_PARAM)).orElse(configuration.getCdsPath());
-
         return EntUrlBuilder.builder().url(apiUrl).path(basePath).paths(paths).build();
     }
 

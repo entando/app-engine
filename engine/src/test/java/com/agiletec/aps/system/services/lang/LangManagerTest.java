@@ -20,13 +20,12 @@ import com.agiletec.aps.system.services.lang.events.LangsChangedEvent;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -83,7 +82,7 @@ class LangManagerTest {
 	}
 
 	@Test
-	public void updateLang() throws Throwable {
+	void updateLang() throws Throwable {
 		Lang requiredLang = new Lang();
 		requiredLang.setCode("de");
 		requiredLang.setCode("German");
@@ -96,7 +95,7 @@ class LangManagerTest {
 	}
 
 	@Test
-	public void updateLangNullLang() throws Throwable {
+	void updateLangNullLang() throws Throwable {
 		Mockito.when(cacheWrapper.getLang("et")).thenReturn(null);
 		this.langManager.updateLang("et", "Estonian lang");
 		Mockito.verify(cacheWrapper, Mockito.times(0)).updateLang(Mockito.any(Lang.class));
@@ -105,7 +104,7 @@ class LangManagerTest {
 	}
 
 	@Test
-	public void removeLang() throws Throwable {
+	void removeLang() throws Throwable {
 		Lang requiredLang = new Lang();
 		requiredLang.setCode("de");
 		requiredLang.setCode("German");
@@ -117,7 +116,7 @@ class LangManagerTest {
 	}
 
 	@Test
-	public void removeLangNullLang() throws Throwable {
+	void removeLangNullLang() throws Throwable {
 		Mockito.when(cacheWrapper.getLang("et")).thenReturn(null);
 		this.langManager.removeLang("et");
 		Mockito.verify(cacheWrapper, Mockito.times(0)).removeLang(Mockito.any(Lang.class));
@@ -125,4 +124,10 @@ class LangManagerTest {
 		Mockito.verify(notifyManager, Mockito.times(0)).publishEvent(Mockito.any(LangsChangedEvent.class));
 	}
 
+	@Test
+	void initTenantAwareShouldLoadAssignableLanguages() throws Exception {
+		LangManager spy = Mockito.spy(langManager);
+		spy.initTenantAware();
+		Mockito.verify(spy, Mockito.times(1)).getAssignableLangs();
+	}
 }

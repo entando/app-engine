@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author G.Cocco
  */
-public class TestVersioningDAO extends BaseTestCase {
+class VersioningDAOTest extends BaseTestCase {
 	
     @Test
 	void testGetVersions() throws Throwable {

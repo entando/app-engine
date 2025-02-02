@@ -368,11 +368,13 @@ public class PageService implements IComponentExistsService, IPageService,
         try {
             IPage newPage = null;
             if (status.equals(STATUS_ONLINE)) {
-                IPage publicParent = this.getPageManager().getOnlinePage(currentPage.getParentCode());
-                if (null == publicParent) {
-                    bindingResult.reject(PageValidator.ERRCODE_PAGE_WITH_NO_PUBLIC_PARENT,
-                            new String[]{pageCode, currentPage.getParentCode()}, "page.status.parent.unpublished");
-                    throw new ValidationGenericException(bindingResult);
+                if (!currentPage.isRoot()) {
+                    IPage publicParent = this.getPageManager().getOnlinePage(currentPage.getParentCode());
+                    if (null == publicParent) {
+                        bindingResult.reject(PageValidator.ERRCODE_PAGE_WITH_NO_PUBLIC_PARENT,
+                                new String[]{pageCode, currentPage.getParentCode()}, "page.status.parent.unpublished");
+                        throw new ValidationGenericException(bindingResult);
+                    }
                 }
                 this.getPageManager().setPageOnline(pageCode);
                 newPage = this.getPageManager().getOnlinePage(pageCode);

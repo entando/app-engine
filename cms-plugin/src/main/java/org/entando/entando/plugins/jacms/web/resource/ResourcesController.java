@@ -241,6 +241,6 @@ public class ResourcesController {
         }
 
         service.deleteAsset(resourceId, correlationCode);
-        return ResponseEntity.ok(new SimpleRestResponse<>(new HashMap()));
+        return ResponseEntity.ok(new SimpleRestResponse<>(new HashMap<>()));
     }
 }

@@ -16,6 +16,7 @@ package org.entando.entando.plugins.jacms.web.content.validator;
 import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentDto;
+import java.util.Objects;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.entity.model.EntityDto;
 import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
@@ -36,6 +37,8 @@ public class ContentValidator extends EntityValidator {
     @Autowired
     private IContentManager contentManager;
 
+    public static final String ERRCODE_TYPE_INVALID = "5";
+
     public boolean existContent(String code, String status) {
         boolean online = (IContentService.STATUS_ONLINE.equalsIgnoreCase(status));
         try {
@@ -45,6 +48,14 @@ public class ContentValidator extends EntityValidator {
             throw new RestServerError("error extracting content", e);
         }
     }
+
+    public void validateTypeCode(Object target, Errors errors) {
+        EntityDto request = (EntityDto) target;
+        if (Objects.isNull(this.getEntityManager().getEntityPrototype(request.getTypeCode()))) {
+            errors.reject(ERRCODE_TYPE_INVALID,"entity.typeCode.invalid");
+        }
+    }
+
 
     @Override
     protected IEntityManager getEntityManager() {

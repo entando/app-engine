@@ -12,14 +12,14 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Entando - Error</title>
+		<title>Error</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/bootstrap/css/bootstrap.min.css" media="screen" />
 	</head>
 	<body>
 		<div class="container">
-			<h1>Entando - Error</h1>
+			<h1>Error</h1>
 			<p><a class="" href="<%=response.encodeURL(request.getContextPath()) %>">Go to Home</a></p>
 			<table class="table table-responsive table-striped">
 				<tr>

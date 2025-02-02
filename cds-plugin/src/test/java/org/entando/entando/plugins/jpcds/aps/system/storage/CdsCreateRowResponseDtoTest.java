@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-Present Entando S.r.l. (http://www.entando.com) All rights reserved.
+ * Copyright 2024-Present Entando S.r.l. (http://www.entando.com) All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -12,7 +12,6 @@
  * details.
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
-
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
