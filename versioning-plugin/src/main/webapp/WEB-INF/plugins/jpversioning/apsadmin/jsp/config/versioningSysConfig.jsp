@@ -77,10 +77,16 @@
                         </div>
                         <div class="col-xs-10 text-left">
                             <s:set var="paramName" value="'jpversioning_deleteMidVersions'" />
-                            <input type="hidden" value="<s:property value="systemParams[#paramName]" />" id="<s:property value="#paramName"/>"
+                            <s:if test="%{null == systemParams[#paramName]}">
+                                <s:set var="deleteMidVersionsValue" value="'true'" />
+                            </s:if>
+                            <s:else>
+                                <s:set var="deleteMidVersionsValue" value="systemParams[#paramName]" />
+                            </s:else>
+                            <input type="hidden" value="<s:property value="#deleteMidVersionsValue" />" id="<s:property value="#paramName"/>"
                                    name="<s:property value="#paramName"/>" />
-                            <input type="checkbox" value="<s:property value="systemParams[#paramName]" />" id="ch_<s:property value="#paramName"/>" class="bootstrap-switch"
-                                   <s:if test="systemParams[#paramName] == 'true'">checked="checked"</s:if> />
+                            <input type="checkbox" value="<s:property value="#deleteMidVersionsValue" />" id="ch_<s:property value="#paramName"/>" class="bootstrap-switch"
+                                   <s:if test="#deleteMidVersionsValue == 'true'">checked="checked"</s:if> />
                             <wpsf:hidden name="%{#paramName + externalParamMarker}" value="true"/>
                         </div>
                     </div>

@@ -38,6 +38,7 @@ import org.entando.entando.plugins.jacms.web.content.validator.ContentValidator;
 import org.entando.entando.plugins.jacms.web.content.validator.RestContentListRequest;
 import org.entando.entando.web.common.annotation.RestAccessControl;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
+import org.entando.entando.web.common.exceptions.ValidationUnprocessableEntityException;
 import org.entando.entando.web.common.model.PagedMetadata;
 import org.entando.entando.web.common.model.PagedRestResponse;
 import org.entando.entando.web.common.model.RestResponse;
@@ -202,18 +203,24 @@ public class ContentController {
         }
 
         List<ContentDto> response = bodyRequest.stream()
-            .map(content -> {
-                this.getContentValidator().validate(content, bindingResult);
-                if (bindingResult.hasErrors()) {
-                    throw new ValidationGenericException(bindingResult);
-                }
-                ContentDto result = this.getContentService().addContent(content, userDetails, bindingResult);
-                if (bindingResult.hasErrors()) {
-                    throw new ValidationGenericException(bindingResult);
-                }
-                return result;
-            })
-            .collect(Collectors.toList());
+                .map(content -> {
+                    this.getContentValidator().validate(content, bindingResult);
+                    if (bindingResult.hasErrors()) {
+                        throw new ValidationGenericException(bindingResult);
+                    }
+
+                    this.getContentValidator().validateTypeCode(content, bindingResult);
+                    if (bindingResult.hasErrors()) {
+                        throw new ValidationUnprocessableEntityException(bindingResult);
+                    }
+
+                    ContentDto result = this.getContentService().addContent(content, userDetails, bindingResult);
+                    if (bindingResult.hasErrors()) {
+                        throw new ValidationGenericException(bindingResult);
+                    }
+                    return result;
+                })
+                .collect(Collectors.toList());
 
         return new ResponseEntity<>(new SimpleRestResponse<>(response), HttpStatus.OK);
     }

@@ -30,7 +30,6 @@ import com.agiletec.plugins.jacms.aps.system.services.cache.CmsCacheWrapperManag
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 
 /**
  * Return informations of content authorization
@@ -110,18 +109,17 @@ public class ContentAuthorizationHelper implements IContentAuthorizationHelper {
     }
 
     @Override
-    @Cacheable(value = ICacheInfoManager.DEFAULT_CACHE_NAME,
-            key = "'" + JacmsSystemConstants.CONTENT_AUTH_INFO_CACHE_PREFIX + "'.concat(#contentId)")
     public PublicContentAuthorizationInfo getAuthorizationInfo(String contentId) {
         return this.getAuthorizationInfo(contentId, true);
     }
     
     @Override
-    @Cacheable(value = ICacheInfoManager.DEFAULT_CACHE_NAME, condition = "#cacheable",
-            key = "'" + JacmsSystemConstants.CONTENT_AUTH_INFO_CACHE_PREFIX + "'.concat(#contentId)")
     public PublicContentAuthorizationInfo getAuthorizationInfo(String contentId, boolean cacheable) {
-        PublicContentAuthorizationInfo authInfo = null;
         String cacheKey = JacmsSystemConstants.CONTENT_AUTH_INFO_CACHE_PREFIX + contentId;
+        PublicContentAuthorizationInfo authInfo = this.getCacheInfoManager().getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey, PublicContentAuthorizationInfo.class);
+        if (null != authInfo) {
+            return authInfo;
+        }
         try {
             Content content = this.getContentManager().loadContent(contentId, true);
             if (null == content) {
@@ -131,7 +129,7 @@ public class ContentAuthorizationHelper implements IContentAuthorizationHelper {
             authInfo = new PublicContentAuthorizationInfo(content, this.getLangManager().getLangs());
             if (cacheable) {
                 String[] groups = CmsCacheWrapperManager.getContentCacheGroups(contentId);
-                this.getCacheInfoManager().putInGroup(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey, groups);
+                this.getCacheInfoManager().putInCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey, authInfo, groups);
             }
         } catch (Throwable t) {
             _logger.error("error in getAuthorizationInfo for content {}", contentId, t);

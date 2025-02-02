@@ -9,4 +9,6 @@
 
     <include file="port/00000000000001_dataPort_test.xml" relativeToChangelogFile="true" />
 
+    <include file="port/20240308000000_jpversioning_resource_descr.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>

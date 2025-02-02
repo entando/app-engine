@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.plugins.jacms.aps.system.services.content.IContentService;
-import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
@@ -47,7 +46,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
@@ -55,7 +53,6 @@ import org.springframework.test.web.servlet.ResultActions;
 /**
  * @author E.Santoboni
  */
-@ExtendWith(SolrTestExtension.class)
 class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
 
     @Autowired

@@ -14,11 +14,23 @@
 package org.entando.entando.plugins.jpsolr;
 
 import com.agiletec.aps.system.common.notify.NotifyManager;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.common.SolrException;
+import org.entando.entando.aps.system.services.searchengine.SolrEnvironmentVariables;
+import org.testcontainers.containers.GenericContainer;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 
 /**
  * @author E.Santoboni
  */
 public class SolrTestUtils {
+    
+    private static final int SOLR_PORT = 8983;
+    private static final String SOLR_IMAGE = "solr:9";
+    private static final String SOLR_CORE = "entando";
 
     public static void waitNotifyingThread() throws InterruptedException {
         waitThreads(NotifyManager.NOTIFYING_THREAD_NAME);
@@ -35,5 +47,41 @@ public class SolrTestUtils {
             }
         }
     }
+    
+    public static GenericContainer startContainer(GenericContainer solrContainer, EnvironmentVariables environmentVariables) throws Exception {
+        if (solrContainer == null) {
+            solrContainer = new GenericContainer(SOLR_IMAGE).withExposedPorts(SOLR_PORT)
+                    .withCommand("solr-precreate", SOLR_CORE);
+            solrContainer.start();
+            environmentVariables.set("SOLR_ADDRESS", "http://localhost:" + solrContainer.getMappedPort(SOLR_PORT) + "/solr");
+        }
+        waitSolrReady();
+        return solrContainer;
+    }
+
+    /**
+     * Sometimes Solr is not ready even if the container is ready. This method attempts to read the schema fields.
+     */
+    private static void waitSolrReady() throws Exception {
+        int attempt = 0;
+        do {
+            SolrClient solrClient = new HttpSolrClient.Builder(SolrEnvironmentVariables.solrAddress())
+                    .withConnectionTimeout(10000)
+                    .withSocketTimeout(60000)
+                    .build();
+            try {
+                solrClient.request(new SchemaRequest.Fields(), SolrEnvironmentVariables.solrCore());
+                return;
+            } catch (SolrServerException | SolrException ex) {
+                attempt++;
+            } finally {
+                solrClient.close();
+            }
+        } while (attempt < 10);
+    }
+    
+    
+    
+    
 
 }

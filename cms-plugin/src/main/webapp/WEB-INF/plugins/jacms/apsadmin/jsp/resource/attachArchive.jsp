@@ -165,6 +165,7 @@
                 <p class="sr-only">
                 <wpsf:hidden name="text"/>
                 <wpsf:hidden name="categoryCode"/>
+                <wpsf:hidden name="searchedResourceId"/>
                 <wpsf:hidden name="resourceTypeCode"/>
                 <wpsf:hidden name="fileName"/>
                 <wpsf:hidden name="ownerGroupName"/>

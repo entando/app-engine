@@ -13,6 +13,8 @@
  */
 package org.entando.entando.web.database;
 
+import static org.hamcrest.CoreMatchers.is;
+
 import com.agiletec.aps.system.services.user.UserDetails;
 import org.entando.entando.aps.system.init.DatabaseManager;
 import org.entando.entando.aps.system.init.IComponentManager;
@@ -36,6 +38,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +76,7 @@ class DatabaseControllerTest extends AbstractControllerTest {
                 .build();
         databaseService.setDatabaseManager(this.databaseManager);
         databaseService.setComponentManager(this.componentManager);
+        databaseService.setRestoreEnabled(true);
         controller.setDatabaseService(databaseService);
     }
 
@@ -125,7 +129,7 @@ class DatabaseControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void startRestore_1() throws Exception {
+    void requireRestore() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         String xml = null;
@@ -140,7 +144,7 @@ class DatabaseControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void startRestore_2() throws Exception {
+    void requireRestoreWithoutBackup() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
         when(databaseManager.getBackupReport(ArgumentMatchers.anyString())).thenReturn(null);
@@ -150,6 +154,20 @@ class DatabaseControllerTest extends AbstractControllerTest {
         result.andExpect(status().isNotFound());
         Mockito.verify(databaseService, Mockito.times(1)).startDatabaseRestore("reportCode");
         Mockito.verify(databaseManager, Mockito.times(0)).dropAndRestoreBackup("reportCode");
+    }
+    
+    @Test
+    void requireRestoreWithRestoreDisabled() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        databaseService.setRestoreEnabled(false);
+        ResultActions result = mockMvc.perform(
+                put("/database/restoreBackup/{reportCode}", "reportCode").content("{}")
+                .header("Authorization", "Bearer " + accessToken));
+        result.andExpect(status().isBadRequest());
+        result.andExpect(jsonPath("$.errors.size()", is(1)));
+        result.andExpect(jsonPath("$.errors[0].code", is("2")));
+        Mockito.verifyNoInteractions(this.databaseManager);
     }
 
     @Test

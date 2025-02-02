@@ -13,6 +13,7 @@
  */
 package org.entando.entando.aps.system.init;
 
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.util.FileTextReader;
 
@@ -26,6 +27,7 @@ import javax.sql.DataSource;
 import org.entando.entando.aps.system.init.model.Component;
 import org.entando.entando.aps.system.init.util.QueryExtractor;
 import org.entando.entando.aps.system.init.util.TableDataUtils;
+import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -50,22 +52,24 @@ public class DatabaseRestorer extends AbstractDatabaseUtils {
 		}
 	}
 
-	protected void dropAndRestoreBackup(String backupSubFolder) throws EntException {
+	protected void dropAndRestoreBackup(String backupSubFolder, 
+            ITenantManager tenantManager) throws EntException {
 		try {
 			List<Component> components = this.getComponents();
 			int size = components.size();
 			for (int i = 0; i < components.size(); i++) {
 				Component componentConfiguration = components.get(size - i - 1);
-				this.dropTables(componentConfiguration.getTableNames());
+				this.dropTables(componentConfiguration.getTableNames(), tenantManager);
 			}
-			this.restoreBackup(backupSubFolder);
+			this.restoreBackup(backupSubFolder, tenantManager);
 		} catch (Throwable t) {
 			_logger.error("Error while restoring backup: {}", backupSubFolder, t);
 			throw new EntException("Error while restoring backup", t);
 		}
 	}
 
-	private void dropTables(Map<String, List<String>> tableMapping) throws EntException {
+	private void dropTables(Map<String, List<String>> tableMapping, 
+            ITenantManager tenantManager) throws EntException {
 		if (null == tableMapping) {
 			return;
 		}
@@ -77,7 +81,7 @@ public class DatabaseRestorer extends AbstractDatabaseUtils {
 				if (null == tableNames || tableNames.isEmpty()) {
 					continue;
 				}
-				DataSource dataSource = (DataSource) this.getBeanFactory().getBean(dataSourceName);
+				DataSource dataSource = this.fetchDataSource(dataSourceName, tenantManager);
 				int size = tableNames.size();
 				for (int j = 0; j < tableNames.size(); j++) {
 					String tableName = tableNames.get(size - j - 1);
@@ -91,49 +95,54 @@ public class DatabaseRestorer extends AbstractDatabaseUtils {
 		}
 	}
 
-	protected void restoreBackup(String backupSubFolder) throws EntException {
+	protected void restoreBackup(String backupSubFolder, 
+            ITenantManager tenantManager) throws EntException {
 		try {
 			List<Component> components = this.getComponents();
 			for (int i = 0; i < components.size(); i++) {
 				Component componentConfiguration = components.get(i);
-				this.restoreLocalDump(componentConfiguration.getTableNames(), backupSubFolder);
+				this.restoreLocalDump(componentConfiguration.getTableNames(), backupSubFolder, tenantManager);
 			}
 		} catch (Throwable t) {
 			_logger.error("Error while restoring local backup", t);
 			throw new EntException("Error while restoring local backup", t);
 		}
 	}
-
-	private void restoreLocalDump(Map<String, List<String>> tableMapping, String backupSubFolder) throws EntException {
+    
+	private void restoreLocalDump(Map<String, List<String>> tableMapping, 
+            String backupSubFolder, ITenantManager tenantManager) throws EntException {
 		if (null == tableMapping) {
 			return;
 		}
 		try {
-			StringBuilder folder = new StringBuilder(this.getLocalBackupsFolder())
-					.append(backupSubFolder).append(File.separator);
+			String folder = this.getLocalBackupsFolder() + backupSubFolder + File.separator;
 			String[] dataSourceNames = this.extractBeanNames(DataSource.class);
-			for (int i = 0; i < dataSourceNames.length; i++) {
-				String dataSourceName = dataSourceNames[i];
-				List<String> tableNames = tableMapping.get(dataSourceName);
-				if (null == tableNames || tableNames.isEmpty()) {
-					continue;
-				}
-				DataSource dataSource = (DataSource) this.getBeanFactory().getBean(dataSourceName);
-				this.initOracleSchema(dataSource);
-				for (int j = 0; j < tableNames.size(); j++) {
-					String tableName = tableNames.get(j);
-					String fileName = folder.toString() + dataSourceName + File.separator + tableName + ".sql";
-					InputStream is = this.getStorageManager().getStream(fileName, true);
-					if (null != is) {
-						this.restoreTableData(is, dataSource);
-					}
-				}
-			}
+            for (String dataSourceName : dataSourceNames) {
+                List<String> tableNames = tableMapping.get(dataSourceName);
+                if (null == tableNames || tableNames.isEmpty()) {
+                    continue;
+                }
+                DataSource dataSource = this.fetchDataSource(dataSourceName, tenantManager);
+                this.initOracleSchema(dataSource);
+                for (int j = 0; j < tableNames.size(); j++) {
+                    String tableName = tableNames.get(j);
+                    String fileName = folder + dataSourceName + File.separator + tableName + ".sql";
+                    InputStream is = this.getStorageManager().getStream(fileName, true);
+                    if (null != is) {
+                        this.restoreTableData(is, dataSource);
+                    }
+                }
+            }
 		} catch (Throwable t) {
 			_logger.error("Error while restoring local dump", t);
 			throw new RuntimeException("Error while restoring local dump", t);
 		}
 	}
+    
+    private DataSource fetchDataSource(String dataSourceName, ITenantManager tenantManager) {
+        return ApsTenantApplicationUtils.getTenant().map(tenantManager::getDatasource)
+                .orElse((DataSource) this.getBeanFactory().getBean(dataSourceName));
+    }
 
 	private void restoreTableData(InputStream is, DataSource dataSource) {
 		try {

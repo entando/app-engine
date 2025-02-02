@@ -148,7 +148,7 @@ public class ActivityStreamInterceptor extends HandlerInterceptorAdapter {
     }
 
     private String getCurrentUsername(HttpServletRequest request) {
-        UserDetails user = (UserDetails) request.getSession().getAttribute("user");
+        UserDetails user = (UserDetails) request.getAttribute("user");
         if (null != user) {
             return user.getUsername();
         }

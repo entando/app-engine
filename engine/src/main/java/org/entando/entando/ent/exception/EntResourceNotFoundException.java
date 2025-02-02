@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -14,11 +14,16 @@
 package org.entando.entando.ent.exception;
 
 /**
- * Generic Entando Runtime Exception
+ * Generic Resource Not Found Exception
  */
 public class EntResourceNotFoundException extends EntException {
+
+    public EntResourceNotFoundException(String message) {
+        super(message);
+    }
 
     public EntResourceNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
+    
 }

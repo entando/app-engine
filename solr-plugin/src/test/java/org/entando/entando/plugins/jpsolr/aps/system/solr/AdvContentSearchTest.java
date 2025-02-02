@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.agiletec.aps.BaseTestCase;
 import java.util.ArrayList;
 import java.util.List;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
@@ -34,55 +33,24 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
-import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
-import org.entando.entando.plugins.jpsolr.SolrTestExtension;
+import org.entando.entando.plugins.jpsolr.SolrBaseTestCase;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.FileSystemResourceLoader;
-import org.springframework.mock.web.MockServletContext;
 
 /**
  * Rewriting of some default tests for content manager
  * @author E.Santoboni
  */
-@ExtendWith(SolrTestExtension.class)
-class AdvContentSearchTest {
+class AdvContentSearchTest extends SolrBaseTestCase {
 
     private IContentManager contentManager = null;
     private ISolrSearchEngineManager searchEngineManager = null;
     private ICategoryManager categoryManager;
     
     private List<String> allowedGroup = new ArrayList<>();
-    
-    private static ApplicationContext applicationContext;
-
-    public static ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    public static void setApplicationContext(ApplicationContext applicationContext) {
-        AdvContentSearchTest.applicationContext = applicationContext;
-    }
-    
-    @BeforeAll
-    public static void startUp() throws Exception {
-        ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
-        applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
-        setApplicationContext(applicationContext);
-    }
-    
-    @AfterAll
-    public static void tearDown() throws Exception {
-        BaseTestCase.tearDown();
-    }
     
     @BeforeEach
     protected void init() throws Exception {

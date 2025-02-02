@@ -1,3 +1,16 @@
+/*
+ * Copyright 2023-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
 import com.agiletec.aps.system.services.category.ICategoryManager;
@@ -7,7 +20,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 
 @Slf4j
 public class SolrResourcesAccessor implements ISolrResourcesAccessor {
@@ -30,9 +43,7 @@ public class SolrResourcesAccessor implements ISolrResourcesAccessor {
             ICategoryManager categoryManager, HttpClientBuilder httpClientBuilder) {
         log.debug("Creating Solr resources for {}", solrCore);
         this.solrCore = solrCore;
-        this.solrClient = new HttpSolrClient.Builder(solrAddress)
-                .withHttpClient(httpClientBuilder.build())
-                .build();
+        this.solrClient = new Http2SolrClient.Builder(solrAddress).build();
 
         this.indexerDAO = new IndexerDAO(solrClient, solrCore);
         this.indexerDAO.setLangManager(langManager);

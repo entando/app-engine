@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ * Copyright 2024-Present Entando Inc. (http://www.entando.com) All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -35,6 +35,7 @@ import org.entando.entando.aps.system.services.storage.BasicFileAttributeView;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.aps.system.services.tenants.TenantConfig;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.exception.EntResourceNotFoundException;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -151,7 +152,6 @@ class CdsStorageManagerTest {
 
         CdsCreateResponseDto ret = new CdsCreateResponseDto();
         ret.setStatusOk(true);
-        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
         Mockito.when(cdsRemoteCaller.executePostCall(any(),
                 eq("/sub-path-testy/myfilename"),
                 eq(false),
@@ -226,6 +226,8 @@ class CdsStorageManagerTest {
         final String baseUrl = "http://my-server/tenant1/cms-resources";
         Map<String,String> configMap = Map.of("cdsPublicUrl", baseUrl,
                 "cdsPrivateUrl","http://cds-kube-service:8081/",
+                "cdsPublicPath","/custom-path",
+                "cdsInternalPublicSection", "/custom-path",
                 "cdsPath","/mytenant/api/v1/");
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
@@ -236,17 +238,22 @@ class CdsStorageManagerTest {
         ).isInstanceOf(EntRuntimeException.class).hasMessageStartingWith("Error validating path");
 
         String testFilePath = "/testfolder/test.txt";
-        URI testFile = URI.create( baseUrl + "/public" + testFilePath);
+        
+        Assertions.assertThatThrownBy(
+                ()-> cdsStorageManager.getStream(testFilePath, false)
+        ).isInstanceOf(EntResourceNotFoundException.class).hasMessageStartingWith("File \"" + testFilePath);
+        
+        URI testFile = URI.create( baseUrl + "/custom-path" + testFilePath);
+        this.mockExecuteListFolder("http://cds-kube-service:8081/mytenant/api/v1/list/protected/testfolder", "test.txt");
         Mockito.when(cdsRemoteCaller.getFile(eq(testFile),
                 any(),
                 eq(false))).thenReturn(null);
         Assertions.assertThatThrownBy(
                 ()-> cdsStorageManager.getStream(testFilePath,false)
-        ).isInstanceOf(EntException.class).hasMessageStartingWith("Error extracting file");
-
-
+        ).isInstanceOf(EntResourceNotFoundException.class).hasMessageStartingWith("Error extracting file");
+        
         String testFilePathBadGateway = "/testfolder/test-badgw.txt";
-        URI testFileBadGateway = URI.create( baseUrl + "/public" + testFilePathBadGateway);
+        URI testFileBadGateway = URI.create( baseUrl + "/custom-path" + testFilePathBadGateway);
         Mockito.when(cdsRemoteCaller.getFile(eq(testFileBadGateway),
                 any(),
                 eq(false))).thenThrow(new HttpClientErrorException(HttpStatus.BAD_GATEWAY));
@@ -255,15 +262,9 @@ class CdsStorageManagerTest {
                 ()-> cdsStorageManager.getStream(testFilePathBadGateway,false)
         ).isInstanceOf(EntException.class).hasMessageStartingWith("Error extracting file");
 
-
         String testFilePathNotFound = "/testfolder/test-notfound.txt";
-        URI testFileNotFound = URI.create( baseUrl + "/public" + testFilePathNotFound);
-        Mockito.when(cdsRemoteCaller.getFile(eq(testFileNotFound),
-                any(),
-                eq(false))).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
-
-        Assertions.assertThat(cdsStorageManager.getStream(testFilePathNotFound,false)).isNull();
-
+        Assertions.assertThatThrownBy(() -> cdsStorageManager.getStream(testFilePathNotFound,false))
+                .isInstanceOf(EntResourceNotFoundException.class).hasMessageStartingWith("Error extracting file");
     }
 
     @Test
@@ -275,32 +276,33 @@ class CdsStorageManagerTest {
                 "cdsPath","/mytenant/api/v1/");
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
-
-        Mockito.when(cdsRemoteCaller.getFile(eq(URI.create("http://my-server/tenant1/cms-resources/public/test-folder/test.txt")),
+        
+        Mockito.when(cdsRemoteCaller.getFile(eq(URI.create("http://my-server/tenant1/cms-resources/test-folder/test.txt")),
                 any(),
                 eq(false))).thenReturn(Optional.ofNullable(new ByteArrayInputStream("text random".getBytes(StandardCharsets.UTF_8))));
-
+        
+        this.mockExecuteListFolder("http://cds-kube-service:8081/mytenant/api/v1/list/test-folder", "test.txt");
         ApsTenantApplicationUtils.setTenant("my-tenant");
         InputStream is = cdsStorageManager.getStream(testFilePath,false);
         Assertions.assertThat(new BufferedReader(new InputStreamReader(is))
                 .lines().collect(Collectors.joining(""))).isEqualTo("text random");
-
+        
         Mockito.when(cdsRemoteCaller.getFile(eq(URI.create("http://cds-kube-service:8081/mytenant/api/v1/protected/test-folder/test.txt")),
                 any(),
                 eq(true))).thenReturn(Optional.ofNullable(new ByteArrayInputStream("text random".getBytes(StandardCharsets.UTF_8))));
-
+        
+        this.mockExecuteListFolder("http://cds-kube-service:8081/mytenant/api/v1/list/protected/test-folder", "test.txt");
         is = cdsStorageManager.getStream(testFilePath,true);
         Assertions.assertThat(new BufferedReader(new InputStreamReader(is))
                 .lines().collect(Collectors.joining(""))).isEqualTo("text random");
-
     }
 
     @Test
     void shouldReturnRightUrlWhenCallGetResourceUrl() throws Exception {
         String testFilePath = "/test-folder/test.txt";
-
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
                 "cdsPrivateUrl","http://cds-tenant1-kube-service:8081/",
+                "cdsPublicPath","/public",
                 "cdsPath","/mytenant/api/v1/");
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
@@ -314,7 +316,6 @@ class CdsStorageManagerTest {
 
         resourceUrl = cdsStorageManager.createFullPath(testFilePath,true);
         Assertions.assertThat(resourceUrl).isEqualTo("http://cds-tenant1-kube-service:8081/protected/test-folder/test.txt");
-
     }
 
     @Test
@@ -359,15 +360,15 @@ class CdsStorageManagerTest {
                 "http://cds-tenant1-kube-service:8081/mytenant/api/v1/list/protected/test-folder")),
                 any())).thenReturn(Optional.ofNullable(new CdsFileAttributeViewDto[]{file}));
         Assertions.assertThat(cdsStorageManager.exists(testFilePath,true)).isTrue();
-
     }
 
     @Test
     void shouldWorkFineWhenCallExistsWithRootAsEmpty() throws Exception {
         String testFilePath = "";
-
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
                 "cdsPrivateUrl","http://cds-tenant1-kube-service:8081/",
+                "cdsPublicPath","/public",
+                "cdsInternalPublicSection", "/public",
                 "cdsPath","/mytenant/api/v1/");
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
@@ -467,7 +468,7 @@ class CdsStorageManagerTest {
         String testFilePath = "/testfolder/test.txt";
 
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
-                "cdsPrivateUrl","http://cds-kube-service:8081/",
+                "cdsPrivateUrl","http://cdsmaster-kube-service:8081/",
                 "cdsPath","/mytenant/api/v1/");
         TenantConfig tc = new TenantConfig(configMap);
         Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
@@ -475,8 +476,9 @@ class CdsStorageManagerTest {
         Mockito.when(cdsRemoteCaller.getFile(any(),
                 any(),
                 eq(false))).thenReturn(Optional.ofNullable(new ByteArrayInputStream("text random".getBytes(StandardCharsets.UTF_8))));
-
-
+        
+        this.mockExecuteListFolder("http://cdsmaster-kube-service:8081/mytenant/api/v1/list/testfolder", "test.txt");
+        
         ApsTenantApplicationUtils.setTenant("my-tenant");
         Assertions.assertThat(cdsStorageManager.readFile(testFilePath,false))
                 .isEqualTo("text random");
@@ -484,7 +486,7 @@ class CdsStorageManagerTest {
 
     @Test
     void shouldManageExceptionWhenReadFile() throws Exception {
-        String testFilePath = "/testfolder/test.txt";
+        String testFilePath = "/testfolder/subfolder/test.txt";
 
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
                 "cdsPrivateUrl","http://cds-kube-service:8081/",
@@ -501,7 +503,7 @@ class CdsStorageManagerTest {
         try (MockedStatic<IOUtils> ioUtils = Mockito.mockStatic(IOUtils.class)) {
             ioUtils.when(() -> IOUtils.toString(any(InputStream.class), eq(StandardCharsets.UTF_8)))
                     .thenThrow(new IOException());
-
+            this.mockExecuteListFolder("http://cds-kube-service:8081/mytenant/api/v1/list/testfolder/subfolder", "test.txt");
             Assertions.assertThatThrownBy(() -> cdsStorageManager.readFile(testFilePath, false))
                     .isInstanceOf(EntException.class)
                     .hasMessageStartingWith("Error extracting text");
@@ -555,7 +557,74 @@ class CdsStorageManagerTest {
                         eq(false));
 
     }
-
+    
+    @Test
+    void shouldMoveFile() throws Exception {
+        this.initTenantForMovement();
+        this.setExistingFileForMovement("source_file.txt", false, "test", false);
+        this.setExistingFileForMovement("dest_file.txt", true, "test_dest", true);
+        CdsCreateResponseDto ret = new CdsCreateResponseDto();
+        ret.setStatusOk(true);
+        Mockito.when(cdsRemoteCaller.executePostCall(any(),
+                eq("test_dest/dest_file.txt"),
+                eq(true),
+                any(),
+                any(),
+                eq(false))).thenReturn(ret);
+        boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", true);
+        Assertions.assertThat(result).isTrue();
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(3)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(1)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
+    }
+    
+    @Test
+    void shouldFailMovementDueMissingSource() throws Exception {
+        this.initTenantForMovement();
+        boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", false);
+        Assertions.assertThat(result).isFalse();
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(1)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(0)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
+    }
+    
+    @Test
+    void shouldFailMovementDueExistingDestination() throws Exception {
+        this.initTenantForMovement();
+        this.setExistingFileForMovement("source_file.txt", false, "test", false);
+        this.setExistingFileForMovement("dest_file.txt", true, "test_dest", false);
+        boolean result = this.cdsStorageManager.move("test/source_file.txt", false, "test_dest/dest_file.txt", true);
+        Assertions.assertThat(result).isFalse();
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(2)).getFileAttributeView(Mockito.any(URI.class), Mockito.any());
+        Mockito.verify(this.cdsRemoteCaller, Mockito.times(0)).getFile(Mockito.any(URI.class), Mockito.any(), Mockito.anyBoolean());
+    }
+    
+    private void initTenantForMovement() {
+        Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
+                "cdsPrivateUrl","http://cds-kube-service:8081/",
+                "cdsPath","/mytenant/api/v1/");
+        TenantConfig tc = new TenantConfig(configMap);
+        Mockito.when(tenantManager.getConfig("my-tenant")).thenReturn(Optional.ofNullable(tc));
+        ApsTenantApplicationUtils.setTenant("my-tenant");
+    }
+    
+    private void setExistingFileForMovement(String existingFileName, boolean isProtected, String path, boolean returnEmpty) {
+        String subPath = ((isProtected) ? "protected/" : "") + path;
+        if (returnEmpty) {
+            Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
+                        "http://cds-kube-service:8081/mytenant/api/v1/list/" + subPath)),
+                any())).thenReturn(Optional.empty());
+            return;
+        }
+        CdsFileAttributeViewDto file = new CdsFileAttributeViewDto();
+        file.setName(existingFileName);
+        file.setDirectory(false);
+        CdsFileAttributeViewDto dir = new CdsFileAttributeViewDto();
+        dir.setName("test-folder");
+        dir.setDirectory(true);
+        Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(
+                        "http://cds-kube-service:8081/mytenant/api/v1/list/" + subPath)),
+                any())).thenReturn(Optional.ofNullable(new CdsFileAttributeViewDto[]{file, dir}));
+    }
+    
     //@Test
     void testListAttributes() throws Throwable {
         Map<String,String> configMap = Map.of("cdsPublicUrl","http://my-server/tenant1/cms-resources",
@@ -585,6 +654,13 @@ class CdsStorageManagerTest {
             prevDirectory = bfav.isDirectory();
         }
         assertTrue(containsCms);
+    }
+    
+    private void mockExecuteListFolder(String uri, String filename) {
+        CdsFileAttributeViewDto file = new CdsFileAttributeViewDto();
+        file.setName(filename);
+        Mockito.when(cdsRemoteCaller.getFileAttributeView(eq(URI.create(uri)),
+                any())).thenReturn(Optional.ofNullable(new CdsFileAttributeViewDto[]{file}));
     }
 
 }

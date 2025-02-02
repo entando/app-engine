@@ -146,7 +146,7 @@ public class BaseTestCase {
                 SystemConstants.AUTHENTICATION_PROVIDER_MANAGER);
         IUserManager userManager = (IUserManager) getService(SystemConstants.USER_MANAGER);
         UserDetails user = null;
-        if (username.equals(SystemConstants.GUEST_USER_NAME)) {
+        if (SystemConstants.GUEST_USER_NAME.equals(username)) {
             user = userManager.getGuestUser();
         } else {
             user = provider.getUser(username, password);
@@ -166,9 +166,13 @@ public class BaseTestCase {
     }
 
     public static void setUserOnSession(String username) throws Exception {
-        UserDetails currentUser = getUser(username);
         HttpSession session = request.getSession();
-        session.setAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER, currentUser);
+        UserDetails currentUser = getUser(username);
+        if (null != currentUser) {
+            session.setAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER, currentUser);
+        } else {
+            session.removeAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
+        }
     }
 
     public static RequestContext getRequestContext() {

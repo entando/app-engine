@@ -526,6 +526,23 @@ class ContentServiceTest {
     }
     
     @Test
+    void shouldFindReferences() throws Exception {
+        ContentServiceUtilizer utilizer = Mockito.mock(ContentServiceUtilizer.class);
+        List<IComponentDto> components = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            IComponentDto dto = Mockito.mock(IComponentDto.class);
+            components.add(dto);
+        }
+        when(utilizer.getManagerName()).thenReturn("service");
+        when(utilizer.getContentUtilizer(Mockito.anyString())).thenReturn(components);
+        when(this.applicationContext.getBeansOfType(ContentServiceUtilizer.class)).thenReturn(Map.of("service", utilizer));
+        when(this.contentManager.loadContent("ART123", false)).thenReturn(Mockito.mock(Content.class));
+        PagedMetadata<?> result = contentService.getContentReferences("ART123", 
+                "service", Mockito.mock(UserDetails.class), new RestListRequest());
+        Assertions.assertEquals(5, result.getBody().size());
+    }
+    
+    @Test
     void shouldFindComponentDto() throws Exception {
         this.addMockedContent("ART123", "ART", null, null);
         Optional<IComponentDto> dto = this.contentService.getComponentDto("ART123");

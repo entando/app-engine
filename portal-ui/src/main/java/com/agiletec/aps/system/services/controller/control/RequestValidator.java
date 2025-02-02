@@ -51,42 +51,29 @@ public class RequestValidator extends AbstractControlService {
     private static final Logger _logger = LoggerFactory.getLogger(RequestValidator.class);
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        _logger.debug("{} ready", this.getClass().getName());
-    }
-
-    /**
-	 * Esecuzione. Le operazioni sono descritte nella documentazione della
-	 * classe.
-     *
-	 * @param reqCtx Il contesto di richiesta
-	 * @param status Lo stato di uscita del servizio precedente
-     * @return Lo stato di uscita
-     */
-    @Override
     public int service(RequestContext reqCtx, int status) {
         _logger.debug("{} invoked", this.getClass().getName());
         int retStatus = ControllerManager.INVALID_STATUS;
-        // Se si è verificato un errore in un altro sottoservizio, termina
-        // subito
         if (status == ControllerManager.ERROR) {
             return status;
         }
-        try { // non devono essere rilanciate eccezioni
+        try {
             boolean ok = this.isRightPath(reqCtx);
-            if (ok) {
-                if (null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE)) {
-                    IPage page = this.getPageManager().getOnlinePage(this.getNotFoundPageCode());
-                    reqCtx.addExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE, page);
-                }
-                if (null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE)
-                        || null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG)) {
-                    retStatus = this.redirect(this.getErrorPageCode(), reqCtx);
-                } else {
-                    retStatus = ControllerManager.CONTINUE;
-                }
-            } else {
+            Runnable addNotFoundPageParam = () -> {
+                IPage page = this.getPageManager().getOnlinePage(this.getNotFoundPageCode());
+                reqCtx.addExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE, page);
+            };
+            if (!ok || null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG)) {
+                addNotFoundPageParam.run();
+                reqCtx.addExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG, this.getLangManager().getDefaultLang());
+            } else if (null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE)) {
+                addNotFoundPageParam.run();
+            }
+            if (null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE)
+                    || null == reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG)) {
                 retStatus = this.redirect(this.getErrorPageCode(), reqCtx);
+            } else {
+                retStatus = ControllerManager.CONTINUE;
             }
         } catch (Throwable t) {
             retStatus = ControllerManager.SYS_ERROR;

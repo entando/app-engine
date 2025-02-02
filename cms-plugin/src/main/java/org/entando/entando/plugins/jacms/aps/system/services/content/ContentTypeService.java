@@ -199,6 +199,7 @@ public class ContentTypeService extends AbstractEntityTypeService<Content, Conte
                     .map(ContentDto::buildUsageEntity)
                     .collect(Collectors.toList());
             for (var utilizer : this.contentTypeServiceUtilizers) {
+                @SuppressWarnings("unchecked")
                 List<IComponentDto> objects = utilizer.getContentTypeUtilizer(componentCode);
                 List<ComponentUsageEntity> utilizerForService = objects.stream()
                         .map(o -> o.buildUsageEntity()).collect(Collectors.toList());

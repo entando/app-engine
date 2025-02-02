@@ -59,8 +59,8 @@ import org.xml.sax.SAXException;
  *
  * @author W.Ambu - E.Santoboni
  */
-public class ResourceManager extends AbstractService implements IResourceManager, GroupUtilizer, CategoryUtilizer,
-        RefreshableBeanTenantAware {
+public class ResourceManager extends AbstractService 
+        implements IResourceManager, GroupUtilizer<String>, CategoryUtilizer<String, String>, RefreshableBeanTenantAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 
@@ -262,29 +262,27 @@ public class ResourceManager extends AbstractService implements IResourceManager
             resource.setId(String.valueOf(newId));
         }
     }
-
+    
     @Override
     public void updateResource(ResourceDataBean bean) throws EntException {
-        ResourceInterface oldResource = this.loadResource(bean.getResourceId());
         try {
-            if (null == bean.getInputStream()) {
+            ResourceInterface oldResource = this.loadResource(bean.getResourceId());
+            ResourceInterface updatedResource = null;
+            if (null != bean.getInputStream()) {
+                updatedResource = this.createResource(bean);
+                oldResource.moveInstances("todelete");
+                updatedResource.saveResourceInstances(bean, getIgnoreMetadataKeysForResourceType(bean.getResourceType()));
+                oldResource.deleteResourceInstances();
+            } else {
                 oldResource.setDescription(bean.getDescr());
                 oldResource.setCategories(bean.getCategories());
                 oldResource.setMetadata(bean.getMetadata());
                 oldResource.setMainGroup(bean.getMainGroup());
                 oldResource.setFolderPath(bean.getFolderPath());
-                this.getResourceDAO().updateResource(oldResource);
-                this.notifyResourceChanging(oldResource, ResourceChangedEvent.UPDATE_OPERATION_CODE);
-            } else {
-                ResourceInterface updatedResource = this.createResource(bean);
-                updatedResource
-                        .saveResourceInstances(bean, getIgnoreMetadataKeysForResourceType(bean.getResourceType()));
-                this.getResourceDAO().updateResource(updatedResource);
-                if (!updatedResource.getMasterFileName().equals(oldResource.getMasterFileName())) {
-                    oldResource.deleteResourceInstances();
-                }
-                this.notifyResourceChanging(updatedResource, ResourceChangedEvent.UPDATE_OPERATION_CODE);
+                updatedResource = oldResource;
             }
+            this.getResourceDAO().updateResource(updatedResource);
+            this.notifyResourceChanging(updatedResource, ResourceChangedEvent.UPDATE_OPERATION_CODE);
         } catch (Throwable t) {
             logger.error("Error updating resource", t);
             throw new EntException("Error updating resource", t);
@@ -603,7 +601,7 @@ public class ResourceManager extends AbstractService implements IResourceManager
     }
 
     @Override
-    public List getCategoryUtilizers(String categoryCode) throws EntException {
+    public List<String> getCategoryUtilizers(String categoryCode) throws EntException {
         List<String> resourcesId = null;
         try {
             resourcesId = this.getResourceDAO().searchResourcesId(null, null, null, categoryCode, null);
@@ -643,7 +641,7 @@ public class ResourceManager extends AbstractService implements IResourceManager
     }
 
     @Override
-    public List getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException {
+    public List<String> getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException {
         List<String> resourcesId = null;
         try {
             resourcesId = this.getCategoryUtilizers(categoryCode);

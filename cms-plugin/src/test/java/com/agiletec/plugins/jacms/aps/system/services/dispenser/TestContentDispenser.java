@@ -32,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.agiletec.aps.system.services.user.IUserManager;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +44,9 @@ import org.junit.jupiter.api.Test;
  * @author W.Ambu - E.Santoboni
  */
 class TestContentDispenser extends BaseTestCase {
+    
+    private static final List<String> usernamesForTest = List.of("supervisorCoach", "mainEditor", "pageManagerCoach", 
+            "supervisorCustomers", "pageManagerCustomers", "editorCustomers", "editorCoach", "admin");
 
     @Test
     void testGetRenderedContent_1() throws Throwable {
@@ -115,43 +121,30 @@ class TestContentDispenser extends BaseTestCase {
     
     @Test
     void testGetRenderedContent_3_1() throws Throwable {
-        this.executeTestGetRenderedContent_3(Boolean.FALSE, false);
-        this.executeTestGetRenderedContent_3(Boolean.FALSE, true);
+        for (String username : usernamesForTest) {
+            this.executeTestGetRenderedContent_3(Boolean.FALSE, username);
+            this.executeTestGetRenderedContent_3(Boolean.TRUE, username);
+            this.executeTestGetRenderedContent_3(null, username);
+        }
+        this.executeTestGetRenderedContent_3(Boolean.TRUE, null);
     }
     
-    @Test
-    void testGetRenderedContent_3_2() throws Throwable {
-        this.executeTestGetRenderedContent_3(Boolean.TRUE, false);
-        this.executeTestGetRenderedContent_3(Boolean.TRUE, true);
-    }
-    
-    @Test
-    void testGetRenderedContent_3_3() throws Throwable {
-        this.executeTestGetRenderedContent_3(null, false);
-    }
-    
-    protected void executeTestGetRenderedContent_3(Boolean cached, boolean useCurrentUser) throws Throwable {
+    protected void executeTestGetRenderedContent_3(Boolean cached, String username) throws Throwable {
         Content content = this._contentManager.loadContent("ART120", true);
         content.setId(null);
         try {
+            String id = this._contentManager.insertOnLineContent(content);
             RequestContext reqCtx = this.getRequestContext();
-            this.setUserOnSession("admin");
+            this.setUserOnSession(username);
             UserDetails currentUser = (UserDetails) reqCtx.getRequest().getSession().getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
-            assertEquals("admin", currentUser.getUsername());
-            this._contentManager.insertOnLineContent(content);
-            String cacheKey = (useCurrentUser) ? 
-                    BaseContentDispenser.getRenderizationInfoCacheKey(content.getId(), 2, "it", reqCtx) :
-                    BaseContentDispenser.getRenderizationInfoCacheKey(content.getId(), 2, "it", currentUser);
+            Optional.ofNullable(username).ifPresent(notNull -> assertEquals(username, currentUser.getUsername()));
+            String cacheKey = BaseContentDispenser.getRenderizationInfoCacheKey(id, 2, "it", reqCtx);
             assertNull(this._cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey));
             ContentRenderizationInfo outputInfo = null; 
             if (null == cached) {
-                outputInfo = this._contentDispenser.getRenderizationInfo(content.getId(), 2, "it", reqCtx);
+                outputInfo = this._contentDispenser.getRenderizationInfo(id, 2, "it", reqCtx);
             } else {
-                if (useCurrentUser) {
-                    outputInfo = this._contentDispenser.getRenderizationInfo(content.getId(), 2, "it", currentUser, cached);
-                } else {
-                    outputInfo = this._contentDispenser.getRenderizationInfo(content.getId(), 2, "it", reqCtx, cached);
-                }
+                outputInfo = this._contentDispenser.getRenderizationInfo(id, 2, "it", reqCtx, cached);
             }
             assertNotNull(outputInfo);
             this.waitNotifyingThread();
@@ -164,10 +157,43 @@ class TestContentDispenser extends BaseTestCase {
                 assertNotNull(renderedInfoInCache);
                 assertNotNull(contentAuthInfoInCache);
             }
+            content.setId(id);
             this._contentManager.insertOnLineContent(content);
             this.waitNotifyingThread();
             assertNull(this._cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey));
             assertNull(this._cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, JacmsSystemConstants.CONTENT_AUTH_INFO_CACHE_PREFIX + content.getId()));
+        } catch (Throwable t) {
+            throw t;
+        } finally {
+            if (null != content.getId()) {
+                this._contentManager.deleteContent(content);
+            }
+        }
+    }
+    
+    @Test
+    void testGetRenderedContent_3_2() throws Throwable {
+        RequestContext reqCtx = this.getRequestContext();
+        Content content = this._contentManager.loadContent("ART120", true);
+        content.setId(null);
+        try {
+            String id = this._contentManager.insertOnLineContent(content);
+            List<String> cacheKeys = new ArrayList<>();
+            for (String username : usernamesForTest) {
+                setUserOnSession(username);
+                UserDetails currentUser = (UserDetails) reqCtx.getRequest().getSession().getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
+                assertEquals(username, currentUser.getUsername());
+                String cacheKey = BaseContentDispenser.getRenderizationInfoCacheKey(id, 2, "it", reqCtx);
+                assertNull(this._cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey));
+                ContentRenderizationInfo outputInfo = this._contentDispenser.getRenderizationInfo(id, 2, "it", reqCtx);
+                assertNotNull(outputInfo);
+                cacheKeys.add(cacheKey);
+            }
+            cacheKeys.stream().forEach(key -> assertNotNull(this._cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, key)));
+            content.setId(id);
+            this._contentManager.insertOnLineContent(content);
+            this.waitNotifyingThread();
+            cacheKeys.stream().forEach(key -> assertNull(this._cacheInfoManager.getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, key)));
         } catch (Throwable t) {
             throw t;
         } finally {

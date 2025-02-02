@@ -279,7 +279,7 @@ class UserProfileManagerIntegrationTest extends BaseTestCase {
     @Test
     void testLoadRoles() throws Exception {
         List<AttributeRole> roles = this.profileManager.getAttributeRoles();
-        assertEquals(8, roles.size());
+        assertEquals(7, roles.size());
         AttributeRole role1 = this.profileManager.getAttributeRole("userprofile:surname");
         assertNotNull(role1);
         assertEquals(1, role1.getAllowedAttributeTypes().size());

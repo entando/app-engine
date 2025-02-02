@@ -19,8 +19,12 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.entando.entando.ent.exception.EntResourceNotFoundException;
 import org.entando.entando.ent.exception.EntResourceNotFoundRuntimeException;
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -44,6 +48,12 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 	public boolean isMultiInstance() {
     	return false;
     }
+
+    @Override
+    public List<ResourceInstance> getInstanceList() {
+        return Optional.ofNullable(this.getInstance())
+                .map(i -> new ArrayList<>(List.of(i))).orElse(new ArrayList<>());
+    }
 	
 	@Override
 	public InputStream getResourceStream(int size, String langCode) {
@@ -60,7 +70,7 @@ public abstract class AbstractMonoInstanceResource extends AbstractResource {
 			throw new EntResourceNotFoundRuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, e);
 		} catch (Throwable t) {
 			logger.error(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
-			throw new RuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
+			throw new EntRuntimeException(ERROR_ON_EXTRACTING_RESOURCE_STREAM, t);
 		}
 	}
     

@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/entando/entando-tomcat-base:7.3.0
+FROM registry.hub.docker.com/entando/entando-tomcat-base:v7.3.1-ENG-5347-PR-29-BB-release-2F-7.3
 ARG VERSION
 
 ### Required OpenShift Labels
@@ -6,7 +6,7 @@ LABEL name="Entando App" \
       maintainer="dev@entando.com" \
       vendor="Entando Inc." \
       version="${VERSION}" \
-      release="7.3.0" \
+      release="7.3.1" \
       summary="Entando Application" \
       description="This Entando app engine application provides APIs and composition for Entando applications"
 

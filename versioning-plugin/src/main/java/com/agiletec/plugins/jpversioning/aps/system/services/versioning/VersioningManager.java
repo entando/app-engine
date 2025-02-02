@@ -44,6 +44,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO;
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import java.io.IOException;
+import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.xml.sax.SAXException;
@@ -63,8 +64,8 @@ public class VersioningManager extends AbstractService implements IVersioningMan
 
     @Override
     public void initTenantAware() throws Exception {
-        String deleteMidVersions = this.getConfigManager().getParam(JpversioningSystemConstants.CONFIG_PARAM_DELETE_MID_VERSIONS);
-        this.setDeleteMidVersions("true".equalsIgnoreCase(deleteMidVersions));
+        this.setDeleteMidVersions(Optional.ofNullable(this.getConfigManager().getParam(JpversioningSystemConstants.CONFIG_PARAM_DELETE_MID_VERSIONS))
+                .map(Boolean::parseBoolean).orElse(Boolean.TRUE));
     }
 
     @Before("execution(* com.agiletec.plugins.jacms.aps.system.services.content.IContentManager.saveContent(..)) && args(content)")

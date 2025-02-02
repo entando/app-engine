@@ -44,11 +44,6 @@ public class RequestAuthorizator extends AbstractControlService {
 
 	private static final Logger _logger = LoggerFactory.getLogger(RequestAuthorizator.class);
 	
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		_logger.debug("{} : initialized", this.getClass().getName());
-	}
-	
 	/**
 	 * Verifica che l'utente in sessione sia abilitato all'accesso alla pagina richiesta.
 	 * Se è autorizzato il metodo termina con CONTINUE, altrimenti 

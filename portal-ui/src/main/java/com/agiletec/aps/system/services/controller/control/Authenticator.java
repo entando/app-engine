@@ -38,12 +38,6 @@ public class Authenticator extends AbstractControlService {
 
 	private static final Logger _logger = LoggerFactory.getLogger(Authenticator.class);
 	private final transient JavaSecS5145<String> logSanitizer = new JavaSecS5145<>();
-
-	
-	@Override
-    public void afterPropertiesSet() throws Exception {
-    	_logger.debug("{} ready", this.getClass().getName());
-	}
     
 	/**
      * Esecuzione.
