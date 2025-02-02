@@ -30,6 +30,7 @@ public class DatabaseValidator extends AbstractPaginationValidator {
 
     public static final String ERRCODE_NO_DUMP_FOUND = "1";
     public static final String ERRCODE_NO_TABLE_DUMP_FOUND = "1";
+    public static final String ERRCODE_RESTORE_NO_ACTIVE = "2";
 
     @Override
     public boolean supports(Class<?> type) {

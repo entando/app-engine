@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "userPreferences")
 @XmlType(propOrder = {"username", "wizard", "loadOnPageSelect", "translationWarning", "defaultPageOwnerGroup",
 		"defaultPageJoinGroups", "defaultContentOwnerGroup", "defaultContentJoinGroups", "defaultWidgetOwnerGroup",
-		"defaultWidgetJoinGroups", "disableContentMenu"})
+		"defaultWidgetJoinGroups", "disableContentMenu", "gravatar"})
 public class UserPreferences implements Serializable {
 
 	private String username;
@@ -35,6 +35,7 @@ public class UserPreferences implements Serializable {
 	private String defaultWidgetOwnerGroup;
 	private String defaultWidgetJoinGroups;
 	private boolean disableContentMenu;
+	private boolean gravatar;
 
 	@XmlElement(name = "username", required = true)
 	public String getUsername() {
@@ -135,6 +136,15 @@ public class UserPreferences implements Serializable {
 		this.disableContentMenu = disableContentMenu;
 	}
 
+    @XmlElement(name = "gravatar")
+    public boolean isGravatar() {
+        return gravatar;
+    }
+
+    public void setGravatar(boolean gravatar) {
+        this.gravatar = gravatar;
+    }
+
 	@Override
 	public String toString() {
 		return "UserPreferences{" +
@@ -148,7 +158,8 @@ public class UserPreferences implements Serializable {
 				", defaultContentJoinGroups='" + defaultContentJoinGroups + '\'' +
 				", defaultWidgetOwnerGroup='" + defaultWidgetOwnerGroup + '\'' +
 				", defaultWidgetJoinGroups='" + defaultWidgetJoinGroups + '\'' +
-				", disableContentMenu='" + disableContentMenu +
+				", disableContentMenu='" + disableContentMenu + '\'' +
+				", gravatar='" + gravatar +
 				'}';
 	}
 }

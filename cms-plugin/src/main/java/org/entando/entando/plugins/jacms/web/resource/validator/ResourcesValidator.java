@@ -66,6 +66,7 @@ public class ResourcesValidator extends AbstractPaginationValidator {
     }
 
     public void resourceReferencesValidation(String resourceId, Errors errors) throws EntException {
+        @SuppressWarnings("unchecked")
         List<String> references = ((ResourceUtilizer) contentManager).getResourceUtilizers(resourceId);
         if (references != null && references.size() > 0) {
             references.forEach(reference->{

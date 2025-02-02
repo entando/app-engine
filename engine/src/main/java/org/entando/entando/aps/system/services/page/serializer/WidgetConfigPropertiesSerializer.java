@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -136,36 +137,30 @@ public class WidgetConfigPropertiesSerializer extends StdSerializer<ApsPropertie
         List<String> split = Arrays.stream(Optional.ofNullable(value)
                 .orElse("").split(regex))
                 .collect(Collectors.toList());
-
         List<Map<String,String>> properties = new ArrayList<>();
         for (String strProperty : split) {
             Map<String,String> property = extractProperty(strProperty);
-
             if (!property.entrySet().isEmpty()) {
                 properties.add(property);
             }
         }
-
         return properties;
     }
 
     private Map<String, String> extractProperty(String value) {
         Map<String, String> property = new HashMap<>();
-
-        for (String f : value.trim().split(";|,")) {
-            if (f == null || f.trim().isEmpty()) {
+        for (String f : value.trim().split("[;,]")) {
+            if (StringUtils.isBlank(f)) {
                 continue;
             }
-
-            String[] keyValue = f.split("=|:");
+            String[] keyValue = f.trim().split("[=:]", 2);
             if (keyValue.length != 2) {
                 logger.warn("Invalid filter format: {}", f);
-                continue;
+            } else {
+                property.put(keyValue[0].trim(), keyValue[1].trim());
             }
-
-            property.put(keyValue[0].trim(), keyValue[1].trim());
         }
-
         return property;
     }
+    
 }

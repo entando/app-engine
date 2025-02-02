@@ -26,7 +26,7 @@ import org.entando.entando.aps.system.services.storage.CdsActive;
 @Component
 @CdsActive(true)
 public class CdsConfiguration {
-
+    
     @Value("${resourceRootURL}")
     private String baseURL;
     @Value("${resourceDiskRootFolder}")
@@ -39,6 +39,10 @@ public class CdsConfiguration {
     private boolean enabled;
     @Value("${CDS_PUBLIC_URL:https://cds.entando.org}")
     private String cdsPublicUrl;
+    @Value("${CDS_PUBLIC_PATH:}")
+    private String cdsPublicPath;
+    @Value("${CDS_INTERNAL_PUBLIC_SECTION:}")
+    private String cdsInternalPublicSection;
     @Value("${CDS_PRIVATE_URL:https://cds.entando.org}")
     private String cdsPrivateUrl;
     @Value("${CDS_PATH:/api/v1}")
@@ -51,6 +55,5 @@ public class CdsConfiguration {
     private String kcClientId;
     @Value("${KEYCLOAK_CLIENT_SECRET:}")
     private String kcClientSecret;
-
-
+    
 }

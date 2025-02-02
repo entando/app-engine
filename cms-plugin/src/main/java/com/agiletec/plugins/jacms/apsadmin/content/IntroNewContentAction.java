@@ -19,6 +19,11 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
+import java.util.Arrays;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.lang.StringUtils;
+import org.entando.entando.aps.system.services.userpreferences.IUserPreferencesManager;
+import org.entando.entando.aps.system.services.userpreferences.UserPreferences;
 
 /**
  * Action gestore delle operazioni di creazione nuovo contenuto.
@@ -69,13 +74,32 @@ public class IntroNewContentAction extends AbstractContentAction {
     public String createNew() {
         try {
             _logger.debug("Create new content");
+            String username = getCurrentUser().getUsername();
             Content prototype = this.getContentManager().createContentType(this.getContentTypeCode());
             if (null == prototype) {
                 this.addFieldError("contentTypeCode", this.getText("error.content.type.invalid"));
                 _logger.debug("Invalid content type");
                 return INPUT;
             }
-            prototype.setFirstEditor(this.getCurrentUser().getUsername());
+            this.getRequest().getSession().removeAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP);
+            prototype.setFirstEditor(username);
+            UserPreferences pref = this.getUserPreferencesManager().getUserPreferences(username);
+            if (pref != null) {
+                String defaultContentOwnerGroup = pref.getDefaultContentOwnerGroup();
+                String defaultContentJoinGroups = pref.getDefaultContentJoinGroups();
+                if (StringUtils.isNotBlank(defaultContentJoinGroups)) {
+                    String[] joinGroup = defaultContentJoinGroups.split(";");
+                    Arrays.stream(joinGroup).filter(c -> null != this.getGroup(c))
+                            .forEach(g -> {
+                                _logger.info("adding join group {} from user {} preferences", g, username);
+                                prototype.addGroup(g);
+                            });
+                }
+                if (StringUtils.isNotBlank(defaultContentOwnerGroup) && null != this.getGroup(defaultContentOwnerGroup)) {
+                    this.getRequest().getSession().setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP, defaultContentOwnerGroup);
+                    _logger.info("setting ownerGroup to {}", defaultContentOwnerGroup);
+                }
+            }
             this.fillSessionAttribute(prototype);
         } catch (Throwable t) {
             _logger.error("error in createNew", t);
@@ -85,12 +109,14 @@ public class IntroNewContentAction extends AbstractContentAction {
     }
 	
 	protected void fillSessionAttribute(Content prototype) {
-		if (this.getAuthorizationManager().isAuthOnGroup(this.getCurrentUser(), Group.FREE_GROUP_NAME)) {
-			this.getRequest().getSession().setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP, Group.FREE_GROUP_NAME);
+        HttpSession session = this.getRequest().getSession();
+		if (null == session.getAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP) 
+                && this.getAuthorizationManager().isAuthOnGroup(this.getCurrentUser(), Group.FREE_GROUP_NAME)) {
+			session.setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_GROUP, Group.FREE_GROUP_NAME);
 		}
 		String marker = buildContentOnSessionMarker(prototype, ApsAdminSystemConstants.ADD);
 		super.setContentOnSessionMarker(marker);
-		this.getRequest().getSession().setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_PREXIX + marker, prototype);
+		session.setAttribute(ContentActionConstants.SESSION_PARAM_NAME_CURRENT_CONTENT_PREXIX + marker, prototype);
 		_logger.debug("Created ed inserted on session content prototype of type {}", prototype.getTypeCode());
 	}
 	
@@ -149,10 +175,19 @@ public class IntroNewContentAction extends AbstractContentAction {
 	public void setContentStatus(String contentStatus) {
 		this._contentStatus = contentStatus;
 	}
+    
+    public IUserPreferencesManager getUserPreferencesManager() {
+        return userPreferencesManager;
+    }
+    public void setUserPreferencesManager(IUserPreferencesManager userPreferencesManager) {
+        this.userPreferencesManager = userPreferencesManager;
+    }
 	
 	private String _contentTypeCode;
 	private String _contentDescription;
 	private String _contentMainGroup;
 	private String _contentStatus;
+    
+    private transient IUserPreferencesManager userPreferencesManager;
 	
 }

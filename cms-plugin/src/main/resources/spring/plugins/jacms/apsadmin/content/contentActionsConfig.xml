@@ -45,7 +45,9 @@
     </bean>
 
     <bean id="jacmsIntroNewContentAction" scope="prototype"
-              class="com.agiletec.plugins.jacms.apsadmin.content.IntroNewContentAction" parent="jacmsAbstractContentAction" />
+              class="com.agiletec.plugins.jacms.apsadmin.content.IntroNewContentAction" parent="jacmsAbstractContentAction" >
+        <property name="userPreferencesManager" ref="UserPreferencesManager" />
+    </bean>
 
     <bean id="jacmsContentAction" scope="prototype"
               class="com.agiletec.plugins.jacms.apsadmin.content.ContentAction"

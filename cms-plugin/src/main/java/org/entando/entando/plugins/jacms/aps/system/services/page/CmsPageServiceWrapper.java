@@ -58,6 +58,7 @@ public class CmsPageServiceWrapper implements ContentServiceUtilizer<PageDto> {
     @Override
     public List<PageDto> getContentUtilizer(String contentId) {
         try {
+            @SuppressWarnings("unchecked")
             List<IPage> pages = this.getPageManagerWrapper().getContentUtilizers(contentId);
             return this.getDtoBuilder().convert(pages);
         } catch (EntException ex) {

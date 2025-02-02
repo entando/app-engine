@@ -117,6 +117,8 @@
 
     <bean id="UserProfileService" class="org.entando.entando.aps.system.services.userprofile.UserProfileService" />
 
+    <bean id="AvatarService" class="org.entando.entando.aps.system.services.userprofile.AvatarService" />
+
     <bean id="UserSettingsService" class="org.entando.entando.aps.system.services.usersettings.UserSettingsService" />
 
     <bean id="CategoryService" class="org.entando.entando.aps.system.services.category.CategoryService" />
@@ -141,6 +143,7 @@
     <bean id="DatabaseService" class="org.entando.entando.aps.system.services.database.DatabaseService" >
         <property name="databaseManager" ref="DatabaseManager" />
         <property name="componentManager" ref="ComponentManager" />
+        <property name="restoreEnabled"><value>${db.restore.enabled}</value></property>
     </bean>
 
     <bean id="FileBrowserService" class="org.entando.entando.aps.system.services.storage.FileBrowserService" >

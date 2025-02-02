@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>app-engine</artifactId>
-        <version>7.3.0</version>
+        <version>7.3.1</version>
     </parent>
     <groupId>org.entando.entando</groupId>
     <artifactId>webapp</artifactId>
@@ -826,7 +826,7 @@
                                     <version>3.0.0</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>11</version>
+                                    <version>17</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -837,8 +837,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <target>11</target>
-                    <source>11</source>
+                    <target>17</target>
+                    <source>17</source>
                 </configuration>
             </plugin>
             <plugin>

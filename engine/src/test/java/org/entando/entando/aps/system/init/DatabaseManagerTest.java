@@ -154,7 +154,7 @@ class DatabaseManagerTest {
             dbFactory.when(DatabaseFactory::getInstance).thenReturn(Mockito.mock(DatabaseFactory.class));
 
             databaseManager.installDatabase(null, DatabaseMigrationStrategy.AUTO, Optional.empty());
-            Mockito.verify(databaseRestorer).restoreBackup("/path/to/dump");
+            Mockito.verify(databaseRestorer).restoreBackup("/path/to/dump", this.tenantManager);
         }
     }
 

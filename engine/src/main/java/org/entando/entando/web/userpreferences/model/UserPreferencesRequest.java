@@ -30,6 +30,7 @@ public class UserPreferencesRequest {
     private String defaultWidgetOwnerGroup;
     private List<String> defaultWidgetJoinGroups;
     private Boolean disableContentMenu;
+    private Boolean gravatar;
 
     @Override
     public String toString() {
@@ -42,8 +43,9 @@ public class UserPreferencesRequest {
                 ", defaultContentOwnerGroup='" + defaultContentOwnerGroup + '\'' +
                 ", defaultContentJoinGroups=" + defaultContentJoinGroups +
                 ", defaultWidgetOwnerGroup='" + defaultWidgetOwnerGroup + '\'' +
-                ", defaultWidgetJoinGroups=" + defaultWidgetJoinGroups +
-                ", disableContentMenu=" + disableContentMenu +
+                ", defaultWidgetJoinGroups=" + defaultWidgetJoinGroups + '\'' +
+                ", disableContentMenu=" + disableContentMenu + '\'' +
+                ", gravatar=" + gravatar +
                 '}';
     }
 }

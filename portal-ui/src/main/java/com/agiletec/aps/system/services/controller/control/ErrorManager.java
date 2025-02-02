@@ -32,11 +32,6 @@ public class ErrorManager extends AbstractControlService {
 	private static final Logger _logger = LoggerFactory.getLogger(ErrorManager.class);
 	
 	@Override
-	public void afterPropertiesSet() throws Exception {
-		_logger.debug("{} : initialized", this.getClass().getName());
-	}
-	
-	@Override
 	public int service(RequestContext reqCtx, int status) {
 		if (status == ControllerManager.CONTINUE || status == ControllerManager.OUTPUT) {
 			return ControllerManager.OUTPUT;

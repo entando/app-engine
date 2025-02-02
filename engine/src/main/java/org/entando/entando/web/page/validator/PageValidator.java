@@ -48,6 +48,7 @@ public class PageValidator extends AbstractPaginationValidator {
     public static final String ERRCODE_PAGE_HAS_CHILDREN = "2";
     public static final String ERRCODE_GROUP_MISMATCH = "2";
     public static final String ERRCODE_INVALID_PARENT = "3";
+    public static final String ERRCODE_PAGE_ROOT = "4";
     public static final String ERRCODE_STATUS_PAGE_MISMATCH = "6";
     public static final String ERRCODE_CHANGE_POSITION_INVALID_REQUEST = "7";
     public static final String ERRCODE_REFERENCED_ONLINE_PAGE = "2";
@@ -130,6 +131,15 @@ public class PageValidator extends AbstractPaginationValidator {
         if (pageRequest.getParentCode() == null || pageRequest.getPosition() <= 0
                 || this.getPageManager().getDraftPage(pageRequest.getParentCode()) == null) {
             errors.reject(ERRCODE_CHANGE_POSITION_INVALID_REQUEST, new String[]{pageCode}, "page.move.position.invalid");
+        }
+    }
+    
+    public void validateDeletePageRequest(String pageCode, Errors errors) {
+        this.validateOnlinePage(pageCode, errors);
+        this.validateChildren(pageCode, errors);
+        IPage page = this.getDraftPage(pageCode);
+        if (null != page && page.isRoot()) {
+            errors.reject(ERRCODE_PAGE_ROOT, new String[]{pageCode}, "page.delete.root");
         }
     }
 

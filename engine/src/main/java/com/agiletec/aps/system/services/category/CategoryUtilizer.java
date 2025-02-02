@@ -23,7 +23,7 @@ import org.entando.entando.ent.exception.EntException;
  *
  * @author E.Santoboni
  */
-public interface CategoryUtilizer {
+public interface CategoryUtilizer<T, Z> {
 
     /**
      * Restituisce l'identificativo del servizio utilizzatore.
@@ -41,7 +41,7 @@ public interface CategoryUtilizer {
      * dal codice specificato.
      * @throws EntException In caso di errore.
      */
-    public List getCategoryUtilizers(String categoryCode) throws EntException;
+    public List<T> getCategoryUtilizers(String categoryCode) throws EntException;
 
     /**
      * Reload the category references.
@@ -64,6 +64,6 @@ public interface CategoryUtilizer {
      * @return
      * @throws EntException In case of error
      */
-    public List getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException;
+    public List<Z> getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException;
 
 }

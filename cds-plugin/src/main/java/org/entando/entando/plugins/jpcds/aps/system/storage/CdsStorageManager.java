@@ -13,6 +13,7 @@
  */
 package org.entando.entando.plugins.jpcds.aps.system.storage;
 
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,6 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,17 +44,22 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.entando.entando.aps.system.services.storage.CdsActive;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 
 @Slf4j
-@Service("StorageManager")
+@Service(SystemConstants.STORAGE_MANAGER)
 @CdsActive(true)
 public class CdsStorageManager implements IStorageManager {
 
     private static final String ERROR_VALIDATING_PATH_MSG = "Error validating path";
-    private final transient ITenantManager tenantManager;
-    private final transient CdsConfiguration configuration;
-    private final transient CdsRemoteCaller caller;
-
+    
+    @Getter(AccessLevel.PROTECTED)
+    private transient ITenantManager tenantManager;
+    @Getter(AccessLevel.PROTECTED)
+    private transient CdsConfiguration configuration;
+    @Getter(AccessLevel.PROTECTED)
+    private transient CdsRemoteCaller caller;
 
     @Autowired
     public CdsStorageManager(CdsRemoteCaller caller, ITenantManager tenantManager, CdsConfiguration configuration) {
@@ -73,21 +81,18 @@ public class CdsStorageManager implements IStorageManager {
     
     private void create(String subPath, boolean isProtectedResource, Optional<InputStream> fileInputStream) {
         try {
-            Optional<TenantConfig> config = getTenantConfig();
+            Optional<TenantConfig> config = this.getTenantConfig();
             if(StringUtils.isBlank(subPath)){
                 throw new EntRuntimeException(ERROR_VALIDATING_PATH_MSG);
             }
-
-            this.validateAndReturnResourcePath(config, subPath, isProtectedResource);
-
+            this.validateAndReturnResourcePath(config, subPath, false, isProtectedResource);
             URI apiUrl = CdsUrlUtils.buildCdsInternalApiUrl(config, configuration, "/upload/");
-            CdsCreateResponseDto response = caller.executePostCall(apiUrl,
+            CdsCreateResponseDto response = this.caller.executePostCall(apiUrl,
                     subPath,
                     isProtectedResource,
                     fileInputStream,
                     config,
                     false);
-
             if (!response.isStatusOk()) {
                 throw new EntRuntimeException("Invalid status - Response " + response.isStatusOk());
             }
@@ -106,22 +111,18 @@ public class CdsStorageManager implements IStorageManager {
     @Override
     public boolean deleteFile(String subPath, boolean isProtectedResource) {
         try {
-            Optional<TenantConfig> config = getTenantConfig();
-            if(StringUtils.isBlank(subPath)){
+            Optional<TenantConfig> config = this.getTenantConfig();
+            if (StringUtils.isBlank(subPath)){
                 throw new EntRuntimeException(ERROR_VALIDATING_PATH_MSG);
             }
-
-            this.validateAndReturnResourcePath(config, subPath, isProtectedResource);
-
+            this.validateAndReturnResourcePath(config, subPath, true, isProtectedResource);
             URI apiUrl = EntUrlBuilder.builder()
                             .url(CdsUrlUtils.buildCdsInternalApiUrl(config, configuration))
                             .path("/delete/")
-                            .path(CdsUrlUtils.getInternalSection(isProtectedResource))
+                            .path(CdsUrlUtils.getSection(isProtectedResource, config, this.configuration, true))
                             .path(subPath)
                             .build();
-
-            return caller.executeDeleteCall(apiUrl, config, false);
-
+            return this.caller.executeDeleteCall(apiUrl, config, false);
         } catch (EntRuntimeException ert) {
             throw ert;
         } catch (Exception e) {
@@ -134,32 +135,31 @@ public class CdsStorageManager implements IStorageManager {
         final String ERROR_EXTRACTING_FILE = "Error extracting file";
         URI url = null;
         try {
-            Optional<TenantConfig> config = getTenantConfig();
-            if(StringUtils.isBlank(subPath)){
+            Optional<TenantConfig> config = this.getTenantConfig();
+            if (StringUtils.isBlank(subPath)) {
                 throw new EntRuntimeException(ERROR_VALIDATING_PATH_MSG);
             }
-
-            this.validateAndReturnResourcePath(config, subPath, isProtectedResource);
-
+            if (!this.exists(subPath, isProtectedResource)) {
+                throw new EntResourceNotFoundException(
+                        String.format("File \"%s\", protected \"%s\", Not Found", subPath, isProtectedResource));
+            }
+            this.validateAndReturnResourcePath(config, subPath, true, isProtectedResource);
             url = (isProtectedResource) ?
                     CdsUrlUtils.buildCdsInternalApiUrl(config, configuration)  :
                     CdsUrlUtils.buildCdsExternalPublicResourceUrl(config, configuration);
-
             url = EntUrlBuilder.builder()
                     .url(url)
-                    .path(CdsUrlUtils.getInternalSection(isProtectedResource))
+                    .path(CdsUrlUtils.getSection(isProtectedResource, config, this.configuration, true))
                     .path(subPath).build();
-
             Optional<ByteArrayInputStream> is = caller.getFile(url, config, isProtectedResource);
-            return is.orElseThrow(IOException::new);
-
-        } catch (EntRuntimeException ert) {
+            return is.orElse(new ByteArrayInputStream(new byte[0]));
+        } catch (EntResourceNotFoundException | EntRuntimeException ert) {
             throw ert;
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 log.info("File Not found - uri {}", url);
                 return null;
-            }  
+            }
             throw new EntResourceNotFoundException(ERROR_EXTRACTING_FILE, e);
         } catch (Exception e) {
             throw new EntResourceNotFoundException(ERROR_EXTRACTING_FILE, e);
@@ -169,8 +169,8 @@ public class CdsStorageManager implements IStorageManager {
     @Override
     public String getResourceUrl(String subPath, boolean isProtectedResource) {
         try {
-            Optional<TenantConfig> config = getTenantConfig();
-            return this.validateAndReturnResourcePath(config, subPath, isProtectedResource);
+            Optional<TenantConfig> config = this.getTenantConfig();
+            return this.validateAndReturnResourcePath(config, subPath, false, isProtectedResource);
         } catch (Exception e) {
             throw new EntRuntimeException("Error extracting resource url", e);
         }
@@ -185,7 +185,7 @@ public class CdsStorageManager implements IStorageManager {
 
     // when frontend  wants to retrieve public or protected folder contents it gets request with an empty subpath
     private boolean isSubPathPresent(String[] filenames, String subPath){
-        if(StringUtils.isEmpty(subPath)) {
+        if (StringUtils.isEmpty(subPath)) {
             return filenames.length > 0;
         } else {
             return Arrays.asList(filenames).contains(subPath);
@@ -240,15 +240,15 @@ public class CdsStorageManager implements IStorageManager {
     
     private List<BasicFileAttributeView> listAttributes(String subPath, boolean isProtectedResource, CdsFilter filter) {
         Optional<TenantConfig> config = this.getTenantConfig();
-        this.validateAndReturnResourcePath(config, subPath, isProtectedResource);
+        this.validateAndReturnResourcePath(config, subPath, true, isProtectedResource);
 
         URI apiUrl = EntUrlBuilder.builder()
                 .url(CdsUrlUtils.buildCdsInternalApiUrl(config, configuration).toString())
                 .path("/list/")
-                .path(CdsUrlUtils.getInternalSection(isProtectedResource))
+                .path(CdsUrlUtils.getSection(isProtectedResource, config, this.configuration, true))
                 .path(subPath)
                 .build();
-
+        
         Optional<CdsFileAttributeViewDto[]> cdsFileList = caller.getFileAttributeView(apiUrl, config);
 
         return remapAndSort(cdsFileList, filter);
@@ -310,22 +310,19 @@ public class CdsStorageManager implements IStorageManager {
     }
     
 
-    private String validateAndReturnResourcePath(Optional<TenantConfig> config, String resourceRelativePath, boolean privateUrl) {
+    private String validateAndReturnResourcePath(Optional<TenantConfig> config, String resourceRelativePath, boolean privateCall, boolean privateUrl) {
         try {
             String baseUrl = EntUrlBuilder.builder()
                     .url(CdsUrlUtils.fetchBaseUrl(config, configuration, privateUrl))
-                    .path(CdsUrlUtils.getInternalSection(privateUrl)) // << this is part of base url because we want check path traversal!!
+                    .path(CdsUrlUtils.getSection(privateUrl, config, this.configuration, privateCall))
                     .build().toString();
-
             String fullPath = EntUrlBuilder.builder()
                     .url(baseUrl)
                     .path(resourceRelativePath)
                     .build().toString();
-
             if (!StorageManagerUtil.doesPathContainsPath(baseUrl, fullPath, true)) {
                 throw mkPathValidationErr(baseUrl, fullPath);
             }
-
             return fullPath;
         } catch (IOException e) {
             throw new EntRuntimeException(ERROR_VALIDATING_PATH_MSG, e);
@@ -355,4 +352,18 @@ public class CdsStorageManager implements IStorageManager {
         DIRECTORY,
         ALL;
     }
+
+    private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
+        if (ctx == null) {
+            log.warn("Null WebApplicationContext during deserialization");
+            return;
+        }
+        this.tenantManager = ctx.getBean(ITenantManager.class);
+        this.configuration = ctx.getBean(CdsConfiguration.class);
+        this.caller = ctx.getBean(CdsRemoteCaller.class);
+    }
+    
 }
