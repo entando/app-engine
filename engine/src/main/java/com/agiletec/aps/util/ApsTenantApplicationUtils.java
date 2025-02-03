@@ -44,8 +44,9 @@ public final class ApsTenantApplicationUtils {
 		} else {
 			logger.debug("the custom header:'{}' is empty or blank, skip it", UrlUtils.ENTANDO_TENANT_CODE_CUSTOM_HEADER);
 			String domain = getDomainFromRequest(request);
-			String contextPath = request.getContextPath();
-			String context = contextPath.startsWith("/") ? contextPath.replaceFirst("/", "") : contextPath;
+			//String contextPath = request.getContextPath();
+			//String context = contextPath.startsWith("/") ? contextPath.replaceFirst("/", "") : contextPath;
+			String context = request.getParameter("virtual-context");
 			System.out.println(" *** TenantApplicationUtils *** CONTEXT: `" + context + "`");
 			ITenantManager tenantManager = ApsWebApplicationUtils.getBean(ITenantManager.class, request);
 			String tenantCodeFromDomainAndContext = tenantManager.getTenantCodeByDomainAndContext(domain, context);
