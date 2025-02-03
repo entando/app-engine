@@ -117,6 +117,9 @@
         <filter-name>XSSFilter</filter-name>
         <url-pattern>/pages/*</url-pattern>
     </filter-mapping>
+    <!--listener>
+        <listener-class>org.entando.entando.web.listener.VirtualContextListener</listener-class>
+    </listener-->
     <listener>
         <listener-class>org.entando.entando.apsadmin.system.tiles.EntandoStrutsTilesListener</listener-class>
     </listener>

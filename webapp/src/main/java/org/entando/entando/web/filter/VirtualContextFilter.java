@@ -63,6 +63,7 @@ public class VirtualContextFilter implements Filter {
         System.out.println(" * FILTER: Virtual Contexts Enabled: " + virtualContexts);
 
         if(!virtualContexts.isEmpty()) {
+            /*
             String[] parts = request.getServletPath().split("/");
             if (parts.length >= 3 && virtualContexts.contains(parts[1])) {
                 String virtualContextPath = "/" + parts[1];
@@ -71,6 +72,13 @@ public class VirtualContextFilter implements Filter {
             } else {
                 // Lanciare special error
                 System.out.println(" * * * * * * * * * * * * PATH NON GESTITO * * * * * * * * * * * * ");
+            }
+            */
+
+            String virtualContext = request.getHeader("X-ENTANDO-VIRTUAL-CONTEXT");
+            System.out.println("X-ENTANDO-VIRTUAL-CONTEXT: " + virtualContext);
+            if(virtualContext != null) {
+                param.put(CustomWrappedRequest.VIRTUAL_CONTEXT, new String[]{virtualContext});
             }
         }
 
