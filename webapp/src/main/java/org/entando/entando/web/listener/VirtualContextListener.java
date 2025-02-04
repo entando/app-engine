@@ -1,7 +1,7 @@
 package org.entando.entando.web.listener;
 
 import com.agiletec.apsadmin.system.dispatcher.StrutsPrepareAndExecuteFilter;
-import org.entando.entando.aps.servlet.routing.EngineVirtualContext;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.ent.util.EntLogging;
 
 import javax.servlet.*;
@@ -18,7 +18,7 @@ public class VirtualContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent ce) {
         ServletContext servletContext = ce.getServletContext();
 
-        List<String> virtualContexts = EngineVirtualContext.getVirtualContexts();
+        List<String> virtualContexts = VirtualContextHelper.getVirtualContexts();
         if (virtualContexts.isEmpty()) {
             return;
         }

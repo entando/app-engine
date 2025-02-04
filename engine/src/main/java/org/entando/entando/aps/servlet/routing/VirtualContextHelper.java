@@ -1,0 +1,107 @@
+/*
+ * Copyright 2022-Present Entando S.r.l. (http://www.entando.com) All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+package org.entando.entando.aps.servlet.routing;
+
+import com.agiletec.aps.system.EntThreadLocal;
+import com.agiletec.aps.system.SystemConstants;
+import org.entando.entando.aps.servlet.security.CustomWrappedRequest;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+
+public class VirtualContextHelper {
+
+    private static final EntLogger log = EntLogFactory.getSanitizedLogger(VirtualContextHelper.class);
+    public static final String ENABLED_VIRTUAL_CONTEXTS = System.getenv(SystemConstants.ENTANDO_VIRTUAL_CONTEXTS);
+
+
+    /**
+     * Returns a customized wrapper of the provided request
+     */
+    public static HttpServletRequest customizeRequest(final HttpServletRequest originalRequest) {
+        debugRequest("[ORIG]", originalRequest);
+        HttpServletRequest customizedRequest = applyVirtualContext(originalRequest);
+        debugRequest("[CUST]", customizedRequest);
+        return customizedRequest;
+    }
+
+    private static void debugRequest(String tag, HttpServletRequest customRequest) {
+        log.debug(" * FILTER: {} ContextPath: {}", tag, customRequest.getContextPath());
+        log.debug(" * FILTER: {} ServletPath: {}", tag, customRequest.getServletPath());
+    }
+
+    /**
+     * This method modifies on the fly, by wrapping it, the REQUEST
+     *
+     * @param request the original request
+     * @return the wrapped request if modification criteria are met, the original request otherwise
+     */
+    private static HttpServletRequest applyVirtualContext(HttpServletRequest request) {
+        List<String> allowedVirtualContexts = getVirtualContexts();
+
+        if (allowedVirtualContexts.isEmpty()) {
+            return request;
+        }
+
+        String[] parts = request.getServletPath().split("/");
+        String requestVirtualContext = (parts.length >= 2) ? parts[1] : null;
+
+        if (requestVirtualContext == null || !allowedVirtualContexts.contains(requestVirtualContext)) {
+            System.out.println(invalidVirtualContext(requestVirtualContext));
+            return request;
+        }
+
+        return new CustomWrappedRequest(request, requestVirtualContext, new TreeMap<>());
+    }
+
+    private static HttpClientErrorException invalidVirtualContext(String requestVirtualContext) {
+        return (requestVirtualContext != null)
+                ? new HttpClientErrorException(HttpStatus.NOT_FOUND, String.format("The requested virtual context \"%s\" doesn't exist", requestVirtualContext))
+                : new HttpClientErrorException(HttpStatus.NOT_FOUND, "The requested null virtual context doesn't exist");
+    }
+
+    public static List<String> getVirtualContexts() {
+        String virtualContextsAsString = ENABLED_VIRTUAL_CONTEXTS;
+        if (virtualContextsAsString != null) {
+            return Arrays.asList(virtualContextsAsString.split(SystemConstants.SEPARATOR_CONTEXTS, -1));
+        }
+        return Collections.emptyList();
+    }
+
+    public static void setupVirtualContextOnThreadLocalStorage(HttpServletRequest request) {
+        try {
+            CustomWrappedRequest customizedRequest = CustomWrappedRequest.getCustomizedRequest(request);
+            if (customizedRequest != null && customizedRequest.hasVirtualContext()) {
+                setThreadLocal_VirtualContextPath(customizedRequest.getContextPath());
+            }
+        } catch (Exception e) {
+            log.error("Error setting the thread local storage", e);
+        }
+    }
+
+    public static void setThreadLocal_VirtualContextPath(String virtualContextPath) {
+        EntThreadLocal.set(THREAD_LOCAL_VIRTUAL_CONTEXT, virtualContextPath);
+    }
+
+    public static String getThreadLocal_VirtualContextPath() {
+        return (String) EntThreadLocal.get(THREAD_LOCAL_VIRTUAL_CONTEXT);
+    }
+
+    private static final String THREAD_LOCAL_VIRTUAL_CONTEXT = "threadLocal_VirtualContextPath";
+
+}

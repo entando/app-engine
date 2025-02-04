@@ -13,7 +13,7 @@
  */
 package org.entando.entando.aps.servlet.security;
 
-import org.entando.entando.aps.servlet.routing.EngineVirtualContextFilter;
+import org.entando.entando.aps.servlet.routing.VirtualContextFilter;
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 
 import javax.servlet.ServletContext;
@@ -28,7 +28,7 @@ public class SecurityWebApplicationInitializer extends AbstractSecurityWebApplic
     @Override
     protected void beforeSpringSecurityFilterChain(ServletContext servletContext) {
         super.beforeSpringSecurityFilterChain(servletContext);
-        super.insertFilters(servletContext, new EngineVirtualContextFilter());
+        super.insertFilters(servletContext, new VirtualContextFilter());
         super.insertFilters(servletContext, new CsrfFilter());
     }
 }

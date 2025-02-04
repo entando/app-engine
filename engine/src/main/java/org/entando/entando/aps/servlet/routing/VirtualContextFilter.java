@@ -13,7 +13,7 @@
  */
 package org.entando.entando.aps.servlet.routing;
 
-import com.agiletec.aps.system.EntThreadLocal;
+import org.entando.entando.aps.servlet.security.CustomWrappedRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -22,9 +22,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class EngineVirtualContextFilter extends OncePerRequestFilter {
+public class VirtualContextFilter extends OncePerRequestFilter {
 
-    public EngineVirtualContextFilter() {
+    public VirtualContextFilter() {
     }
 
     @Override
@@ -33,13 +33,16 @@ public class EngineVirtualContextFilter extends OncePerRequestFilter {
                                  final FilterChain chain
     ) throws IOException, ServletException {
         try {
-            EntThreadLocal.clear();
-            chain.doFilter(
-                    EngineVirtualContext.applyVirtualContext(servletRequest, servletResponse),
-                    servletResponse
-            );
+            //$$$ EntThreadLocal.clear();
+            HttpServletRequest customizedRequest = VirtualContextHelper.customizeRequest(servletRequest);
+
+            if (customizedRequest instanceof CustomWrappedRequest && ((CustomWrappedRequest) customizedRequest).hasVirtualContext()) {
+                VirtualContextHelper.setThreadLocal_VirtualContextPath(customizedRequest.getContextPath());
+            }
+
+            chain.doFilter(customizedRequest, servletResponse);
         } finally {
-            EntThreadLocal.destroy();
+            //$$$ EntThreadLocal.destroy();
         }
     }
 }
