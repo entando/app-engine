@@ -1,4 +1,4 @@
-package org.entando.entando.web;
+package org.entando.entando.aps.servlet.security;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -71,7 +71,6 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
     public String getContextPath() {
         String origContextPath = super.getContextPath();
 
-
         if(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT) != null) {
             String virtualContextPath = getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT)[0];
             System.out.println(" ** WrappedRequest ** virtual context path: `" + virtualContextPath + "`");
@@ -86,16 +85,26 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
     public String getServletPath() {
         String origPath = super.getServletPath();
 
-        /*
         if(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT) != null) {
             String virtualPath = origPath.replaceFirst(getParameterMap().get(CustomWrappedRequest.VIRTUAL_CONTEXT)[0], "");
             System.out.println(" ** WrappedRequest ** virtual servlet path: " + virtualPath );
             return virtualPath;
         }
         System.out.println(" ** WrappedRequest ** real servlet path: " + origPath);
-        */
 
         return origPath;
     }
 
+    @Override
+    public String getRequestURI() {
+        String res = super.getRequestURI();
+        return res.replace(getContextPath(), "");
+    }
+
+    @Override
+    public StringBuffer getRequestURL() {
+        String old = super.getRequestURL().toString().replace(getContextPath(), "");
+        StringBuffer res = new StringBuffer();
+        return res.append(old);
+    }
 }

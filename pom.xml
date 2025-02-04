@@ -306,13 +306,14 @@
                     </execution>
                 </executions>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.codehaus.mojo</groupId>-->
-<!--                <artifactId>license-maven-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <executeOnlyOnRootModule>false</executeOnlyOnRootModule>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <!--plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.5.0</version>
+                <configuration>
+                    <executeOnlyOnRootModule>false</executeOnlyOnRootModule>
+                </configuration>
+            </plugin-->
         </plugins>
     </build>
     <dependencyManagement>

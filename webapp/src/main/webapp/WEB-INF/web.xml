@@ -55,10 +55,10 @@
         <filter-name>XSSFilter</filter-name>
         <filter-class>org.entando.entando.aps.servlet.XSSFilter</filter-class>
     </filter>
-    <filter>
+    <!--filter>
         <filter-name>VirtualContextFilter</filter-name>
         <filter-class>org.entando.entando.web.filter.VirtualContextFilter</filter-class>
-    </filter>
+    </filter-->
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
         <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
@@ -75,10 +75,10 @@
         <filter-name>CharacterEncodingFilter</filter-name>
         <url-pattern>*</url-pattern>
     </filter-mapping>
-    <filter-mapping>
+    <!--filter-mapping>
         <filter-name>VirtualContextFilter</filter-name>
         <url-pattern>*</url-pattern>
-    </filter-mapping>
+    </filter-mapping-->
     <filter-mapping>
         <filter-name>springSessionRepositoryFilter</filter-name>
         <url-pattern>/*</url-pattern>
@@ -117,9 +117,9 @@
         <filter-name>XSSFilter</filter-name>
         <url-pattern>/pages/*</url-pattern>
     </filter-mapping>
-    <!--listener>
+    <listener>
         <listener-class>org.entando.entando.web.listener.VirtualContextListener</listener-class>
-    </listener-->
+    </listener>
     <listener>
         <listener-class>org.entando.entando.apsadmin.system.tiles.EntandoStrutsTilesListener</listener-class>
     </listener>
@@ -187,10 +187,6 @@
     <servlet-mapping>
         <servlet-name>ResourceControllerServlet</servlet-name>
         <url-pattern>/protected/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>springDispatcher</servlet-name>
-        <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ControllerServlet</servlet-name>

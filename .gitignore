@@ -1,6 +1,7 @@
 .project
 .classpath
 .idea
+.run
 .cache
 .DS_Store
 *.im?
