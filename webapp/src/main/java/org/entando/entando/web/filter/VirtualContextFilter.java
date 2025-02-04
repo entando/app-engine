@@ -17,7 +17,7 @@ import com.agiletec.aps.system.EntThreadLocal;
 import com.agiletec.aps.system.SystemConstants;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.entando.entando.web.CustomWrappedRequest;
+import org.entando.entando.aps.servlet.security.CustomWrappedRequest;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -38,10 +38,15 @@ public class VirtualContextFilter implements Filter {
         try {
             EntThreadLocal.clear();
 
-            System.out.println(" * FILTER: ContextPath: `" + ((HttpServletRequest)servletRequest).getContextPath() + "`");
-            System.out.println(" * FILTER: ServletPath: " + ((HttpServletRequest)servletRequest).getServletPath());
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+            System.out.println(" * FILTER: Real ContextPath: `" + ((HttpServletRequest) servletRequest).getContextPath() + "`");
+            System.out.println(" * FILTER: Real ServletPath: " + ((HttpServletRequest) servletRequest).getServletPath());
 
             HttpServletRequest customRequest = customizeRequest((HttpServletRequest) servletRequest);
+
+            System.out.println(" * FILTER: Virtual ContextPath: `" + customRequest.getContextPath() + "`");
+            System.out.println(" * FILTER: Virtual ServletPath: " + customRequest.getServletPath());
 
             chain.doFilter(customRequest, servletResponse);
         } finally {
@@ -63,9 +68,9 @@ public class VirtualContextFilter implements Filter {
         System.out.println(" * FILTER: Virtual Contexts Enabled: " + virtualContexts);
 
         if(!virtualContexts.isEmpty()) {
-            /*
+
             String[] parts = request.getServletPath().split("/");
-            if (parts.length >= 3 && virtualContexts.contains(parts[1])) {
+            if (parts.length >= 2 && virtualContexts.contains(parts[1])) {
                 String virtualContextPath = "/" + parts[1];
                 System.out.println(" * FILTER: virtualContextPath: " + virtualContextPath);
                 param.put(CustomWrappedRequest.VIRTUAL_CONTEXT, new String[]{virtualContextPath});
@@ -73,13 +78,12 @@ public class VirtualContextFilter implements Filter {
                 // Lanciare special error
                 System.out.println(" * * * * * * * * * * * * PATH NON GESTITO * * * * * * * * * * * * ");
             }
-            */
 
-            String virtualContext = request.getHeader("X-ENTANDO-VIRTUAL-CONTEXT");
-            System.out.println("X-ENTANDO-VIRTUAL-CONTEXT: " + virtualContext);
-            if(virtualContext != null) {
-                param.put(CustomWrappedRequest.VIRTUAL_CONTEXT, new String[]{virtualContext});
-            }
+//            String virtualContext = request.getHeader("X-ENTANDO-VIRTUAL-CONTEXT");
+//            System.out.println("X-ENTANDO-VIRTUAL-CONTEXT: " + virtualContext);
+//            if(virtualContext != null) {
+//                param.put(CustomWrappedRequest.VIRTUAL_CONTEXT, new String[]{virtualContext});
+//            }
         }
 
         return new CustomWrappedRequest(request, param);
