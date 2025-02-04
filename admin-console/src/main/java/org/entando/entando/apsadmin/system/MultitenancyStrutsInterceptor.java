@@ -19,6 +19,7 @@ import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.struts2.ServletActionContext;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 
 public class MultitenancyStrutsInterceptor extends AbstractInterceptor {
 
@@ -29,13 +30,24 @@ public class MultitenancyStrutsInterceptor extends AbstractInterceptor {
             EntThreadLocal.clear();
 
             HttpServletRequest request = ServletActionContext.getRequest();
-            ApsTenantApplicationUtils.extractCurrentTenantCode(request)
-                    .ifPresentOrElse(ApsTenantApplicationUtils::setTenant,ApsTenantApplicationUtils::removeTenant);
+
+            setupTenantInfo(request);
+            setupVirtualContextInfo(request);
 
             return invocation.invoke();
 
         } finally {
             ApsTenantApplicationUtils.removeTenant();
+            VirtualContextHelper.setThreadLocal_VirtualContextPath(null);
         }
+    }
+
+    private static void setupVirtualContextInfo(HttpServletRequest request) {
+        VirtualContextHelper.setupVirtualContextOnThreadLocalStorage(request);
+    }
+
+    private static void setupTenantInfo(HttpServletRequest request) {
+        ApsTenantApplicationUtils.extractCurrentTenantCode(request)
+                .ifPresentOrElse(ApsTenantApplicationUtils::setTenant, ApsTenantApplicationUtils::removeTenant);
     }
 }

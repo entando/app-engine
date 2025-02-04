@@ -55,10 +55,6 @@
         <filter-name>XSSFilter</filter-name>
         <filter-class>org.entando.entando.aps.servlet.XSSFilter</filter-class>
     </filter>
-    <!--filter>
-        <filter-name>VirtualContextFilter</filter-name>
-        <filter-class>org.entando.entando.web.filter.VirtualContextFilter</filter-class>
-    </filter-->
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
         <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
@@ -75,10 +71,6 @@
         <filter-name>CharacterEncodingFilter</filter-name>
         <url-pattern>*</url-pattern>
     </filter-mapping>
-    <!--filter-mapping>
-        <filter-name>VirtualContextFilter</filter-name>
-        <url-pattern>*</url-pattern>
-    </filter-mapping-->
     <filter-mapping>
         <filter-name>springSessionRepositoryFilter</filter-name>
         <url-pattern>/*</url-pattern>

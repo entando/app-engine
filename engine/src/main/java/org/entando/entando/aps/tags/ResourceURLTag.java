@@ -16,6 +16,7 @@ package org.entando.entando.aps.tags;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -23,6 +24,8 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+
+import java.nio.file.Paths;
 
 /**
  * Return the URl of the resources.
@@ -59,12 +62,24 @@ public class ResourceURLTag extends TagSupport {
 			if (null == folder) {
 				folder = "";
 			}
-			pageContext.getOut().print(this.getRoot() + this.getFolder());
+			pageContext.getOut().print(
+					this.buildResourcePath()
+			);
 		}  catch (Exception e) {
 			logger.error("Error closing the tag", e);
 			throw new JspException("Error closing the tag", e);
 		}
 		return EVAL_PAGE;
+	}
+
+	private String buildResourcePath() {
+		String res = Paths.get("/", this.getVirtualContextPath(), this.getRoot(), this.getFolder()).toString();
+		return (res.endsWith("/")) ? res : res + "/";
+	}
+
+	private String getVirtualContextPath() {
+		String res = VirtualContextHelper.getThreadLocal_VirtualContextPath();
+		return (res == null || res.isEmpty()) ? "" : res;
 	}
 
 	public boolean isIgnoreTenant() {
