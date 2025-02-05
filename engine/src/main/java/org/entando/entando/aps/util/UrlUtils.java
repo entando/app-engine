@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -144,7 +145,10 @@ public final class UrlUtils {
         }).filter(StringUtils::isNotBlank);
     }
 
-
+    /**
+     * Returns the parsed version of the provided URI string.
+     * If the string is not a real URI null is returned instead.
+     */
     private static URI getUri(String url) {
         try {
             return new URI(url);
@@ -239,4 +243,13 @@ public final class UrlUtils {
         }
     }
 
+    private static final Pattern URI_SCHEME_PATTERN = Pattern.compile("^[a-z][a-z0-9+.-]*:.*$");
+
+    /**
+     * Tells if a string is not an absolute URI by checking that the string doesn't start with the "{scheme}:" pattern.
+     * Note that this is not a safe way to identify a relative URI, so if you need it please use {@link #getUri(String)}
+     */
+    public static boolean isNotAbsoluteURI(String mayBeURI) {
+        return !URI_SCHEME_PATTERN.matcher(mayBeURI).matches();
+    }
 }

@@ -18,6 +18,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
+import org.entando.entando.aps.util.UrlUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -73,8 +74,13 @@ public class ResourceURLTag extends TagSupport {
 	}
 
 	private String buildResourcePath() {
-		String res = Paths.get("/", this.getVirtualContextPath(), this.getRoot(), this.getFolder()).toString();
-		return (res.endsWith("/")) ? res : res + "/";
+		if (UrlUtils.isNotAbsoluteURI(this.getRoot())) {
+			String res = Paths.get("/", this.getVirtualContextPath(), this.getRoot(), this.getFolder()).toString();
+			return (res.endsWith("/")) ? res : res + "/";
+		} else {
+			String res = this.getRoot(), fld=this.getFolder();
+			return (res.endsWith("/") || fld.startsWith("/")) ? res + fld : res + "/" + fld;
+		}
 	}
 
 	private String getVirtualContextPath() {
