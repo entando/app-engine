@@ -25,6 +25,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Objects;
+
 @Configuration
 @EnableWebSecurity
 public class OAuth2SecurityConfiguration extends WebSecurityConfigurerAdapter {
@@ -53,6 +55,10 @@ public class OAuth2SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        /*CorsConfiguration noCorsConfig = new CorsConfiguration(corsConfiguration);
+        noCorsConfig.setAllowedOrigins(corsConfiguration.getAllowedOrigins());
+        noCorsConfig.addAllowedOrigin("null");
+        source.registerCorsConfiguration("/digital-exchange/**", noCorsConfig);*/
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }

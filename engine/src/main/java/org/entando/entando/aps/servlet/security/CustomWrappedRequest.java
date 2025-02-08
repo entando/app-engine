@@ -10,6 +10,7 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
 
     public static final String VIRTUAL_CONTEXT = "virtual-context";
     private final String virtualContextPath;
+    private Map<String, String> headersOverrides = new HashMap<>();
 
     /**
      * Create a new request wrapper that will merge additional parameters into
@@ -35,17 +36,6 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
     @Override
     public String getServletPath() {
         return stripVirtualContextIfRequired(this.getOriginalServletPath());
-    }
-
-    @Override
-    public String getRequestURI() {
-        return stripVirtualContextIfRequired(super.getRequestURI());
-    }
-
-    @Override
-    public StringBuffer getRequestURL() {
-        StringBuffer res = new StringBuffer();
-        return res.append(stripVirtualContextIfRequired(super.getRequestURL().toString()));
     }
 
     public boolean hasVirtualContext() {
@@ -76,4 +66,14 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
             return null;
         }
     }
+
+//    @Override
+//    public String getHeader(String name) {
+//        String res = this.headersOverrides.get(name);
+//        return (res == null) ? res : super.getHeader(name);
+//    }
+//
+//    public void overrideHeader(String name, String value) {
+//        this.headersOverrides.put(name, value);
+//    }
 }

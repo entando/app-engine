@@ -34,15 +34,9 @@ public class VirtualContextHelper {
      * Returns a customized wrapper of the provided request
      */
     public static HttpServletRequest customizeRequest(final HttpServletRequest originalRequest) {
-        debugRequest("[ORIG]", originalRequest);
         HttpServletRequest customizedRequest = applyVirtualContext(originalRequest);
-        debugRequest("[CUST]", customizedRequest);
+        debugRequest(originalRequest, customizedRequest);
         return customizedRequest;
-    }
-
-    private static void debugRequest(String tag, HttpServletRequest customRequest) {
-        log.debug(" * FILTER: {} ContextPath: {}", tag, customRequest.getContextPath());
-        log.debug(" * FILTER: {} ServletPath: {}", tag, customRequest.getServletPath());
     }
 
     /**
@@ -62,17 +56,10 @@ public class VirtualContextHelper {
         String requestVirtualContext = (parts.length >= 2) ? parts[1] : null;
 
         if (requestVirtualContext == null || !allowedVirtualContexts.contains(requestVirtualContext)) {
-            System.out.println(invalidVirtualContext(requestVirtualContext));
             return request;
         }
 
         return new CustomWrappedRequest(request, requestVirtualContext, new TreeMap<>());
-    }
-
-    private static HttpClientErrorException invalidVirtualContext(String requestVirtualContext) {
-        return (requestVirtualContext != null)
-                ? new HttpClientErrorException(HttpStatus.NOT_FOUND, String.format("The requested virtual context \"%s\" doesn't exist", requestVirtualContext))
-                : new HttpClientErrorException(HttpStatus.NOT_FOUND, "The requested null virtual context doesn't exist");
     }
 
     public static List<String> getVirtualContexts() {
@@ -83,7 +70,7 @@ public class VirtualContextHelper {
         return Collections.emptyList();
     }
 
-    public static void setupVirtualContextOnThreadLocalStorage(HttpServletRequest request) {
+    public static void setupThreadLocalStorage(HttpServletRequest request) {
         try {
             CustomWrappedRequest customizedRequest = CustomWrappedRequest.getCustomizedRequest(request);
             if (customizedRequest != null && customizedRequest.hasVirtualContext()) {
@@ -104,4 +91,11 @@ public class VirtualContextHelper {
 
     private static final String THREAD_LOCAL_VIRTUAL_CONTEXT = "threadLocal_VirtualContextPath";
 
+    private static void debugRequest(HttpServletRequest originalRequest, HttpServletRequest customizedRequest) {
+        log.trace("Original ServletPath: {}", originalRequest.getServletPath());
+        log.trace("Original ContextPath: {}", originalRequest.getContextPath());
+        log.trace("Customized ContextPath: {}", customizedRequest.getContextPath());
+        log.trace("Customized ServletPath: {}", customizedRequest.getServletPath());
+    }
+    }
 }
