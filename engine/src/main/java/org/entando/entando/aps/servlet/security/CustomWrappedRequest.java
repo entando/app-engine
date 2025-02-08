@@ -37,17 +37,6 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
         return stripVirtualContextIfRequired(this.getOriginalServletPath());
     }
 
-    @Override
-    public String getRequestURI() {
-        return stripVirtualContextIfRequired(super.getRequestURI());
-    }
-
-    @Override
-    public StringBuffer getRequestURL() {
-        StringBuffer res = new StringBuffer();
-        return res.append(stripVirtualContextIfRequired(super.getRequestURL().toString()));
-    }
-
     public boolean hasVirtualContext() {
         return virtualContextPath != null;
     }

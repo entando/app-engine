@@ -69,7 +69,7 @@ public class ControllerServlet extends freemarker.ext.servlet.FreemarkerServlet 
 			_logger.debug("Output");
 			try {
 				this.initFreemarker(request, response, reqCtx);
-				VirtualContextHelper.setupVirtualContextOnThreadLocalStorage(request);
+				VirtualContextHelper.setupThreadLocalStorage(request);
 				this.executePage(request, reqCtx);
 			} catch (Throwable t) {
 				_logger.error("Error building response", t);

@@ -43,7 +43,7 @@ public class MultitenancyStrutsInterceptor extends AbstractInterceptor {
     }
 
     private static void setupVirtualContextInfo(HttpServletRequest request) {
-        VirtualContextHelper.setupVirtualContextOnThreadLocalStorage(request);
+        VirtualContextHelper.setupThreadLocalStorage(request);
     }
 
     private static void setupTenantInfo(HttpServletRequest request) {

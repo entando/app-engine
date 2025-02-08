@@ -105,8 +105,9 @@ public class TenantManager implements ITenantManager, InitializingBean {
                 .findFirst()
                 .orElse(getCodes().stream().filter(code -> StringUtils.equals(code, domain)).findFirst().orElse(null));
         if (logger.isDebugEnabled()) {
-            logger.debug("From domain/context:'{}{}' retrieved tenantCode:'{}' from codes:'{}'",
-                    domain, context, tenantCode, getCodes().stream().collect(Collectors.joining(",")));
+            logger.debug("Selected tenant of code: '{}' due to request domain and context: '{}/{}'",
+                    tenantCode, domain, (context != null) ? context : "*"
+            );
         }
         return identityIfStatusReadyOrThrow(tenantCode);
     }

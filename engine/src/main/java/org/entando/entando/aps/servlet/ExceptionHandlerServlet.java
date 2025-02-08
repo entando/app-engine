@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
+import org.entando.entando.aps.servlet.security.CustomWrappedRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
@@ -37,18 +39,22 @@ public class ExceptionHandlerServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        HttpServletRequest customizedRequest = setupVirtualContext(request);
+
         try {
+
             String pageCode = this.pageManager.getConfig(IPageManager.CONFIG_PARAM_ERROR_PAGE_CODE);
             log.debug("Configured error page: '{}'", pageCode);
             if (pageCode != null) {
                 IPage page = this.pageManager.getOnlinePage(pageCode);
                 if (null != page) {
-                    Lang lang = this.getLang(request);
-                    String url = this.urlManager.createURL(page, lang, Map.of(), false, request);
-                    String baseUrl = this.urlManager.getApplicationBaseURL(request);
+                    Lang lang = this.getLang(customizedRequest);
+                    String url = this.urlManager.createURL(page, lang, Map.of(), false, customizedRequest);
+                    String baseUrl = this.urlManager.getApplicationBaseURL(customizedRequest);
                     String path = url.substring(baseUrl.length() - 1);
                     log.debug("Forwarding to path '{}' (url='{}', baseUrl='{}')", path, url, baseUrl);
-                    request.getServletContext().getRequestDispatcher(path).forward(request, response);
+                    customizedRequest.getServletContext().getRequestDispatcher(path).forward(customizedRequest, response);
                     return;
                 } else {
                     log.warn("Unable to find custom error page '{}'", pageCode);
@@ -60,10 +66,19 @@ public class ExceptionHandlerServlet extends HttpServlet {
         try {
             // Default error page
             log.debug("Displaying default error page");
-            request.getServletContext().getRequestDispatcher("/error.jsp").forward(request, response);
+            customizedRequest.getServletContext().getRequestDispatcher("/error.jsp").forward(customizedRequest, response);
         } catch (Throwable t) {
             log.warn("Error while displaying default error page", t);
         }
+    }
+
+    private static HttpServletRequest setupVirtualContext(HttpServletRequest request) {
+        HttpServletRequest customizedRequest = VirtualContextHelper.customizeRequest(request);
+
+        if (customizedRequest instanceof CustomWrappedRequest && ((CustomWrappedRequest) customizedRequest).hasVirtualContext()) {
+            VirtualContextHelper.setThreadLocal_VirtualContextPath(customizedRequest.getContextPath());
+        }
+        return customizedRequest;
     }
 
     private Lang getLang(HttpServletRequest request) {
