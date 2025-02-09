@@ -4,6 +4,7 @@ import com.agiletec.apsadmin.system.dispatcher.StrutsPrepareAndExecuteFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.ent.util.EntLogging;
+import org.entando.entando.web.devmode.DevModeProxy;
 
 import javax.servlet.*;
 import java.nio.file.Paths;
@@ -32,16 +33,22 @@ public class ServletContextConfigurator implements ServletContextListener {
         ServletRegistration controllerServletRegistration = servletContext.getServletRegistration(CONTROLLER_SERVLET);
         ServletRegistration previewControllerServletRegistration = servletContext.getServletRegistration(PREVIEW_CONTROLLER_SERVLET);
         ServletRegistration exceptionHandlerServlet = servletContext.getServletRegistration(EXCEPTION_HANDLER_SERVLET);
+        ServletRegistration proxyServlet = addProxyServletRegistration(servletContext);
 
         for (String vctx : virtualContexts) {
             LOGGER.info("Dynamically adding additional mappings for context: {}", vctx);
             addContextFiltersMapping(strutsFilter, vctx);
             addApiMapping(springDispatcherRegistration, vctx);
             addPagesMapping(controllerServletRegistration, previewControllerServletRegistration, vctx);
+            addSpecialMapping(exceptionHandlerServlet, proxyServlet, vctx);
         }
 
     }
 
+    private static ServletRegistration addProxyServletRegistration(ServletContext servletContext) {
+        return (StringUtils.isBlank(DevModeProxy.CONFIG)) ? null :
+                servletContext.addServlet("ProxyServlet", DevModeProxy.class);
+    }
 
     private static void addContextFiltersMapping(FilterRegistration.Dynamic filter, String vctx) {
         filter.addMappingForUrlPatterns(DISPATCHER_TYPES, false, Paths.get("/", vctx, "do", "*").toString());

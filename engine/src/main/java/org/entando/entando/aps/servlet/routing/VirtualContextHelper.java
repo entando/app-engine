@@ -92,9 +92,10 @@ public class VirtualContextHelper {
     private static final String THREAD_LOCAL_VIRTUAL_CONTEXT = "threadLocal_VirtualContextPath";
 
     private static void debugRequest(HttpServletRequest originalRequest, HttpServletRequest customizedRequest) {
-        log.info("Original ContextPath: {}", originalRequest.getContextPath());
-        log.info("Original ServletPath: {}", originalRequest.getServletPath());
-        log.info("Customized ContextPath: {}", customizedRequest.getContextPath());
-        log.info("Customized ServletPath: {}", customizedRequest.getServletPath());
+        log.trace("Original ServletPath: {}", originalRequest.getServletPath());
+        log.trace("Original ContextPath: {}", originalRequest.getContextPath());
+        log.trace("Customized ContextPath: {}", customizedRequest.getContextPath());
+        log.trace("Customized ServletPath: {}", customizedRequest.getServletPath());
+    }
     }
 }
