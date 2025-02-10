@@ -97,5 +97,9 @@ public class VirtualContextHelper {
         log.trace("Customized ContextPath: {}", customizedRequest.getContextPath());
         log.trace("Customized ServletPath: {}", customizedRequest.getServletPath());
     }
+
+    public static String contextPathToContext(String contextPath) {
+        if (contextPath == null) return null;
+        return contextPath.replaceAll("/$", "").replaceAll("^/", "");
     }
 }

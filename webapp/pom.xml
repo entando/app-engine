@@ -222,7 +222,7 @@
                 <!--Hard coded ports for local development -->
                 <db.server.local.port>${db.server.port}</db.server.local.port>
 
-                <cors.access.control.allow.origin>http://localhost:3000</cors.access.control.allow.origin>
+                <cors.access.control.allow.origin>http://localhost:3000,http://localhost:3001</cors.access.control.allow.origin>
                 <cors.access.control.allow.credentials>true</cors.access.control.allow.credentials>
             </properties>
         </profile>

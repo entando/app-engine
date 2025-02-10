@@ -55,10 +55,6 @@ public class OAuth2SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        /*CorsConfiguration noCorsConfig = new CorsConfiguration(corsConfiguration);
-        noCorsConfig.setAllowedOrigins(corsConfiguration.getAllowedOrigins());
-        noCorsConfig.addAllowedOrigin("null");
-        source.registerCorsConfiguration("/digital-exchange/**", noCorsConfig);*/
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }

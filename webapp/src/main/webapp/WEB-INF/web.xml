@@ -181,6 +181,10 @@
         <url-pattern>/protected/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>springDispatcher</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>ControllerServlet</servlet-name>
         <url-pattern>/page/*</url-pattern>
     </servlet-mapping>
