@@ -13,6 +13,7 @@
  */
 package com.agiletec.plugins.jacms.aps.system.services.dispenser;
 
+import com.agiletec.aps.system.ApsSystemUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -81,6 +82,7 @@ public class BaseContentDispenser extends AbstractService implements IContentDis
             long modelId, String langCode, RequestContext reqCtx, boolean cacheable) {
         PublicContentAuthorizationInfo authInfo = this.getContentAuthorizationHelper().getAuthorizationInfo(contentId, cacheable);
         if (null == authInfo) {
+            _logger.debug("No authorization info found for content {}", contentId);
             return null;
         }
         return this.getRenderizationInfo(authInfo, contentId, modelId, langCode, reqCtx, cacheable);
@@ -104,12 +106,21 @@ public class BaseContentDispenser extends AbstractService implements IContentDis
     protected ContentRenderizationInfo getRenderizationInfo(PublicContentAuthorizationInfo authInfo,
             String contentId, long modelId, String langCode, UserDetails user, RequestContext reqCtx, boolean cacheable) {
         String cacheKey = BaseContentDispenser.getRenderizationInfoCacheKey(contentId, modelId, langCode, user);
+
+        ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "for content: " + contentId + " modelId: " + modelId + " langCode: " + langCode + " user " + user.getUsername());
+        ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "cache key in use: " + cacheKey);
+        ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "cacheable: " + String.valueOf(cacheable));
+
         ContentRenderizationInfo renderInfo = (cacheable)
                 ? (ContentRenderizationInfo) this.getCacheInfoManager().getFromCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey) : null;
         if (null != renderInfo) {
+            ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "content RETRIEVED from the cache with key: " + cacheKey );
+            ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "CACHED rendered content [key: " + cacheKey + "]:\n\t[" + renderInfo.getCachedRenderedContent() + "]");
+            ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "rendered content [key: " + cacheKey + "]:\n\t[" + renderInfo.getRenderedContent() + "]");
             return renderInfo;
         }
         try {
+            ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "cache MISS for key " + cacheKey + ", resorting to database");
             List<Group> userGroups = (null != user) ? this.getAuthorizationManager().getUserGroups(user) : new ArrayList<>();
             if (authInfo.isUserAllowed(userGroups)) {
                 renderInfo = this.getBaseRenderizationInfo(authInfo, contentId, modelId, langCode, user, reqCtx);
@@ -124,6 +135,7 @@ public class BaseContentDispenser extends AbstractService implements IContentDis
             return null;
         }
         if (cacheable) {
+            ApsSystemUtils.ApsDeepDebug.print("contentRenderInfo-cache-key", "CACHING content render info info with key: " + cacheKey );
             String[] groups = BaseContentDispenser.getRenderizationInfoCacheGroupsCsv(contentId, modelId).split(",");
             this.getCacheInfoManager().putInCache(ICacheInfoManager.DEFAULT_CACHE_NAME, cacheKey, renderInfo, groups);
         }

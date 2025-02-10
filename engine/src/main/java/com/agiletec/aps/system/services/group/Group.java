@@ -18,7 +18,7 @@ import com.agiletec.aps.system.services.authorization.AbstractAuthority;
 import java.io.Serializable;
 
 /**
- * Rappresentazione di un'oggetto "Gruppo".
+ * Rappresentazione di un oggetto "Gruppo".
  * @author E.Santoboni
  */
 public class Group extends AbstractAuthority implements Serializable {
