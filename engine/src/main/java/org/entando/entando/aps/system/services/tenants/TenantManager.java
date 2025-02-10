@@ -157,12 +157,13 @@ public class TenantManager implements ITenantManager, InitializingBean {
     }
 
     private String identityIfStatusReadyOrThrow(String tenantCode){
-        if( tenantCode == null
-                || !tenantDataAccessor.getTenantConfigs().containsKey(tenantCode)
-                || TenantStatus.READY.equals(tenantDataAccessor.getTenantStatuses().get(tenantCode)) ) {
+        if (tenantCode == null) return null;
+        TenantStatus tenantStatus = tenantDataAccessor.getTenantStatuses().get(tenantCode);
+        if (!tenantDataAccessor.getTenantConfigs().containsKey(tenantCode) || TenantStatus.READY.equals(tenantStatus)) {
             return tenantCode;
         }
-        throw new RuntimeException(String.format("Error status for tenant with code '%s' is not ready please visit health status endpoint to check", tenantCode));
+        throw new RuntimeException(String.format("The tenant '%s' is not ready ('%s'), " +
+                "please visit health status endpoint to check", tenantCode, tenantStatus));
     }
 
     @Override

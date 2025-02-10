@@ -19,6 +19,7 @@ import com.agiletec.aps.system.EntThreadLocal;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.aps.util.UrlUtils;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ public final class ApsTenantApplicationUtils {
 
 	public static Optional<String> extractCurrentTenantCode(HttpServletRequest request) {
 		String tenantCode = fetchTenantCodeFromEntandoHeader(request);
-		System.out.println(" *** TenantApplicationUtils *** REQUEST CLASS: " + request.getClass().getName());
 		if(StringUtils.isNotBlank(tenantCode)) {
 			if(StringUtils.equalsIgnoreCase(tenantCode, PRIMARY_CODE)) {
 				logger.debug("the tenantCode:'{}' contains primary code, return empty", tenantCode);
@@ -44,11 +44,9 @@ public final class ApsTenantApplicationUtils {
 		} else {
 			logger.debug("the custom header:'{}' is empty or blank, skip it", UrlUtils.ENTANDO_TENANT_CODE_CUSTOM_HEADER);
 			String domain = getDomainFromRequest(request);
-			String context = request.getContextPath().replaceAll("/$", "").replaceAll("^/", "");;
-			System.out.println(" *** TenantApplicationUtils *** CONTEXT: `" + context + "`");
+			String context = VirtualContextHelper.contextPathToContext(request.getContextPath());
 			ITenantManager tenantManager = ApsWebApplicationUtils.getBean(ITenantManager.class, request);
 			String tenantCodeFromDomainAndContext = tenantManager.getTenantCodeByDomainAndContext(domain, context);
-			System.out.println(" *** TenantApplicationUtils *** TENANT CODE: `" + tenantCodeFromDomainAndContext + "`");
 			return Optional.ofNullable(tenantCodeFromDomainAndContext);
 		}
 	}
