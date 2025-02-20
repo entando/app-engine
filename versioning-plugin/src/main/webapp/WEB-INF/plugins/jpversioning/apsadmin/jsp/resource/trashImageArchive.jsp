@@ -16,9 +16,9 @@
 </ol>
 
 <div class="page-tabs-header">
-    <div class="row">
-        <div class="col-sm-12 col-md-6">
-            <h1 class="page-title-container">
+    <div class="row" style="display: flex; align-items: center;">
+        <div class="col-sm-12 col-md-8">
+            <h1 style="margin: unset;">
                 <s:text name="jpversioning.admin.menu"/>
                 <span class="pull-right">
                 <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
@@ -28,7 +28,7 @@
                 </span>
             </h1>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-4">
             <ul class="nav nav-tabs nav-justified nav-tabs-pattern">
                 <c:if test="${isEditContents}">
                     <li>
@@ -53,29 +53,22 @@
     </div>
 </div>
 
-<br/>
 
 <div id="main">
-    <div class="container-fluid subsection-light">
+    <div class="subsection-light">
         <s:form action="search" cssClass="form-horizontal">
             <p class="sr-only">
                 <wpsf:hidden name="resourceTypeCode" />
             </p>
 
             <div class="searchPanel form-group">
-                <label for="descr" class="sr-only">
-                    <s:text name="label.search.by"/>&#32;<s:text name="label.description"/>
-                </label>
-
-                <div class="well col-md-offset-3 col-md-6">
-                    <p class="search-label col-sm-12"><s:text name="label.search.label"/></p>
+                <div class="well">
                     <div class="form-group">
-                        <label class="col-sm-2 control-label"><s:text name="jpversioning.label.description" /></label>
-                        <div class="col-sm-10 has-clear">
+                        <div class="has-clear">
                             <wpsf:textfield id="text" name="text" cssClass="form-control input-lg" title="%{getText('label.search.by')+' '+getText('label.description')}" placeholder="%{getText('jpversioning.label.description')}"/>
                         </div>
                     </div>
-                    <div class="col-sm-12">
+                    <div >
                         <div class="form-group">
                             <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
                                 <span class="sr-only"><s:text name="label.search" /></span>

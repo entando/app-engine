@@ -12,33 +12,39 @@
         </s:if>
         <wpsf:hidden name="contentOnSessionMarker" />
     </p>
-    <div class="searchPanel form-group">
-        <div class="well col-md-offset-3 col-md-6">
-            <p class="search-label col-sm-12"><s:text name="label.search.label"/></p>
-            <div class="form-group">
-                <label class="col-sm-2 control-label">
-                    <s:text name="label.search.by" />
-                </label>
-                <div class="col-sm-9">
+    <div class="searchPanel form-group searchPanelColumn">
+        <div class="well">
+            <div class="form-group" style="display: flex; align-items: center;">
+                <div style="margin-right: 16px;">
                     <wpsf:textfield name="text" id="text" cssClass="form-control"  title="%{getText('label.search.by')+' '+getText('label.description')}" placeholder="%{getText('label.description')}"/>
                 </div>
+                <div>
+                    <div class="form-group">
+                        <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
+                            <s:text name="label.search" />
+                        </wpsf:submit>
+                    </div>
+                </div>
             </div>
-            <div class="panel-group" id="accordion-markup" >
+      
+            </div>
+           
+            <div class="panel-group" id="accordion-markup">
                 <div class="panel panel-default">
                     <div class="panel-heading" style="padding:0 0 10px;">
-                        <p class="panel-title active" style="text-align: end">
+                        <p class="panel-title active">
                             <a data-toggle="collapse" data-parent="#accordion-markup" href="#collapseOne">
                                 <s:text name="label.search.advanced" />
                             </a>
                         </p>
                     </div>
                     <div id="collapseOne" class="panel-collapse collapse <s:if test="%{#attr['openCollapsed'] || #attr['openCollapsed'].equals('\\'true\\'') || openCollapsed}">in</s:if>">
-                            <div class="panel-body">
+                            <div class="panel-body" style="display:flex; gap: 8px; justify-content: flex-start; align-items: flex-start;">
                             <%-- groups --%>
                             <s:set var="allowedGroupsVar" value="allowedGroups"></s:set>
                             <s:if test="null != #allowedGroupsVar && #allowedGroupsVar.size()>1">
                                 <div class="form-group">
-                                    <label for="ownerGroupName" class="control-label col-sm-2" ><s:text name="label.group" /></label>
+                                    <label for="ownerGroupName" class="control-label" ><s:text name="label.group" /></label>
                                     <div class="col-sm-9" >
                                         <wpsf:select name="ownerGroupName" id="ownerGroupName" list="#allowedGroupsVar" headerKey="" headerValue="%{getText('label.all')}" listKey="name" listValue="descr" cssClass="form-control" />
                                     </div>
@@ -47,7 +53,7 @@
 
                             <%-- filename --%>
                             <div class="form-group">
-                                <label for="fileName" class="control-label col-sm-2"><s:text name="label.filename" /></label>
+                                <label for="fileName" class="control-label"><s:text name="label.filename" /></label>
                                 <div class="col-sm-9">
                                     <wpsf:textfield name="fileName" id="fileName" cssClass="form-control"/>
                                 </div>
@@ -55,15 +61,15 @@
 
                             <%-- resource id --%>
                             <div class="form-group">
-                                <label for="fileName" class="control-label col-sm-2"><s:text name="label.resourceId" /></label>
+                                <label for="fileName" class="control-label"><s:text name="label.resourceId" /></label>
                                 <div class="col-sm-9">
                                     <wpsf:textfield name="searchedResourceId" id="searchedResourceId" cssClass="form-control"/>
                                 </div>
                             </div>
 
                             <%-- category tree --%>
-                            <div class="form-group">
-                                <label for="fileName" class="control-label col-sm-2"><s:text name="label.categoriesTree" /></label>
+                            <div class="form-group" style="align-items: flex-start;" >
+                                <label for="fileName" class="control-label" style="margin-top: 6px;"><s:text name="label.categoriesTree" /></label>
                                 <div class="col-sm-9">
                                     <div class="table-responsive ">
                                         <table id="categoryTree" class="table table-bordered table-hover table-treegrid <s:property value="#categoryTreeStyleVar" />">
@@ -106,14 +112,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-sm-12">
-                <div class="form-group">
-                    <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
-                        <s:text name="label.search" />
-                    </wpsf:submit>
-                </div>
-            </div>
         </div>
     </div>
 </s:form>

@@ -12,19 +12,20 @@
     </li>
 </ol>
 <div class="page-tabs-header">
-    <div class="row">
-        <div class="col-sm-6">
-            <h1>
+    <div class="row" style="display: flex;">
+        <div class="col-sm-9" style="display: flex; width: 100%; align-items: center; justify-content: space-between;">
+            <h1 style="margin: unset;">
                 <s:text name="title.categoryManagement"/>
-                <span class="pull-right">
-                    <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
-                       data-content="<s:text name="page.category.help"/>" data-placement="left" data-original-title="">
-                        <i class="fa fa-question-circle-o" aria-hidden="true"></i>
-                    </a>
-                </span>
+               
             </h1>
+            <span class="pull-right">
+                <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
+                   data-content="<s:text name="page.category.help"/>" data-placement="left" data-original-title="">
+                    <i class="fa fa-question-circle-o" aria-hidden="true"></i>
+                </a>
+            </span>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-3">
             <ul class="nav nav-tabs nav-justified nav-tabs-pattern">
                 <li class="active">
                     <a href="<s:url namespace="/do/Category" action="viewTree" />"><s:text name="title.categoryTree"/></a>

@@ -88,7 +88,7 @@
                                         <wpsa:actionSubParam name="index" value="%{#elementIndexVar}" />
                                     </wpsa:actionParam>
                                     <wpsf:submit action="%{#actionName}" type="button" value="%{getText('label.remove')}" title="%{getText('label.remove')}" cssClass="btn btn-menu-right">
-                                        <i class="fa fa-trash-o fa-lg" aria-hidden="true" style="color: #23a8e0"></i>
+                                        <i class="fa fa-trash-o fa-lg" aria-hidden="true" style="color: #1a75ff"></i>
                                     </wpsf:submit>
                                 </td>
                             </tr>

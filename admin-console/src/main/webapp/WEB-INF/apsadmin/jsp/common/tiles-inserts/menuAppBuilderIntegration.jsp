@@ -62,7 +62,7 @@
 <ul class="list-group">
     <li class="list-group-item secondary-nav-item-pf">
         <a href='<c:out value="${appBuilderBaseURL}"/>dashboard' class="no-chevron">
-            <span class="fa" data-toggle="tooltip" title="<s:text name="menu.dashboard" />"><em class="dashboard"></em></span>
+            <span class="icons-svg-new svg-dashboard" data-toggle="tooltip" title="<s:text name="menu.dashboard" />"><em class="dashboard"></em></span>
             <span class="list-group-item-value"><s:text name="menu.dashboard" /></span>
         </a>
     </li>
@@ -72,7 +72,7 @@
         <li class="list-group-item secondary-nav-item-pf" data-target="#page-designer-secondary">
 
             <a>
-                <span class="fa fa-files-o" data-toggle="tooltip" title="<s:text name="menu.pageDesigner" />" ></span>
+                <span class="icons-svg-new svg-pages" data-toggle="tooltip" title="<s:text name="menu.pageDesigner" />" ></span>
                 <span class="list-group-item-value"><s:text name="menu.pageDesigner" /></span>
             </a>
 
@@ -117,7 +117,7 @@
     <c:if test="${isSuperUser}">
         <li class="list-group-item secondary-nav-item-pf" data-target="#ux-pattern-secondary">
             <a>
-                <span class="fa fa-object-ungroup" data-toggle="tooltip" title="<s:text name="menu.UXPattern" />"></span>
+                <span class="icons-svg-new svg-components" data-toggle="tooltip" title="<s:text name="menu.UXPattern" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.UXPattern" /></span>
             </a>
 
@@ -148,7 +148,7 @@
     <!-- APPS -->
     <li class="list-group-item secondary-nav-item-pf" data-target="#apps-secondary">
         <a>
-            <span class="fa fa-file-text-o" data-toggle="tooltip" title="<s:text name="menu.APPS" />"></span>
+            <span class="icons-svg-new svg-content" data-toggle="tooltip" title="<s:text name="menu.APPS" />"></span>
             <span class="list-group-item-value"><s:text name="menu.APPS" /></span>
         </a>
         <!--Integrations secondary-->
@@ -172,10 +172,9 @@
         <!--  Users Settings -->
         <li class="list-group-item secondary-nav-item-pf" data-target="#user-settings-secondary">
             <a>
-                <span class="fa fa-users" data-toggle="tooltip" title="<s:text name="menu.userSettings" />" ></span>
-                <span class="list-group-item-value"><s:text name="menu.userSettings" /></span>
-            </a>
-
+            <span class="icons-svg-new svg-users" data-toggle="tooltip" title="<s:text name="menu.userSettings" />"></span>
+            <span class="list-group-item-value"><s:text name="menu.userSettings" /></span>
+        </a>
             <div id="#user-settings-secondary" class="nav-pf-secondary-nav">
                 <div class="nav-item-pf-header">
                     <a class="secondary-collapse-toggle-pf" data-toggle="collapse-secondary-nav"></a>
@@ -227,7 +226,7 @@
     <c:if test="${(isSuperUser || isEnterECR) && !isHideBundlesMenuEntries}">
         <li class="list-group-item secondary-nav-item-pf">
             <a href='<c:out value="${appBuilderBaseURL}"/>component-repository' class="no-chevron">
-                <span class="fa fa-th-list" data-toggle="tooltip" title="<s:text name="menu.ECR" />"></span>
+                <span class="icons-svg-new svg-hub" data-toggle="tooltip" title="<s:text name="menu.ECR" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.ECR" /></span>
             </a>
         </li>
@@ -237,7 +236,7 @@
     <c:if test="${!isHideBundlesMenuEntries}">
         <li class="list-group-item secondary-nav-item-pf menu-epc">
             <a href='<c:out value="${appBuilderBaseURL}"/>' onclick="window.sessionStorage.setItem('menu_open', 'epc')" class="no-chevron">
-                <span class="fa menu-epc-icon" data-toggle="tooltip" title="<s:text name="menu.EPCs" />"></span>
+                <span class="icons-svg-new svg-emp" data-toggle="tooltip" title="<s:text name="menu.EPCs" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.EPCs" /></span>
             </a>
         </li>
@@ -245,11 +244,11 @@
 </ul>
 
 <c:if test="${isSuperUser}">
-    <ul class="list-group fixed-bottom">
+    <ul class="list-group">
 
         <li class="list-group-item secondary-nav-item-pf" data-target="#settings-secondary">
             <a>
-                <span class="fa fa-cogs" data-toggle="tooltip" title="<s:text name="menu.settings" />"></span>
+                <span class="icons-svg-new svg-setting" data-toggle="tooltip" title="<s:text name="menu.settings" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.settings" /></span>
             </a>
 

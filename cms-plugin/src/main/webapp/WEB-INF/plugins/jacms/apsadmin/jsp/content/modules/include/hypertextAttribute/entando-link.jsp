@@ -15,11 +15,14 @@
 
 		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/css/entando-admin-console-default-theme.css" media="screen" />
 		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/bootstrap/css/bootstrap.min.css" media="screen">
-		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly.min.css">
-		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly-additions.min.css">
+		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly.css">
+		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly-additions.css">
 		<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/css/entando-admin-console-default-theme.css">
 		<link rel="stylesheet" type="text/css" href="<wp:resourceURL />administration/css/pages/settingsPage.css">
 		<link rel="stylesheet" type="text/css" href="<wp:resourceURL />administration/css/jquery-ui.css">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
 
 		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->

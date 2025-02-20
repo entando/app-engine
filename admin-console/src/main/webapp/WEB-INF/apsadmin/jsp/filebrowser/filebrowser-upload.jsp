@@ -69,7 +69,7 @@
 
                 <div class="col-sm-5 col-sm-offset-2">                                        
 
-                    <s:label id="fileUpload_0_label" for="fileUpload_0" class="btn btn-default" key="filebrowser.label.button-choose-file" />
+                    <s:label id="fileUpload_0_label" for="fileUpload_0" class="btn btn-outlined-secondary" key="filebrowser.label.button-choose-file" />
                     <s:file name="upload" id="fileUpload_0" cssClass="input-file-button file" label="filebrowser.label.file" />
                     <span id="fileUpload_0_selected" >
                         <s:text name="filebrowser.label.no-file-selected" />

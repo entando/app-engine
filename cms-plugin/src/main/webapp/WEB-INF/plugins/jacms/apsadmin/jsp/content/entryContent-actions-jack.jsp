@@ -36,12 +36,14 @@
 
 <!-- toolbar second row -->
 <div class="row toolbar-pf-results">
-    <div class="col-lg-6 col-lg-offset-6 col-md-8 col-md-offset-4 col-xs-12 no-padding">
-        <div class="col-xs-12 text-right">
+    <div>
+        <div class="col-xs-12 text-right" style="
+        padding: 20px;
+        display: flex;">
             <span class="mr-20 bold"><s:text name="label.setAs" /></span>
             <wpsf:submit id="edit-saveAndContinue" data-button-type="autosave"
                          data-loading-text="%{getText('label.autosaving.button.text')}"
-                         action="saveAndContinue" type="button" cssClass="btn btn-default"
+                         action="saveAndContinue" type="button" cssClass="btn btn-outlined-secondary mr-20"
                          title="%{getText('note.button.saveAndContinue')}">
                 <s:text name="label.saveAndContinue" />
             </wpsf:submit>

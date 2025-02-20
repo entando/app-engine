@@ -25,10 +25,10 @@
                     <s:text name="label.search.label" />
                 </p>
                 <div class="form-group">
-                    <label class="control-label col-sm-2" for="text" class="sr-only">
+                    <label class="control-label" for="text" class="sr-only">
                         <s:text name="label.description" />
                     </label>
-                    <div class="col-sm-9">
+                    <div>
                         <wpsf:textfield name="text" id="text" cssClass="form-control"
                                         placeholder="%{getText('label.description')}"
                                         title="%{getText('label.search.by')+' '+getText('label.description')}" />
@@ -50,17 +50,17 @@
                                 <div id="search-advanced" class="collapse-input-group">
                                     <!--code -->
                                     <div class="form-group">
-                                        <label for="contentIdToken" class="control-label col-sm-2 text-right">
+                                        <label for="contentIdToken" class="control-label text-right">
                                             <s:text name="label.code" />
                                         </label>
-                                        <div class="col-sm-9 input-group">
+                                        <div class="input-group">
                                             <wpsf:textfield name="contentIdToken" id="contentIdToken" cssClass="form-control" />
                                         </div>
                                     </div>
                                     <!--type-->
                                     <div class="form-group">
-                                        <label class="control-label col-sm-2 text-right" for="contentType"><s:text name="label.type"/></label>
-                                        <div class="col-sm-9 input-group">
+                                        <label class="control-label text-right" for="contentType"><s:text name="label.type"/></label>
+                                        <div class="input-group">
                                             <wpsf:select name="contentType" id="contentType"
                                                          list="contentTypes" listKey="code" listValue="description"
                                                          headerKey="" headerValue="%{getText('label.all')}"
@@ -69,8 +69,8 @@
                                     </div>
                                     <!--status -->
                                     <div class="form-group">
-                                        <label class="control-label col-sm-2 text-right" for="state"><s:text name="label.state"/></label>
-                                        <div class="col-sm-9 input-group">
+                                        <label class="control-label text-right" for="state"><s:text name="label.state"/></label>
+                                        <div class="input-group">
                                             <wpsf:select name="state" id="state" list="avalaibleStatus"
                                                          headerKey="" headerValue="%{getText('label.all')}"
                                                          cssClass="form-control" listKey="key" listValue="%{getText(value)}" />

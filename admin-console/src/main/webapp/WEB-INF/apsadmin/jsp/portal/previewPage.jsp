@@ -4,8 +4,11 @@
 <s:set var="currentSize" value="screenSize" />
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly.min.css"/>
+    <link rel="stylesheet" type="text/css" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly.css"/>
     <link rel="stylesheet" type="text/css" href="<wp:resourceURL ignoreTenant="true" />administration/css/pages/previewPage.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script>

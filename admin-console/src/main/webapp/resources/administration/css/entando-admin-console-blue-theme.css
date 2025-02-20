@@ -2,9 +2,11 @@
     position: fixed;
     left: 0;
     bottom: 0;
-    background: #292e34;
-    border-top: 1px solid #030303;
+    border-top: 1px solid #e4e7ec;
     border-bottom: 0;
+    padding-left: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 .logo-entando {
     height: 17px;

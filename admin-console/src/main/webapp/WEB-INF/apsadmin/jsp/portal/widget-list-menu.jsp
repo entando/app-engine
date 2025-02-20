@@ -6,7 +6,7 @@
 <link rel="stylesheet" type="text/css" href="<wp:resourceURL ignoreTenant="true" />administration/css/entando-widget-icons.css"/>
 
 <div class="right-menu-title">
-    <s:text name="title.widgetlist" /><span class="pull-right drawer-pf-icons-right-menu"><i id="widgetGrid" class="fa fa-th-large pointer" aria-hidden="true"></i>&nbsp;&nbsp;<i id="widgetList" class="fa fa-th-list pointer"  aria-hidden="true"></i></span>
+    <s:text name="title.widgetlist" /><span class="pull-right drawer-pf-icons-right-menu"><i id="widgetGrid" class="fa fa-th-large pointer" aria-hidden="true"></i>&nbsp;&nbsp;<i id="widgetList" class="icons-svg-new svg-hub pointer"  aria-hidden="true"></i></span>
     <input id="search-widget" class="input-pf-right-menu" type="text" placeholder="<s:text name="widget.search" />" />
 </div>
 

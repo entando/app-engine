@@ -64,7 +64,7 @@
     <c:if test="${isManagePage || isSuperUser}">
         <li class="list-group-item secondary-nav-item-pf" data-target="#ux-pattern-secondary">
             <a>
-                <span class="fa fa-object-ungroup" data-toggle="tooltip" title="<s:text name="menu.UXPattern" />"></span>
+                <span class="icons-svg-new svg-components" data-toggle="tooltip" title="<s:text name="menu.UXPattern" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.UXPattern" /></span>
             </a>
 
@@ -180,7 +180,7 @@
         <!--  Users Settings -->
         <li class="list-group-item secondary-nav-item-pf" data-target="#user-settings-secondary">
             <a>
-                <span class="fa fa-users" data-toggle="tooltip" title="<s:text name="menu.userSettings" />" ></span>
+                <span class="fa fa-user" data-toggle="tooltip" title="<s:text name="menu.userSettings" />" ></span>
                 <span class="list-group-item-value"><s:text name="menu.userSettings" /></span>
             </a>
 
@@ -256,7 +256,7 @@
 
         <li class="list-group-item secondary-nav-item-pf" data-target="#settings-secondary">
             <a>
-                <span class="fa fa-cogs" data-toggle="tooltip" title="<s:text name="menu.settings" />"></span>
+                <span class="icons-svg-new svg-setting" data-toggle="tooltip" title="<s:text name="menu.settings" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.settings" /></span>
             </a>
 

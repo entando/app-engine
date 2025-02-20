@@ -2,8 +2,8 @@
 
 <!--CSS inclusions-->
 <link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/bootstrap/css/bootstrap.min.css" media="screen" />
-<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly.min.css">
-<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly-additions.min.css">
+<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly.css">
+<link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/patternfly/css/patternfly-additions.css">
 <link rel="stylesheet" href="<wp:resourceURL ignoreTenant="true" />administration/css/entando-admin-console-default-theme.css">
 <link rel="stylesheet" type="text/css" href="<wp:resourceURL ignoreTenant="true" />administration/css/pages/settingsPage.css"/>
 

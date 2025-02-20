@@ -39,7 +39,7 @@
                                    <s:param name="pageCode"><s:property value="currentPage.code"/></s:param>
                                    <s:param name="frame"><s:property value="#rowstatus.index"/></s:param>
                                </s:url>" class="text-success" title="<s:text name="name.mainFrame" />">
-                                <span class="icon fa fa-cogs fa-fw"></span>&#32;
+                                <span class="icon icons-svg-new svg-setting fa-fw"></span>&#32;
                             </s:if>
                             <s:else>
                                 <a href="<s:url action="editFrame" namespace="/do/Page">

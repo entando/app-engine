@@ -46,12 +46,12 @@
     </button>    
     <s:if test="#appBuilderIntegrationEnabled == 'true'">
         <a href='<c:out value="${appBuilderBaseURL}"/>dashboard' class="navbar-brand">
-            <img class="navbar-brand-icon logo-entando" src="<wp:resourceURL ignoreTenant="true" />administration/img/entando-logo-white.svg" alt="Entando <c:out value="${appBuilderVersion}" />" />
+            <img class="navbar-brand-icon logo-entando" src="<wp:resourceURL ignoreTenant="true" />administration/img/logo-black.svg" alt="Entando <c:out value="${appBuilderVersion}" />" />
         </a>
     </s:if>
     <s:else>
         <a href="<s:url action="main" namespace="/do" />" class="navbar-brand">
-            <img class="navbar-brand-icon logo-entando" src="<wp:resourceURL ignoreTenant="true" />administration/img/entando-logo-white.svg" alt="Entando <wp:info key="systemParam" paramName="version" />" />
+            <img class="navbar-brand-icon logo-entando" src="<wp:resourceURL ignoreTenant="true" />administration/img/logo-black.svg" alt="Entando <wp:info key="systemParam" paramName="version" />" />
         </a>
     </s:else>
 </div>

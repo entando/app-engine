@@ -36,15 +36,10 @@
     </li>
 </ol>
 <div class="page-tabs-header">
-    <div class="row">
-        <div class="col-sm-12 col-md-6">
-            <h1 class="page-title-container">
-                <span class="pull-right">
-                    <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
-                       data-content="<s:text name="label.digitalAsset.help"/>" data-placement="left" data-original-title="">
-                        <i class="fa fa-question-circle-o" aria-hidden="true"></i>
-                    </a>
-                </span>
+    <div class="row" style="display: flex;">
+        <div class="col-sm-12 col-md-10 page-title-container">
+            <h1>
+              
                 <s:if test="!onEditContent">
                     <s:text name="breadcrumb.digitalAsset"/>
                 </s:if>
@@ -52,8 +47,14 @@
                     <s:text name="title.imageManagement"/>
                 </s:else>
             </h1>
+            <span class="pull-right">
+                <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
+                   data-content="<s:text name="label.digitalAsset.help"/>" data-placement="left" data-original-title="">
+                    <i class="fa fa-question-circle-o" aria-hidden="true"></i>
+                </a>
+            </span>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-2">
             <ul class="nav nav-tabs nav-justified nav-tabs-pattern">
                 <li role="presentation" <s:if test="%{resourceTypeCode == 'Image'}">class="active" </s:if>>
                     <s:if test="!onEditContent">
@@ -75,7 +76,6 @@
         </div>
     </div>
 </div>
-<br>
 
 <div class="tab-content" class="tab-pane active">
 
@@ -94,12 +94,12 @@
     </wp:ifauthorized>
     <br>
 
-    <div class="container-fluid">
+    <div class="container-fluid"  style="margin-left: -20px;">
 
         <s:if test="onEditContent">
 
             <div class="btn-group btn-position filters">
-                <a class="btn btn-default" href="<s:url action="changeOrder" anchor="" includeParams="all" >
+                <a class="btn btn-outlined-secondary" href="<s:url action="changeOrder" anchor="" includeParams="all" >
                        <s:param name="resourceTypeCode"><s:property value="resourceTypeCode"/></s:param>
                        <s:param name="lastGroupBy"><s:property value="lastGroupBy"/></s:param>
                        <s:param name="lastOrder" ><s:property value="lastOrder" /></s:param>
@@ -107,7 +107,7 @@
                        <s:param name="entandoaction:changeOrder">changeOrder</s:param>
                    </s:url>"><s:text name="label.orderBy" />: <s:text name="label.description" />
                 </a>
-                <a  class="btn btn-default "href="<s:url action="changeOrder" anchor="" includeParams="all" >
+                <a  class="btn btn-outlined-secondary "href="<s:url action="changeOrder" anchor="" includeParams="all" >
                         <s:param name="resourceTypeCode"><s:property value="resourceTypeCode"/></s:param>
                         <s:param name="lastGroupBy"><s:property value="lastGroupBy"/></s:param>
                         <s:param name="lastOrder" ><s:property value="lastOrder" /></s:param>
@@ -115,7 +115,7 @@
                         <s:param name="entandoaction:changeOrder">changeOrder</s:param>
                     </s:url>"><s:text name="label.orderBy" />: <s:text name="label.creationDate" />
                 </a>
-                <a  class="btn btn-default" href="<s:url action="changeOrder" anchor="" includeParams="all" >
+                <a  class="btn btn-outlined-secondary" href="<s:url action="changeOrder" anchor="" includeParams="all" >
                         <s:param name="resourceTypeCode"><s:property value="resourceTypeCode"/></s:param>
                         <s:param name="lastGroupBy"><s:property value="lastGroupBy"/></s:param>
                         <s:param name="lastOrder" ><s:property value="lastOrder" /></s:param>
@@ -126,23 +126,24 @@
             </div>
         </s:if>
         <s:else>
+            
 
             <div class="btn-group btn-position filters">
-                <a  class="btn btn-default" href="<s:url action="changeOrder" anchor="" includeParams="all" >
+                <a  class="btn btn-outlined-secondary" href="<s:url action="changeOrder" anchor="" includeParams="all" >
                         <s:param name="lastGroupBy"><s:property value="lastGroupBy"/></s:param>
                         <s:param name="lastOrder" ><s:property value="lastOrder" /></s:param>
                         <s:param name="groupBy">descr</s:param>
                         <s:param name="entandoaction:changeOrder">changeOrder</s:param>
                     </s:url>"><s:text name="label.orderBy" />: <s:text name="label.description" />
                 </a>
-                <a  class="btn btn-default" href="<s:url action="changeOrder" anchor="" includeParams="all" >
+                <a  class="btn btn-outlined-secondary" href="<s:url action="changeOrder" anchor="" includeParams="all" >
                         <s:param name="lastGroupBy"><s:property value="lastGroupBy"/></s:param>
                         <s:param name="lastOrder" ><s:property value="lastOrder" /></s:param>
                         <s:param name="groupBy">created</s:param>
                         <s:param name="entandoaction:changeOrder">changeOrder</s:param>
                     </s:url>"><s:text name="label.orderBy" />: <s:text name="label.creationDate" />
                 </a>
-                <a  class="btn btn-default" href="<s:url action="changeOrder" anchor="" includeParams="all" >
+                <a  class="btn btn-outlined-secondary" href="<s:url action="changeOrder" anchor="" includeParams="all" >
                         <s:param name="lastGroupBy"><s:property value="lastGroupBy"/></s:param>
                         <s:param name="lastOrder" ><s:property value="lastOrder" /></s:param>
                         <s:param name="groupBy">lastModified</s:param>
@@ -153,13 +154,12 @@
         </s:else>
         <div class="toolbar-pf">
             <div class="toolbar-pf-action-right mt-10">
-                <div class="form-group toolbar-pf-view-selector" id="TabList">
-                    <span class="choose_view"><s:text name="label.visualization"/></span>
+                <div class="form-group toolbar-pf-view-selector" id="TabList" style="display: flex;">
                     <button class="btn btn-link" data-toggle="tab" href="#table-view">
                         <i class="fa fa-th-large"></i>
                     </button>
                     <button class="btn btn-link" data-toggle="tab" href="#list-view">
-                        <i class="fa fa-th-list"></i>
+                        <i class="icons-svg-new svg-hub"></i>
                     </button>
                 </div>
             </div>
@@ -289,7 +289,7 @@
             </s:form>
         </div>
         <div id="list-view" class="tab-pane fade in active">
-            <s:form action="search" class="container-fluid">
+            <s:form action="search">
                 <p class="sr-only">
                 <wpsf:hidden name="text"/>
                 <wpsf:hidden name="categoryCode"/>

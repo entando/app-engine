@@ -16,9 +16,9 @@
 </ol>
 
 <div class="page-tabs-header">
-    <div class="row">
-        <div class="col-sm-12 col-md-6">
-            <h1 class="page-title-container">
+    <div class="row" style="display: flex; align-items: center;">
+        <div class="col-sm-12 col-md-8">
+            <h1 style="margin: unset;">
                 <s:text name="jpversioning.admin.menu"/>
                 <span class="pull-right">
                 <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
@@ -28,7 +28,7 @@
                 </span>
             </h1>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-4">
             <ul class="nav nav-tabs nav-justified nav-tabs-pattern">
                 <c:if test="${isEditContents}">
                     <li class="active">
@@ -53,8 +53,6 @@
     </div>
 </div>
 
-<br/>
-
 <div id="main">
     <s:form action="search" class="form-horizontal">
 
@@ -63,17 +61,15 @@
                 <s:text name="label.search.by"/>&#32;<s:text name="label.description"/>
             </label>
 
-            <div class="well col-md-offset-3 col-md-6 form-horizontal">
-                <p class="search-label col-sm-12"><s:text name="label.search.label"/></p>
+            <div class="well form-horizontal">
                 <div class="form-group">
-                    <label class="col-sm-2 control-label"><s:text name="jpversioning.label.description" /></label>
-                    <div class="col-sm-10 has-clear">
+                    <div class="has-clear">
                         <wpsf:textfield id="descr" name="descr" cssClass="form-control input-lg" title="%{getText('label.search.by')+' '+getText('jpversioning.label.description')}" placeholder="%{getText('jpversioning.label.description')}"/>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="contentType" class="control-label col-sm-3" ><s:text name="label.type" /></label>
-                    <div class="col-sm-9" >
+                <div class="form-group" style="display: flex; align-items: center;">
+                    <label for="contentType" class="control-label" style="margin-right: 8px;" ><s:text name="label.type" /></label>
+                    <div>
                         <wpsf:select name="contentType"
                                      id="contentType"
                                      list="contentTypes"
@@ -102,7 +98,7 @@
                         <%--</div>--%>
                     <%--</div>--%>
                 <%--</div>--%>
-                <div class="col-sm-12">
+                <div>
                     <div class="form-group">
                         <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
                             <span class="sr-only"><s:text name="label.search" /></span>

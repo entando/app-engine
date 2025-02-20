@@ -27,7 +27,7 @@
 <div class="row settings-row">
 	<div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 margin-large-bottom">
 			<a href="<s:url namespace="/do/BaseAdmin" action="configSystemParams" />" class="btn btn-default btn-lg btn-block">
-					<span class="icon fa fa-cogs"></span>&#32;
+					<span class="icon icons-svg-new svg-setting"></span>&#32;
 					<s:text name="menu.settings.general" />
 			</a>
 			<small class="text-muted display-block margin-base-bottom">
@@ -38,7 +38,7 @@
 	<wp:ifauthorized permission="superuser">
 		<div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 margin-large-bottom">
 			<a href="<s:url action="list" namespace="/do/LocaleString" />" class="btn btn-default btn-lg btn-block">
-					<span class="icon fa fa-th-list"></span>&#32;
+					<span class="icon icons-svg-new svg-hub"></span>&#32;
 					<s:text name="menu.languageAdmin.labels" />
 			</a>
 			<small class="text-muted display-block margin-base-bottom">

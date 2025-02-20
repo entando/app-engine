@@ -31,10 +31,10 @@
     <div class="form-group-separator"></div>
 </div>
 
-<div id="main" role="main" class="mt-20">
+<div id="main" role="main" >
     <wpsa:entityTypes entityManagerName="jacmsContentManager"
                       var="contentTypesVar" />
-    <div class="col-xs-12  ">
+    <div>
         <s:url action="search" var="formAction" namespace="do/jacms/Content" />
 
         <s:form action="%{'/' + #formAction}" cssClass="form-horizontal"
@@ -47,261 +47,255 @@
                 <wpsf:hidden name="lastOrder" />
             </p>
             <div class="searchPanel form-group">
-                <div class="well col-lg-offset-3 col-lg-6 col-md-offset-2 col-md-8 col-sm-offset-1 col-sm-10">
-                    <p class="search-label">
-                        <s:text name="label.search.label" />
-                    </p>
+                <div class="well">
 
                     <div class="form-group">
-                        <label class="control-label col-sm-2" for="text" class="sr-only"><s:text
-                                name="label.description" /></label>
-                        <div class="col-sm-9">
+                        <div>
                             <wpsf:textfield name="text" id="text" cssClass="form-control" placeholder="%{getText('label.description')}" title="%{getText('label.search.by')} %{getText('label.description')}" />
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="control-label col-sm-2" for="contentIdToken" class="control-label col-sm-2 text-right"><s:text name="label.code" />
-                        </label>
-                        <div class="col-sm-9">
-                            <wpsf:textfield name="contentIdToken" id="contentIdToken" cssClass="form-control" placeholder="CNG12" />
+                        <div >
+                            <wpsf:textfield name="contentIdToken" id="contentIdToken" cssClass="form-control" placeholder="Code" />
                         </div>
                     </div>
-                    <br>
-                    <br>
 
-                    <!-------------Advanced Search----------->
-                    <div class="panel-group advanced-search" id="accordion-markup">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <p class="panel-title">
-                                    <a data-toggle="collapse" data-parent="#accordion-markup" href="#collapseOne"><s:text name="label.search.advanced"/></a>
-                                </p>
-                            </div>
-                            <div id="collapseOne" class="panel-collapse collapse <s:if test="%{#attr['openCollapsed'] || #attr['openCollapsed'].equals('\\'true\\'') || openCollapsed}">in</s:if>">
-                                    <div class="panel-body">
-                                        <div id="search-advanced"
-                                             class="collapse-input-group <s:if test="(#categoryTreeStyleVar == 'request' && null != treeNodeActionMarkerCode)">in</s:if>">
-                                            <div class="form-group">
-                                                <label for="contentType" class="control-label col-sm-2 text-right"><s:text name="label.type" />
-                                            </label>
-                                            <div class="col-sm-9 input-group input-20px-leftRight">
-                                                <wpsf:select cssClass="form-control" name="contentType" id="contentType" list="contentTypes" listKey="code"
-                                                             listValue="description" headerKey="" headerValue="%{getText('label.all')}" />
-                                                <div class="input-group-btn">
-                                                    <wpsf:submit cssClass="btn btn-primary" value="%{getText('label.set')}" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <s:set var="searchableAttributes" value="searchableAttributes" />
-                                        <s:if test="null != #searchableAttributes && #searchableAttributes.size() > 0">
+                    <div class="form-group">
+                      
+                        <div >
+                            <wpsf:textfield
+                                id="%{currentFieldId}_dateEndFieldName_cal"
+                                name="%{#dateEndInputFieldName}"
+                                value="%{getSearchFormFieldValue(#dateEndInputFieldName)}"
+                                cssClass="form-control bootstrap-datepicker"
+                                placeholder="dd/mm/yyyy" />
+                        </div>
+                    </div>
 
-                                            <s:iterator var="attribute" value="#searchableAttributes">
-                                                <s:set var="currentFieldId"
-                                                       value="%{'entityFinding_'+#attribute.name}" />
-                                                <s:if test="#attribute.textAttribute">
-                                                    <div class="form-group">
-                                                        <s:set var="textInputFieldName">
-                                                            <s:property value="#attribute.name" />_textFieldName</s:set>
-                                                        <label class="control-label col-sm-2" for="<s:property value="currentFieldId" />" class="control-label col-sm-3 text-right">
-                                                            <s:property value="#attribute.name" />
-                                                        </label>
-                                                        <div class="col-sm-9">
-                                                            <wpsf:textfield id="%{currentFieldId}"  name="%{#textInputFieldName}" value="%{getSearchFormFieldValue(#textInputFieldName)}"
-                                                                            cssClass="form-control" />
-                                                        </div>
-                                                    </div>
-                                                </s:if>
-                                                <s:elseif test="#attribute.type == 'Date'">
-                                                    <s:set var="dateStartInputFieldName">
-                                                        <s:property value="#attribute.name" />_dateStartFieldName</s:set>
-                                                    <s:set var="dateEndInputFieldName">
-                                                        <s:property value="#attribute.name" />_dateEndFieldName</s:set>
 
-                                                        <div class="form-group">
-                                                            <label
-                                                                class="control-label col-sm-2"
-                                                                for="<s:property value="%{currentFieldId}" />_dateStartFieldName_cal"
-                                                            class="control-label col-sm-9 text-right">
-                                                            <s:text name="note.range.from.attribute" />&#32;
-                                                            <s:property value="#attribute.name" />
-                                                        </label>
-                                                        <div class="col-sm-9">
-                                                            <wpsf:textfield
-                                                                id="%{currentFieldId}_dateStartFieldName_cal"
-                                                                name="%{#dateStartInputFieldName}"
-                                                                value="%{getSearchFormFieldValue(#dateStartInputFieldName)}"
-                                                                cssClass="form-control bootstrap-datepicker"
-                                                                placeholder="dd/mm/yyyy" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label 
-                                                            class="control-label col-sm-2"
-                                                            for="<s:property value="%{currentFieldId}" />_dateEndFieldName_cal"
-                                                            class="control-label col-sm-9 text-right">
-                                                            <s:text name="note.range.to.attribute" />&#32;
-                                                            <s:property value="#attribute.name" />
-                                                        </label>
-                                                        <div class="col-sm-9">
-                                                            <wpsf:textfield
-                                                                id="%{currentFieldId}_dateEndFieldName_cal"
-                                                                name="%{#dateEndInputFieldName}"
-                                                                value="%{getSearchFormFieldValue(#dateEndInputFieldName)}"
-                                                                cssClass="form-control bootstrap-datepicker"
-                                                                placeholder="dd/mm/yyyy" />
-                                                        </div>
-                                                    </div>
-                                                </s:elseif>
-                                                <s:elseif test="#attribute.type == 'Number'">
-                                                    <s:set var="numberStartInputFieldName">
-                                                        <s:property value="#attribute.name" />_numberStartFieldName</s:set>
-                                                    <s:set var="numberEndInputFieldName">
-                                                        <s:property value="#attribute.name" />_numberEndFieldName</s:set>
-                                                        <div class="form-group">
-                                                            <label class="control-label col-sm-2"
-                                                                   for="<s:property value="currentFieldId" />_start"><s:text
-                                                                name="note.range.from.attribute" />&#32;<s:property
-                                                                value="#attribute.name" />:</label>
-                                                        <div class="col-sm-9">
-                                                            <wpsf:textfield 
-                                                                id="%{currentFieldId}_start"
-                                                                name="%{#numberStartInputFieldName}"
-                                                                value="%{getSearchFormFieldValue(#numberStartInputFieldName)}"
-                                                                cssClass="form-control" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label 
-                                                            class="control-label col-sm-2"
-                                                            for="<s:property value="currentFieldId" />_end">
-                                                            <s:text  name="note.range.to.attribute" />&#32;
-                                                            <s:property value="#attribute.name" />:
-                                                        </label>
-                                                        <div class="col-sm-9">
-                                                            <wpsf:textfield
-                                                                id="%{currentFieldId}_end"
-                                                                name="%{#numberEndInputFieldName}"
-                                                                value="%{getSearchFormFieldValue(#numberEndInputFieldName)}"
-                                                                cssClass="form-control" />
-                                                        </div>
-                                                    </div>
+                    <div class="form-group">
+                        <div>
+                            <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
+                                <s:text name="label.search" />
+                            </wpsf:submit>
+                        </div>
+                    </div>
+            
 
-                                                </s:elseif>
-                                                <s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
-                                                    <p>
-                                                        <span class="important">
-                                                            <s:property value="#attribute.name" />
-                                                        </span>
-                                                        <br />
-                                                    </p>
-                                                    <s:set var="booleanInputFieldName">
-                                                        <s:property value="#attribute.name" />_booleanFieldName</s:set>
-                                                    <s:set var="booleanInputFieldValue">
-                                                        <s:property
-                                                            value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
-                                                    </s:set>
-                                                    <ul class="noBullet radiocheck">
-                                                        <li>
-                                                            <wpsf:radio 
-                                                                id="none_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value=""
-                                                                checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" /><label
-                                                                for="none_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.bothYesAndNo" />
-                                                            </label>
-                                                        </li>
-                                                        <li>
-                                                            <wpsf:radio 
-                                                                id="true_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value="true"
-                                                                checked="%{#booleanInputFieldValue == 'true'}" />
-                                                            <label
-                                                                for="true_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.yes" />
-                                                            </label>
-                                                        </li>
-                                                        <li>
-                                                            <wpsf:radio 
-                                                                id="false_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value="false"
-                                                                checked="%{#booleanInputFieldValue == 'false'}" />
-                                                            <label
-                                                                for="false_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.no" />
-                                                            </label>
-                                                        </li>
-                                                    </ul>
-                                                </s:elseif>
-                                            </s:iterator>
-                                        </s:if>
-                                        <div class="form-group">
-                                            <label for="contentType"
-                                                   class="control-label col-sm-2 text-right"> <s:text
-                                                    name="label.category" />
-                                            </label>
-                                            <div class="col-sm-9">
-                                                <wpsa:action name="showCategoryTreeOnContentFinding"
-                                                          namespace="/do/jacms/Content" ignoreContextParams="true"
-                                                          executeResult="true">
-                                                    <s:param name="treeNodesToOpen" value="#parameters['treeNodesToOpen']" />
-                                                </wpsa:action>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <s:set var="allowedGroupsVar" value="allowedGroups" />
-                                    <s:if
-                                        test="null != #allowedGroupsVar && #allowedGroupsVar.size()>1">
-                                        <div class="form-group">
-                                            <label for="ownerGroupName"
-                                                   class="control-label col-sm-2 text-right"><s:text
-                                                    name="label.group" /></label>
-                                            <div class="col-sm-9">
-                                                <wpsf:select name="ownerGroupName" id="ownerGroupName"
-                                                             list="#allowedGroupsVar" headerKey=""
-                                                             headerValue="%{getText('label.all')}" listKey="name"
-                                                             listValue="descr" cssClass="form-control" />
-                                            </div>
-                                        </div>
-                                    </s:if>
+                 
+                </div>
+                
+            </div>
+               <!-------------Advanced Search----------->
+               <div class="panel-group advanced-search" id="accordion-markup">
+                <div class="panel-heading">
+                    <p class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion-markup" href="#collapseOne"><s:text name="label.search.advanced"/></a>
+                    </p>
+                </div>
+                <div class="panel panel-default">
+                  
+                    <div id="collapseOne" class="panel-collapse collapse <s:if test="%{#attr['openCollapsed'] || #attr['openCollapsed'].equals('\\'true\\'') || openCollapsed}">in</s:if>">
+                            <div class="panel-body" style="display:flex; gap: 8px; justify-content: flex-start; align-items: flex-start;">
+                                <div id="search-advanced"
+                                     class="collapse-input-group <s:if test="(#categoryTreeStyleVar == 'request' && null != treeNodeActionMarkerCode)">in</s:if>">
                                     <div class="form-group">
-                                        <label for="state" class="control-label col-sm-2 text-right"><s:text
-                                                name="label.state" /></label>
-                                        <div class="col-sm-9">
-                                            <wpsf:select name="state" id="state" list="avalaibleStatus" headerKey="" headerValue="%{getText('label.all')}" listKey="key" listValue="%{getText(value)}" cssClass="form-control" />
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <div class="btn-group col-sm-9 col-sm-offset-2"
-                                             data-toggle="buttons">
-                                            <label class="btn btn-default <s:if test="('yes' == onLineState)"> active </s:if>">
-                                                    <input type="radio" name="onLineState" id="approved"
-                                                    <s:if test="('yes' == onLineState)">checked="checked"</s:if>
-                                                    value="yes" />&#32; <s:text name="name.isApprovedContent" />
-                                            </label> <label class="btn btn-default <s:if test="('no' == onLineState)"> active </s:if>">
-                                                    <input type="radio" name="onLineState" id="notApproved"
-                                                    <s:if test="('no' == onLineState)">checked="checked"</s:if>
-                                                    value="no" />&#32; <s:text name="name.isNotApprovedContent" />
-                                            </label> <label class="btn btn-default <s:if test="('yes' != onLineState) && ('no' != onLineState)"> active </s:if>">
-                                                    <input type="radio" name="onLineState" id="bothApproved"
-                                                    <s:if test="('yes' != onLineState) && ('no' != onLineState)">checked="checked"</s:if>
-                                                    value="" />&#32; <s:text name="name.isApprovedOrNotContent" />
-                                            </label>
+                                        <label for="contentType" class="control-label text-right"><s:text name="label.type" />
+                                    </label>
+                                    <div class="col-sm-9 input-group input-20px-leftRight">
+                                        <wpsf:select cssClass="form-control" name="contentType" id="contentType" list="contentTypes" listKey="code"
+                                                     listValue="description" headerKey="" headerValue="%{getText('label.all')}" />
+                                        <div class="input-group-btn">
+                                            <wpsf:submit cssClass="btn btn-primary" value="%{getText('label.set')}" />
                                         </div>
                                     </div>
                                 </div>
+                                <s:set var="searchableAttributes" value="searchableAttributes" />
+                                <s:if test="null != #searchableAttributes && #searchableAttributes.size() > 0">
+
+                                    <s:iterator var="attribute" value="#searchableAttributes">
+                                        <s:set var="currentFieldId"
+                                               value="%{'entityFinding_'+#attribute.name}" />
+                                        <s:if test="#attribute.textAttribute">
+                                            <div class="form-group">
+                                                <s:set var="textInputFieldName">
+                                                    <s:property value="#attribute.name" />_textFieldName</s:set>
+                                                <label class="control-label " for="<s:property value="currentFieldId" />" class="control-label col-sm-3 text-right">
+                                                    <s:property value="#attribute.name" />
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <wpsf:textfield id="%{currentFieldId}"  name="%{#textInputFieldName}" value="%{getSearchFormFieldValue(#textInputFieldName)}"
+                                                                    cssClass="form-control" />
+                                                </div>
+                                            </div>
+                                        </s:if>
+                                        <s:elseif test="#attribute.type == 'Date'">
+                                            <s:set var="dateStartInputFieldName">
+                                                <s:property value="#attribute.name" />_dateStartFieldName</s:set>
+                                            <s:set var="dateEndInputFieldName">
+                                                <s:property value="#attribute.name" />_dateEndFieldName</s:set>
+
+                                                <div class="form-group">
+                                                    <label
+                                                        class="control-label "
+                                                        for="<s:property value="%{currentFieldId}" />_dateStartFieldName_cal"
+                                                    class="control-label col-sm-9 text-right">
+                                                    <s:text name="note.range.from.attribute" />&#32;
+                                                    <s:property value="#attribute.name" />
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <wpsf:textfield
+                                                        id="%{currentFieldId}_dateStartFieldName_cal"
+                                                        name="%{#dateStartInputFieldName}"
+                                                        value="%{getSearchFormFieldValue(#dateStartInputFieldName)}"
+                                                        cssClass="form-control bootstrap-datepicker"
+                                                        placeholder="dd/mm/yyyy" />
+                                                </div>
+                                            </div>
+                                      
+                                        </s:elseif>
+                                        <s:elseif test="#attribute.type == 'Number'">
+                                            <s:set var="numberStartInputFieldName">
+                                                <s:property value="#attribute.name" />_numberStartFieldName</s:set>
+                                            <s:set var="numberEndInputFieldName">
+                                                <s:property value="#attribute.name" />_numberEndFieldName</s:set>
+                                                <div class="form-group">
+                                                    <label class="control-label"
+                                                           for="<s:property value="currentFieldId" />_start"><s:text
+                                                        name="note.range.from.attribute" />&#32;<s:property
+                                                        value="#attribute.name" />:</label>
+                                                <div class="col-sm-9">
+                                                    <wpsf:textfield 
+                                                        id="%{currentFieldId}_start"
+                                                        name="%{#numberStartInputFieldName}"
+                                                        value="%{getSearchFormFieldValue(#numberStartInputFieldName)}"
+                                                        cssClass="form-control" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label 
+                                                    class="control-label"
+                                                    for="<s:property value="currentFieldId" />_end">
+                                                    <s:text  name="note.range.to.attribute" />&#32;
+                                                    <s:property value="#attribute.name" />:
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <wpsf:textfield
+                                                        id="%{currentFieldId}_end"
+                                                        name="%{#numberEndInputFieldName}"
+                                                        value="%{getSearchFormFieldValue(#numberEndInputFieldName)}"
+                                                        cssClass="form-control" />
+                                                </div>
+                                            </div>
+
+                                        </s:elseif>
+                                        <s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
+                                            <p>
+                                                <span class="important">
+                                                    <s:property value="#attribute.name" />
+                                                </span>
+                                                <br />
+                                            </p>
+                                            <s:set var="booleanInputFieldName">
+                                                <s:property value="#attribute.name" />_booleanFieldName</s:set>
+                                            <s:set var="booleanInputFieldValue">
+                                                <s:property
+                                                    value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
+                                            </s:set>
+                                            <ul class="noBullet radiocheck">
+                                                <li>
+                                                    <wpsf:radio 
+                                                        id="none_%{#booleanInputFieldName}"
+                                                        name="%{#booleanInputFieldName}" value=""
+                                                        checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" /><label
+                                                        for="none_<s:property value="#booleanInputFieldName" />"
+                                                        class="normal"><s:text name="label.bothYesAndNo" />
+                                                    </label>
+                                                </li>
+                                                <li>
+                                                    <wpsf:radio 
+                                                        id="true_%{#booleanInputFieldName}"
+                                                        name="%{#booleanInputFieldName}" value="true"
+                                                        checked="%{#booleanInputFieldValue == 'true'}" />
+                                                    <label
+                                                        for="true_<s:property value="#booleanInputFieldName" />"
+                                                        class="normal"><s:text name="label.yes" />
+                                                    </label>
+                                                </li>
+                                                <li>
+                                                    <wpsf:radio 
+                                                        id="false_%{#booleanInputFieldName}"
+                                                        name="%{#booleanInputFieldName}" value="false"
+                                                        checked="%{#booleanInputFieldValue == 'false'}" />
+                                                    <label
+                                                        for="false_<s:property value="#booleanInputFieldName" />"
+                                                        class="normal"><s:text name="label.no" />
+                                                    </label>
+                                                </li>
+                                            </ul>
+                                        </s:elseif>
+                                    </s:iterator>
+                                </s:if>
+                                <div class="form-group">
+                                    <label for="contentType"
+                                           class="control-label text-right"> <s:text
+                                            name="label.category" />
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <wpsa:action name="showCategoryTreeOnContentFinding"
+                                                  namespace="/do/jacms/Content" ignoreContextParams="true"
+                                                  executeResult="true">
+                                            <s:param name="treeNodesToOpen" value="#parameters['treeNodesToOpen']" />
+                                        </wpsa:action>
+                                        </div>
+                                    </div>
+                                </div>
+                            <s:set var="allowedGroupsVar" value="allowedGroups" />
+                            <s:if
+                                test="null != #allowedGroupsVar && #allowedGroupsVar.size()>1">
+                                <div class="form-group">
+                                    <label for="ownerGroupName"
+                                           class="control-label text-right"><s:text
+                                            name="label.group" /></label>
+                                    <div class="col-sm-9">
+                                        <wpsf:select name="ownerGroupName" id="ownerGroupName"
+                                                     list="#allowedGroupsVar" headerKey=""
+                                                     headerValue="%{getText('label.all')}" listKey="name"
+                                                     listValue="descr" cssClass="form-control" />
+                                    </div>
+                                </div>
+                            </s:if>
+                            <div class="form-group">
+                                <label for="state" class="control-label text-right"><s:text
+                                        name="label.state" /></label>
+                                <div class="col-sm-9">
+                                    <wpsf:select name="state" id="state" list="avalaibleStatus" headerKey="" headerValue="%{getText('label.all')}" listKey="key" listValue="%{getText(value)}" cssClass="form-control" />
+                                </div>
                             </div>
-                        </div>
-                        <%--// search-advanced --%>
-                        <div class="form-group">
-                            <div class="col-sm-12">
-                                <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
-                                    <s:text name="label.search" />
-                                </wpsf:submit>
+                            <div class="form-group">
+                                <div class="btn-group col-sm-9 col-sm-offset-2"
+                                     data-toggle="buttons" style="display: flex;">
+                                    <label class="btn btn-outlined-secondary <s:if test="('yes' == onLineState)"> active </s:if>">
+                                            <input type="radio" name="onLineState" id="approved"
+                                            <s:if test="('yes' == onLineState)">checked="checked"</s:if>
+                                            value="yes" />&#32; <s:text name="name.isApprovedContent" />
+                                    </label> <label class="btn btn-outlined-secondary <s:if test="('no' == onLineState)"> active </s:if>">
+                                            <input type="radio" name="onLineState" id="notApproved"
+                                            <s:if test="('no' == onLineState)">checked="checked"</s:if>
+                                            value="no" />&#32; <s:text name="name.isNotApprovedContent" />
+                                    </label> <label class="btn btn-outlined-secondary <s:if test="('yes' != onLineState) && ('no' != onLineState)"> active </s:if>">
+                                            <input type="radio" name="onLineState" id="bothApproved"
+                                            <s:if test="('yes' != onLineState) && ('no' != onLineState)">checked="checked"</s:if>
+                                            value="" />&#32; <s:text name="name.isApprovedOrNotContent" />
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <%--// search-advanced --%>
+               
             </div>
         </div>
 
@@ -333,7 +327,7 @@
 
     </s:form>
 
-    <div class="col-xs-12 mt-20">
+    <div class="col-xs-12 mt-20" style="margin-left: -20px; padding-right: unset;">
         <s:form action="search" cssClass="form-horizontal">
             <p class="sr-only">
                 <wpsf:hidden name="text" />
@@ -450,7 +444,7 @@
                                                                      cssClass="btn btn-success"><s:text name="label.approve" />
                                                         </wpsf:submit>
                                                         <wpsf:submit action="bulkPutOffline" type="button" title="%{getText('note.button.suspend')}"
-                                                                     cssClass="btn btn-default"><s:text name="label.suspend" />
+                                                                     cssClass="btn btn-outlined-secondary"><s:text name="label.suspend" />
                                                         </wpsf:submit>
                                                     </div>
                                                 </wp:ifauthorized>
@@ -485,7 +479,7 @@
                                         <div class="col-xs-7 no-padding">
                                             <div class="btn-toolbar">
                                                 <div class="dropdown" style="margin:10px 0 0px -4px;">
-                                                    <button type="button" class="btn btn-default dropdown-toggle w100perc text-right" id="bulkAction" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <button type="button" class="btn btn-outlined-secondary dropdown-toggle w100perc text-right" id="bulkAction" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="pull-left"><s:text name="label.selectAction"/></span><span class="caret"></span>
                                                     </button>
                                                     <ol class="dropdown-menu w100perc" aria-labelledby="bulkAction" >

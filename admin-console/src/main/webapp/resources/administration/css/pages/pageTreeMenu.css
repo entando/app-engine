@@ -81,8 +81,8 @@
 }
 
 .button-bar .defwidgets-btn {
-	color: #23a8e0;
-	border-color: #23a8e0;
+	color: #1a75ff;
+	border-color: #1a75ff;
 	font-weight: normal;
 }
 
@@ -95,7 +95,7 @@
     color: #8b8d8f;
 }
 .grid-container[data-online="true"] .grid-slot .widget-icon {
-    color: #3f9c35;
+    color: #39ac73;
 }
 
 .grid-container[data-online="true"] .grid-slot.diff-slot .widget-icon {

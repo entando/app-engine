@@ -15,9 +15,9 @@
 </ol>
 
 <div class="page-tabs-header">
-    <div class="row">
-        <div class="col-sm-12 col-md-6">
-            <h1 class="page-title-container">
+    <div class="row" style="display: flex; align-items: center;">
+        <div class="col-sm-12 col-md-8">
+            <h1 style="margin: unset;">
                 <s:text name="jpversioning.admin.menu"/>
                 <span class="pull-right">
                 <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
@@ -27,7 +27,7 @@
                 </span>
             </h1>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-6 col-md-4">
             <ul class="nav nav-tabs nav-justified nav-tabs-pattern">
                 <c:if test="${isEditContents}">
                     <li>
@@ -69,7 +69,7 @@
                     </ul>
                 </div>
             </s:if>
-            <fieldset class="col-xs-12 margin-large-top">
+            <fieldset class="margin-large-top">
                 <div class="form-group">
                     <div class="row">
                         <div class="col-xs-2 col-label">
@@ -116,7 +116,7 @@
                     </div>
                 </div>
             </fieldset>
-            <div class="col-xs-12">
+            <div >
                 <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
                     <s:text name="label.save" />
                 </wpsf:submit>

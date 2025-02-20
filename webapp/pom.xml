@@ -48,11 +48,11 @@
         <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
 
         <!-- Keycloak Configuration -->
-        <keycloak.enabled>false</keycloak.enabled>
-        <keycloak.auth.url>http://localhost:8081/auth</keycloak.auth.url>
-        <keycloak.realm>entando</keycloak.realm>
-        <keycloak.client.id>entando-app</keycloak.client.id>
-        <keycloak.client.secret>b4b34472-9926-4753-9db8-a50f152df3da</keycloak.client.secret>
+       <keycloak.enabled>true</keycloak.enabled>
+<keycloak.auth.url>http://localhost:8081/auth</keycloak.auth.url>
+<keycloak.realm>entando-development</keycloak.realm>
+<keycloak.client.id>entando-core</keycloak.client.id>
+<keycloak.client.secret>t7BM7ujzggOsLodwWIVcwDkAW33c06o6</keycloak.client.secret>
         <keycloak.public.client.id>entando-web</keycloak.public.client.id>
 
         <!-- CORS Configuration -->

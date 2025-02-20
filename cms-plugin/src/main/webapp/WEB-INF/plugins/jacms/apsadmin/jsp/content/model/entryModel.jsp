@@ -27,13 +27,14 @@
         <s:if test="strutsAction == 2">
             <s:text name="title.contentModels.edit" />
         </s:if>
-        <span class="pull-right">
-            <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title="" data-content="<s:text name="title.contentManagement.help" />"
-               data-placement="left" data-original-title="">
-                <i class="fa fa-question-circle-o" accesskey="" aria-hidden="true"></i>
-            </a>
-        </span>
+       
     </div>
+    <span class="pull-right">
+        <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title="" data-content="<s:text name="title.contentManagement.help" />"
+           data-placement="left" data-original-title="">
+            <i class="fa fa-question-circle-o" accesskey="" aria-hidden="true"></i>
+        </a>
+    </span>
 </h1>
 <div class="text-right">
     <div class="form-group-separator"></div>

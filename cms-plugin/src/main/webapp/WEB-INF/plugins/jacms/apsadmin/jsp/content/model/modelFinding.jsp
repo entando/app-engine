@@ -13,36 +13,34 @@
 <h1 class="page-title-container">
     <div>
         <s:text name="title.contentModels" />
-        <span class="pull-right">
-            <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
-               data-content="<s:text name="title.contentManagement.help" />" data-placement="left" accesskey="" data-original-title="">
-                <i class="fa fa-question-circle-o"  aria-hidden="true"></i>
-            </a>
-        </span>
+      
     </div>
+    <span class="pull-right">
+        <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-html="true" title=""
+           data-content="<s:text name="title.contentManagement.help" />" data-placement="left" accesskey="" data-original-title="">
+            <i class="fa fa-question-circle-o"  aria-hidden="true"></i>
+        </a>
+    </span>
 </h1>
 <div class="text-right">
     <div class="form-group-separator"></div>
 </div>
 <br>
 <div id="main" role="main">
-    <div class="col-xs-12">
-        <div class="well col-md-offset-3 col-md-6">
-            <p class="search-label">
-                <s:text name="label.search" />
-            </p>
-            <s:form action="search" cssClass="form-horizontal" role="search">
-                <div class="form-group">
+    <div>
+      
+            <s:form action="search" cssClass="form-group" role="search" style="display: flex; gap: 16px;">
+                <div class="form-group" style="display: flex; align-items: center;">
 
-                    <label class="col-sm-2 control-label">
+                    <label class="control-label" style="margin-right: 8px;">
                         <s:text name="label.type" />
                     </label>
-                    <div class="col-sm-9">
+                    <div>
                         <wpsf:select name="contentType" id="contentType" cssClass="form-control input-lg" list="smallContentTypes" listKey="code" listValue="descr" headerKey=""  headerValue="%{getText('label.all')}" />
                     </div>
                 </div>
                 <div class="form-group">
-                    <div class="col-sm-12">
+                    <div >
                         <div class="pull-right">
                             <wpsf:submit type="button" cssClass="btn btn-primary">
                                 <s:text name="label.search" />
@@ -51,10 +49,10 @@
                     </div>
                 </div>
             </s:form>
-        </div>
+       
     </div>
 
-    <a href="<s:url action="new" namespace="/do/jacms/ContentModel"/>" class="btn btn-primary pull-right mb-5">
+    <a href="<s:url action="new" namespace="/do/jacms/ContentModel"/>" class="btn btn-primary pull-right mb-10">
         <s:text name="contentModels.label.add" />
     </a>
 
