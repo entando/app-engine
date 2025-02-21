@@ -97,10 +97,10 @@
                 <div class="panel panel-default">
                   
                     <div id="collapseOne" class="panel-collapse collapse <s:if test="%{#attr['openCollapsed'] || #attr['openCollapsed'].equals('\\'true\\'') || openCollapsed}">in</s:if>">
-                            <div class="panel-body" style="display:flex; gap: 8px; justify-content: flex-start; align-items: flex-start;">
-                                <div id="search-advanced"
+                            <div class="panel-body" style="display:flex; gap: 8px; justify-content: flex-start; align-items: flex-start;flex-wrap: wrap;">
+                                <div id="search-advanced" style="display: flex; align-items: flex-start;"
                                      class="collapse-input-group <s:if test="(#categoryTreeStyleVar == 'request' && null != treeNodeActionMarkerCode)">in</s:if>">
-                                    <div class="form-group">
+                                    <div class="form-group" style="margin-left: -16px;">
                                         <label for="contentType" class="control-label text-right"><s:text name="label.type" />
                                     </label>
                                     <div class="col-sm-9 input-group input-20px-leftRight">
@@ -242,7 +242,7 @@
                                            class="control-label text-right"> <s:text
                                             name="label.category" />
                                     </label>
-                                    <div class="col-sm-9">
+                                    <div>
                                         <wpsa:action name="showCategoryTreeOnContentFinding"
                                                   namespace="/do/jacms/Content" ignoreContextParams="true"
                                                   executeResult="true">
@@ -258,7 +258,7 @@
                                     <label for="ownerGroupName"
                                            class="control-label text-right"><s:text
                                             name="label.group" /></label>
-                                    <div class="col-sm-9">
+                                    <div>
                                         <wpsf:select name="ownerGroupName" id="ownerGroupName"
                                                      list="#allowedGroupsVar" headerKey=""
                                                      headerValue="%{getText('label.all')}" listKey="name"
@@ -269,12 +269,12 @@
                             <div class="form-group">
                                 <label for="state" class="control-label text-right"><s:text
                                         name="label.state" /></label>
-                                <div class="col-sm-9">
+                                <div>
                                     <wpsf:select name="state" id="state" list="avalaibleStatus" headerKey="" headerValue="%{getText('label.all')}" listKey="key" listValue="%{getText(value)}" cssClass="form-control" />
                                 </div>
                             </div>
                             <div class="form-group">
-                                <div class="btn-group col-sm-9 col-sm-offset-2"
+                                <div class="btn-group"
                                      data-toggle="buttons" style="display: flex;">
                                     <label class="btn btn-outlined-secondary <s:if test="('yes' == onLineState)"> active </s:if>">
                                             <input type="radio" name="onLineState" id="approved"

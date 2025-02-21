@@ -53,20 +53,20 @@
             </div>
         </s:if>
 
-        <fieldset class="col-xs-12 settings-form">
-            <div class="form-group">
-                <div class="row" style="display: flex; align-items: center; padding-left: 20px;">
+        <fieldset>
+            <div class="form-group" style="margin-left: -16px;">
+                <div class="row" style="display: flex; align-items: center; padding-left: 20px; gap: 16px;">
                     <div>
                         <span for="admin-settings-area-notFoundPageCode"><s:text name="label.chooseYourCategoriesTreeStyle" /></span>
                     </div>
                     <div class="text-left">
                         <s:set var="paramName" value="'treeStyle_category'" />
                         <div class="btn-group" data-toggle="buttons">
-                            <label class="btn btn-default <s:if test="systemParams[#paramName] == 'classic'"> active</s:if>">
+                            <label class="btn btn-outlined-secondary <s:if test="systemParams[#paramName] == 'classic'"> active</s:if>">
                                     <wpsf:radio id="classic" name="%{#paramName}" value="classic" checked="%{systemParams[#paramName].equals('classic')}" />
                                 <s:text name="treeStyle.classic" />
                             </label>
-                            <label class="btn btn-default <s:if test="systemParams[#paramName] == 'request'"> active</s:if>">
+                            <label class="btn btn-outlined-secondary <s:if test="systemParams[#paramName] == 'request'"> active</s:if>">
                                     <wpsf:radio id="request" name="%{#paramName}" value="request" checked="%{systemParams[#paramName].equals('request')}" />
                                 <s:text name="treeStyle.request" />
                             </label>

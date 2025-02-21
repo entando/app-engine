@@ -2699,6 +2699,7 @@ input[type="search"] {
 }
 .panel-body .form-group{
   display: flex;
+  gap: 16px;
 }
 .radio,
 .checkbox {
@@ -3893,14 +3894,6 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 }
 .input-group-btn > .btn {
   position: relative;
-}
-
-
-.table.table-striped.table-bordered.table-hover.content-list.dataTable.no-footer.DTFC_Cloned tbody {
-  /* Your styles here */
-  background-color: blue;
-  border-top-right-radius: 1px;
-  border-top-left-radius: 1px;
 }
 
 
@@ -7524,6 +7517,17 @@ button.close {
   background-color: #0041cc; /* or any color you want */
 
 }
+
+.btn-link.active .icons-svg-new {
+  color: #0041cc;
+  background-color: #0041cc; /* Matches hover state */
+}
+
+.btn-link.active .svg-hub,
+.btn-link.active .svg-list-views {
+  background-color: #0041cc; /* Matches hover state */
+}
+
 .svg-users {
   -webkit-mask-image: url('../img/users_icon.svg'); /* For WebKit browsers */
   mask-image: url('../img/users_icon.svg'); /* Standard */
@@ -7616,6 +7620,19 @@ button.close {
 .svg-setting {
   -webkit-mask-image: url('../img/settings_icon.svg'); /* For WebKit browsers */
   mask-image: url('../img/settings_icon.svg'); /* Standard */
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  background-color: #72767b; /* or any color you want */
+  width: 18px;
+  height: 18px;
+}
+.svg-list-views {
+  -webkit-mask-image: url('../img/list-views_icon.svg'); /* For WebKit browsers */
+  mask-image: url('../img/list-views_icon.svg'); /* Standard */
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-size: contain;
@@ -9181,11 +9198,23 @@ fieldset[disabled] .btn-default.active {
   box-shadow: none;
 }
 
+.btn-outlined-secondary.active {
+ box-shadow: unset;
+ -webkit-box-shadow:unset;
+  background-color: #ced2da !important;
+}
+
 .btn-outlined-secondary:focus,
 .btn-outlined-secondary:focus:hover {
   outline: none;
 }
 
+.btn.active, .btn:active{
+  background-image: none;
+  outline: 0;
+  -webkit-box-shadow: unset;
+  box-shadow: unset;
+}
 
 .btn-link,
 .btn-link:active {

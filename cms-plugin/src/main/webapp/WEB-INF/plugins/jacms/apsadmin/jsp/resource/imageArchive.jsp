@@ -156,10 +156,10 @@
             <div class="toolbar-pf-action-right mt-10">
                 <div class="form-group toolbar-pf-view-selector" id="TabList" style="display: flex;">
                     <button class="btn btn-link" data-toggle="tab" href="#table-view">
-                        <i class="fa fa-th-large"></i>
+                        <i class="icons-svg-new svg-hub"></i>
                     </button>
                     <button class="btn btn-link" data-toggle="tab" href="#list-view">
-                        <i class="icons-svg-new svg-hub"></i>
+                        <i class="icons-svg-new svg-list-views"></i>
                     </button>
                 </div>
             </div>
@@ -435,14 +435,21 @@
         </div>
     </div>
     <script>
-        $('#TabList button').click(function (e) {
+        $('#TabAttachList button').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
+    
+            // Rimuove "active" da tutti i pulsanti e aggiunge solo al pulsante cliccato
+            $('#TabAttachList button').removeClass('active');
+            $(this).addClass('active');
         });
+    
+        // Salva l'hash come ID
         $("button").on("shown.bs.tab", function (e) {
             var id = $(e.target).attr("href").substr(1);
             window.location.hash = id;
         });
+    
         $('.filters a').click(function (e) {
             e.preventDefault();
             var newhash = window.location.hash;
@@ -450,8 +457,17 @@
             var link = newhref + newhash;
             location.href = link;
         });
+    
+        // Al caricamento, passa l'hash al tab e imposta la classe "active"
         var hash = window.location.hash;
-        $('#TabList button[href="' + hash + '"]').tab('show');
+        var targetButton = $('#TabAttachList button[href="' + hash + '"]');
+    
+        if (targetButton.length) {
+            targetButton.tab('show').addClass('active');
+        } else {
+            // Se nessun hash, imposta il primo pulsante come attivo di default
+            $('#TabAttachList button').first().addClass('active');
+        }
     </script>
     <wp:ifauthorized permission="superuser">
         <s:if test="!onEditContent">
