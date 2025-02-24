@@ -167,13 +167,13 @@
             <div class="form-group">
                 <div class="row">
                     <s:set var="metadataMetadataFieldNameVar" value="%{'resourceMetadata_mapping_' + #metadataKeyVar}" />
-                    <div class="col-xs-2 control-label">
+                    <div class=" control-label">
                         <span for="<s:property value="#metadataMetadataFieldNameVar" />">
                             <wpsf:hidden name="metadataKeys" value="%{#metadataKeyVar}" />
                             <s:text name="jacms.label.resourceMetadata" ><s:param value="#metadataKeyVar" /></s:text>
                         </span>
                     </div>
-                    <div class="col-xs-2 control-label">
+                    <div class=" control-label">
                         <span for="<s:property value="#metadataMetadataFieldNameVar" />">
                             <s:text name="jacms.label.resourceMetadataMapping" />
                         </span>
@@ -182,10 +182,10 @@
                             <span class="fa fa-info-circle"></span>
                         </a>
                     </div>
-                    <div class="col-xs-6">
+                    <div class="">
                         <wpsf:textfield name="%{#metadataMetadataFieldNameVar}" id="%{#metadataMetadataFieldNameVar}" value="%{buildCsv(#metadataKeyVar)}" cssClass="form-control" />
                     </div>
-                    <div class="col-xs-2">
+                    <div class="">
                         <wpsa:actionParam action="removeMetadata" var="actionNameVar" >
                             <wpsa:actionSubParam name="metadataKey" value="%{#metadataKeyVar}" />
                         </wpsa:actionParam>

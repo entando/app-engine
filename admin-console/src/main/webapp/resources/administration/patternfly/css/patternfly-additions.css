@@ -4640,7 +4640,7 @@ a.disabled {
 .navbar-pf-vertical .navbar-brand {
   color: #fff;
   height: auto;
-  margin: 0 0 0 11px;
+  margin: 0 0 2px 8px;
   min-height: 35px;
   padding: 11px 0 12px;
 }
@@ -5777,7 +5777,7 @@ table.dataTable th:active {
   top: 60px;
   width: 200px;
   z-index: 1030;
-  padding: 6px 0 0 13px;
+  padding: 6px 0 12px 13px;
   display: flex;
   justify-content: space-between;
   flex-direction: column
@@ -5854,8 +5854,12 @@ table.dataTable th:active {
 .nav-pf-vertical .list-group-item > a:hover {
   text-decoration: none;
 }
-.nav-pf-vertical .list-group-item:hover > a {
-  font-weight: bold;
+.nav-pf-vertical .list-group-item:hover > a:hover > .icons-svg-new {
+  background-color: #39a5dc ;
+}
+
+.nav-pf-vertical .list-group-item:hover  {
+
 }
 .nav-pf-vertical .list-group-item.active {
   border: none ;
@@ -5873,7 +5877,7 @@ table.dataTable th:active {
 }
 
 .nav-pf-vertical .list-group-item:hover > a .icons-new-svg{
-  background-color: #1a75ff;
+  background-color:#39a5dc;
 }
 
 .nav-pf-vertical .list-group-item.active > a:before {
@@ -6082,7 +6086,7 @@ table.dataTable th:active {
   font-size: 14px;
   line-height: 30px;
   position: absolute;
-  right: 20px;
+  right: 35px;
   top: 0;
 }
 @supports (display: flex) {

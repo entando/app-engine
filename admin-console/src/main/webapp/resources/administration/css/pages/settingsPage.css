@@ -4,12 +4,21 @@
     font-weight: 600;
 }
 
-.settings-form .form-group > .row > * {
-    text-align: right;
+.settings-form .form-group > .row  {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-left: -16px !important;
+    gap: 16px;
+}
+
+.settings-form .form-group > .row > .control-label {
+   min-width: 70px;
 }
 .settings-form .form-group select {
     height: 30px;
     line-height: 30px;
+    
 }
 
 
