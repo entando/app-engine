@@ -6099,10 +6099,7 @@ table.dataTable th:active {
   width: calc(200px + 1px);
   z-index: 1031;
 }
-.secondary-nav-item-pf.active > a:after,
-.secondary-nav-item-pf:hover > a:after {
-  right: 21px;
-}
+
 .collapsed-secondary-nav-pf .secondary-nav-item-pf.active > a,
 .collapsed-secondary-nav-pf .secondary-nav-item-pf:hover > a {
   z-index: 0;
