@@ -3096,6 +3096,7 @@ select[multiple].input-lg {
   border-radius: 6px;
   font-size: 14px;
   box-shadow: none;
+  width: fit-content;
 }
 
 .btn:focus, 
@@ -3295,27 +3296,27 @@ fieldset[disabled] .btn-warning.focus {
   background-color: #fff;
 }
 .btn-danger {
-  color: #fff;
-  background-color: #F64C4C;
-  border-color: #8b0000;
+  background-color: #fff;
+  border: 1px solid #F64C4C;
+  color: #F64C4C;
 }
 .btn-danger:focus,
 .btn-danger.focus {
   color: #fff;
-  background-color: #8b0000;
-  border-color: #4e0000;
+  background-color: #F64C4C;
+  border: 1px solid #F64C4C;
 }
 .btn-danger:hover {
   color: #fff;
-  background-color: #8b0000;
-  border-color: #4e0000;
+  background-color: #F64C4C;
+  border: 1px solid #F64C4C;
 }
 .btn-danger:active,
 .btn-danger.active,
 .open > .dropdown-toggle.btn-danger {
   color: #fff;
-  background-color: #700000;
-  border-color: #4e0000;
+  background-color: #F64C4C;
+  border: 1px solid #F64C4C;
 }
 .btn-danger:active:hover,
 .btn-danger.active:hover,
@@ -3327,8 +3328,8 @@ fieldset[disabled] .btn-warning.focus {
 .btn-danger.active.focus,
 .open > .dropdown-toggle.btn-danger.focus {
   color: #fff;
-  background-color: #4c0000;
-  border-color: #0b0000;
+  background-color: #F64C4C;
+  border: 1px solid #F64C4C;
 }
 .btn-danger:active,
 .btn-danger.active,
@@ -5769,11 +5770,11 @@ button.list-group-item-danger.active:focus {
   font-size: 18px;
   font-weight: bold;
   line-height: 1;
-  color: #000;
-  text-shadow: 0 1px 0 #fff;
   opacity: 0.2;
   filter: alpha(opacity=20);
 }
+
+
 .close:hover,
 .close:focus {
   color: #000;
@@ -5788,6 +5789,7 @@ button.close {
   background: transparent;
   border: 0;
   -webkit-appearance: none;
+
 }
 .modal-open {
   overflow: hidden;
@@ -7638,6 +7640,19 @@ button.close {
   width: 18px;
   height: 18px;
 }
+.svg-close {
+  -webkit-mask-image: url('../img/close_icon.svg'); /* For WebKit browsers */
+  mask-image: url('../img/close_icon.svg'); /* Standard */
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  background-color: #72767b; /* or any color you want */
+  width: 14px;
+  height: 14px;
+}
 
 .fa-building-o:before {
   content: "\f0f7";
@@ -8988,6 +9003,7 @@ button.close {
   border-radius: 6px;
   align-items: center;
 }
+
 .alert .alert-link {
   color: #0088ce;
 }
@@ -9072,8 +9088,9 @@ fieldset[disabled] .btn.btn-link {
 }
 .btn-danger {
   background-color: #fff;
-  border-color: #F64C4C;
+  border: 1px solid #F64C4C;
   color: #F64C4C;
+  border-radius: 6px;
 }
 .btn-danger:hover,
 .btn-danger:focus,

@@ -11,8 +11,8 @@
         <p>
         <wpsf:hidden name="entityManagerName"/>
         </p>
-        <a href="<s:url namespace="/do/Entity" action="initAddEntityType" > <s:param name="entityManagerName"><s:property value="entityManagerName" /></s:param></s:url>"
-            class="btn btn-primary pull-right mb-5">
+        <a href="<s:url namespace="/do/Entity" action="initAddEntityType"  > <s:param name="entityManagerName"><s:property value="entityManagerName" /></s:param></s:url>"
+            class="btn btn-primary mb-10">
             <s:text name="menu.entityAdmin.entityTypes.new"/>
         </a>
 
@@ -120,7 +120,7 @@
     </wpsa:subset>
 </s:if>
 <s:else>
-    <div class="col-md-12">
+    <div>
         <div class="alert alert-warning">
             <span class="pficon pficon-warning-triangle-o"></span>
             <strong><s:text name="%{'note.' + entityManagerName + '.empty'}"/></strong>
