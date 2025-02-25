@@ -3932,7 +3932,6 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .nav > li > a:hover,
 .nav > li > a:focus {
   text-decoration: none;
-  background-color: #f1f1f1;
 }
 .nav > li.disabled > a {
   color: #9c9c9c;
@@ -7513,11 +7512,6 @@ button.close {
   padding: 2px;
 }
 
-.icons-svg-new:hover{
-  color: #0041cc;
-  background-color: #0041cc; /* or any color you want */
-
-}
 
 .btn-link.active .icons-svg-new {
   color: #0041cc;
