@@ -389,7 +389,7 @@
                 <div class="panel-heading">
                     <h2 class="h4 margin-none">
                         <s:text name="title.contentInfo" />
-                        <a href="#quickmenu" id="info_content_goBackToQuickMenu" class="pull-right" title="<s:text name="note.goBackToQuickMenu" />"><span class="icon fa fa-arrow-circle-up"></span><span class="sr-only"><s:text name="note.goBackToQuickMenu" /></span></a>
+                        <a href="#quickmenu" id="info_content_goBackToQuickMenu" class="pull-right" title="<s:text name="note.goBackToQuickMenu" />"><span class="icon fa fa-arrow-circle-up" style="font-size: 24px;"></span><span class="sr-only"><s:text name="note.goBackToQuickMenu" /></span></a>
                     </h2>
                 </div>
 

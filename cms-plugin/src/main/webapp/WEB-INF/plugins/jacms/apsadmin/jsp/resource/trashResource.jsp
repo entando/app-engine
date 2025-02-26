@@ -48,8 +48,8 @@
         <p class="esclamation-underline"><s:text name="note.deleteResource.areYouSure"/></p>
         <p class="esclamation-underline-text"><s:property value="%{loadResource(resourceId).descr}"/>&#63;</p>
 
-        <div class="text-center margin-large-top">
-            <a class="btn btn-default button-fixed-width" href="<s:url action="list" namespace="/do/jacms/Resource">
+        <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+            <a class="btn btn-outlined-secondary button-fixed-width" href="<s:url action="list" namespace="/do/jacms/Resource">
                    <s:param name="resourceTypeCode">
                        <s:property value="resourceTypeCode" />
                    </s:param>

@@ -41,8 +41,8 @@
             <s:property value="%{getEntityPrototype(entityTypeCode).typeDescr}"/>?
         </p>
 
-        <div class="text-center margin-large-top">
-            <a class="btn btn-default button-fixed-width"
+        <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+            <a class="btn btn-outlined-secondary button-fixed-width"
                href="<s:url action="initViewEntityTypes" namespace="/do/Entity"><s:param name="entityManagerName"><s:property value="entityManagerName" /></s:param></s:url>">
                 <s:text name="label.back"/>
             </a>

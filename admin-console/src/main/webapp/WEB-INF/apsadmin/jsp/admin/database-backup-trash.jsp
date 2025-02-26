@@ -35,8 +35,8 @@
             <s:date name="#dumpReportVar.date" format="dd/MM/yyyy HH:mm:ss" />?
     </p>
     <br>
-    <div class="text-center margin-large-top">
-        <a class="btn btn-default button-fixed-width"
+    <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+        <a class="btn btn-outlined-secondary button-fixed-width"
            href="<s:url namespace="/do/Admin/Database" action="entry" />">
             <s:text name="label.back" />
         </a>

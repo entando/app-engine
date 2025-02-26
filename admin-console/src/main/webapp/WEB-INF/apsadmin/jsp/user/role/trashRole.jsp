@@ -30,7 +30,7 @@
         <p class="esclamation-underline-text"><s:text name="note.roleConfirm.trash"/>&#32;<s:property value="name"/></p>
 
         <div class="text-center">
-            <a class="btn btn-default button-fixed-width" href="<s:url action="list" namespace="/do/Role" />">
+            <a class="btn btn-outlined-secondary button-fixed-width" href="<s:url action="list" namespace="/do/Role" />">
                 <s:text name="label.back"/>
             </a>
             <wpsf:submit type="button" cssClass="btn btn-danger button-fixed-width">

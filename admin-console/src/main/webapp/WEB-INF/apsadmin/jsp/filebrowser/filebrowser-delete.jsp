@@ -35,8 +35,8 @@
             <s:text name="label.delete.confirm" />
             &#32;<s:property value="%{filename}" />?
         </p>
-        <div class="text-center margin-large-top">
-            <a class="btn btn-default button-fixed-width"
+        <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+            <a class="btn btn-outlined-secondary button-fixed-width"
                href="<s:url namespace="/do/FileBrowser" action="list" />">
                 <s:text name="note.goToSomewhere" />&#32;<s:text
                     name="label.back" />

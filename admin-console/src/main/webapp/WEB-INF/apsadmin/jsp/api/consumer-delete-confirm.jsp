@@ -26,8 +26,8 @@
             <p class="esclamation-underline"><s:text name="note.api.consumer.trash" /></p>
             <p class="esclamation-underline-text"><s:property value="#consumerVar.description" /> <s:property value="consumerKey" />?</p>
             <br>
-            <div class="text-center margin-large-top">
-                <a class="btn btn-default button-fixed-width" href="<s:url action="list" namespace="/do/Api/Consumer" />"><s:text name="label.back" /></a>
+            <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+                <a class="btn btn-outlined-secondary button-fixed-width" href="<s:url action="list" namespace="/do/Api/Consumer" />"><s:text name="label.back" /></a>
                 <wpsf:submit type="button" cssClass="btn btn-danger button-fixed-width">
                     <s:text name="label.remove" />
                 </wpsf:submit>

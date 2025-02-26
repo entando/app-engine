@@ -48,8 +48,8 @@
             <s:text name="note.deleteResource.areYouSure"/>&#32;
             <s:property value="#resource.descr" />&#63;
         </p>
-        <div class="text-center margin-large-top">
-            <a class="btn btn-default button-fixed-width"
+        <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+            <a class="btn btn-outlined-secondary button-fixed-width"
                href="<s:url action="list" namespace="/do/jpversioning/Resource/Trash"><s:param name="resourceTypeCode" value="%{resourceTypeCode}" /></s:url>   ">
                 <s:text name="label.back"/>
             </a>

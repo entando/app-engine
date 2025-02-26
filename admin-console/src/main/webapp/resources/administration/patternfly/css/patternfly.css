@@ -3469,10 +3469,10 @@ tbody.collapse.in {
   display: none;
   float: left;
   min-width: fit-content;
-  padding: 0px;
+  padding: 8px 0px;
   margin: 2px 0 0;
   list-style: none;
-  font-size: 12px;
+  font-size: 14px;
   text-align: left;
   background-color: #fff;
   border-radius: 6px;
@@ -3491,9 +3491,22 @@ tbody.collapse.in {
   margin: 4px 1px;
   overflow: hidden;
 }
+
 .dropdown-menu > li > a {
   display: block;
-  padding: 8px;
+  padding: 4px 16px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.66666667;
+  color: #363636;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+
+}
+.dropdown-menu > li > button {
+  display: block;
+ padding: 4px 10px;
   clear: both;
   font-weight: normal;
   line-height: 1.66666667;
@@ -3531,8 +3544,11 @@ tbody.collapse.in {
   cursor: not-allowed;
 }
 .open > .dropdown-menu {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
+
 .open > a {
   outline: 0;
 }
@@ -4824,9 +4840,10 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   cursor: not-allowed;
 }
 .label {
-  display: inline;
+  display: flex;
   padding: .2em .6em .3em;
   font-size: 75%;
+  align-items: center;
   font-weight: bold;
   line-height: 1;
   color: #fff;
@@ -4834,12 +4851,13 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   white-space: nowrap;
   vertical-align: baseline;
   border-radius: .25em;
+  width: fit-content;
 }
 a.label:hover,
 a.label:focus {
   color: #fff;
-  text-decoration: none;
-  cursor: pointer;
+  text-decoration: none !important;
+  cursor: pointer; 
 }
 .label:empty {
   display: none;
@@ -9332,7 +9350,6 @@ fieldset[disabled] .btn-primary.active {
   border-color: transparent;
   border-style: solid;
   border-width: 1px 0;
-  padding: 8px;
   gap: 4px;
 }
 .dropdown-menu > li > a:hover,

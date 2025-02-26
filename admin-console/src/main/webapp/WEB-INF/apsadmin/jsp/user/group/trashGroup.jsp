@@ -32,8 +32,8 @@
         <s:text name="note.groupConfirm.trash" />
         &#32;<s:property value="name" />?
     </p>
-    <div class="text-center margin-large-top">
-        <a class="btn btn-default button-fixed-width"
+    <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+        <a class="btn btn-outlined-secondary button-fixed-width"
            href="<s:url action="list" />"> <s:text name="menu.back"/>
         </a>
         <wpsf:submit type="button"

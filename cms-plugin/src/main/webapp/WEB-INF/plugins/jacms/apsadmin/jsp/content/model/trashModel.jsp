@@ -36,8 +36,8 @@
             <s:property value="modelId" />?
         </p>
 
-        <div class="text-center margin-large-top">
-            <a class="btn btn-default button-fixed-width"
+        <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
+            <a class="btn btn-outlined-secondary button-fixed-width"
                href="<s:url action="list" namespace="/do/jacms/ContentModel"/>">
                 <s:text name="note.back" />
             </a>

@@ -47,12 +47,12 @@
                     <s:text name="note.clearPosition.areYouSure.widget" />&#32;<strong><s:property value="%{getTitle(#showletType.getCode(), #showletType.getTitles())}" /></strong>
                 </s:if>?
             </p>
-            <div class="text-center margin-large-top">
+            <div class="text-center margin-large-top" style="display:flex;justify-content: center;">
                 <s:if test="%{#NScurrent == '/do/Portal/WidgetType'}">
-                    <a class="btn btn-default button-fixed-width" href="<s:url action="viewWidgets" namespace="/do/Portal/WidgetType"/>" ><s:text name="label.back" /></a>
+                    <a class="btn btn-outlined-secondary button-fixed-width" href="<s:url action="viewWidgets" namespace="/do/Portal/WidgetType"/>" ><s:text name="label.back" /></a>
                 </s:if>
                 <s:elseif test="%{#NScurrent == '/do/Page'}">
-                    <a class="btn btn-default button-fixed-width" href="<s:url action="viewTree" namespace="/do/Page"/>" ><s:text name="title.pageManagement" /></a>
+                    <a class="btn btn-outlined-secondary button-fixed-width" href="<s:url action="viewTree" namespace="/do/Page"/>" ><s:text name="title.pageManagement" /></a>
                 </s:elseif>
                 <wpsf:submit type="button" cssClass="btn btn-danger button-fixed-width">
                     <s:text name="label.delete" />
