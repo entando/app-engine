@@ -82,7 +82,7 @@
                         <span class="icon-chevron-down"></span>
                     </button><br><br>
 
-                    <div class="collapse" id="jpcontentinspection_metadata">
+                    <div class="collapse table-wrapper" id="jpcontentinspection_metadata">
                         <table class="table table-bordered">
                             <tr>
                                 <th class="td-pagetree-width"><s:text name="label.description" /></th>

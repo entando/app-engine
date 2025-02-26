@@ -32,45 +32,48 @@
 
 <div class="mb-20">
     <div class="col-xs-12">
-        <table class="table table-bordered">
-            <tr>
-                <th class="td-pagetree-width"><s:text name="label.description" /></th>
-                <td><s:property value="description" /></td>
-            </tr>
-            <tr>
-                <th class="td-pagetree-width"><s:text name="label.code" /></th>
-                <td>/<s:property value="code" /></td>
-            </tr>
-            <tr>
-                <th class="td-pagetree-width"><s:text name="label.pluginCode" /></th>
-                <td>
-                    <s:property value="pluginCode" />
-                </td>
-            </tr>
-            <tr>
-                <th class="td-pagetree-width"><s:text name="label.configuration" /></th>
-                <td>
-                    <c:set var="xmlConfigurationVar"><s:property value="xmlConfiguration" /></c:set>
-                    <c:set var="ESCAPED_STRING" value="${fn:replace(fn:replace(xmlConfigurationVar, tabChar, '&emsp;'),carriageReturnChar, '')}" />
-                    <pre><code><c:out value="${ESCAPED_STRING}" escapeXml="true" /></code></pre>
-                </td>
-            </tr>
-            <tr>
-                <th class="td-pagetree-width"><s:text name="label.template" /></th>
-                <td>
-                    <c:set var="templateVar"><s:property value="template" /></c:set>
-                    <c:set var="ESCAPED_STRING" value="${fn:replace(fn:replace(templateVar, tabChar, '&emsp;'),carriageReturnChar, '')}" />
-                    <pre><code><c:out value="${ESCAPED_STRING}" escapeXml="true" /></code></pre>
-                </td>
-            </tr>
-            <tr>
-                <th class="td-pagetree-width"><s:text name="label.template.preview" /></th>
-                <td>
-                    <!-- the grid (or alert) will be appended here -->
-                    <div class="grid-container"></div>
-                </td>
-            </tr>
-        </table>
+        <div class="table-wrapper">
+            <table class="table table-bordered">
+                <tr>
+                    <th class="td-pagetree-width"><s:text name="label.description" /></th>
+                    <td><s:property value="description" /></td>
+                </tr>
+                <tr>
+                    <th class="td-pagetree-width"><s:text name="label.code" /></th>
+                    <td>/<s:property value="code" /></td>
+                </tr>
+                <tr>
+                    <th class="td-pagetree-width"><s:text name="label.pluginCode" /></th>
+                    <td>
+                        <s:property value="pluginCode" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="td-pagetree-width"><s:text name="label.configuration" /></th>
+                    <td>
+                        <c:set var="xmlConfigurationVar"><s:property value="xmlConfiguration" /></c:set>
+                        <c:set var="ESCAPED_STRING" value="${fn:replace(fn:replace(xmlConfigurationVar, tabChar, '&emsp;'),carriageReturnChar, '')}" />
+                        <pre><code><c:out value="${ESCAPED_STRING}" escapeXml="true" /></code></pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="td-pagetree-width"><s:text name="label.template" /></th>
+                    <td>
+                        <c:set var="templateVar"><s:property value="template" /></c:set>
+                        <c:set var="ESCAPED_STRING" value="${fn:replace(fn:replace(templateVar, tabChar, '&emsp;'),carriageReturnChar, '')}" />
+                        <pre><code><c:out value="${ESCAPED_STRING}" escapeXml="true" /></code></pre>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="td-pagetree-width"><s:text name="label.template.preview" /></th>
+                    <td>
+                        <!-- the grid (or alert) will be appended here -->
+                        <div class="grid-container"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+      
 
         <p class="text-right">
             <a class="btn btn-primary"

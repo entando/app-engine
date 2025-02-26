@@ -30,7 +30,7 @@
 </div>
 <br>
 
-<div id="main" role="main">
+<div id="main" role="main" class="settings-page-content">
     <s:form class="form-horizontal" action="updateSystemParams">
         <s:if test="hasActionMessages()">
             <div class="alert alert-success alert-dismissable">
@@ -198,45 +198,48 @@
             </s:iterator>
             <div class="metadata-well">
                 <div class="separator"></div>
-                <label class="col-sm-2 section-label" for="new_metatag">
-                    <s:text name="jacms.label.addResourceMetadata" />
-                    <a role="button" tabindex="0" data-toggle="popover" data-trigger="focus" data-html="true" title=""
-                       data-placement="top" data-content="<s:text name="jacms.help.addResourceMetadata" />"
-                       data-original-title="">
-                        <span class="fa fa-info-circle"></span>
-                    </a>
-                </label>
-                <s:set var="fieldErrorsVar" value="%{fieldErrors['metadataKey']}" />
-                <s:set var="hasFieldErrorVar" value="#fieldErrorsVar != null && !#fieldErrorsVar.isEmpty()" />
-                <s:set var="controlGroupErrorClass" value="%{#hasFieldErrorVar ? ' has-error' : ''}" />
-                <div class="col-md-4 form-group<s:property value="#controlGroupErrorClass" />">
-                    <label class="col-sm-4 control-label" for="new_metadata">
-                        <s:text name="label.key" />
+                <div class="content-settings-form">
+                    <label class="section-label" for="new_metatag">
+                        <s:text name="jacms.label.addResourceMetadata" />
+                        <a role="button" tabindex="0" data-toggle="popover" data-trigger="focus" data-html="true" title=""
+                           data-placement="top" data-content="<s:text name="jacms.help.addResourceMetadata" />"
+                           data-original-title="">
+                            <span class="fa fa-info-circle"></span>
+                        </a>
                     </label>
-                    <div class="col-sm-8">
-                        <wpsf:textfield name="metadataKey" id="new_metadata" cssClass="form-control custom-input" />
-                        <s:if test="#hasFieldErrorVar">
-                            <span class="help-block text-danger">
-                                <s:iterator value="%{#fieldErrorsVar}">
-                                    <s:property />&#32;
-                                </s:iterator>
-                            </span>
-                        </s:if>
+                    <s:set var="fieldErrorsVar" value="%{fieldErrors['metadataKey']}" />
+                    <s:set var="hasFieldErrorVar" value="#fieldErrorsVar != null && !#fieldErrorsVar.isEmpty()" />
+                    <s:set var="controlGroupErrorClass" value="%{#hasFieldErrorVar ? ' has-error' : ''}" />
+                    <div class=" form-group<s:property value="#controlGroupErrorClass" />">
+                        <label class="control-label" for="new_metadata">
+                            <s:text name="label.key" />
+                        </label>
+                        <div class="">
+                            <wpsf:textfield name="metadataKey" id="new_metadata" cssClass="form-control custom-input" />
+                            <s:if test="#hasFieldErrorVar">
+                                <span class="help-block text-danger">
+                                    <s:iterator value="%{#fieldErrorsVar}">
+                                        <s:property />&#32;
+                                    </s:iterator>
+                                </span>
+                            </s:if>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label" for="new_metadata_mapping">
+                            <s:text name="jacms.label.metadataMapping" />
+                        </label>
+                        <div class="">
+                            <wpsf:textfield name="metadataMapping" id="new_metadata_mapping" cssClass="form-control custom-input" />
+                        </div>
+                    </div>
+                    <div class=""> 
+                        <wpsf:submit action="addMetadata" type="button" cssClass="btn btn-primary pull-right btn-position">
+                            <s:text name="label.add" />
+                        </wpsf:submit>
                     </div>
                 </div>
-                <div class="col-md-4 form-group">
-                    <label class="col-sm-4 control-label" for="new_metadata_mapping">
-                        <s:text name="jacms.label.metadataMapping" />
-                    </label>
-                    <div class="col-sm-8">
-                        <wpsf:textfield name="metadataMapping" id="new_metadata_mapping" cssClass="form-control custom-input" />
-                    </div>
-                </div>
-                <div class="col-sm-2"> 
-                    <wpsf:submit action="addMetadata" type="button" cssClass="btn btn-primary pull-right btn-position">
-                        <s:text name="label.add" />
-                    </wpsf:submit>
-                </div>
+            
             </div>
         </fieldset>
 
@@ -246,7 +249,7 @@
                 <s:text name="jacms.title.contentSetting.cropImage"/>
             </h2>
             <div class="form-group">
-                <div class="col-sm-5 col-sm-offset-2">
+                <div>
                     <div id="add-crop-dim-button">
                         <button type="button" id="add-crop-dim" class="btn btn-primary">
                             <s:text name="label.add" />
@@ -258,7 +261,7 @@
             <s:set var="aspectRatioListVar" value="ratio" />
             <s:iterator var="cropDimVar" value="#aspectRatioListVar" status="status">
                 <div class="form-group">
-                    <div class="col-sm-2 col-sm-offset-2">
+                    <div>
                         <wpsf:textfield name="ratio" maxlength="40" id="ratio_%{#status.count - 1}" cssClass="form-control ratio-conf" value="%{#cropDimVar}" />
                     </div>
                     <button type="button" class="btn-danger delete-fields" title="<s:text name="label.delete" />">
@@ -281,8 +284,8 @@
 </div>
 
 <template id="hidden-fields-template">
-    <div class="form-group">
-        <div class="col-sm-2 col-sm-offset-2">
+    <div class="form-group" style="display: flex;gap: 8px;margin-left: -8px;">
+        <div >
             <wpsf:textfield name="ratio" maxlength="250" id="newRatio" cssClass="form-control ratio-conf" />
         </div>
 

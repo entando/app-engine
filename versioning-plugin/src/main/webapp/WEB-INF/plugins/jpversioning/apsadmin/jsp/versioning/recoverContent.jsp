@@ -31,24 +31,27 @@
 <br/>
 
 <div id="main">
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th class="text-center"><s:text name="jpversioning.label.id" /></th>
-            <th><s:text name="jpversioning.label.description" /></th>
-            <th class="text-center"><s:text name="jpversioning.label.lastVersion" /></th>
-            <th class="text-center"><s:text name="jpversioning.label.version" /></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td class="text-center"><s:property value="contentVersion.contentId" /></td>
-            <td><s:property value="contentVersion.descr" /></td>
-            <td class="text-center"><s:date name="contentVersion.versionDate" format="dd/MM/yyyy HH:mm" /></td>
-            <td class="text-center"><s:property value="contentVersion.version" /></td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="table-wrapper">
+
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th class="text-center"><s:text name="jpversioning.label.id" /></th>
+                <th><s:text name="jpversioning.label.description" /></th>
+                <th class="text-center"><s:text name="jpversioning.label.lastVersion" /></th>
+                <th class="text-center"><s:text name="jpversioning.label.version" /></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="text-center"><s:property value="contentVersion.contentId" /></td>
+                <td><s:property value="contentVersion.descr" /></td>
+                <td class="text-center"><s:date name="contentVersion.versionDate" format="dd/MM/yyyy HH:mm" /></td>
+                <td class="text-center"><s:property value="contentVersion.version" /></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
     <s:if test="%{trashedResources == null || trashedResources.size() == 0 }"></s:if>
     <s:else>

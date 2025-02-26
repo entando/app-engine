@@ -2391,6 +2391,24 @@ th {
   border-radius: 10px;
 }
 
+.settings-page-content .form-group{
+  display: flex;
+  align-items: center;
+}
+
+.content-settings-form{
+  display: flex;
+  gap:16px;
+  align-items: center;
+}
+
+.content-settings-form .form-group{
+  display: flex;
+  margin-bottom: unset;
+  gap: 8px;
+  align-items: center;
+}
+
 .table-bordered tr,th,td,thead {
   background: transparent;
   border: 1px solid transparent;
