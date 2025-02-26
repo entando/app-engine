@@ -62,7 +62,7 @@
             </p>
             <s:set var="userAuthorizationsVar" value="%{userAuthsFormBean.authorizations}" />
             <s:if test="%{#userAuthorizationsVar.size()>0}">
-                <div class="table-responsive">
+                <div class="table-responsive table-wrapper">
                     <table class="table table-striped table-bordered">
                         <tr>
                             <th><s:text name="label.userGroup" /></th>

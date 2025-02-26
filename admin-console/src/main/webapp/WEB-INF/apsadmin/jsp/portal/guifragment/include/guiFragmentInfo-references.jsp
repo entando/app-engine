@@ -19,7 +19,7 @@
             <div class="col-md-12">
                 <wpsa:subset source="references['GuiFragmentManagerUtilizers']" count="10" objectName="guiFragmentReferencesVar" advanced="true" offset="5" pagerId="pageManagerReferences">
                     <s:set var="group" value="#guiFragmentReferencesVar" />
-                    <div class="col-xs-12 no-padding table-nomargin-bottom">
+                    <div class="col-xs-12 no-padding table-nomargin-bottom table-wrapper">
                         <table class="table table-bordered table-hover table-treegrid"  id="guiFragListTable">
                             <thead>
                                 <tr>
@@ -84,7 +84,7 @@
                         <s:include value="/WEB-INF/apsadmin/jsp/common/inc/pagerInfo.jsp" />
                         <s:include value="/WEB-INF/apsadmin/jsp/common/inc/pager_formBlock.jsp" />
                     </div>
-                    <div class="table-responsive">
+                    <div class="table-responsive table-wrapper">
                         <table class="table table-striped table-bordered table-hover"  id="userListTable">
                             <tr>
                                 <th class="text-center col-xs-5 col-sm-3 col-md-2 col-lg-2">

@@ -89,7 +89,7 @@
 
             <script src="<wp:resourceURL ignoreTenant="true"/>administration/js/entando-typeahead-tree.js"></script>
 
-            <div class="table-responsive overflow-visible">
+            <div class="table-responsive table-wrapper overflow-visible">
                 <table id="categoryTree"
                        class="table table-bordered table-hover table-treegrid" style="overflow: visible;">
                     <thead>

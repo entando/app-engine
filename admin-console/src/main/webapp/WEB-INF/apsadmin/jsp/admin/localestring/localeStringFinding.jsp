@@ -123,7 +123,7 @@
                         <wpsf:hidden name="lastGroupBy"/>
                         <wpsf:hidden name="lastOrder"/>
                         </p>
-                        <div class="col-xs-12 no-padding">
+                        <div class="col-xs-12 no-padding table-wrapper">
                             <table class="table table-striped table-bordered table-hover no-mb" id="labelTable">
                                 <thead>
                                     <tr>

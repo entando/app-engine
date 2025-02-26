@@ -22,7 +22,7 @@
         <s:if test="%{#entity_list.size > 0}">
             <wpsa:subset source="#entity_list" count="10" objectName="entityGroup" advanced="true" offset="5">
                 <s:set var="group" value="#entityGroup"/>
-                <div class="mt-20">
+                <div class="mt-20" style="border: 1px solid #e4e7ec; border-radius: 6px;">
                     <table class="table table-striped table-bordered table-hover no-mb">
                         <thead>
                             <tr>

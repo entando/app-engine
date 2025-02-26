@@ -49,7 +49,7 @@
             <span class="icon-chevron-down"></span>
         </button>
     </p>
-    <div class="collapse" id="jpcontentinspection_info">
+    <div class="collapse table-wrapper" id="jpcontentinspection_info" >
         <table class="table table-striped table-bordered table-hover no-mb">
             <s:set var="contentGroup" value="%{getGroup(content.getMainGroup())}" />
             <thead>

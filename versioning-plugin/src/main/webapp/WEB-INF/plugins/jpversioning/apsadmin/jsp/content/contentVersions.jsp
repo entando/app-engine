@@ -18,7 +18,7 @@
 
             <s:set var="group" value="#groupContent"/>
 
-            <div class="col-xs-12 no-padding">
+            <div class="col-xs-12 no-padding table-wrapper">
                 <table class="table table-striped table-bordered table-hover no-mb">
                     <caption class="sr-only"><span><s:text name="title.jpversioning.versionList"/></span></caption>
                     <thead>

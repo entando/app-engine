@@ -103,7 +103,7 @@
                     </p>
                     <s:set var="group" value="#groupContent" />
                     <s:if test="%{#contentIdsVar.size() > 0}">
-                        <div class="table-responsive">
+                        <div class="table-responsive table-wrapper">
                             <table class="table table-striped table-bordered table-hover no-mb">
                                 <thead>
                                     <tr>

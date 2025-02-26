@@ -8,7 +8,7 @@
 	<wpsa:subset source="#referencingContentsId" count="10" objectName="contentReferencesGroup" advanced="true" offset="5" pagerId="referencingContentsId">
 		<s:set var="group" value="#contentReferencesGroup" />
 
-		<div class="table-responsive">
+		<div class="table-responsive table-wrapper">
 			<table class="table table-striped table-bordered table-hover no-mb" id="contentListTable" summary="<s:text name="note.resources.referencingContent.summary" />">
 			<caption class="text-strong margin-base-vertical"><s:text name="title.referencedContents" /></caption>
 				<s:include value="/WEB-INF/plugins/jacms/apsadmin/jsp/common/contentReferencesTable_header.jsp" />

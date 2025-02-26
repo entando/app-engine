@@ -101,7 +101,7 @@
                                     </div>
                                     <div class="card-pf-body" id="page-table">
                                         <div class="spinner spinner-xl"></div>
-                                        <div class="table-responsive hidden">
+                                        <div class="table-responsive table-wrapper hidden">
                                             <table id="page-table" class="table table-striped table-bordered no-mb">
                                                 <thead>
                                                     <tr>

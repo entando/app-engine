@@ -58,7 +58,7 @@
                      </script>
                  </s:if>
 
-                 <div class="table-responsive">
+                 <div class="table-responsive table-wrapper">
                      <table id="pageTree" class="table table-bordered table-hover table-treegrid no-mb">
                          <thead>
                              <tr>

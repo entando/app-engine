@@ -97,7 +97,7 @@
                     <label><s:text name="label.api.resource.method.requestParameters" /></label>
                 </div>
                 <div class="col-sm-10 table-in-col10">
-                    <div class="table-responsive overflow-visible">
+                    <div class="table-responsive table-wrapper overflow-visible">
                         <table class="table table-striped table-bordered">
                             <tr>
                                 <th class="col-xs-1 col-sm-1 col-md-1 col-lg-1"><s:text name="label.required" /></th>

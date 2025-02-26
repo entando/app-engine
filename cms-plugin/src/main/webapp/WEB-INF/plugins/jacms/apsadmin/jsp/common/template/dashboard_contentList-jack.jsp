@@ -49,7 +49,7 @@
                         </h2>
                     </div>
                     <div class="card-pf-body" id="content-table">
-                        <div class="table-responsive hidden">
+                        <div class="table-responsive table-wrapper hidden">
                             <table class="table table-striped table-bordered no-mb">
                                 <thead>
                                     <tr>

@@ -62,7 +62,7 @@
         <p><s:text name="label.senders.none" /></p>
     </s:if>
     <s:else>
-        <div class="table-responsive overflow-visible">
+        <div class="table-responsive table-wrapper overflow-visible">
             <table class="table table-striped table-bordered table-hover no-mb">
                 <thead>
                     <tr>

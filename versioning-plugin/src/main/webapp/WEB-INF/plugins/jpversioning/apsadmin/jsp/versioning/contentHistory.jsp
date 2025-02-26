@@ -37,7 +37,7 @@
 
 <s:set var="currentContentVar" value="%{getCurrentContent(contentId)}" />
 <s:if test="null != #currentContentVar" >
-    <div id="jpcontentinspection_info">
+    <div id="jpcontentinspection_info" class="table-wrapper">
         <table class="table table-striped table-bordered table-hover no-mb">
             <s:set var="contentGroup" value="%{getGroup(#currentContentVar.getMainGroup())}" />
             <thead>
@@ -102,7 +102,7 @@
             <s:hidden name="backId" />
             <s:hidden name="fromEdit" />
         </p>
-        <div class="col-xs-12 no-padding">
+        <div class="col-xs-12 no-padding table-wrapper" >
             <table class="table table-striped table-bordered table-hover no-mb">
                 <thead>
                     <tr>

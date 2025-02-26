@@ -124,7 +124,7 @@
             <s:if test="#guiFragmentsCodes_list.size > 0">
                 <wpsa:subset source="#guiFragmentsCodes_list" count="10" objectName="groupGuiFragments" advanced="true" offset="5">
                     <s:set var="group" value="#groupGuiFragments" />
-                    <div class="col-xs-12 no-padding">
+                    <div class="col-xs-12 no-padding table-wrapper">
                         <table class="table table-striped table-bordered table-hover no-mb">
                             <tr>
                                 <th><s:text name="label.code" /></th>

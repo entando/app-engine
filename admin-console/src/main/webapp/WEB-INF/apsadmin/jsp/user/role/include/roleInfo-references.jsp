@@ -26,7 +26,7 @@
 
 
                     <wp:ifauthorized permission="superuser" var="canEditUser" />
-                    <!--<div class="table-responsive">-->
+                    <!--<div class="table-responsive table-wrapper">-->
                     <table class="table table-bordered" id="userListTable">
                         <thead>
                             <tr>

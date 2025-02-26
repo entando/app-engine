@@ -187,49 +187,52 @@
             <div class="col-xs-10">
                 <script src="<wp:resourceURL ignoreTenant="true" />administration/js/entando-typeahead-tree.js"></script>
                 <s:include value="/WEB-INF/apsadmin/jsp/common/layouts/assets-more/category/categoryTree-extra.jsp" />
-                <table id="categoryTree" class="table table-bordered table-hover table-treegrid ${categoryTreeStyleVar}">
-                    <thead>
-                        <tr>
-                            <th>
-                                <s:text name="label.category.tree" />
-                                <s:if test="#categoryTreeStyleVar == 'classic'">
-                                    <button type="button" class="btn-no-button expand-button" id="expandAll">
-                                        <i class="fa fa-plus-square-o treeInteractionButtons" aria-hidden="true"></i>
-                                        &#32;
-                                        <s:text name="label.category.expandAll" />
-                                    </button>
-                                    <button type="button" class="btn-no-button" id="collapseAll">
-                                        <i class="fa fa-minus-square-o treeInteractionButtons" aria-hidden="true"></i>
-                                        &#32;
-                                        <s:text name="label.category.collapseAll" />
-                                    </button>
-                                </s:if>
-                            </th>
-                            <th class="text-center table-w-10">
-                                <s:text name="label.category.join" />
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <s:set var="selectedTreeNode" value="selectedNode" />
-                        <s:set var="currentRoot" value="categoryRoot" />
-                        <s:set var="inputFieldName" value="'categoryCode'" />
-                        <s:set var="selectedTreeNode" value="categoryCode" />
-                        <s:set var="liClassName" value="'category'" />
-                        <s:set var="treeItemIconName" value="'fa-folder'" />
-                        <s:if test="#categoryTreeStyleVar == 'classic'">
+                <div class="table-wrapper">
+                    
+                    <table id="categoryTree" class="table table-bordered table-hover table-treegrid ${categoryTreeStyleVar}">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <s:text name="label.category.tree" />
+                                    <s:if test="#categoryTreeStyleVar == 'classic'">
+                                        <button type="button" class="btn-no-button expand-button" id="expandAll">
+                                            <i class="fa fa-plus-square-o treeInteractionButtons" aria-hidden="true"></i>
+                                            &#32;
+                                            <s:text name="label.category.expandAll" />
+                                        </button>
+                                        <button type="button" class="btn-no-button" id="collapseAll">
+                                            <i class="fa fa-minus-square-o treeInteractionButtons" aria-hidden="true"></i>
+                                            &#32;
+                                            <s:text name="label.category.collapseAll" />
+                                        </button>
+                                    </s:if>
+                                </th>
+                                <th class="text-center table-w-10">
+                                    <s:text name="label.category.join" />
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <s:set var="selectedTreeNode" value="selectedNode" />
                             <s:set var="currentRoot" value="categoryRoot" />
-                            <s:include value="/WEB-INF/plugins/jacms/apsadmin/jsp/common/treeBuilderCategoriesJoin.jsp" />
-                        </s:if>
-                        <s:elseif test="#categoryTreeStyleVar == 'request'">
-                            <s:set var="currentRoot" value="showableTree" />
-                            <s:set var="openTreeActionName" value="'openCloseCategoryTreeNodeOnEntryResource'" />
-                            <s:set var="closeTreeActionName" value="'openCloseCategoryTreeNodeOnEntryResource'" />
-                            <s:include
-                                value="/WEB-INF/plugins/jacms/apsadmin/jsp/common/treeBuilder-request-categories.jsp" />
-                        </s:elseif>
-                    </tbody>
-                </table>
+                            <s:set var="inputFieldName" value="'categoryCode'" />
+                            <s:set var="selectedTreeNode" value="categoryCode" />
+                            <s:set var="liClassName" value="'category'" />
+                            <s:set var="treeItemIconName" value="'fa-folder'" />
+                            <s:if test="#categoryTreeStyleVar == 'classic'">
+                                <s:set var="currentRoot" value="categoryRoot" />
+                                <s:include value="/WEB-INF/plugins/jacms/apsadmin/jsp/common/treeBuilderCategoriesJoin.jsp" />
+                            </s:if>
+                            <s:elseif test="#categoryTreeStyleVar == 'request'">
+                                <s:set var="currentRoot" value="showableTree" />
+                                <s:set var="openTreeActionName" value="'openCloseCategoryTreeNodeOnEntryResource'" />
+                                <s:set var="closeTreeActionName" value="'openCloseCategoryTreeNodeOnEntryResource'" />
+                                <s:include
+                                    value="/WEB-INF/plugins/jacms/apsadmin/jsp/common/treeBuilder-request-categories.jsp" />
+                            </s:elseif>
+                        </tbody>
+                    </table>
+                    </div>
                 <s:if test="extraGroups.size() != 0">
                     <s:iterator value="extraGroups" var="groupName">
                         <wpsa:actionParam action="removeExtraGroup" var="actionName">

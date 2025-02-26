@@ -79,7 +79,7 @@
         <jacmsapsadmin:cmssubset pagerId="%{getPagerId()}" total="%{#paginatedResourcesIdsVar.count}" maxSize="#maxSizeVar" objectName="groupContent" offset="5" >
             <s:set var="group" value="#groupContent" />
             <s:if test="%{#resourcesIdsVar.size() > 0}">
-                <div class="table-responsive no-mb">
+                <div class="table-responsive table-wrapper no-mb">
                     <table class="table table-striped table-bordered table-hover no-mb" id="resourceListTable">
                         <thead>
                             <tr>

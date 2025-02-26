@@ -362,7 +362,7 @@
                          var="hasEditProfilePermission" />
         <s:set var="hasEditProfilePermission"
                value="#attr.hasEditProfilePermission" />
-        <div class="col-xs-12 no-padding">
+        <div class="col-xs-12 no-padding table-wrapper">
             <table class="table table-striped table-bordered table-hover no-mb">
                 <thead>
                     <tr>

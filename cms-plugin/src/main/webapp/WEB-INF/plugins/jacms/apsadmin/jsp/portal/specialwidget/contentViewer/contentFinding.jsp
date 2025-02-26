@@ -149,7 +149,7 @@
                                 <wpsf:hidden name="lastGroupBy" />
                                 <wpsf:hidden name="lastOrder" />
                             </p>
-                            <div class="table-responsive"><%-- table-responsive --%>
+                            <div class="table-responsive table-wrapper"><%-- table-responsive --%>
                                 <table class="table table-striped table-bordered table-hover no-mb">
                                     <thead>
                                         <tr>

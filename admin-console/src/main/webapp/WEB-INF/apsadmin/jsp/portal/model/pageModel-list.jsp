@@ -43,7 +43,7 @@
         <s:if test="%{#pageModels_list.size > 0}">
             <wpsa:subset source="#pageModels_list" count="10" objectName="pageModelGroups" advanced="true" offset="5">
                 <s:set var="group" value="#pageModelGroups" />
-                <div class="col-xs-12 no-padding">
+                <div class="col-xs-12 no-padding table-wrapper">
                     <table class="table table-striped table-bordered table-hover no-mb">
                         <tr>
                             <th><s:text name="label.code" /></th>

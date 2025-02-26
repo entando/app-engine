@@ -71,7 +71,7 @@
                             <div class="form-group" style="align-items: flex-start;" >
                                 <label for="fileName" class="control-label" style="margin-top: 6px;"><s:text name="label.categoriesTree" /></label>
                                 <div class="col-sm-9">
-                                    <div class="table-responsive ">
+                                    <div class="table-responsive table-wrapper ">
                                         <table id="categoryTree" class="table table-bordered table-hover table-treegrid <s:property value="#categoryTreeStyleVar" />">
                                             <thead>
                                                 <tr>

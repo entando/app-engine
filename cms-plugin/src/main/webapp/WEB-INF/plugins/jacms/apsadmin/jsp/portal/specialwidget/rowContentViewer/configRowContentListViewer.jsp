@@ -82,7 +82,7 @@
                     <legend><s:text name="title.contentsPublished" /></legend>
                     <s:set var="contentsPropertiesVar" value="contentsProperties" />
                     <s:if test="%{#contentsPropertiesVar.size()>0}">
-                        <div class="table-responsive">
+                        <div class="table-responsive table-wrapper">
                             <table class="table table-striped table-bordered table-hover">
                                 <thead>
                                     <tr>

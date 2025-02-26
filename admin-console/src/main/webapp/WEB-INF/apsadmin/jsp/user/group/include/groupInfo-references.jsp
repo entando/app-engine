@@ -37,7 +37,7 @@
                                  objectName="pageReferences" advanced="true" offset="5"
                                  pagerId="pageManagerReferences">
                         <s:set var="group" value="#pageReferences" />
-                        <div class="col-xs-12 no-padding">
+                        <div class="col-xs-12 no-padding table-wrapper">
                             <table class="table table-striped table-bordered table-hover no-mb"
                                    id="pageListTable">
                                 <thead>
@@ -124,7 +124,7 @@
                                  pagerId="userManagerReferences">
                         <s:set var="group" value="#userReferences" />
                         <wp:ifauthorized permission="superuser" var="canEditUser" />
-                        <div class="col-xs-12 no-padding">
+                        <div class="col-xs-12 no-padding table-wrapper">
                             <table class="table table-striped table-bordered table-hover no-mb"
                                    id="userListTable">
                                 <thead>
@@ -261,7 +261,7 @@
                                  count="10" objectName="widgetTypeReferencesVar" advanced="true"
                                  offset="5" pagerId="widgetTypeReferences">
                         <s:set var="group" value="#widgetTypeReferencesVar" />
-                        <div class="col-xs-12 no-padding">
+                        <div class="col-xs-12 no-padding table-wrapper">
                             <table class="table table-striped table-bordered table-hover no-mb"
                                    id="widgetTypeListTable">
                                 <thead>

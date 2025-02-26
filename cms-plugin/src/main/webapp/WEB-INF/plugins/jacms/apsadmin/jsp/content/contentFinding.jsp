@@ -519,7 +519,7 @@
                         </div>
                     </div>
                     <div class="col-xs-12 no-padding">
-                        <div class="mt-20 content-finding-table">
+                        <div class="mt-20 content-finding-table table-wrapper">
                             <table class="table table-striped table-bordered table-hover content-list" id="contentListTable" style="width:100%">
                                 <thead>
                                     <tr>

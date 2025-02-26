@@ -9,7 +9,7 @@
         <s:text name="label.attributes" />
     </label>
     <div class="col-sm-10 table-in-col10">
-        <div class="table-responsive overflow-visible">
+        <div class="table-responsive table-wrapper overflow-visible">
             <table class="table table-striped table-bordered"
                    id="fagiano_entityTypesList">
                 <tr>

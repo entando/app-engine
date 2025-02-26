@@ -12,7 +12,7 @@
                          count="10" objectName="contentReferences" advanced="true"
                          offset="5" pagerId="contentManagerReferences">
                 <s:set var="group" value="#contentReferences" />
-                <div class="col-xs-12 no-padding">
+                <div class="col-xs-12 no-padding table-wrapper">
                     <table class="table table-striped table-bordered table-hover no-mb"
                            id="contentListTable">
                         <thead>
@@ -92,7 +92,7 @@
                          count="10" objectName="resourceReferences" advanced="true"
                          offset="5" pagerId="resourceManagerReferences">
                 <s:set var="group" value="#resourceReferences" />
-                <div class="col-xs-12 no-padding">
+                <div class="col-xs-12 no-padding table-wrapper">
                     <table class="table table-striped table-bordered table-hover no-mb"
                            id="resourceListTable">
                         <thead>

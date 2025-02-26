@@ -727,7 +727,7 @@
     <div class="col-xs-12 no-padding">
         <h2><s:text name="title.metadata"/></h2>
     </div>
-    <div class="col-xs-12 no-padding">
+    <div class="col-xs-12 no-padding table-wrapper">
         <table class="table table-bordered table-hover table-striped">
             <thead>
             <tr>

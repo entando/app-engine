@@ -19,7 +19,7 @@
                 <wpsa:subset source="references['PageManagerUtilizers']" count="10" objectName="pageReferences"
                              advanced="true" offset="5" pagerId="pageManagerReferences">
                     <s:set var="group" value="#pageReferences"/>
-                    <div class="col-xs-12 no-padding table-nomargin-bottom">
+                    <div class="col-xs-12 no-padding table-nomargin-bottom table-wrapper">
                         <table class="table table-striped table-bordered" id="pageListTable">
                             <tr>
                                 <th class="table-w-5">

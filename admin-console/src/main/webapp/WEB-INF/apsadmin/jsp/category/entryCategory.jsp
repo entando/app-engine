@@ -126,53 +126,56 @@
                 <s:set var="categoryTreeStyleVar"><wp:info key="systemParam" paramName="treeStyle_category" /></s:set>
                     <div class="col-xs-10">
                         <script src="<wp:resourceURL ignoreTenant="true"/>administration/js/entando-typeahead-tree.js"></script>
+                    
                     <s:include value="/WEB-INF/apsadmin/jsp/common/layouts/assets-more/category/categoryTree-extra.jsp" />
-                    <table id="categoryTree"
-                           class="table table-bordered table-hover table-treegrid">
-                        <thead>
-                            <tr>
-                                <th>
-                                    <s:text name="title.categoryTree" />
-                                    <s:if test="#categoryTreeStyleVar == 'classic'">
-                                        <button type="button" class="btn-no-button expand-button" id="expandAll">
-                                            <i class="fa fa-plus-square-o treeInteractionButtons"
-                                               aria-hidden="true"></i>&#32;
-                                            <s:text name="label.category.expandAll" />
-                                        </button>
-                                        <button type="button" class="btn-no-button" id="collapseAll">
-                                            <i class="fa fa-minus-square-o treeInteractionButtons"
-                                               aria-hidden="true"></i>&#32;
-                                            <s:text name="label.category.collapseAll" />
-                                        </button>
-                                    </s:if>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <s:set var="inputFieldName" value="%{'parentCategoryCode'}" />
-                            <s:set var="selectedTreeNode" value="%{parentCategoryCode}" />
-                            <s:set var="selectedPage" value="%{getCategory(parentCategoryCode)}" />
-                            <s:set var="isPosition" value="false" />
-                            <s:set var="treeItemIconName" value="'fa-folder'" />
-                            <s:if test="#categoryTreeStyleVar == 'classic'">
-                                <s:set var="currentRoot" value="treeRootNode" />
-                                <s:include value="/WEB-INF/apsadmin/jsp/common/treeBuilder.jsp" />
-                            </s:if>
-                            <s:elseif test="#categoryTreeStyleVar == 'request'">
-                            <style>
-                                .table-treegrid span.collapse-icon, .table-treegrid span.expand-icon {
-                                    cursor: pointer;
-                                    display: none;
-                                }
-                            </style>
-                            <s:set var="openTreeActionName" value="'openCloseCategoryTreeInEntry'" />
-                            <s:set var="closeTreeActionName" value="'openCloseCategoryTreeInEntry'" />
-                            <s:set var="currentRoot" value="showableTree" />
-                            <s:set var="skipJoinAction" value="'true'" />
-                            <s:include value="/WEB-INF/apsadmin/jsp/common/treeBuilder-request-categories.jsp" />
-                        </s:elseif>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table id="categoryTree"
+                               class="table table-bordered table-hover table-treegrid">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <s:text name="title.categoryTree" />
+                                        <s:if test="#categoryTreeStyleVar == 'classic'">
+                                            <button type="button" class="btn-no-button expand-button" id="expandAll">
+                                                <i class="fa fa-plus-square-o treeInteractionButtons"
+                                                   aria-hidden="true"></i>&#32;
+                                                <s:text name="label.category.expandAll" />
+                                            </button>
+                                            <button type="button" class="btn-no-button" id="collapseAll">
+                                                <i class="fa fa-minus-square-o treeInteractionButtons"
+                                                   aria-hidden="true"></i>&#32;
+                                                <s:text name="label.category.collapseAll" />
+                                            </button>
+                                        </s:if>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <s:set var="inputFieldName" value="%{'parentCategoryCode'}" />
+                                <s:set var="selectedTreeNode" value="%{parentCategoryCode}" />
+                                <s:set var="selectedPage" value="%{getCategory(parentCategoryCode)}" />
+                                <s:set var="isPosition" value="false" />
+                                <s:set var="treeItemIconName" value="'fa-folder'" />
+                                <s:if test="#categoryTreeStyleVar == 'classic'">
+                                    <s:set var="currentRoot" value="treeRootNode" />
+                                    <s:include value="/WEB-INF/apsadmin/jsp/common/treeBuilder.jsp" />
+                                </s:if>
+                                <s:elseif test="#categoryTreeStyleVar == 'request'">
+                                <style>
+                                    .table-treegrid span.collapse-icon, .table-treegrid span.expand-icon {
+                                        cursor: pointer;
+                                        display: none;
+                                    }
+                                </style>
+                                <s:set var="openTreeActionName" value="'openCloseCategoryTreeInEntry'" />
+                                <s:set var="closeTreeActionName" value="'openCloseCategoryTreeInEntry'" />
+                                <s:set var="currentRoot" value="showableTree" />
+                                <s:set var="skipJoinAction" value="'true'" />
+                                <s:include value="/WEB-INF/apsadmin/jsp/common/treeBuilder-request-categories.jsp" />
+                            </s:elseif>
+                            </tbody>
+                        </table>
+                        </div>
                 </div>
             </div>
         </s:if>

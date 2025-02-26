@@ -41,7 +41,7 @@
 
             <s:set var="pageTreeStyleVar" ><wp:info key="systemParam" paramName="treeStyle_page" /></s:set>
 
-                <div class="table-responsive overflow-visible">
+                <div class="table-responsive table-wrapper overflow-visible">
                     <s:if test="%{#pageTreeStyleVar == 'request'}">
                         <p class="sr-only">
                             <s:iterator value="treeNodesToOpen" var="treeNodeToOpenVar">
@@ -93,7 +93,7 @@
             </div>
             <p class="sr-only"><wpsf:hidden name="copyingPageCode" /></p>
         </s:form>
-        <a href="<s:url namespace="/do/Page" action="new" />" class="btn btn-primary pull-right" title="<s:text name="label.new" />" style="margin-bottom: 5px">
+        <a href="<s:url namespace="/do/Page" action="new" />" class="btn btn-primary pull-right mt-10" title="<s:text name="label.new" />" style="margin-bottom: 5px">
             <s:text name="label.add" />
         </a>
     </div>

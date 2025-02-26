@@ -17,7 +17,7 @@
     <s:include value="/WEB-INF/apsadmin/jsp/common/treeClassicNodesState.jsp" />
 </s:elseif>
 
-<div class="table-responsive">
+<div class="table-responsive table-wrapper">
 	<table id="categoryTree" class="table table-bordered table-hover table-treegrid">
 		<thead>
 			<tr>

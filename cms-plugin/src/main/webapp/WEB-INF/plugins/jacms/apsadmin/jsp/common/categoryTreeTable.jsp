@@ -61,7 +61,7 @@
     })();
 </script>
 
-<div class="table-responsive" id="categoryTreeWrapper">
+<div class="table-responsive table-wrapper" id="categoryTreeWrapper">
 
     <s:if test="%{#categoryTreeStyleVar == 'request'}">
         <p class="sr-only">

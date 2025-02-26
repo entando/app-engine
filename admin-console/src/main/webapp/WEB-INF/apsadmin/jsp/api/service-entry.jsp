@@ -154,7 +154,7 @@
                     <s:text name="label.parameters" />
                 </label>
                 <div class="col-sm-10">
-                    <div class="table-responsive">
+                    <div class="table-responsive table-wrapper">
                         <table class="table table-bordered table-hover table-striped">
                             <tr>
                                 <th class="table-w-10"><s:text name="label.name" /></th>

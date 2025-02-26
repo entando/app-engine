@@ -119,7 +119,7 @@
             <s:else>
                 <wpsa:subset source="latestVersions" count="10" objectName="groupContent" advanced="true" offset="5">
                     <s:set var="group" value="#groupContent" />
-                    <div class="col-xs-12 no-padding">
+                    <div class="col-xs-12 no-padding table-wrapper">
                         <table class="table table-striped table-bordered table-hover no-mb">
                             <thead>
                             <tr>

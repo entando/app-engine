@@ -11,7 +11,7 @@
     <s:if test="!#publishedContents.empty">
         <wpsa:subset source="#publishedContents" count="10" objectName="publishedContentsGroup" advanced="true" offset="5" pagerId="publContents">
             <s:set var="group" value="#publishedContentsGroup" />
-            <div class="col-xs-12 no-padding">
+            <div class="col-xs-12 no-padding table-wrapper">
                 <table class="table table-striped table-bordered table-hover no-mb" id="contentListTable" summary="<s:text name="note.content.publishedContent.summary" />">
                     <legend><s:text name="title.publishedContent" /></legend>
                     <s:include value="/WEB-INF/plugins/jacms/apsadmin/jsp/common/contentReferencesTable_header.jsp" />

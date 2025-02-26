@@ -148,7 +148,7 @@
             <div class="col-sm-10">
 
                 <s:set var="pageTreeStyleVar" ><wp:info key="systemParam" paramName="treeStyle_page" /></s:set>
-                    <div class="table-responsive overflow-visible">
+                    <div class="table-responsive table-wrapper overflow-visible">
                         <table id="pageTree"
                                class="table table-bordered table-hover table-treegrid">
                             <thead>

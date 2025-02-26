@@ -86,7 +86,7 @@
         <s:set var="group" value="#groupSearchResult" />
         <s:set var="tokenOccurrencesVar" value="tokenOccurrencesByConsumer" />
 
-        <div class="col-xs-12 no-padding">
+        <div class="col-xs-12 no-padding table-wrapper">
             <table class="table table-striped table-bordered table-hover no-mb">
                 <thead>
                     <tr>
