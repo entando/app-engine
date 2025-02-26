@@ -72,7 +72,7 @@
     </s:if>
 
     <table id="categoryTree"
-           class="table table-bordered table-hover table-treegrid <s:property value="#categoryTreeStyleVar" />">
+          style="overflow: visible;" class="table table-bordered table-hover table-treegrid <s:property value="#categoryTreeStyleVar" />">
         <thead>
             <tr>
                 <th>

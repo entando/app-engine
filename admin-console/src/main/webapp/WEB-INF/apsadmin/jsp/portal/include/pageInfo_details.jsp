@@ -2,7 +2,7 @@
 <%@ taglib prefix="wp" uri="/aps-core" %>
 
 <!------table detail on page-------->
-<button type="button" data-toggle="collapse" data-target="#page-info" class="btn btn-sm btn-primary margin-large-bottom">
+<button type="button" data-toggle="collapse" data-target="#page-info" class="btn btn-outlined-secondary margin-large-bottom">
     <span class="icon fa fa-chevron-down"></span>&nbsp;&nbsp;
     <span class="info-title"><s:text name="label.info" /></span>
 </button>

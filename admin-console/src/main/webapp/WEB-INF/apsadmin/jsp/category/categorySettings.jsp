@@ -77,7 +77,7 @@
         </fieldset>
         
         <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
+            <div class="col-sm-offset-2">
                 <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
                     <s:text name="label.save"/>
                 </wpsf:submit>

@@ -91,7 +91,7 @@
 
             <div class="table-responsive overflow-visible">
                 <table id="categoryTree"
-                       class="table table-bordered table-hover table-treegrid">
+                       class="table table-bordered table-hover table-treegrid" style="overflow: visible;">
                     <thead>
                         <tr>
                             <th> <s:text name="title.categoryTree"/>

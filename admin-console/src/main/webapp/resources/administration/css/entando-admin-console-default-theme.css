@@ -124,6 +124,7 @@ a {
     background-color: #ffe6e6 !important;
     border-color: #c00;
     color: #363636 !important;
+    display: block;
 }
 .position-search{
     margin:0 auto;
@@ -461,6 +462,9 @@ td{
 .label-tag {
     background-color: #0088ce !important;
     margin: 3px 3px 0px 0px !important;
+    display: flex;
+    align-items: center;
+    width: fit-content;
 }
 .btn-tag{
     color:#fff;
@@ -732,6 +736,7 @@ a {
     background-color: #ffe6e6 !important;
     border-color: #c00;
     color: #363636 !important;
+    display: block;
 }
 .position-search{
     margin:0 auto;
@@ -2564,6 +2569,7 @@ label .fa-folder, .fa-folder {
 }
 .nav-pf-vertical .secondary-nav-item-pf:hover > a {
     width: 215px;
+    font-weight: bold;
 }
 .layout-pf.layout-pf-fixed .container-pf-nav-pf-vertical {
     margin-left: 215px;

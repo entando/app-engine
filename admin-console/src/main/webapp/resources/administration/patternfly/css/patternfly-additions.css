@@ -4652,7 +4652,7 @@ a.disabled {
 .navbar-pf-vertical .navbar-brand .navbar-brand-icon {
   display: inline-block;
   height: 24px;
-  margin: 0 15px 0 0;
+  margin: -2px 15px 0 0;
 }
 .navbar-pf-vertical .navbar-iconic {
   margin-right: 0;

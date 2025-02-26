@@ -39,7 +39,8 @@
     <div>
         <div class="col-xs-12 text-right" style="
         padding: 20px;
-        display: flex;">
+        display: flex;
+        gap: 8px;">
             <span class="mr-20 bold"><s:text name="label.setAs" /></span>
             <wpsf:submit id="edit-saveAndContinue" data-button-type="autosave"
                          data-loading-text="%{getText('label.autosaving.button.text')}"

@@ -220,7 +220,7 @@
 
             <div class="col-sm-5 col-sm-offset-2">
                 <div id="add-resource-button">
-                    <button type="button" id="add-fields"><span class="fa fa-plus-square-o"></span>
+                    <button type="button" id="add-fields"  class="btn btn-outlined-secondary"><span class="fa fa-plus-square-o"></span>
                         <s:text name="label.add-fileinput"/>
                     </button>
                 </div>
@@ -298,7 +298,7 @@
 
                 <div class="col-sm-4">
                     <s:label id="fileUpload_%{#ctr.count -1}_label" for="fileUpload_%{#ctr.count -1}"
-                             class="btn btn-default" key="label.button-choose-file"/>
+                             class="btn btn-outlined-secondary" key="label.button-choose-file"/>
 
                     <s:file name="fileUpload" id="newFileUpload_%{#ctr.count -1}" cssClass="input-file-button" label="label.file"/>
 
@@ -815,7 +815,7 @@
             </label>
 
             <div class="col-sm-4">
-                <label id="newFileUpload_label" for="newFileUpload" class="btn btn-default">
+                <label id="newFileUpload_label" for="newFileUpload" class="btn btn-outlined-secondary">
                     <s:text name="label.button-choose-file"/>
                 </label>
 

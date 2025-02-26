@@ -351,6 +351,7 @@
     background-color: #fafafa;
     font-size: 16px;
     border: solid 1px #d3d3d3;
+    border-radius: 1px;
 }
 
 .file-upload-region--dragging {

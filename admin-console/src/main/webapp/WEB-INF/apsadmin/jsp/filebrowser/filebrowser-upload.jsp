@@ -53,7 +53,7 @@
             <div class="form-group">
                 <div class="col-sm-5 col-sm-offset-2">
                     <div id="add-resource-button">
-                        <button type="button" id="add-fields" >    <span class="fa fa-plus-square-o"></span> 
+                        <button type="button" id="add-fields" class="btn btn-outlined-secondary">    <span class="fa fa-plus-square-o"></span> 
                             <s:text name="filebrowser.label.add-fileinput" />
                         </button>
                     </div>
@@ -104,7 +104,7 @@
 
     <div class="form-group">
         <div class="col-sm-5 col-sm-offset-2">
-            <label id="newFileUpload_label" for="newFileUpload" class="btn btn-default" >
+            <label id="newFileUpload_label" for="newFileUpload" class="btn btn-outlined-secondary" >
                 <s:text name="filebrowser.label.button-choose-file" />
             </label>
                 <s:file name="upload" id="newFileUpload" cssClass="input-file-button file" label="filebrowser.label.file" />
