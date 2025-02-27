@@ -5283,7 +5283,7 @@ table.dataTable tbody > tr > td.table-view-pf-actions {
   vertical-align: middle;
 }
 table.dataTable tbody > tr:hover > td.table-view-pf-actions {
-  background-color: #f5f5f5;
+  background-color: #D7F2FE;
   border-bottom-color: #e4e7ec;
 }
 table.dataTable tbody > tr.selected {

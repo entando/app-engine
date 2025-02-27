@@ -189,7 +189,7 @@
         <s:if test="%{null != content.mainGroup && content.mainGroup != ''}">
 
             <ul class="nav nav-tabs tab-togglers" id="tab-togglers">
-                <li class="sr-only"><a data-toggle="tab" href="#info_tab"><s:text name="title.contentInfo" /></a></li>
+                <li ><a data-toggle="tab" href="#info_tab"><s:text name="title.contentInfo" /></a></li>
                 <s:iterator value="langs" var="lang" status="langStatusVar">
                     <li <s:if test="#langStatusVar.first"> class="active" </s:if>>
                         <a data-toggle="tab" href="#<s:property value="#lang.code" />_tab">

@@ -313,7 +313,7 @@
             <s:if test="strutsAction == 1">
                 <div class="btn-group">
                     <wpsf:submit type="button" action="saveAndContinue"
-                                 cssClass="btn btn-default btn-block">
+                                 cssClass="btn btn-outlined-secondary btn-block">
 
                         <s:text name="label.saveAndEditProfile" />
                     </wpsf:submit>

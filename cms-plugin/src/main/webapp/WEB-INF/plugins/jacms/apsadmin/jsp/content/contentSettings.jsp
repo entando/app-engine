@@ -228,7 +228,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-4 control-label" for="new_metadata_mapping">
+                        <label class="control-label" for="new_metadata_mapping">
                             <s:text name="jacms.label.metadataMapping" />
                         </label>
                         <div class="">

@@ -487,14 +487,14 @@
                                                             <wpsa:actionParam action="bulkOnCategories" var="bulkActionName">
                                                                 <wpsa:actionSubParam name="strutsAction" value="1" />
                                                             </wpsa:actionParam>
-                                                            <wpsf:submit action="%{#bulkActionName}" type="button" title="%{getText('note.button.addCategories')}" cssClass="btn btn-success">
+                                                            <wpsf:submit action="%{#bulkActionName}" type="button" title="%{getText('note.button.addCategories')}" cssClass="btn btn-success no-shadow">
                                                                 <span class="icon fa"></span><s:text name="label.addCategories" />
                                                             </wpsf:submit></li>
                                                         <li>
                                                             <wpsa:actionParam action="bulkOnCategories"  var="bulkActionName">
                                                                 <wpsa:actionSubParam name="strutsAction" value="4" />
                                                             </wpsa:actionParam>
-                                                            <wpsf:submit action="%{#bulkActionName}" type="button" title="%{getText('note.button.removeCategories')}" cssClass="btn btn-success">
+                                                            <wpsf:submit action="%{#bulkActionName}" type="button" title="%{getText('note.button.removeCategories')}" cssClass="btn btn-success no-shadow">
                                                                 <span class="icon fa"></span>
                                                                 <s:text name="label.removeCategories" />
                                                             </wpsf:submit>

@@ -1406,8 +1406,12 @@ ul {
     margin-bottom: unset;
     display: flex;
     align-items: center;
-    gap: unset;
+    gap: 8px;
+    margin-left:-8px;
 }
+
+
+
 .searchPanel .form-group .col-sm-9 .form-control{
   display: flex;
   align-items: center;
