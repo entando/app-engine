@@ -205,9 +205,17 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <version>${maven-dependency-plugin.version}</version>
+                    <groupId>org.cyclonedx</groupId>
+                    <artifactId>cyclonedx-maven-plugin</artifactId>
+                    <version>2.9.0</version>
+                    <configuration>
+                        <format>json</format>
+                        <outputFile>my-project-sbom.json</outputFile>
+                        <componentType>application</componentType>
+                        <includeTestScope>false</includeTestScope>
+                        <includeLicenseText>true</includeLicenseText>
+                        <makeAggregateBom>true</makeAggregateBom>
+                    </configuration>
                 </plugin>
 
                 <plugin>

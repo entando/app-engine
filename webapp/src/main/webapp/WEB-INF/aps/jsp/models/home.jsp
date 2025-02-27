@@ -45,7 +45,7 @@
 
                 <c:choose>
                     <c:when test = "${appBuilderIntegrationEnabled == 'true'}">
-                        <a href='<c:out value="${appBuilderBaseURL}"/>' class="btn btn-login">
+                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}"/>" class="btn btn-login">
                             GO TO LOG IN PAGE
                         </a>
                     </c:when>
