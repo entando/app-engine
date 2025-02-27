@@ -35,6 +35,7 @@
         <docker.db.password>password</docker.db.password>
         <env.db.environment>production</env.db.environment>
         <entando.engine.web.context>${project.build.finalName}</entando.engine.web.context>
+        <entando.virtual.contexts>myapp1,myapp2</entando.virtual.contexts>
         <skipDocker>true</skipDocker>
         <skipSmokeTests>true</skipSmokeTests>
         <autoCreateNetwork>true</autoCreateNetwork>

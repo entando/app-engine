@@ -36,6 +36,7 @@
 <s:set var="appBuilderBaseURL" ><wp:info key="systemParam" paramName="appBuilderBaseURL" /></s:set>
 <s:set var="version" ><wp:info key="systemParam" paramName="version" /></s:set>
 <c:set var = "appBuilderVersion"><c:out value="${version.replaceAll('.([^.]+)$', '')}"/></c:set>
+<s:set var="entandoVirtualContexts" ><wp:info key="systemParam" paramName="entandoVirtualContexts" /></s:set>
 
 <div class="navbar-header">
     <button type="button" class="navbar-toggle">
@@ -57,6 +58,25 @@
 </div>
 <nav class="collapse navbar-collapse">
     <ul class="nav navbar-nav navbar-right navbar-iconic">
+        <li id="tenantDropdown" class="dropdown">
+            <a class="dropdown-toggle nav-item-iconic" id="tenantDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                <c:set var="current_tenant" value="myapp" />
+                <c:out value="${fn:toUpperCase(current_tenant)}" />
+            </a>
+            <ul id="tenantDropdownComponent" class="dropdown-menu" aria-labelledby="tenantDropdownMenu">
+                <s:set var="contextPath" value="%{#requestScope.contextPath}" ></s:set>
+                <s:set var="servletPath" value="%{#requestScope.servletPath}" ></s:set>
+
+                <c:set var="itemList" value="${fn:split(entandoVirtualContexts, ',')}" />
+<c:out value="XXXXXX${itemList}XXXXXX" />
+<c:out value="YYYYYY${entandoVirtualContexts}YYYYYY" />
+
+                <c:forEach var="currentTenant" items="${itemList}">
+
+                   <li><a tenant-name="${currentTenant}" href="/${currentTenant}/${servletPath}">${currentTenant}</a></li>
+    			</c:forEach>
+            </ul>
+        </li>
         <li id="languageDropdown" class="dropdown">
             <a class="dropdown-toggle nav-item-iconic" id="languageDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                 <c:set var="current_languague" value="${not empty WW_TRANS_I18N_LOCALE ? WW_TRANS_I18N_LOCALE : pageContext.response.locale}" />
