@@ -43,9 +43,9 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
-    </button>    
+    </button>
     <s:if test="#appBuilderIntegrationEnabled == 'true'">
-        <a href='<c:out value="${appBuilderBaseURL}"/>dashboard' class="navbar-brand">
+        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="dashboard"/>" class="navbar-brand">
             <img class="navbar-brand-icon logo-entando" src="<wp:resourceURL ignoreTenant="true" />administration/img/entando-logo-white.svg" alt="Entando <c:out value="${appBuilderVersion}" />" />
         </a>
     </s:if>
@@ -92,8 +92,8 @@
             </a>
             <s:if test="#appBuilderIntegrationEnabled == 'true'">
                 <ul class="dropdown-menu" aria-labelledby="infoDropdownMenu">
-                    <li><a href='<c:out value="${appBuilderBaseURL}"/>about'><s:text name="about.title" /></a></li>
-                    <li><a href='<c:out value="${appBuilderBaseURL}"/>license'><s:text name="license.title" /></a></li>
+                    <li><a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="about"/>"><s:text name="about.title" /></a></li>
+                    <li><a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="license"/>"><s:text name="license.title" /></a></li>
                 </ul>
             </s:if>
             <s:else>
