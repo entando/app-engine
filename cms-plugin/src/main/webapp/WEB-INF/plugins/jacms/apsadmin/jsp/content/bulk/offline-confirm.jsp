@@ -48,7 +48,7 @@
                 <div class="blank-slate-pf-main-action">
 
                 <s:set var="labelAction" value="%{getText('label.bulk.content.offline.confirm')}"/>
-                <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-primary btn-lg">
+                <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-primary">
                     <s:property value="%{#labelAction}" />
                 </wpsf:submit>
             </div>

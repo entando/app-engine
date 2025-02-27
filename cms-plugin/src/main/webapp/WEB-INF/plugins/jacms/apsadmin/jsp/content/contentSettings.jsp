@@ -33,7 +33,7 @@
 <div id="main" role="main" class="settings-page-content">
     <s:form class="form-horizontal" action="updateSystemParams">
         <s:if test="hasActionMessages()">
-            <div class="alert alert-success alert-dismissable">
+            <div class="alert alert-success alert-dismissable alert-block">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
                     <span class="pficon pficon-close"></span>
                 </button>
@@ -62,24 +62,26 @@
         </s:if>
         
         <div class="form-group">
-            <div class="col-xs-2 control-label">
+            <div class="label-min-width  control-label">
                 <span class="display-block"><s:text name="note.reload.contentReferences.start"/></span>
             </div>
-            <div class="col-xs-10 ">
+            <div class="   ">
                 <div class="btn-group">
                     <s:if test="contentManagerStatus == 1">
+                        <a class="btn btn-primary" href="<s:url action="openIndexProspect" namespace="/do/jacms/Content/Admin" />" title="<s:text name="note.reload.contentReferences.refresh" />">
+                        <s:text name="label.refresh" />
+                    </a>
                         <p class="text-info">
-                            <a class="btn btn-primary" href="<s:url action="openIndexProspect" namespace="/do/jacms/Content/Admin" />" title="<s:text name="note.reload.contentReferences.refresh" />">
-                                <s:text name="label.refresh" />
-                            </a>
+                           
                             &#32;(<s:text name="note.reload.contentReferences.status.working" />)
                         </p>
                     </s:if>
                     <s:else>
+                        <a class="btn btn-primary" href="<s:url action="reloadContentsReference" namespace="/do/jacms/Content/Admin" />">
+                        <s:text name="note.reload.contentReferences.start" />
+                    </a>
                         <p>
-                            <a class="btn btn-primary" href="<s:url action="reloadContentsReference" namespace="/do/jacms/Content/Admin" />">
-                                <s:text name="note.reload.contentReferences.start" />
-                            </a>
+                          
                             &#32;(
                             <s:if test="contentManagerStatus == 2">
                                 <span class="text-info"><s:text name="note.reload.contentReferences.status.needToReload" /></span>
@@ -94,24 +96,26 @@
             </div>
         </div>
         <div class="form-group">
-            <div class="col-xs-2 control-label">
+            <div class="label-min-width  control-label">
                 <span class="display-block"><s:text name="title.reload.contentIndexes"/></span>
             </div>
-            <div class="col-xs-10 ">
+           
                 <div class="btn-group">
                     <s:if test="searcherManagerStatus == 1">
-                        <p class="text-info">
-                            <a class="btn btn-primary" href="<s:url action="openIndexProspect" namespace="/do/jacms/Content/Admin" />" title="<s:text name="note.reload.contentIndexes.refresh" />">
+                        <a class="btn btn-primary" href="<s:url action="openIndexProspect" namespace="/do/jacms/Content/Admin" />" title="<s:text name="note.reload.contentIndexes.refresh" />">
                                 <s:text name="label.refresh" />
                             </a>
+                        <p class="text-info">
+                            
                             &#32;(<s:text name="note.reload.contentIndexes.status.working" />)
                         </p>
                     </s:if>
                     <s:else>
+                        <a class="btn btn-primary" href="<s:url action="reloadContentsIndex" namespace="/do/jacms/Content/Admin" />">
+                        <s:text name="note.reload.contentIndexes.start" />
+                    </a>
                         <p>
-                            <a class="btn btn-primary" href="<s:url action="reloadContentsIndex" namespace="/do/jacms/Content/Admin" />">
-                                <s:text name="note.reload.contentIndexes.start" />
-                            </a>
+                           
                             &#32;(
                             <s:if test="searcherManagerStatus == 2">
                                 <span class="text-warning"><s:text name="note.reload.contentIndexes.status.needToReload" /></span>
@@ -135,30 +139,28 @@
                         </p>
                     </s:if>
                 </div>
-            </div>
+           
         </div>
             
         <fieldset class="form-group">
-            <div class="col-xs-2 control-label">
+            <div class="label-min-width  control-label">
                 <span class="display-block"><s:text name="label.chooseYourEditor"/></span>
             </div>
-            <div class="col-xs-10 ">
-                <div class="btn-group" data-toggle="buttons">
-                    <s:set var="isNone" value="%{(null != systemParams && systemParams['hypertextEditor'] == 'none') || #parameters['hypertextEditor'][0] == 'none'}" />
-                    <label class="btn btn-default <s:if test="#isNone"> active</s:if>">
-                            <input type="radio" class="radiocheck" id="admin-settings-area-hypertextEditor_none"
-                                   name="hypertextEditor" value="none" <s:if test="#isNone">checked="checked"</s:if> />
-                        <s:text name="label.none"/>
-                    </label>
-                    <s:set var="isFckeditor" value="%{(null != systemParams && systemParams['hypertextEditor'] == 'fckeditor') || #parameters['hypertextEditor'][0] == 'fckeditor'}" />
-                    <label class="btn btn-default <s:if test="#isFckeditor"> active</s:if>">
-                            <input type="radio" class="radiocheck" name="hypertextEditor" value="fckeditor" <s:if test="#isFckeditor">checked="checked"</s:if> />
-                        <s:text name="name.editor.ckeditor"/>
-                    </label>
-                </div>
+            <div class="btn-group" data-toggle="buttons" style="gap:0px">
+                <s:set var="isNone" value="%{(null != systemParams && systemParams['hypertextEditor'] == 'none') || #parameters['hypertextEditor'][0] == 'none'}" />
+                <label class="btn btn-outlined-secondary <s:if test="#isNone"> active</s:if>">
+                        <input type="radio" class="radiocheck" id="admin-settings-area-hypertextEditor_none"
+                               name="hypertextEditor" value="none" <s:if test="#isNone">checked="checked"</s:if> />
+                    <s:text name="label.none"/>
+                </label>
+                <s:set var="isFckeditor" value="%{(null != systemParams && systemParams['hypertextEditor'] == 'fckeditor') || #parameters['hypertextEditor'][0] == 'fckeditor'}" />
+                <label class="btn btn-outlined-secondary <s:if test="#isFckeditor"> active</s:if>">
+                        <input type="radio" class="radiocheck" name="hypertextEditor" value="fckeditor" <s:if test="#isFckeditor">checked="checked"</s:if> />
+                    <s:text name="name.editor.ckeditor"/>
+                </label>
             </div>
         </fieldset>
-        <fieldset class="col-xs-12 settings-form">
+        <fieldset class="settings-form">
             <h2>
                 <s:text name="jacms.menu.resourceMetadataMapping" />
             </h2>
@@ -167,13 +169,13 @@
             <div class="form-group">
                 <div class="row">
                     <s:set var="metadataMetadataFieldNameVar" value="%{'resourceMetadata_mapping_' + #metadataKeyVar}" />
-                    <div class=" control-label">
+                    <div class="control-label">
                         <span for="<s:property value="#metadataMetadataFieldNameVar" />">
                             <wpsf:hidden name="metadataKeys" value="%{#metadataKeyVar}" />
                             <s:text name="jacms.label.resourceMetadata" ><s:param value="#metadataKeyVar" /></s:text>
                         </span>
                     </div>
-                    <div class=" control-label">
+                    <div class="control-label">
                         <span for="<s:property value="#metadataMetadataFieldNameVar" />">
                             <s:text name="jacms.label.resourceMetadataMapping" />
                         </span>
@@ -243,7 +245,7 @@
             </div>
         </fieldset>
 
-        <fieldset class="col-xs-12">
+        <fieldset>
 
             <h2>
                 <s:text name="jacms.title.contentSetting.cropImage"/>
@@ -271,15 +273,17 @@
             </s:iterator>
             <div id="fields-container" >
             </div>
+
+            <div class="form-group">
+                <div class="col-xs-12" style="margin-right: -20px;">
+                    <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
+                        <s:text name="label.save"/>
+                    </wpsf:submit>
+                </div>
+            </div>
         </fieldset>
 
-        <div class="form-group">
-            <div class="col-xs-12">
-                <wpsf:submit type="button" cssClass="btn btn-primary pull-right">
-                    <s:text name="label.save"/>
-                </wpsf:submit>
-            </div>
-        </div>
+       
     </s:form>
 </div>
 

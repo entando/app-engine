@@ -77,89 +77,93 @@
                     </ul>
                     <%-- metadata --%>
 
-                    <button type="button" data-toggle="collapse" data-target="#jpcontentinspection_metadata" class="btn btn-default">
+                    <button type="button" class="btn btn-outlined-secondary no-focus" data-toggle="collapse" data-target="#jpcontentinspection_metadata" aria-expanded="false">
                         <s:text name="title.metadata" />
-                        <span class="icon-chevron-down"></span>
+                        <span class="fa fa-chevron-down"></span>
                     </button><br><br>
 
                     <div class="collapse table-wrapper" id="jpcontentinspection_metadata">
-                        <table class="table table-bordered">
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.description" /></th>
-                                <td><s:property value="content.descr" /></td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.key" /></th>
-                                <td><s:property value="content.id" /></td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.lastEdit" /></th>
-                                <td title="<s:date name="content.lastModified" format="EEEE d MMMM yyyy, HH:mm" />">
-                                    <span title="<s:date name="content.lastModified" format="EEEE d MMMM yyyy, HH:mm" />"><s:date name="content.lastModified" format="dd/MM/yyyy HH:mm" nice="true" /></span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.creationDate" /></th>
-                                <td><s:date name="content.created" format="dd/MM/yyyy HH:mm" /></td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.editor" /></th>
-                                <td><s:property value="content.lastEditor" /></td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="name.version" /></th>
-                                <td><s:property value="content.version" /></td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.mainGroup" /></th>
-                                <td>
-                                    <s:property value="%{getGroupsMap()[content.mainGroup].getDescr()}"/>&#32;
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.viewgroups" /></th>
-                                <td>
-                                    <s:if test="!content.groups.empty">
-                                        <s:set var="groupsVar" value="%{''}" />
-                                        <s:set var="firstVar" value="%{true}" />
-                                        <s:iterator var="curViewGroupCode" value="content.groups">
-                                            <s:set var="curViewGroup" value="getGroup(#curViewGroupCode)" />
-                                            <s:if test="null != #curViewGroup">
-                                                <s:if test="!#firstVar">
-                                                    <s:set var="groupsVar" value="%{#groupsVar + ', ' + #curViewGroup.descr}"/>
-                                                </s:if>
-                                                <s:else>
-                                                    <s:set var="groupsVar" value="%{#curViewGroup.descr}"/>
-                                                </s:else>
-                                                <s:if test="#firstVar"><s:set var="firstVar" value="%{false}" /></s:if>
-                                            </s:if>
-                                        </s:iterator>
-                                        <s:property value="#groupsVar" />
-                                        <s:if test="#groupsVar==''">
-                                            <span class="text-muted"><s:text name="note.noViewGroups"/></span>
-                                        </s:if>
-                                    </s:if>
-                                    <s:else>
-                                        <span class="text-muted"><s:text name="note.noViewGroups"/></span>
-                                    </s:else>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="td-pagetree-width"><s:text name="label.categories" /></th>
-                                <td>
-                                    <s:if test="!content.categories.empty">
-                                        <ul class="list-unstyled">
-                                            <s:iterator var="curCategory" value="content.categories" status="catStatus">
-                                                <li><s:property value="%{getFullTitle(#curCategory, currentLang.code)}"/></li>
-                                                </s:iterator>
-                                        </ul>
-                                    </s:if>
-                                    <s:else>
-                                        <span class="text-muted"><s:text name="label.none" /></span>
-                                    </s:else>
-                                </td>
-                        </table>
-                    </div>
+    <table class="table table-bordered">
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.description" /></th>
+            <td><s:property value="content.descr" /></td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.key" /></th>
+            <td><s:property value="content.id" /></td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.lastEdit" /></th>
+            <td title="<s:date name='content.lastModified' format='EEEE d MMMM yyyy, HH:mm' />">
+                <span title="<s:date name='content.lastModified' format='EEEE d MMMM yyyy, HH:mm' />">
+                    <s:date name="content.lastModified" format="dd/MM/yyyy HH:mm" nice="true" />
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.creationDate" /></th>
+            <td><s:date name="content.created" format="dd/MM/yyyy HH:mm" /></td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.editor" /></th>
+            <td><s:property value="content.lastEditor" /></td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="name.version" /></th>
+            <td><s:property value="content.version" /></td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.mainGroup" /></th>
+            <td>
+                <s:property value="%{getGroupsMap()[content.mainGroup].getDescr()}"/>&#32;
+            </td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.viewgroups" /></th>
+            <td>
+                <s:if test="!content.groups.empty">
+                    <s:set var="groupsVar" value="%{''}" />
+                    <s:set var="firstVar" value="%{true}" />
+                    <s:iterator var="curViewGroupCode" value="content.groups">
+                        <s:set var="curViewGroup" value="getGroup(#curViewGroupCode)" />
+                        <s:if test="null != #curViewGroup">
+                            <s:if test="!#firstVar">
+                                <s:set var="groupsVar" value="%{#groupsVar + ', ' + #curViewGroup.descr}"/>
+                            </s:if>
+                            <s:else>
+                                <s:set var="groupsVar" value="%{#curViewGroup.descr}"/>
+                            </s:else>
+                            <s:if test="#firstVar"><s:set var="firstVar" value="%{false}" /></s:if>
+                        </s:if>
+                    </s:iterator>
+                    <s:property value="#groupsVar" />
+                    <s:if test="#groupsVar==''">
+                        <span class="text-muted"><s:text name="note.noViewGroups"/></span>
+                    </s:if>
+                </s:if>
+                <s:else>
+                    <span class="text-muted"><s:text name="note.noViewGroups"/></span>
+                </s:else>
+            </td>
+        </tr>
+        <tr>
+            <th class="td-pagetree-width"><s:text name="label.categories" /></th>
+            <td>
+                <s:if test="!content.categories.empty">
+                    <ul class="list-unstyled">
+                        <s:iterator var="curCategory" value="content.categories" status="catStatus">
+                            <li><s:property value="%{getFullTitle(#curCategory, currentLang.code)}"/></li>
+                        </s:iterator>
+                    </ul>
+                </s:if>
+                <s:else>
+                    <span class="text-muted"><s:text name="label.none" /></span>
+                </s:else>
+            </td>
+        </tr>
+    </table>
+</div>
+
                     <%-- references --%><hr>
                     <br><br>
                     <div class="col-xs-12">
@@ -396,4 +400,41 @@
                         </div>
                     </s:else><%-- content is not null --%>
                 </div>
+
+                <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const button = document.querySelector('[data-toggle="collapse"]');
+        const icon = button.querySelector('.fa');
+        const collapseElement = document.getElementById('jpcontentinspection_metadata');
+
+        button.addEventListener("click", function () {
+            const isExpanded = button.getAttribute("aria-expanded") === "true";
+
+            // Toggle aria-expanded
+            button.setAttribute("aria-expanded", !isExpanded);
+
+            // Change icon based on expanded/collapsed state
+            if (isExpanded) {
+                icon.classList.remove("fa-chevron-up");
+                icon.classList.add("fa-chevron-down");
+            } else {
+                icon.classList.remove("fa-chevron-down");
+                icon.classList.add("fa-chevron-up");
+            }
+        });
+
+        // Bootstrap event listeners for when collapse is triggered
+        collapseElement.addEventListener('shown.bs.collapse', function () {
+            button.setAttribute("aria-expanded", "true");
+            icon.classList.remove("fa-chevron-down");
+            icon.classList.add("fa-chevron-up");
+        });
+
+        collapseElement.addEventListener('hidden.bs.collapse', function () {
+            button.setAttribute("aria-expanded", "false");
+            icon.classList.remove("fa-chevron-up");
+            icon.classList.add("fa-chevron-down");
+        });
+    });
+</script>
                 </div>

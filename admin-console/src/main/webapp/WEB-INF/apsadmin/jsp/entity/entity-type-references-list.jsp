@@ -22,14 +22,15 @@
         <s:property value="entityTypeCode" />
         -
         <s:property value="%{getEntityPrototype(entityTypeCode).typeDescr}" />
-        <span class="pull-right"> <a tabindex="0" role="button"
-                                     data-toggle="popover" data-trigger="focus" data-html="true" title=""
-                                     data-content="<s:text name="%{'page.' + entityManagerName + '.help'}"/>" data-placement="left"
-                                     data-original-title=""> <i class="fa fa-question-circle-o"
-                                       aria-hidden="true"></i>
-            </a>
-        </span>
+      
     </div>
+    <span class="pull-right"> <a tabindex="0" role="button"
+        data-toggle="popover" data-trigger="focus" data-html="true" title=""
+        data-content="<s:text name="%{'page.' + entityManagerName + '.help'}"/>" data-placement="left"
+        data-original-title=""> <i class="fa fa-question-circle-o"
+          aria-hidden="true"></i>
+</a>
+</span>
 </h1>
 <div class="text-right">
     <div class="form-group-separator"></div>
@@ -70,11 +71,11 @@
     </ul>
 
     <s:if test="entityManagerName == 'jacmsContentManager'">
-        <div class="pull-right margin-large-top">
-            <a class="btn btn-default"
+        <div class="margin-large-top" style="display: flex; justify-content: center; gap: 8px;">
+            <a class="btn btn-primary"
                href="<s:url action="search" namespace="/do/jacms/Content"><s:param name="contentType"><s:property value="entityTypeCode" /></s:param><s:param name="viewCode"><s:property value="true" /></s:param><s:param name="viewTypeDescr"><s:property value="true" /></s:param></s:url>"><s:text
                     name="note.goToSomewhere" />: <s:text
-                    name="jacms.menu.contentAdmin.list" /></a> <a class="btn btn-default"
+                    name="jacms.menu.contentAdmin.list" /></a> <a class="btn btn-outlined-secondary"
                     href="<s:url action="initViewEntityTypes" namespace="/do/Entity"><s:param name="entityManagerName"><s:property value="entityManagerName" /></s:param></s:url>"><s:text
                     name="note.backToSomewhere" />: <s:text
                     name="title.entityAdmin.manager" />&#32;<s:property

@@ -1294,7 +1294,7 @@ h2,
 .h2,
 h3,
 .h3 {
-  margin-top: 20px;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 h1 small,
@@ -2394,6 +2394,30 @@ th {
 .settings-page-content .form-group{
   display: flex;
   align-items: center;
+  gap: 8px;
+  margin-left: -8px;
+}
+.settings-page-content .btn-group{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+
+}
+.settings-page-content fieldset{
+ margin-top: 8px;
+
+}
+.settings-page-content .label-min-width{
+min-width: 140px;
+
+}
+.settings-page-content .btn-group p{
+    margin: unset;
+}
+.settings-page-content .btn-group a{
+  border-bottom-right-radius: 6px !important;
+  border-top-right-radius: 6px !important;
 }
 
 .content-settings-form{
@@ -9099,6 +9123,25 @@ button.close {
   right: -13px;
   top: 1px;
 }
+
+.dataTables_scrollHeadInner > .table > thead > tr > th{
+  border-bottom: unset;
+}
+
+.get-th-border > .table > thead > tr > th{
+  border-bottom: unset;
+}
+
+.btn.btn-outlined-secondary.active:focus{
+  outline: none;
+}
+.btn.btn-outlined-secondary.active{
+  outline: none;
+}
+
+.alert-block{
+  display: block !important;
+}
 .badge {
   margin-left: 6px;
 }
@@ -9276,6 +9319,15 @@ fieldset[disabled] .btn-default.active {
  box-shadow: unset;
  -webkit-box-shadow:unset;
   background-color: #ced2da !important;
+}
+
+.btn-outlined-secondary.no-focus:focus{
+background-color: white !important;
+}
+
+.dropdown.dropdown-kebab-pf{
+  display: flex;
+  justify-content: center;
 }
 
 .btn-outlined-secondary:focus,

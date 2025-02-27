@@ -49,7 +49,7 @@
 
                 <div class="blank-slate-pf-main-action">
                 <s:set var="labelAction" value="%{getText('label.remove')}"/>
-                <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-danger btn-lg">
+                <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-danger">
                     <s:property value="%{#labelAction}" />
                 </wpsf:submit>
             </div>

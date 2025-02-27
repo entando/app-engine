@@ -107,12 +107,12 @@
             </ul>
             <div class="blank-slate-pf-main-action">
                 <s:if test="strutsAction == 1">
-                    <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-primary btn-lg">
+                    <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-primary">
                         <s:property value="%{#labelAction}" />
                     </wpsf:submit>
                 </s:if>
                 <s:else>
-                    <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-danger btn-lg">
+                    <wpsf:submit type="button" title="%{#labelAction}" cssClass="btn btn-danger">
                         <s:property value="%{#labelAction}" />
                     </wpsf:submit>
                 </s:else>
