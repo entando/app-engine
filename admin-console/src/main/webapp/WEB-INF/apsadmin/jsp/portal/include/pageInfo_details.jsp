@@ -3,8 +3,8 @@
 
 <!------table detail on page-------->
 <button type="button" data-toggle="collapse" data-target="#page-info" class="btn btn-outlined-secondary margin-large-bottom">
-    <span class="icon fa fa-chevron-down"></span>&nbsp;&nbsp;
     <span class="info-title"><s:text name="label.info" /></span>
+    <span class="icon fa fa-chevron-down"></span>&nbsp;&nbsp;
 </button>
 
 <s:set var="details_pivotPage" value="pageToShow" />

@@ -145,15 +145,10 @@ a {
     border-color: transparent;
     border-style: solid;
     border-width: 1px 0;
-    padding: 1px 16px;
+    padding: 4px 16px;
 }
 
-.dropdown-menu>li>button:hover {
-    background: #fff;
-    background-color: #def3ff !important;
-    border-color: #bee1f4 !important;
-    color: #4d5258 !important;
-}
+
 .expand-button{
     margin-left: 4em;
 }
@@ -749,21 +744,13 @@ a {
     border-color: transparent;
     border-style: solid;
     border-width: 1px 0;
-    padding: 1px 16px;
+    padding: 4px 16px;
 }
-.dropdown-menu>li>button {
-    display: block;
-    clear: both;
-    font-weight: 400;
-    color: #4d5258;
-    background: #fff;
-    text-align: initial;
-    padding: 1px 10px;
-}
+
 .dropdown-menu>li>button:hover {
     background: #fff;
-    background-color: #def3ff !important;
-    border-color: #bee1f4 !important;
+    background-color: #D5D5D5 !important;
+    border-color: #D5D5D5 !important;
     color: #4d5258 !important;
 }
 .expand-button{
@@ -1732,7 +1719,6 @@ table.content-list {
 table.content-list td, table.content-list th {
     width: 200px;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap!important;
 }
 
@@ -1815,7 +1801,11 @@ table.content-list td, table.content-list th {
 .white {
     color: #fff
 }
-.white:hover {
+
+.red {
+   color: #F64C4C
+}
+.red:hover {
     color: #fff
 }
 /* --------------- Datepicker --------------- */
@@ -2005,6 +1995,7 @@ table.content-list td, table.content-list th {
     background: #1a75ff;
     font-size: 12px;
     font-weight: 600;
+    border-radius: 4px;
 }
 /*button remove*/
 .btn-remove{

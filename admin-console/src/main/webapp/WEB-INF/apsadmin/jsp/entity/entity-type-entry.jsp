@@ -67,7 +67,7 @@
             <wpsf:hidden name="entityTypeCode" value="%{#entityType.typeCode}"/>
             </p>
         </s:if>
-        <fieldset class="col-xs-12">
+        <fieldset style="margin-top: 10px;">
             <!--Info-->
             <legend>
                 <s:text name="label.info"/>
@@ -127,7 +127,7 @@
         </s:if>
 
         <!--Attributes-->
-        <fieldset class="col-xs-12">
+        <fieldset>
             <legend>
                 <s:text name="label.attributes"/>
             </legend>
@@ -135,9 +135,9 @@
             <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-operations-add.jsp"/>
             <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-list.jsp"/>
         </fieldset>
-        <fieldset class="col-xs-12">
+        <fieldset >
             <div class="form-group">
-                <div class="col-xs-12">
+                <div class="col-xs-12" style="margin-right: -20px;">
                     <wpsf:submit type="button" cssClass="btn btn-primary  pull-right" action="saveEntityType">
                         <s:text name="label.save"/>
                     </wpsf:submit>

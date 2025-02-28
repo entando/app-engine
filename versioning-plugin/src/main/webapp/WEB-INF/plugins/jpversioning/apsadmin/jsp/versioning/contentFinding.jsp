@@ -125,7 +125,7 @@
                             <tr>
                                 <th class="text-nowrap" style="width: 240px"><s:text name="jpversioning.label.description" /></th>
                                 <th class="text-center col-sm-1"><s:text name="jpversioning.label.id" /></th>
-                                <th class="text-center"><s:text name="jpversioning.label.contentType" /></th>
+                                <th class="text-center" ><s:text name="jpversioning.label.contentType" /></th>
                                 <th class="text-center"><s:text name="jpversioning.label.username" /></th>
                                 <th class="text-center col-sm-2"><s:text name="jpversioning.label.lastVersion" /></th>
                                 <th class="text-center col-sm-1"><s:text name="label.state" /></th>
@@ -147,7 +147,7 @@
                                         </s:else>
                                     </td>
                                     <td class="text-center text-nowrap"><code><s:property value="#contentVersion.contentId" /></code></td>
-                                    <td><s:property value="%{getSmallContentType(#contentVersion.contentType).descr}" /></td>
+                                    <td class="text-center"><s:property value="%{getSmallContentType(#contentVersion.contentType).descr}" /></td>
                                     <td class="text-center"><s:property value="#contentVersion.username" /></td>
                                     <td class="text-center text-nowrap"><code><s:property value="#contentVersion.version" />&#32;(<s:date name="#contentVersion.versionDate" format="dd/MM/yyyy" />)</code></td>
                                     <td class="text-center">

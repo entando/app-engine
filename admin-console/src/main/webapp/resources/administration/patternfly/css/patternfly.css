@@ -2360,6 +2360,20 @@ th {
   border-bottom: 2px solid #e4e7ec;
 }
 
+td {
+  text-overflow: unset !important;
+}
+
+.dropdown-menu li button {
+
+}
+
+
+th.text-center.cell-w100.sorting_disabled {
+  text-overflow: ellipsis;
+}
+
+
 .table > caption + thead > tr:first-child > th,
 .table > colgroup + thead > tr:first-child > th,
 .table > thead:first-child > tr:first-child > th,
@@ -3560,9 +3574,10 @@ tbody.collapse.in {
   align-items: center;
 
 }
-.dropdown-menu > li > button {
+
+.dropdown-menu li button {
   display: block;
- padding: 4px 10px;
+  padding: 4px 16px;
   clear: both;
   font-weight: normal;
   line-height: 1.66666667;
@@ -3570,6 +3585,18 @@ tbody.collapse.in {
   white-space: nowrap;
   display: flex;
   align-items: center;
+}
+.dropdown-menu > li > button {
+  display: block;
+ padding: 4px 16px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.66666667;
+  color: #363636;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
 
 }
 .dropdown-menu > li > a:hover,

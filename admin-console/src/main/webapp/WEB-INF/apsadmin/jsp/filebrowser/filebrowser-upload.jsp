@@ -115,7 +115,7 @@
 
         <button type="button" class="btn-danger delete-fields " 
                 title="<s:text name="filebrowser.label.remove-fileinput" />"
-                >    <span class="fa fa-times white"></span> 
+                >    <span class="fa fa-times red"></span> 
         </button>
 
 

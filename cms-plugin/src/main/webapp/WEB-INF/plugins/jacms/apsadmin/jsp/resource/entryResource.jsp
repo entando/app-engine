@@ -364,7 +364,7 @@
 
                     <button type="button" class="btn-danger delete-fields "
                             title="<s:text name="label.remove-fileinput" />"
-                    ><span class="fa fa-times white"></span>
+                    ><span class="fa fa-times red"></span>
                     </button>
                 </s:if>
 
@@ -828,7 +828,7 @@
         <s:if test="%{resourceTypeCode == 'Attach'}">
             <button type="button" class="btn-danger delete-fields "
                     title="<s:text name="label.remove-fileinput" />"
-            ><span class="fa fa-times white"></span>
+            ><span class="fa fa-times red"></span>
             </button>
         </s:if>
 
