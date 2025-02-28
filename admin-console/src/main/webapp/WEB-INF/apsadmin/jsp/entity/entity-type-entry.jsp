@@ -33,11 +33,11 @@
         </a>
     </span>
 </h1>
+<div class="form-group-separator">
+</div>
+<div class="text-right mt-5">
+    <s:text name="note.entityTypes.editType.intro.2"/>
 
-<div class="text-right">
-    <div class="form-group-separator">
-        <s:text name="note.entityTypes.editType.intro.2"/>
-    </div>
 </div>
 
 <div class="mb-20" >
@@ -67,7 +67,7 @@
             <wpsf:hidden name="entityTypeCode" value="%{#entityType.typeCode}"/>
             </p>
         </s:if>
-        <fieldset style="margin-top: 10px;">
+        <fieldset class="col-xs-12" >
             <!--Info-->
             <legend>
                 <s:text name="label.info"/>
@@ -127,7 +127,7 @@
         </s:if>
 
         <!--Attributes-->
-        <fieldset>
+        <fieldset class="col-xs-12">
             <legend>
                 <s:text name="label.attributes"/>
             </legend>
@@ -135,9 +135,9 @@
             <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-operations-add.jsp"/>
             <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-list.jsp"/>
         </fieldset>
-        <fieldset >
+        <fieldset class="col-xs-12">
             <div class="form-group">
-                <div class="col-xs-12" style="margin-right: -20px;">
+                <div class="col-xs-12">
                     <wpsf:submit type="button" cssClass="btn btn-primary  pull-right" action="saveEntityType">
                         <s:text name="label.save"/>
                     </wpsf:submit>
