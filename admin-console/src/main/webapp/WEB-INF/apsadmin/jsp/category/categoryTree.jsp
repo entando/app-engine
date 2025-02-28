@@ -140,7 +140,7 @@
         </s:form>
         <a href="<s:url namespace="/do/Category" action="new" />"
            class="btn btn-primary pull-right"
-           title="<s:text name="label.new" />" style="margin-bottom: 5px">
+           title="<s:text name="label.new" />" style="margin-bottom: 5px; margin-top:10px;">
             <s:text name="label.add" />
         </a>
     </div>

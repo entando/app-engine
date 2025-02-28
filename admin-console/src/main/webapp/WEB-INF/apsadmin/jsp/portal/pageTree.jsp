@@ -93,7 +93,7 @@
             </div>
             <p class="sr-only"><wpsf:hidden name="copyingPageCode" /></p>
         </s:form>
-        <a href="<s:url namespace="/do/Page" action="new" />" class="btn btn-primary pull-right mt-10" title="<s:text name="label.new" />" style="margin-bottom: 5px">
+        <a href="<s:url namespace="/do/Page" action="new" />" class="btn btn-primary pull-right mt-10" title="<s:text name="label.new" />" style="margin-bottom: 5px; margin-top:10px;">
             <s:text name="label.add" />
         </a>
     </div>
