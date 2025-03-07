@@ -18,11 +18,10 @@ import com.agiletec.aps.system.SystemConstants;
 import org.entando.entando.aps.servlet.security.CustomWrappedRequest;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class VirtualContextHelper {
 
@@ -65,7 +64,9 @@ public class VirtualContextHelper {
     public static List<String> getVirtualContexts() {
         String virtualContextsAsString = ENABLED_VIRTUAL_CONTEXTS;
         if (virtualContextsAsString != null) {
-            return Arrays.asList(virtualContextsAsString.split(SystemConstants.SEPARATOR_CONTEXTS, -1));
+            return Arrays.stream(virtualContextsAsString.split(SystemConstants.SEPARATOR_CONTEXTS, -1)).map(
+                    vc -> vc.equals(SystemConstants.VIRTUAL_CONTEXT_ROOT_ALIAS) ? "" : vc
+            ).collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

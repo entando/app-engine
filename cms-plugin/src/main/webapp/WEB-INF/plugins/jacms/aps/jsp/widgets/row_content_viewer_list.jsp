@@ -12,7 +12,7 @@
 	<c:when test="${!(empty contentInfoList)}">
 			<wp:pager listName="contentInfoList" objectName="groupContent" pagerIdFromFrame="true" advanced="true" offset="5">
 				<c:set var="group" value="${groupContent}" scope="request" />
-				<c:forEach var="contentInfoVar" items="${result}" begin="${groupContent.begin}" end="${groupContent.end}">
+				<c:forEach var="contentInfoVar" items="${contentInfoList}" begin="${groupContent.begin}" end="${groupContent.end}">
 					<c:choose>
 						<c:when
 							test="${contentInfoVar['modelId'] != null}">
