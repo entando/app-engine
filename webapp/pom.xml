@@ -984,7 +984,7 @@
                     <scanIntervalSeconds>5</scanIntervalSeconds>
                     <webApp>
                         <defaultsDescriptor>${basedir}/src/main/jetty/webdefault.xml</defaultsDescriptor>
-                        <contextPath>/${project.build.finalName}</contextPath>
+                        <contextPath>/</contextPath>
                         <jettyEnvXml>${project.basedir}/src/main/jetty/jetty-env.xml</jettyEnvXml>
                     </webApp>
                     <systemProperties>
@@ -1074,10 +1074,11 @@
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.8.2</version>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.codehaus.mojo</groupId>-->
-<!--                <artifactId>license-maven-plugin</artifactId>-->
-<!--            </plugin>-->
+            <!--plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.5.0</version>
+            </plugin-->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
