@@ -4,6 +4,7 @@
 .cache
 .DS_Store
 *.im?
+.run
 target
 work
 *.tgz
