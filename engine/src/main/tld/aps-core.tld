@@ -72,7 +72,7 @@
 	</tag>
 	<tag>
 		<description><![CDATA[Generate an URL for an entando module.]]></description>
-		<name>moduleUrl</name>
+		<name>entandoModuleUrl</name>
 		<tag-class>org.entando.entando.aps.tags.EntandoModuleUrlTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
@@ -88,10 +88,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description><![CDATA[If true (default) adds the current virtual-context to non-relative urls]]></description>
-			<name>withVirtualContext</name>
+			<description><![CDATA[If provided overrides the current virtual-context]]></description>
+			<name>virtualContext</name>
 			<required>false</required>
-			<rtexprvalue>false</rtexprvalue>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
 	<tag>

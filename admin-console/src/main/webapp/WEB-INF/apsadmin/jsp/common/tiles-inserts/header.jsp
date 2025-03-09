@@ -36,6 +36,8 @@
 <s:set var="appBuilderBaseURL" ><wp:info key="systemParam" paramName="appBuilderBaseURL" /></s:set>
 <s:set var="version" ><wp:info key="systemParam" paramName="version" /></s:set>
 <c:set var = "appBuilderVersion"><c:out value="${version.replaceAll('.([^.]+)$', '')}"/></c:set>
+<wp:info key="request" paramName="virtualContexts" var="virtualContextsVar" />
+<wp:info key="request" paramName="currentVirtualContext" var="currentVirtualContextVar" />
 
 <div class="navbar-header">
     <button type="button" class="navbar-toggle">
@@ -45,7 +47,7 @@
         <span class="icon-bar"></span>
     </button>
     <s:if test="#appBuilderIntegrationEnabled == 'true'">
-        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="dashboard"/>" class="navbar-brand">
+        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="dashboard"/>" class="navbar-brand">
             <img class="navbar-brand-icon logo-entando" src="<wp:resourceURL ignoreTenant="true" />administration/img/entando-logo-white.svg" alt="Entando <c:out value="${appBuilderVersion}" />" />
         </a>
     </s:if>
@@ -57,6 +59,27 @@
 </div>
 <nav class="collapse navbar-collapse">
     <ul class="nav navbar-nav navbar-right navbar-iconic">
+        <li id="tenantDropdownList" class="dropdown">
+            <a class="dropdown-toggle nav-item-iconic" id="tenantDropdownListMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                <s:text name="context.gotoContext"/>
+            </a>
+            <ul id="tenantDropdownListItem" class="dropdown-menu" aria-labelledby="tenantDropdownListMenu">
+                <c:forEach var="contextVar" items="${virtualContextsVar}">
+                    <c:if test="${contextVar ne currentVirtualContextVar}">
+                        <s:set var="baseUrlVar">
+                            <wp:entandoModuleUrl baseUrl="/" virtualContext="${contextVar}" path="/do/main"/>
+                        </s:set>
+                        <li>
+                            <s:set var="contextVarUI">${contextVar}</s:set>
+                            <c:if test="${empty contextVar}">
+                                <s:set var="contextVarUI"><s:text name="context.rootContextNickname"/></s:set>
+                            </c:if>
+                            <a tenant-name="${contextVar}" href="${baseUrlVar}"/><c:out value="${contextVarUI}" /></a>
+                        </li>
+                    </c:if>
+                </c:forEach>
+            </ul>
+        </li>
         <li id="languageDropdown" class="dropdown">
             <a class="dropdown-toggle nav-item-iconic" id="languageDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                 <c:set var="current_languague" value="${not empty WW_TRANS_I18N_LOCALE ? WW_TRANS_I18N_LOCALE : pageContext.response.locale}" />
@@ -92,8 +115,8 @@
             </a>
             <s:if test="#appBuilderIntegrationEnabled == 'true'">
                 <ul class="dropdown-menu" aria-labelledby="infoDropdownMenu">
-                    <li><a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="about"/>"><s:text name="about.title" /></a></li>
-                    <li><a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="license"/>"><s:text name="license.title" /></a></li>
+                    <li><a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="about"/>"><s:text name="about.title" /></a></li>
+                    <li><a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="license"/>"><s:text name="license.title" /></a></li>
                 </ul>
             </s:if>
             <s:else>

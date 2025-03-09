@@ -102,12 +102,6 @@ public class KeycloakFilter implements Filter {
 
             HttpServletRequest request = handleVirtualContext((HttpServletRequest) servletRequest);
 
-            if (request.getServletPath().equals("/digital-exchange")) {
-                chain.doFilter(servletRequest, servletResponse);
-                return;
-            }
-
-
             ApsTenantApplicationUtils.extractCurrentTenantCode(request)
                     .filter(StringUtils::isNotBlank)
                     .ifPresent(ApsTenantApplicationUtils::setTenant);

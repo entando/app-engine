@@ -16,21 +16,26 @@ package org.entando.entando.aps.tags;
 import lombok.Getter;
 import lombok.Setter;
 import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
-import org.entando.entando.aps.util.UrlUtils;
 import org.entando.entando.aps.util.UrlUtils.EntUrlBuilder;
-import org.entando.entando.ent.util.EntLogging;
+import org.springframework.lang.Nullable;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * customUrlTag
+ * Generate an URL for an entando module
  * <pre>
- *     Allows generating a tenant link with arbitrary base url/path and path.
+ *     Generates a link with arbitrary base-url, context and virtualContext path.
+ *     If the virtualContext is null the current one is used.
+ *
  *     Handles:
  *     - absolute urls (user is responsible for valid tenant FQDN)
  *     - relative urls
- *     - tenant virtual-context is present
+ *     - explicit virtualContext if provided
  * </pre>
  */
 @Getter
@@ -38,25 +43,29 @@ import javax.servlet.jsp.tagext.TagSupport;
 public class EntandoModuleUrlTag extends TagSupport {
     String baseUrl;
     String path;
-    boolean withVirtualContext = true;
+    String virtualContext = null;
 
     @Override
     public int doEndTag() throws JspException {
         try {
-            pageContext.getOut().print(this.composePath());
+            pageContext.getOut().print(
+                    EntandoModuleUrlTag.compose(
+                            baseUrl,
+                            (virtualContext == null) ? this.getCurrentVirtualContextPath() : virtualContext,
+                            path
+                    )
+            );
         } catch (Exception e) {
             throw new JspException("Error closing the tag", e);
         }
         return EVAL_PAGE;
     }
 
-    private String composePath() {
-        return ((UrlUtils.isNotAbsoluteURI(baseUrl) && !baseUrl.startsWith("/") && withVirtualContext)
-                ? EntUrlBuilder.builder().paths(baseUrl, path)
-                : EntUrlBuilder.builder().url(baseUrl).paths(this.getVirtualContextPath(), path)).build().toString();
+    public static String compose(String baseUrl, @Nullable String virtualContextPath, String path) {
+        return EntUrlBuilder.builder().url(baseUrl).paths(virtualContextPath, path).build().toString();
     }
 
-    private String getVirtualContextPath() {
+    protected String getCurrentVirtualContextPath() {
         String res = VirtualContextHelper.getThreadLocal_VirtualContextPath();
         return (res == null || res.isEmpty()) ? "" : res;
     }

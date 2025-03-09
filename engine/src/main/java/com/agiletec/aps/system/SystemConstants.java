@@ -41,6 +41,17 @@ public final class SystemConstants {
     public static final String PAR_APPL_BASE_URL = "applicationBaseURL";
 
     /**
+     * Parameter name of the list of virtual contexts configured via environment
+     * variable ENTANDO_VIRTUAL_CONTEXTS
+     */
+    public static final String PAR_APPL_VIRTUAL_CONTEXTS = "virtualContexts";
+
+    /**
+     * Parameter name of the virtual context of the current servlet request
+     */
+    public static final String PAR_APPL_CURRENT_VIRTUAL_CONTEXT = "currentVirtualContext";
+
+    /**
      * Nome del parametro di configurazione che rappresenta l'URL base per le
      * risorse su file
      */

@@ -59,7 +59,7 @@
 <s:set var="appBuilderBaseURL" ><wp:info key="systemParam" paramName="appBuilderBaseURL" /></s:set>
 <ul class="list-group">
     <li class="list-group-item secondary-nav-item-pf">
-        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="dashboard"/>" class="no-chevron">
+        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="dashboard"/>" class="no-chevron">
             <span class="fa" data-toggle="tooltip" title="<s:text name="menu.dashboard" />"><em class="dashboard"></em></span>
             <span class="list-group-item-value"><s:text name="menu.dashboard" /></span>
         </a>
@@ -83,24 +83,24 @@
                 <!-- Page Designer Secondary -->
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <a id="linkHome" href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="page"/>">
+                        <a id="linkHome" href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="page"/>">
                             <span class="list-group-item-value"><s:text name="menu.pageDesigner.pageTree" /></span>
                         </a>
                     </li>
                     <li class="list-group-item">
-                        <a id="" href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="page/configuration/homepage"/>">
+                        <a id="" href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="page/configuration/homepage"/>">
                             <span class="list-group-item-value"><s:text name="menu.pageDesigner.pageConfiguration" /></span>
                         </a>
                     </li>
                     <c:if test="${isSuperUser}">
                         <li class="list-group-item">
-                            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="page-template"/>">
+                            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="page-template"/>">
                                 <span class="list-group-item-value"><s:text name="menu.UXPattern.pageModels" /></span>
                             </a>
                         </li>
 
                         <li class="list-group-item">
-                            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="page/settings"/>">
+                            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="page/settings"/>">
                                 <span class="list-group-item-value"><s:text name="menu.pageDesigner.pageSettings" /></span>
                             </a>
                         </li>
@@ -128,12 +128,12 @@
                 <!-- UX Patterns Secondary -->
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="widget"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="widget"/>">
                             <span class="list-group-item-value"><s:text name="menu.UXPattern.widget" /></span>
                         </a>
                     </li>
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="fragment"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="fragment"/>">
                             <span class="list-group-item-value"><s:text name="menu.UXPattern.fragments" /></span>
                         </a>
                     </li>
@@ -184,32 +184,32 @@
 
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="user"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="user"/>">
                             <span class="list-group-item-value"><s:text name="menu.usersSettings.users" /></span>
                         </a>
                     </li>
 
                     <c:if test="${isSuperUser}">
                         <li class="list-group-item">
-                            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="role"/>">
+                            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="role"/>">
                                 <span class="list-group-item-value"><s:text name="menu.usersSettings.roles" /></span>
                             </a>
                         </li>
 
                         <li class="list-group-item">
-                            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="group"/>">
+                            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="group"/>">
                                 <span class="list-group-item-value"><s:text name="menu.settings.groups" /></span>
                             </a>
                         </li>
 
                         <li class="list-group-item">
-                            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="profiletype"/>">
+                            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="profiletype"/>">
                                 <span class="list-group-item-value"><s:text name="menu.usersSettings.profileTypes" /></span>
                             </a>
                         </li>
 
                         <li class="list-group-item">
-                            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="user/restrictions"/>">
+                            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="user/restrictions"/>">
                                 <span class="list-group-item-value"><s:text name="menu.usersSettings.usersRestriction" /></span>
                             </a>
                         </li>
@@ -224,7 +224,7 @@
     <wp:ifauthorized permission="enterECR" var="isEnterECR" />
     <c:if test="${isSuperUser || isEnterECR}">
         <li class="list-group-item secondary-nav-item-pf">
-            <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="component-repository"/>" class="no-chevron">
+            <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="component-repository"/>" class="no-chevron">
                 <span class="fa fa-th-list" data-toggle="tooltip" title="<s:text name="menu.ECR" />"></span>
                 <span class="list-group-item-value"><s:text name="menu.ECR" /></span>
             </a>
@@ -233,7 +233,7 @@
 
     <!-- EPC -->
     <li class="list-group-item secondary-nav-item-pf menu-epc">
-        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}"/>" onclick="window.sessionStorage.setItem('menu_open', 'epc')" class="no-chevron">
+        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}"/>" onclick="window.sessionStorage.setItem('menu_open', 'epc')" class="no-chevron">
             <span class="fa menu-epc-icon" data-toggle="tooltip" title="<s:text name="menu.EPCs" />"></span>
             <span class="list-group-item-value"><s:text name="menu.EPCs" /></span>
         </a>
@@ -260,31 +260,31 @@
 
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="database"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="database"/>">
                             <span class="list-group-item-value"><s:text name="menu.settings.database" /></span>
                         </a>
                     </li>
 
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="file-browser"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="file-browser"/>">
                             <span class="list-group-item-value"><s:text name="menu.settings.fileBrowser" /></span>
                         </a>
                     </li>
 
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="labels-languages"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="labels-languages"/>">
                             <span class="list-group-item-value"><s:text name="menu.settings.labelsLanguages" /></span>
                         </a>
                     </li>
                     
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="email-config"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="email-config"/>">
                             <span class="list-group-item-value"><s:text name="menu.settings.email" /></span>
                         </a>
                     </li>
 
                     <li class="list-group-item">
-                        <a href="<wp:moduleUrl baseUrl="${appBuilderBaseURL}" path="reloadConfiguration"/>">
+                        <a href="<wp:entandoModuleUrl baseUrl="${appBuilderBaseURL}" path="reloadConfiguration"/>">
                             <span class="list-group-item-value"><s:text name="menu.settings.reloadConfigurations" /></span>
                         </a>
                     </li>

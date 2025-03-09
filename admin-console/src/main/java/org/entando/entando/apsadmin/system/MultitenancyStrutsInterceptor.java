@@ -34,6 +34,9 @@ public class MultitenancyStrutsInterceptor extends AbstractInterceptor {
             setupTenantInfo(request);
             setupVirtualContextInfo(request);
 
+            request.setAttribute("contextPath", request.getContextPath());
+            request.setAttribute("servletPath", request.getServletPath());
+
             return invocation.invoke();
 
         } finally {
