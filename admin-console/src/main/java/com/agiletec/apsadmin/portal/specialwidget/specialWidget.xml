@@ -12,7 +12,7 @@
     			<param name="namespace">/do/Page</param>
     			<param name="actionName">viewTree</param>
     		</result>
-    		<result name="configure" type="redirectAction">
+    		<result name="configure" type="redirectActionXF">
             	<param name="namespace">/do/Page</param>
     			<param name="actionName">configure</param>
     			<param name="pageCode">${pageCode}</param>

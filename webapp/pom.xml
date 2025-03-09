@@ -29,6 +29,7 @@
         <docker.host.address>127.0.0.1</docker.host.address>
         <entando.engine.port>8080</entando.engine.port>
         <appbuilder.port>3000</appbuilder.port>
+        <appbuilder.base.url>http://localhost:6000</appbuilder.base.url>
         <skipAppBuilderImage>true</skipAppBuilderImage>
         <docker.db.database>entando</docker.db.database>
         <docker.db.username>entando</docker.db.username>

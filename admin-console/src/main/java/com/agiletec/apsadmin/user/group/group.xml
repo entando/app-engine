@@ -34,7 +34,7 @@
         
     	<action name="save" class="groupAction" method="save">
         	<result name="input" type="tiles">admin.Group.entry</result>
-        	<result type="redirectAction">list</result>
+        	<result type="redirectActionXF">list</result>
         	<interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
         
@@ -48,7 +48,7 @@
     	<action name="delete" class="groupAction" method="delete">
         	<result name="references" type="tiles">admin.Group.references</result>
             <result name="groupList" type="chain">list</result>
-        	<result type="redirectAction">list</result>
+        	<result type="redirectActionXF">list</result>
         	<interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
     	

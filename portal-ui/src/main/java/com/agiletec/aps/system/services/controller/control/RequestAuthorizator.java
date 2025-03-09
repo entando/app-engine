@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.entando.entando.aps.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ public class RequestAuthorizator extends AbstractControlService {
 			if (authorized) {
 				retStatus = ControllerManager.CONTINUE;
 			} else {
-				StringBuilder targetUrl = new StringBuilder(req.getRequestURL());
+				StringBuilder targetUrl = new StringBuilder(UrlUtils.determineFrontendURL(req));
 				String queryString = req.getQueryString();
 				if (null != queryString && queryString.trim().length() > 0) {
 					targetUrl.append("?").append(queryString);

@@ -34,7 +34,7 @@
     	
     	<action name="save" class="localeStringAction" method="save">
             <result name="input" type="tiles">admin.LocaleString.entry</result>
-        	<result type="redirectAction">list</result>
+        	<result type="redirectActionXF">list</result>
         	<interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
     	

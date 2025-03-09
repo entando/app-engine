@@ -134,7 +134,7 @@
         <action name="save" class="jacmsMultipleResourceAction" method="save">
             <result type="tiles" name="input">admin.jacms.resource.entry</result>
             <result type="tiles" name="failure">admin.jacms.resource.entry</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">list</param>
                 <param name="resourceTypeCode">${resourceTypeCode}</param>
             </result>
@@ -187,7 +187,7 @@
         </action>
         
         <action name="refreshResourcesInstances" class="jacmsResourceAdminAction" method="refreshResourcesInstances" >
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="namespace">/do/jacms/Resource</param>
                 <param name="actionName">list</param>
                 <param name="resourceTypeCode">${resourceTypeCode}</param>

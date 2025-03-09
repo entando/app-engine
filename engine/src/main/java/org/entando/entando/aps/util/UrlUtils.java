@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -40,6 +41,55 @@ public final class UrlUtils {
     public static final String HTTPS_SCHEME = "https";
 
     private UrlUtils(){}
+
+    public static String determineFullFrontendURL(HttpServletRequest req) {
+        String base = determineFrontendURL(req);
+        String query = req.getQueryString();
+        return base + ((query != null) ? "?" + query : "");
+    }
+
+    /**
+     * Returns the actual URL fetched by the browser, without the query part.
+     * <pre>
+     * The term "FrontendURL" refers to the URL fetched by the browser,
+     * which may or may not be aligned with the data (e.g. HOST header)
+     * received the server when reverse proxies are in the way.
+     * This function in fact assists in the proper generation of links
+     * and redirect locations.
+     * </pre>
+     */
+
+    public static String determineFrontendURL(HttpServletRequest req) {
+        URL url = determineFrontendUrlObject(req);
+        String path = req.getRequestURI();
+        return url.getProtocol() + "://" +
+                url.getHost()
+                + ((url.getPort() != -1) ? ":" + url.getPort() : "")
+                + ((path != null) ? path : "");
+    }
+
+    public static String determineFrontendServerName(HttpServletRequest request) {
+        return determineFrontendUrlObject(request).getHost();
+    }
+
+    /**
+     * Returns a URL object that stores information about the frontendURL
+     * (see determineFrontendURL)
+     */
+    public static URL determineFrontendUrlObject(HttpServletRequest request) {
+        String host, scheme = request.getScheme();
+        Optional<Integer> port;
+
+        host = getHostFromXHeader(request).orElse(request.getServerName());
+        scheme = getProtoFromXHeader(request).orElse(scheme);
+        port = Optional.of(getPortFromXHeader(request).orElse(request.getServerPort()));
+
+        if (BooleanUtils.toBoolean(System.getenv(ENTANDO_APP_USE_TLS))) {
+            scheme = HTTPS_SCHEME;
+        }
+
+        return generateUrl(scheme, host, port, request);
+    }
 
     public static String fetchScheme(HttpServletRequest request){
         return getProtoFromEnv().filter(UrlUtils::isHttps)
@@ -144,7 +194,10 @@ public final class UrlUtils {
         }).filter(StringUtils::isNotBlank);
     }
 
-
+    /**
+     * Returns the parsed version of the provided URI string.
+     * If the string is not a real URI null is returned instead.
+     */
     private static URI getUri(String url) {
         try {
             return new URI(url);
@@ -239,4 +292,13 @@ public final class UrlUtils {
         }
     }
 
+    private static final Pattern URI_SCHEME_PATTERN = Pattern.compile("^[a-z][a-z0-9+.-]*:.*$");
+
+    /**
+     * Tells if a string is not an absolute URI by checking that the string doesn't start with the "{scheme}:" pattern.
+     * Note that this is not a safe way to identify a relative URI, so if you need it please use {@link #getUri(String)}
+     */
+    public static boolean isNotAbsoluteURI(String mayBeURI) {
+        return !URI_SCHEME_PATTERN.matcher(mayBeURI).matches();
+    }
 }

@@ -36,7 +36,7 @@
 		</action>
         
         <action name="remove" class="jpversioningTrashedResourceAction" method="remove">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
 		   		<param name="actionName">list</param>
 			    <param name="resourceTypeCode">${resourceTypeCode}</param>
 			</result>
@@ -44,7 +44,7 @@
         </action>
         
         <action name="restore" class="jpversioningTrashedResourceAction" method="restore">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
 		   		<param name="actionName">list</param>
 			    <param name="resourceTypeCode">${resourceTypeCode}</param>
 			</result>

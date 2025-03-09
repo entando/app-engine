@@ -57,7 +57,7 @@
         
     	<action name="saveSender" class="jpmailMailSenderConfigAction" method="save">
             <result name="input" type="tiles">admin.jpmail.MailConfig.entrySender</result>
-            <result type="redirectAction">viewSenders</result>
+            <result type="redirectActionXF">viewSenders</result>
         	<interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
         
@@ -69,7 +69,7 @@
         
     	<action name="deleteSender" class="jpmailMailSenderConfigAction" method="delete">
             <result name="input" type="chain">viewSenders</result>
-            <result type="redirectAction">viewSenders</result>
+            <result type="redirectActionXF">viewSenders</result>
         	<interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
         

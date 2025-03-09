@@ -16,7 +16,7 @@
         </action>
         
         <action name="updateSystemParams" class="jpversioningConfigAction" method="updateSystemParams">
-            <result type="redirectAction">systemParams</result>
+            <result type="redirectActionXF">systemParams</result>
             <interceptor-ref name="entandoDefaultStack">
                 <param name="requestAuth.requiredPermission">superuser</param>
             </interceptor-ref>
