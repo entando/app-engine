@@ -137,7 +137,10 @@ public class FormFrontEndAction extends FormAction {
     }
 
     public String deliver() {
-        Form form = new Form();
+        final Form form = new Form();
+
+        form.setFormPayload(getFormPayload());
+        form.getFormPayload().setDeliveryData(new DeliveryData());
 
         try {
             Widget widget = getWidgetConfig();
@@ -151,10 +154,10 @@ public class FormFrontEndAction extends FormAction {
 
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
-            final String json = null; // TODO GET FROM SPID
 
+            final String json = null; // getSigeManager().getUserInfoById(currentUser);
             final String fullName = this.getCurrentUser().getUsername();
-            //form.setQualifiedName(fullName);
+
             form.getFormPayload().getDeliveryData().setQualifiedName(fullName);
 //            if (StringUtils.isNotBlank(json)) {
                 final String emailFromSPID = "email@email.it";
@@ -165,13 +168,11 @@ public class FormFrontEndAction extends FormAction {
 //            }
             form.setName(currentUser);
             form.setSubmitted(LocalDateTime.now());
-            //form.setData(getFormData());
-            form.setFormPayload(getFormPayload());
 
-            final String email = getMailManager().getEmailById(getIdDestinatario());
-            if (StringUtils.isBlank(email)) {
-                log.warn("Could not find email with key '{}'", getIdDestinatario());
-            }
+//            final String email = getMailManager().getEmailById(getIdDestinatario());
+//            if (StringUtils.isBlank(email)) {
+//                log.warn("Could not find email with key '{}'", getIdDestinatario());
+//            }
 //            final String from = getMailManager().getEmailById(IMailManager.CFG_FROM);
 //            if (StringUtils.isBlank(from)) {
 //                log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
@@ -181,11 +182,9 @@ public class FormFrontEndAction extends FormAction {
             form.getFormPayload().getDeliveryData().setSubject(getSubject());
 
             if (getMailManager().sendMail(form)) {
-                //log.debug("Form successfully delivered to {}", form.getRecipient());
                 log.debug("Form successfully delivered to {}", form.getFormPayload().getDeliveryData().getRecipient());
                 form.setDelivered(true);
             } else {
-                //log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
                 log.warn("Could not deliver email to {}, saving for later", form.getFormPayload().getDeliveryData().getRecipient());
                 form.setDelivered(false);
             }
@@ -275,7 +274,7 @@ public class FormFrontEndAction extends FormAction {
      * @return lista delle opzioni come richiesto dal tag di Struts
      */
     public Map<String, String> generateDropDown(String options) {
-        final Map<String, String> map = new HashMap<>();
+        final Map<String, String> map = new LinkedHashMap<>();
 
         if (StringUtils.isNotBlank(options)) {
             String[] tokens = options.split(";");
@@ -296,11 +295,7 @@ public class FormFrontEndAction extends FormAction {
     }
 
     public FormData getFormData() {
-        return _formData;
-    }
-
-    public void setFormData(FormData formData) {
-        this._formData = formData;
+        return getFormPayload().getFormData();
     }
 
     public String getPageCode() {
@@ -404,10 +399,7 @@ public class FormFrontEndAction extends FormAction {
 
     private Form form;
 
-
-
-    private FormPayload _formPayload; //<======
-    private FormData _formData;
+    private FormPayload _formPayload;
     private String _idDestinatario;
     public String _pageCode;
     public String _subject;

@@ -403,8 +403,6 @@ public class FormFrontEndAction extends FormAction {
 
     private Form form;
 
-
-
     private FormPayload _formPayload;
     private String _idDestinatario;
     public String _pageCode;
