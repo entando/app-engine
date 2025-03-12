@@ -9,17 +9,21 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
-import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.plugins.jpversioning.web.resource.model.FileResourceDTO;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +140,10 @@ public class FormFrontEndAction extends FormAction {
     }
 
     public String deliver() {
-        Form form = new Form();
+        final Form form = new Form();
+
+        form.setFormPayload(getFormPayload());
+        form.getFormPayload().setDeliveryData(new DeliveryData());
 
         try {
             Widget widget = getWidgetConfig();
@@ -150,39 +157,39 @@ public class FormFrontEndAction extends FormAction {
 
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
+
             final String json = null; // getSigeManager().getUserInfoById(currentUser);
-
             final String fullName = this.getCurrentUser().getUsername();
-            form.setQualifiedName(fullName);
 
+            form.getFormPayload().getDeliveryData().setQualifiedName(fullName);
 //            if (StringUtils.isNotBlank(json)) {
                 final String emailFromSPID = "email@email.it";
-                form.setCc(emailFromSPID);
+                //form.setCc(emailFromSPID);
+            form.getFormPayload().getDeliveryData().setCc(emailFromSPID);
 //            } else {
 //                log.warn("Could not get SIGE data for user '{}'", currentUser);
 //            }
+
             form.setName(currentUser);
             form.setSubmitted(LocalDateTime.now());
-            //form.setData(getFormData()); <=========
-            form.setFormPayload(form.getFormPayload());
 
-            final String email = getMailManager().getEmailById(getIdDestinatario());
-            if (StringUtils.isBlank(email)) {
-                log.warn("Could not find email with key '{}'", getIdDestinatario());
-            }
-            final String from = getMailManager().getEmailById(IMailManager.CFG_FROM);
-            if (StringUtils.isBlank(from)) {
-                log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
-            }
+//            final String email = getMailManager().getEmailById(getIdDestinatario());
+//            if (StringUtils.isBlank(email)) {
+//                log.warn("Could not find email with key '{}'", getIdDestinatario());
+//            }
+//            final String from = getMailManager().getEmailById(IMailManager.CFG_FROM);
+//            if (StringUtils.isBlank(from)) {
+//                log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
+//            }
 
-            form.setRecipient(email);
-            form.setSubject(getSubject());
+            form.getFormPayload().getDeliveryData().setRecipient(getIdDestinatario());
+            form.getFormPayload().getDeliveryData().setSubject(getSubject());
 
             if (getMailManager().sendMail(form)) {
-                log.debug("Form successfully delivered to {}", form.getRecipient());
+                log.debug("Form successfully delivered to {}", form.getFormPayload().getDeliveryData().getRecipient());
                 form.setDelivered(true);
             } else {
-                log.warn("Could not deliver email to {}, saving for later", form.getRecipient());
+                log.warn("Could not deliver email to {}, saving for later", form.getFormPayload().getDeliveryData().getRecipient());
                 form.setDelivered(false);
             }
             getFormManager().addForm(form);
@@ -271,7 +278,7 @@ public class FormFrontEndAction extends FormAction {
      * @return lista delle opzioni come richiesto dal tag di Struts
      */
     public Map<String, String> generateDropDown(String options) {
-        final Map<String, String> map = new HashMap<>();
+        final Map<String, String> map = new LinkedHashMap<>();
 
         if (StringUtils.isNotBlank(options)) {
             String[] tokens = options.split(";");
@@ -292,11 +299,7 @@ public class FormFrontEndAction extends FormAction {
     }
 
     public FormData getFormData() {
-        return _formData;
-    }
-
-    public void setFormData(FormData formData) {
-        this._formData = formData;
+        return getFormPayload().getFormData();
     }
 
     public String getPageCode() {
@@ -381,6 +384,13 @@ public class FormFrontEndAction extends FormAction {
         this._seriale = _seriale;
     }
 
+    public FormPayload getFormPayload() {
+        return _formPayload;
+    }
+
+    public void setFormPayload(FormPayload _formPayload) {
+        this._formPayload = _formPayload;
+    }
     // search parameter
     private Long _id;
     private Date _from;
@@ -394,7 +404,8 @@ public class FormFrontEndAction extends FormAction {
     private Form form;
 
 
-    private FormData _formData;
+
+    private FormPayload _formPayload;
     private String _idDestinatario;
     public String _pageCode;
     public String _subject;

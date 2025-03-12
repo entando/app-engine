@@ -151,7 +151,7 @@ public class FormFrontEndAction extends FormAction {
 
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
-            final String json = null; // getSigeManager().getUserInfoById(currentUser);
+            final String json = null; // TODO GET FROM SPID
 
             final String fullName = this.getCurrentUser().getUsername();
             //form.setQualifiedName(fullName);
@@ -172,17 +172,13 @@ public class FormFrontEndAction extends FormAction {
             if (StringUtils.isBlank(email)) {
                 log.warn("Could not find email with key '{}'", getIdDestinatario());
             }
-            final String from = getMailManager().getEmailById(IMailManager.CFG_FROM);
-            if (StringUtils.isBlank(from)) {
-                log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
-            }
+//            final String from = getMailManager().getEmailById(IMailManager.CFG_FROM);
+//            if (StringUtils.isBlank(from)) {
+//                log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
+//            }
 
-            //form.setRecipient(email);
-            form.getFormPayload().getDeliveryData().setRecipient(email);
-            //form.setSubject(getSubject());
+            form.getFormPayload().getDeliveryData().setRecipient(getIdDestinatario());
             form.getFormPayload().getDeliveryData().setSubject(getSubject());
-
-
 
             if (getMailManager().sendMail(form)) {
                 //log.debug("Form successfully delivered to {}", form.getRecipient());

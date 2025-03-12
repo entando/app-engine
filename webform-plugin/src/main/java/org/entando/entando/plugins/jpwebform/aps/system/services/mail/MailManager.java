@@ -100,11 +100,15 @@ public class MailManager extends AbstractService implements IMailManager {
                     InternetAddress.parse(form.getFormPayload().getDeliveryData().getCc()) //form.getCc()
             );
             log.info("Mail TO: {}", form.getFormPayload().getDeliveryData().getCc());
+
+            final String recipientId = form.getFormPayload().getDeliveryData().getRecipient();
+            final String recipient = _recipients.get(recipientId);
+
             message.setRecipients(
                     Message.RecipientType.BCC,
-                    InternetAddress.parse(form.getFormPayload().getDeliveryData().getRecipient())
+                    InternetAddress.parse(recipient)
             );
-            log.info("Mail BCC: {}", form.getFormPayload().getDeliveryData().getRecipient());
+            log.info("Mail BCC: {}", recipient);
             if (StringUtils.isNotBlank(form.getFormPayload().getDeliveryData().getSubject())) {
                 message.setSubject(form.getFormPayload().getDeliveryData().getSubject());
             } else {
