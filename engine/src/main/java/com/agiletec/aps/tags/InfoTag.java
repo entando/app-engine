@@ -197,10 +197,25 @@ public class InfoTag extends ExtendedTagSupport {
 	public void setParamName(String paramName) {
 		this._paramName = paramName;
 	}
-	
+
+	/**
+	 * Get the information returned by the tag
+	 */
+	public Object getInfo() {
+		return _info;
+	}
+
+	/**
+	 * Sets the information returned by the tag
+	 */
+	public void setInfo(Object _info) {
+		this._info = _info;
+	}
+
 	private String _key;
 	private String _varName;
 	private String _paramName;
+
 	private Object _info;
 	
 }

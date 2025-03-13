@@ -17,6 +17,7 @@ import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.util.logging.Logger;
 import com.opensymphony.xwork2.util.logging.LoggerFactory;
 import com.opensymphony.xwork2.util.reflection.ReflectionExceptionHandler;
+import java.net.URL;
 import lombok.Setter;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
@@ -130,9 +131,10 @@ public class ServletActionRedirectResultXF extends ServletRedirectResult impleme
 
         HttpServletRequest request = ServletActionContext.getRequest();
 
-        String frontendScheme = UrlUtils.determineFrontendUrlObject(request).toURI().getScheme();
-        String frontendServerName = UrlUtils.determineFrontendUrlObject(request).getHost();
-        int frontendPort = UrlUtils.determineFrontendUrlObject(request).getPort();
+        URL frontendUrlObject = UrlUtils.determineFrontendUrlObject(request);
+        String frontendScheme = frontendUrlObject.toURI().getScheme();
+        String frontendServerName = frontendUrlObject.getHost();
+        int frontendPort = frontendUrlObject.getPort();
 
         String sbLocation = frontendScheme + "://"
                 + frontendServerName + ((frontendPort != -1) ? ":" + frontendPort : "")
@@ -142,15 +144,6 @@ public class ServletActionRedirectResultXF extends ServletRedirectResult impleme
         if (null != this.anchorDest) {
             this.setAnchor(this.anchorDest);
         }
-
-        System.out.println("\n" +
-                "\n" + "|----------------------------------------------------------------------------------" +
-                "\n" + "|- frontendScheme => " + frontendScheme +
-                "\n" + "|- frontendServerName => " + frontendServerName +
-                "\n" + "|- frontendPort => " + frontendPort +
-                "\n" + "|- sbLocation => " + sbLocation +
-                "\n" + "|----------------------------------------------------------------------------------" +
-                "\n");
 
         setLocation(sbLocation);
 

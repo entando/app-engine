@@ -59,13 +59,14 @@
 </div>
 <nav class="collapse navbar-collapse">
     <ul class="nav navbar-nav navbar-right navbar-iconic">
-        <li id="tenantDropdownList" class="dropdown">
-            <a class="dropdown-toggle nav-item-iconic" id="tenantDropdownListMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                <s:text name="context.gotoContext"/>
-            </a>
-            <ul id="tenantDropdownListItem" class="dropdown-menu" aria-labelledby="tenantDropdownListMenu">
-                <c:forEach var="contextVar" items="${virtualContextsVar}">
-                    <c:if test="${contextVar ne currentVirtualContextVar}">
+        <!-- TENANT SELECTOR -->
+        <wp:ifauthorized permission="superuser">
+            <li id="tenantDropdownList" class="dropdown">
+                <a class="dropdown-toggle nav-item-iconic" id="tenantDropdownListMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    <s:text name="context.gotoContext"/>
+                </a>
+                <ul id="tenantDropdownListItem" class="dropdown-menu" aria-labelledby="tenantDropdownListMenu">
+                        <c:forEach var="contextVar" items="${virtualContextsVar}">
                         <s:set var="baseUrlVar">
                             <wp:entandoModuleUrl baseUrl="/" virtualContext="${contextVar}" path="/do/main"/>
                         </s:set>
@@ -76,10 +77,11 @@
                             </c:if>
                             <a tenant-name="${contextVar}" href="${baseUrlVar}"/><c:out value="${contextVarUI}" /></a>
                         </li>
-                    </c:if>
-                </c:forEach>
-            </ul>
-        </li>
+                    </c:forEach>
+                </ul>
+            </li>
+        </wp:ifauthorized>
+        <!-- LANGUAGE SELECTOR -->
         <li id="languageDropdown" class="dropdown">
             <a class="dropdown-toggle nav-item-iconic" id="languageDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                 <c:set var="current_languague" value="${not empty WW_TRANS_I18N_LOCALE ? WW_TRANS_I18N_LOCALE : pageContext.response.locale}" />

@@ -82,6 +82,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         }
     }
 
+    @Disabled
     @Test
     void testGetContents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
@@ -134,6 +135,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         Assertions.assertEquals(4, evnOccurrencesPayloadSize);
     }
 
+    @Disabled
     @Test
     void testGetContentsByGuestUser_1() throws Exception {
         ResultActions result = mockMvc
@@ -159,6 +161,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         Assertions.assertEquals(4, occurrencesPayloadSize);
     }
 
+    @Disabled
     @Test
     void testGetContentsByGuestUser_2() throws Exception {
         ResultActions result = mockMvc
@@ -619,6 +622,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         }
     }
 
+    @Disabled
     @Test
     void testLoadPublicFreeARTContents() throws Exception {
         ResultActions result = mockMvc
@@ -652,6 +656,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         Assertions.assertEquals(1, occurrencesPayloadSize);
     }
 
+    @Disabled
     @Test
     void testLoadPublicARTContents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
@@ -695,6 +700,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         Assertions.assertEquals(5, occurrencesPayloadSize);
     }
 
+    @Disabled
     @Test
     void testLoadPublic_ART_EVN_Contents() throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")

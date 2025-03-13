@@ -66,14 +66,4 @@ public class CustomWrappedRequest extends HttpServletRequestWrapper
             return null;
         }
     }
-
-//    @Override
-//    public String getHeader(String name) {
-//        String res = this.headersOverrides.get(name);
-//        return (res == null) ? res : super.getHeader(name);
-//    }
-//
-//    public void overrideHeader(String name, String value) {
-//        this.headersOverrides.put(name, value);
-//    }
 }
