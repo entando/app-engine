@@ -59,6 +59,8 @@ public class TenantInitializerService implements ITenantInitializerService {
                 .map(tc -> tc.getTenantCode())
                 .forEach(tenantCode -> {
             long startTenant = System.currentTimeMillis();
+            String comment = null;
+            
             try {
                 statuses.put(tenantCode,TenantStatus.PENDING);
 
@@ -71,16 +73,18 @@ public class TenantInitializerService implements ITenantInitializerService {
                 refreshBeanForTenantCode(svCtx, tenantCode);
                 
                 this.executePostInitProcesses();
-
+                comment = "";
             } catch (Throwable th) {
                 statuses.put(tenantCode,TenantStatus.FAILED);
                 if(tenantDataAccessor.getTenantConfigs().get(tenantCode).isInitializationAtStartRequired()) {
-                    throw new RuntimeException(String.format("Tenant:'%s' Error to initialize a required tenant", tenantCode), th);
+                    comment = "with errors";
+                    throw new RuntimeException(String.format("Tenant: '%s' - Error detected executing initialization of required tenant", tenantCode), th);
                 } else {
-                    log.warn("Tenant:'{}' Error to initialize non required tenant",tenantCode, th);
+                    comment = "with warnings";
+                    log.warn("Tenant:'{}' - Error detected executing initialization of non required tenant", tenantCode, th);
                 }
             } finally {
-                log.info("Initialization of tenant '{}' completed in '{}' ms ", tenantCode, System.currentTimeMillis() - startTenant);
+                log.info("Initialization of tenant '{}' completed {}in '{}' ms ", tenantCode, comment, System.currentTimeMillis() - startTenant);
             }
         });
         log.info("End initialization for tenants with filter:'{}' in '{}' ms", filter, System.currentTimeMillis() - startTenants);

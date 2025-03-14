@@ -71,6 +71,30 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description><![CDATA[Generate an URL for an entando module.]]></description>
+		<name>entandoModuleUrl</name>
+		<tag-class>org.entando.entando.aps.tags.EntandoModuleUrlTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<description><![CDATA[The base url; it can be absolute or relative]]></description>
+			<name>baseUrl</name>
+			<required>yes</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description><![CDATA[The terminating path; it can be omitted]]></description>
+			<name>path</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description><![CDATA[If provided overrides the current virtual-context]]></description>
+			<name>virtualContext</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
 		<description><![CDATA[Returns URL of the resources.]]></description>
 		<name>resourceURL</name>
 		<tag-class>org.entando.entando.aps.tags.ResourceURLTag</tag-class>

@@ -38,6 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.KeycloakWiki;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
+import org.entando.entando.aps.servlet.security.CustomWrappedRequest;
 import org.entando.entando.aps.servlet.security.GuestAuthentication;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.util.UrlUtils;
@@ -98,7 +100,8 @@ public class KeycloakFilter implements Filter {
         try {
             EntThreadLocal.clear();
 
-            final HttpServletRequest request = (HttpServletRequest) servletRequest;
+            HttpServletRequest request = handleVirtualContext((HttpServletRequest) servletRequest);
+
             ApsTenantApplicationUtils.extractCurrentTenantCode(request)
                     .filter(StringUtils::isNotBlank)
                     .ifPresent(ApsTenantApplicationUtils::setTenant);
@@ -137,6 +140,15 @@ public class KeycloakFilter implements Filter {
             // moved here to clean context everytime also if we have an exception
             EntThreadLocal.destroy();
         }
+    }
+
+    private static HttpServletRequest handleVirtualContext(HttpServletRequest servletRequest) {
+        HttpServletRequest request = VirtualContextHelper.customizeRequest(servletRequest);
+
+        if (request instanceof CustomWrappedRequest && ((CustomWrappedRequest) request).hasVirtualContext()) {
+            VirtualContextHelper.setThreadLocal_VirtualContextPath(request.getContextPath());
+        }
+        return request;
     }
 
     private void handleLoginRedirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -215,7 +227,7 @@ public class KeycloakFilter implements Filter {
     private void doLogout(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         final HttpSession session = request.getSession();
         final String idToken = (String)session.getAttribute(SESSION_PARAM_ID_TOKEN);
-        final String redirectUri = request.getRequestURL().toString().replace("/do/logout.action", "");
+        final String redirectUri = UrlUtils.determineFrontendURL(request).replace("/do/logout.action", "");
         session.invalidate();
         response.sendRedirect(oidcService.getLogoutUrl(redirectUri, idToken));
     }
@@ -224,7 +236,7 @@ public class KeycloakFilter implements Filter {
         final HttpSession session = request.getSession();
         final String authorizationCode = request.getParameter("code");
         final String stateParameter = request.getParameter("state");
-        final String redirectUri = request.getRequestURL().toString();
+        final String redirectUri = UrlUtils.determineFrontendURL(request);
         final String redirectTo = request.getParameter("redirectTo");
         final String error = request.getParameter("error");
         final String errorDescription = request.getParameter("error_description");
@@ -331,7 +343,7 @@ public class KeycloakFilter implements Filter {
         if (redirectTo != null) {
             if (log.isDebugEnabled()) {
                 log.debug("doLogin evaluate redirect with redirectTo:'{}' requestURL:'{}' servletPath:'{}'",
-                        redirectTo, request.getRequestURL(), request.getServletPath());
+                        redirectTo, UrlUtils.determineFrontendURL(request), request.getServletPath());
             }
             Optional<String> redirectToPath = UrlUtils.fetchPathFromUri(redirectTo);
             String redirectPathWithoutContextRoot = redirectToPath

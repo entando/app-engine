@@ -97,8 +97,29 @@ public class TenantManager implements ITenantManager, InitializingBean {
     }
 
     @Override
+    public String getTenantCodeByDomainAndContext(String domain, String context) {
+        String tenantCode = tenantDataAccessor.getTenantConfigs().values().stream()
+                .filter(v -> v.getFqdns().contains(domain) && (StringUtils.equals(v.getContext(), context) || v.getContext() == null) )
+                .map(tc -> tc.getTenantCode())
+                .filter(StringUtils::isNotBlank)
+                .findFirst()
+                .orElse(getCodes().stream().filter(code -> StringUtils.equals(code, domain)).findFirst().orElse(null));
+        if (logger.isDebugEnabled()) {
+            logger.debug("Selected tenant of code: '{}' due to request domain and context: '{}/{}'",
+                    tenantCode, domain, (context != null) ? context : "*"
+            );
+        }
+        return identityIfStatusReadyOrThrow(tenantCode);
+    }
+
+    @Override
     public Optional<TenantConfig> getTenantConfigByDomain(String domain) {
         return this.getConfigOfReadyTenant(this.getTenantCodeByDomain(domain));
+    }
+
+    @Override
+    public Optional<TenantConfig> getTenantConfigByDomainAndContext(String domain, String context) {
+        return this.getConfigOfReadyTenant(this.getTenantCodeByDomainAndContext(domain, context));
     }
 
     @Override
@@ -136,12 +157,13 @@ public class TenantManager implements ITenantManager, InitializingBean {
     }
 
     private String identityIfStatusReadyOrThrow(String tenantCode){
-        if( tenantCode == null
-                || !tenantDataAccessor.getTenantConfigs().containsKey(tenantCode)
-                || TenantStatus.READY.equals(tenantDataAccessor.getTenantStatuses().get(tenantCode)) ) {
+        if (tenantCode == null) return null;
+        TenantStatus tenantStatus = tenantDataAccessor.getTenantStatuses().get(tenantCode);
+        if (!tenantDataAccessor.getTenantConfigs().containsKey(tenantCode) || TenantStatus.READY.equals(tenantStatus)) {
             return tenantCode;
         }
-        throw new RuntimeException(String.format("Error status for tenant with code '%s' is not ready please visit health status endpoint to check", tenantCode));
+        throw new RuntimeException(String.format("The tenant '%s' is not ready ('%s'), " +
+                "please visit health status endpoint to check", tenantCode, tenantStatus));
     }
 
     @Override

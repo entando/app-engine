@@ -17,6 +17,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -62,6 +63,14 @@ public class InfoTag extends ExtendedTagSupport {
 			} else if ("langs".equals(this._key)) {
 				ILangManager langManager = (ILangManager) ApsWebApplicationUtils.getBean(SystemConstants.LANGUAGE_MANAGER, this.pageContext);
 				this._info = langManager.getLangs();
+			} else if ("request".equals(this._key)) {
+				if (SystemConstants.PAR_APPL_CURRENT_VIRTUAL_CONTEXT.equals(this.getParamName())) {
+					this._info = VirtualContextHelper.contextPathToContext(
+							VirtualContextHelper.getThreadLocal_VirtualContextPath()
+					);
+				} else if (SystemConstants.PAR_APPL_VIRTUAL_CONTEXTS.equals(this.getParamName())) {
+					this._info = VirtualContextHelper.getVirtualContexts();
+				}
 			} else if ("systemParam".equals(this._key)) {
 				if (SystemConstants.PAR_APPL_BASE_URL.equals(this.getParamName())) {
 					IURLManager urlManager = (IURLManager) ApsWebApplicationUtils.getBean(SystemConstants.URL_MANAGER, this.pageContext);
@@ -188,10 +197,25 @@ public class InfoTag extends ExtendedTagSupport {
 	public void setParamName(String paramName) {
 		this._paramName = paramName;
 	}
-	
+
+	/**
+	 * Get the information returned by the tag
+	 */
+	public Object getInfo() {
+		return _info;
+	}
+
+	/**
+	 * Sets the information returned by the tag
+	 */
+	public void setInfo(Object _info) {
+		this._info = _info;
+	}
+
 	private String _key;
 	private String _varName;
 	private String _paramName;
+
 	private Object _info;
 	
 }

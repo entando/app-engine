@@ -38,6 +38,10 @@ public interface ITenantManager {
 
     Optional<TenantConfig> getTenantConfigByDomain(String domain);
 
+    Optional<TenantConfig> getTenantConfigByDomainAndContext(String domain, String context);
+
     String getTenantCodeByDomain(String domain);
+
+    String getTenantCodeByDomainAndContext(String domain, String context);
 
 }

@@ -46,14 +46,14 @@
         </action>
         
         <action name="removeListElement*" class="currentUserProfileListAttributeAction" method="removeListElement">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
 				<param name="actionName">entryProfile</param>
             </result>
             <interceptor-ref name="entandoDefaultStack"></interceptor-ref>
         </action>
         
         <action name="moveListElement*" class="currentUserProfileListAttributeAction" method="moveListElement">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
 				<param name="actionName">entryProfile</param>
             </result>
             <interceptor-ref name="entandoDefaultStack"></interceptor-ref>

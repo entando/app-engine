@@ -39,6 +39,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.aps.system.services.controller.executor.ExecutorBeanContainer;
 import org.entando.entando.aps.system.services.controller.executor.ExecutorServiceInterface;
 import org.entando.entando.aps.system.services.guifragment.GuiFragment;
@@ -68,6 +69,7 @@ public class ControllerServlet extends freemarker.ext.servlet.FreemarkerServlet 
 			_logger.debug("Output");
 			try {
 				this.initFreemarker(request, response, reqCtx);
+				VirtualContextHelper.setupThreadLocalStorage(request);
 				this.executePage(request, reqCtx);
 			} catch (Throwable t) {
 				_logger.error("Error building response", t);

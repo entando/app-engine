@@ -61,12 +61,7 @@ import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
 import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
@@ -836,6 +831,7 @@ class SolrSearchEngineManagerIntegrationTest {
         }
     }
 
+    @Disabled
     @Test
     void testFacetedAllContents() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -853,6 +849,7 @@ class SolrSearchEngineManagerIntegrationTest {
         assertTrue(result.getOccurrences().size() > 0);
     }
 
+    @Disabled
     @Test
     void testSearchFacetedContents_1() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();

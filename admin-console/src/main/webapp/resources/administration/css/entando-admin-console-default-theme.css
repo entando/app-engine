@@ -1219,19 +1219,19 @@ td{
     width: 12px !important;
     margin-left: 3px;
 }
-#userDropdown a, #preview-portal a, #infoHeader a, #languageDropdown a {
+#userDropdown a, #preview-portal a, #infoHeader a, #languageDropdown a, #tenantDropdownList a {
     padding: 15px;
     margin-top: 5px;
     line-height: 20px;
 }
-#userDropdown>a, #preview-portal>a, #languageDropdown>a {
+#userDropdown>a, #preview-portal>a, #languageDropdown>a, #tenantDropdownList>a {
     color:#c1c1c1;
 }
 #userDropdown>a:hover, #preview-portal>ahover{
     color:#fff;
 }
 /* setting nav bar icons font-size */
-#languageDropdown .fa, #preview-portal .fa, #infoHeader .fa, #userDropdown .fa {
+#languageDropdown .fa, #tenantDropdownList .fa, #preview-portal .fa, #infoHeader .fa, #userDropdown .fa {
     font-size: inherit;
 }
 .entando-development{

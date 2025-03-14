@@ -13,11 +13,9 @@
  */
 package org.entando.entando.aps.util;
 
-import static org.entando.entando.aps.util.UrlUtils.HTTPS_SCHEME;
-import static org.entando.entando.aps.util.UrlUtils.HTTP_SCHEME;
-import static org.entando.entando.aps.util.UrlUtils.fetchServerNameFromUri;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.entando.entando.aps.util.UrlUtils.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
 
 import com.google.common.net.HttpHeaders;
 import java.net.URI;
@@ -43,13 +41,54 @@ class UrlUtilsTest {
     @Mock private HttpServletRequest requestMock;
 
     @BeforeEach
-    private void init() throws Exception {
+    public void init() throws Exception {
         Mockito.reset(requestMock);
     }
 
     @AfterEach
     public void afterAll() throws Exception {
         Mockito.reset(requestMock);
+    }
+
+
+    @Test
+    void shouldDetermineFrontendServerName() {
+        doReturn("example.org").when(requestMock).getServerName();
+        //-
+        doReturn("http").when(requestMock).getProtocol();
+        doReturn(80).when(requestMock).getServerPort();
+        doReturn(HTTP_SCHEME).when(requestMock).getScheme();
+        Assertions.assertEquals("example.org", determineFrontendServerName(requestMock));
+        //-
+        doReturn(8080).when(requestMock).getServerPort();
+        Assertions.assertEquals("example.org", determineFrontendServerName(requestMock));
+        //-
+        doReturn("https").when(requestMock).getProtocol();
+        doReturn(443).when(requestMock).getServerPort();
+        Assertions.assertEquals("example.org", determineFrontendServerName(requestMock));
+        //-
+        doReturn(8080).when(requestMock).getServerPort();
+        Assertions.assertEquals("example.org", determineFrontendServerName(requestMock));
+    }
+
+    @Test
+    void shouldDetermineFrontendURL() {
+        doReturn("https").when(requestMock).getHeader(HttpHeaders.X_FORWARDED_PROTO);
+        doReturn("443").when(requestMock).getHeader(HttpHeaders.X_FORWARDED_PORT);
+        doReturn("frontend.example.org").when(requestMock).getHeader(HttpHeaders.X_FORWARDED_HOST);
+        doReturn("internal.example.org").when(requestMock).getHeader(HttpHeaders.HOST);
+        doReturn("http").when(requestMock).getProtocol();
+        doReturn("http").when(requestMock).getProtocol();
+        Assertions.assertEquals("https://frontend.example.org", determineFrontendURL(requestMock));
+        doReturn("/my/path").when(requestMock).getRequestURI();
+        Assertions.assertEquals("https://frontend.example.org/my/path", determineFrontendURL(requestMock));
+        doReturn("p=v").when(requestMock).getQueryString();
+        Assertions.assertEquals("https://frontend.example.org/my/path", determineFrontendURL(requestMock));
+        doReturn("p=v").when(requestMock).getQueryString();
+        Assertions.assertEquals("https://frontend.example.org/my/path?p=v", determineFullFrontendURL(requestMock));
+        doReturn("8080").when(requestMock).getHeader(HttpHeaders.X_FORWARDED_PORT);
+        Assertions.assertEquals("https://frontend.example.org:8080/my/path?p=v",
+                determineFullFrontendURL(requestMock));
     }
 
     @Test

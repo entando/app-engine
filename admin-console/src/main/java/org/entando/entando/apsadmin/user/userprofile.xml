@@ -39,7 +39,7 @@
         </action>
 		
         <action name="saveEmpty" class="userProfileAction" method="saveEmpty" >
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="namespace">/do/User</param>
                 <param name="actionName">list</param>
             </result>
@@ -60,7 +60,7 @@
         </action>
         
         <action name="save" class="userProfileAction" method="save">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="namespace">/do/User</param>
                 <param name="actionName">list</param>
             </result>
@@ -92,7 +92,7 @@
         </action>
         
         <action name="removeListElement*" class="userProfileListAttributeAction" method="removeListElement">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">entryProfile</param>
             </result>
             <interceptor-ref name="entandoDefaultStack">
@@ -102,7 +102,7 @@
         </action>
         
         <action name="moveListElement*" class="userProfileListAttributeAction" method="moveListElement">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">entryProfile</param>
             </result>
             <interceptor-ref name="entandoDefaultStack">

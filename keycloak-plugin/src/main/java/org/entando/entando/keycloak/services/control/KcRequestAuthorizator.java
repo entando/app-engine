@@ -24,6 +24,8 @@ import java.net.URLEncoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.entando.entando.aps.util.UrlUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +60,7 @@ public class KcRequestAuthorizator extends RequestAuthorizator {
             } else if (!currentUser.getUsername().equalsIgnoreCase(SystemConstants.GUEST_USER_NAME)) {
                 return this.returnUserNotAuthorized(reqCtx);
             } else {
-                StringBuilder targetUrl = new StringBuilder(req.getRequestURL());
+                StringBuilder targetUrl = new StringBuilder(UrlUtils.determineFrontendURL(req));
                 targetUrl.append("?");
                 String queryString = req.getQueryString();
                 if (null != queryString && queryString.trim().length() > 0) {

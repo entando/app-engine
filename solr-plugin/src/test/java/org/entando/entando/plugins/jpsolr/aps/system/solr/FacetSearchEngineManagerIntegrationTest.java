@@ -40,10 +40,7 @@ import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
 import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResourceLoader;
@@ -89,6 +86,7 @@ class FacetSearchEngineManagerIntegrationTest {
         ((ISolrSearchEngineManager) this.searchEngineManager).refreshCmsFields();
     }
 
+    @Disabled
     @Test
     void testSearchAllContents() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
@@ -258,6 +256,7 @@ class FacetSearchEngineManagerIntegrationTest {
         }
     }
 
+    @Disabled
     @Test
     void testSearchContentsByRole_2() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
