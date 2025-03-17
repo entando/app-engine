@@ -57,7 +57,7 @@ jobs:
           distribution: 'zulu'
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2
@@ -126,7 +126,7 @@ jobs:
           distribution: 'zulu'
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2
@@ -165,7 +165,7 @@ jobs:
           distribution: 'zulu'
       #~ MAVEN CACHE
       - name: "Cache Maven packages"
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2
