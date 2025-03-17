@@ -14,11 +14,14 @@
 package com.agiletec.plugins.jacms.apsadmin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.opensymphony.xwork2.Action;
 import org.junit.jupiter.api.Test;
+
+import java.util.SimpleTimeZone;
 
 class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
 
@@ -41,7 +44,7 @@ class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
 
         String result = this.executeAction();
         ResourceFileChunksUploadAction action = (ResourceFileChunksUploadAction) this.getAction();
-        assertEquals(Action.SUCCESS, result);
+        assertEquals(Action.INPUT, result);
         assertEquals("VALIDATION_ERROR", action.getResultMessage());
     }
 
@@ -56,7 +59,7 @@ class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
 
         String result = this.executeAction();
         ResourceFileChunksUploadAction action = (ResourceFileChunksUploadAction) this.getAction();
-        assertEquals(Action.SUCCESS, result);
+        assertEquals(Action.INPUT, result);
         assertEquals("VALIDATION_ERROR", action.getResultMessage());
     }
 
@@ -67,10 +70,11 @@ class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
         this.addParameter("strutsAction", String.valueOf(ApsAdminSystemConstants.ADD));
         this.addParameter("resourceTypeCode", "Image");
         this.addParameter("fileName", FILE_NAME_ATTACHMENT);
+        this.addParameter("fileSize", FILE_SIZE);
 
         String result = this.executeAction();
         ResourceFileChunksUploadAction action = (ResourceFileChunksUploadAction) this.getAction();
-        assertEquals(Action.SUCCESS, result);
+        assertEquals(Action.INPUT, result);
         assertEquals("VALIDATION_ERROR", action.getResultMessage());
     }
 
@@ -82,7 +86,7 @@ class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
         this.addParameter("resourceTypeCode", "Attach");
         String result = this.executeAction();
         ResourceFileChunksUploadAction action = (ResourceFileChunksUploadAction) this.getAction();
-        assertEquals(Action.SUCCESS, result);
+        assertEquals(Action.INPUT, result);
         assertEquals("VALIDATION_ERROR", action.getResultMessage());
     }
 
@@ -96,7 +100,7 @@ class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
 
         String result = this.executeAction();
         ResourceFileChunksUploadAction action = (ResourceFileChunksUploadAction) this.getAction();
-        assertEquals(Action.SUCCESS, result);
+        assertEquals(Action.INPUT, result);
 
         assertEquals("VALIDATION_ERROR", action.getResultMessage());
     }
@@ -109,7 +113,7 @@ class TestResourceFileChunkUploadAction extends ApsAdminBaseTestCase {
         this.addParameter("resourceTypeCode", "test");
         String result = this.executeAction();
         ResourceFileChunksUploadAction action = (ResourceFileChunksUploadAction) this.getAction();
-        assertEquals(Action.SUCCESS, result);
+        assertEquals(Action.INPUT, result);
 
         assertEquals("VALIDATION_ERROR", action.getResultMessage());
     }
