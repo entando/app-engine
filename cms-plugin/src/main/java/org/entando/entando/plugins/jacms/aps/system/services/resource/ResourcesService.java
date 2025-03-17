@@ -1,13 +1,5 @@
 package org.entando.entando.plugins.jacms.aps.system.services.resource;
 
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_CATEGORY_NOT_FOUND;
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_GROUP_NOT_FOUND;
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_INVALID_FILE_TYPE;
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_INVALID_RESOURCE_TYPE;
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_RESOURCE_CONFLICT;
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_RESOURCE_FILTER_DATE_INVALID;
-import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.ERRCODE_RESOURCE_NOT_FOUND;
-
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
 import com.agiletec.aps.system.services.authorization.Authorization;
@@ -18,33 +10,8 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.AbstractMonoInstanceResource;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.AbstractResource;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.AttachResource;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.BaseResourceDataBean;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.ImageResource;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.ImageResourceDimension;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInstance;
-import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
+import com.agiletec.plugins.jacms.aps.system.services.resource.model.*;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.util.IImageDimensionReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,11 +21,7 @@ import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.IComponentExistsService;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.plugins.jacms.web.resource.model.AssetDto;
-import org.entando.entando.plugins.jacms.web.resource.model.FileAssetDto;
-import org.entando.entando.plugins.jacms.web.resource.model.ImageAssetDto;
-import org.entando.entando.plugins.jacms.web.resource.model.ImageMetadataDto;
-import org.entando.entando.plugins.jacms.web.resource.model.ListAssetsFolderResponse;
+import org.entando.entando.plugins.jacms.web.resource.model.*;
 import org.entando.entando.plugins.jacms.web.resource.request.ListResourceRequest;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
@@ -70,6 +33,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.entando.entando.plugins.jacms.web.resource.ResourcesController.*;
 
 @Getter
 @Setter
@@ -94,6 +70,9 @@ public class ResourcesService implements IComponentExistsService {
 
     @Value("#{'${jacms.attachResource.allowedExtensions}'.split(',')}")
     private List<String> fileAllowedExtensions;
+
+    @Value("${file.upload.maxSize}")
+    private long fileUploadMaxSize;
 
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH.mm.ss");
 
@@ -221,6 +200,7 @@ public class ResourcesService implements IComponentExistsService {
 
         try {
             validateConflict(correlationCode);
+            validateFileSize(file);
             validateMimeType(type, file.getContentType());
             validateGroup(user, group);
 
@@ -345,6 +325,7 @@ public class ResourcesService implements IComponentExistsService {
             resourceFile.setFolderPath(resource.getFolderPath());
 
             if (file != null) {
+                validateFileSize(file);
                 validateMimeType(unconvertResourceType(resource.getType()), file.getContentType());
 
                 resourceFile.setInputStream(file.getInputStream());
@@ -469,6 +450,14 @@ public class ResourcesService implements IComponentExistsService {
                     "resources.correlationCode");
             errors.reject(ERRCODE_RESOURCE_CONFLICT, "plugins.jacms.resources.error.conflict");
             throw new ValidationConflictException(errors);
+        }
+    }
+
+    public void validateFileSize(MultipartFile file) {
+        if (file.getSize() > this.fileUploadMaxSize) {
+            BeanPropertyBindingResult errors = new BeanPropertyBindingResult(file, "resources.file.size");
+            errors.reject(ERRCODE_INVALID_FILE_TYPE, "plugins.jacms.resources.tooBig");
+            throw new ValidationGenericException(errors);
         }
     }
 

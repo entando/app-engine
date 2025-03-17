@@ -85,13 +85,15 @@
         </action>
 
         <action name="upload" class="jacmsResourceFileChunksUploadAction" method="upload">
-            <result type="stream" name="input">
-                <param name="contentType">plain/text</param>
-                <param name="inputStream">inputStream</param>
+            <result type="json" name="input">
+                <param name="statusCode">400</param>
+                <param name="ignoreHierarchy">false</param>
+                <param name="includeProperties">^actionErrors.*,^fieldErrors.*</param>
             </result>
-            <result type="stream" name="failure">
-                <param name="contentType">plain/text</param>
-                <param name="inputStream">inputStream</param>
+            <result type="json" name="failure">
+                <param name="statusCode">500</param>
+                <param name="ignoreHierarchy">false</param>
+                <param name="includeProperties">^actionErrors.*,^fieldErrors.*</param>
             </result>
 
             <result type="stream">

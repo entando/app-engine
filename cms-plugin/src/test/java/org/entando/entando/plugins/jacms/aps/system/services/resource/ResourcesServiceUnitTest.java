@@ -22,9 +22,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 /*
 @ActiveProfiles("test")
@@ -59,6 +62,7 @@ class ResourcesServiceUnitTest {
     public void setup() {
         authorizationManager = mock(IAuthorizationManager.class);
         resourcesService = new ResourcesService();
+        ReflectionTestUtils.setField(this.resourcesService, "fileUploadMaxSize", 1024);
 
         when(authorizationManager.getGroupsByPermission(any(), matches(Permission.MANAGE_RESOURCES)))
                 .thenReturn(TestHelper.createGroups());
@@ -79,6 +83,16 @@ class ResourcesServiceUnitTest {
     void testGroupValidation() {
         resourcesService.validateGroup(null, "free");
         resourcesService.validateGroup(null, "admin");
+    }
+
+    @Test
+    void testFileSizeValidation() {
+        MultipartFile file = new MockMultipartFile("file.pdf", "file.pdf".getBytes());
+        resourcesService.validateFileSize(file);
+
+
+        ReflectionTestUtils.setField(this.resourcesService, "fileUploadMaxSize", 2);
+        Assertions.assertThrows(ValidationGenericException.class, () -> this.resourcesService.validateFileSize(file));
     }
 
     @Test
