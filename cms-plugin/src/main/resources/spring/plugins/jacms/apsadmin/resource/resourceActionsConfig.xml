@@ -39,6 +39,7 @@
     <bean id="jacmsResourceFileChunksUploadAction" scope="prototype"
           class="com.agiletec.plugins.jacms.apsadmin.resource.ResourceFileChunksUploadAction"
           parent="jacmsAbstractResourceAction" >
+        <property name="maxFileUploadSize" ><value>${file.upload.maxSize}</value></property>
     </bean>
 
     <bean id="jacmsResourceFileChunksStopUploadAndDeleteAction" scope="prototype"
