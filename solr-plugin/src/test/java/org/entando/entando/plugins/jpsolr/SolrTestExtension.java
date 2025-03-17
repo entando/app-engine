@@ -17,7 +17,7 @@ public class SolrTestExtension implements BeforeAllCallback {
     public static final String RECREATE_CORE = "RECREATE_CORE";
 
     private static final int SOLR_PORT = 8983;
-    private static final String SOLR_IMAGE = "solr:9";
+    private static final String SOLR_IMAGE = "solr:8.11.1";
     private static final String SOLR_CORE = "entando";
 
     private static GenericContainer solrContainer;
