@@ -8,8 +8,12 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.sql.*;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +22,6 @@ import java.util.stream.Collectors;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -350,8 +353,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			}
 			ObjectMapper mapper = new ObjectMapper();
 			String tmpJson = res.getString("data");
-			FormData formPayload = mapper.readValue(tmpJson, FormData.class);
-			form.setData(formPayload);
+			FormData formData = mapper.readValue(tmpJson, FormData.class);
+			form.setData(formData);
 			form.setSerial(res.getString("serial"));
 			tmpJson = res.getString("config");
 			FormConfiguration formConfiguration = mapper.readValue(tmpJson, FormConfiguration.class);
