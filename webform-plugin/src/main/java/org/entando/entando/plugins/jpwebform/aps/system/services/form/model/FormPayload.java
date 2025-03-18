@@ -9,6 +9,7 @@ public class FormPayload {
 
     private FormData formData;
     private DeliveryData deliveryData;
+    private FormConfiguration configuration;
 
     public FormData getFormData() {
         return formData;
@@ -24,6 +25,14 @@ public class FormPayload {
 
     public void setDeliveryData(DeliveryData deliveryData) {
         this.deliveryData = deliveryData;
+    }
+
+    public FormConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(FormConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public String toJson() throws JsonProcessingException {

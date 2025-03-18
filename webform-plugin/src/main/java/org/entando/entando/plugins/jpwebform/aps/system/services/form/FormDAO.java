@@ -7,30 +7,24 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
-import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 
 public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private static final Logger logger =  LoggerFactory.getLogger(FormDAO.class);
-	private IMailManager _mailManager;
-	private static final Integer MAX_HOURS = 12;
-
-
 
 	@Override
 	public int countForms(FieldSearchFilter[] filters) {
@@ -159,25 +153,35 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		int index = 1;
 
 		try {
-
 			stat = conn.prepareStatement(ADD_FORM);
 
 			stat.setLong(index++, form.getId());
 			stat.setString(index++, form.getName());
-			stat.setString(index++, form.getCampagna());
+			stat.setString(index++, form.getCampaign());
 			Timestamp submittedTimestamp = Timestamp.valueOf(form.getSubmitted());
 			stat.setTimestamp(index++, submittedTimestamp);
-
-			Clob clob= conn.createClob();
-			clob.setString(1, form.getFormPayload().toJson());
 			stat.setBoolean(index++, form.getDelivered());
-			stat.setClob(index++, clob);
 
-			//stat.setString(index++, form.getFormPayload().toJson()); //<=========
-			stat.setString(index, form.getSeriale());
+			final String dataJson = form.getData().toJson();
+			final Clob dataClob = conn.createClob();
+			dataClob.setString(1, dataJson);
+			stat.setClob(index++, dataClob);
+			stat.setString(index++, form.getSerial());
+
+			final String configJson = form.getConfiguration().toJson();
+			final Clob configClob= conn.createClob();
+			configClob.setString(1, configJson);
+			stat.setClob(index++, configClob);
+
+			stat.setBoolean(index++, form.getHead());
+
+			final String deliveryJson = form.getDelivery().toJson();
+			final Clob deliveyClob= conn.createClob();
+			deliveyClob.setString(1, deliveryJson);
+			stat.setClob(index, deliveyClob);
+
 			stat.executeUpdate();
 		} catch (Throwable t) {
-
 			throw new RuntimeException("Error on insert form", t);
 		} finally {
 			this.closeDaoResources(null, stat, null);
@@ -212,6 +216,42 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			stat.setBoolean(index++, form.getDelivered());
 
 			stat.setLong(index++, form.getId());
+			stat.executeUpdate();
+		} catch (Throwable t) {
+			logger.error("Error updating form {}", form.getId(),  t);
+			throw new RuntimeException("Error updating form", t);
+		} finally {
+			this.closeDaoResources(null, stat, null);
+		}
+	}
+
+	@Override
+	public void updateFormData(Form form) {
+		PreparedStatement stat = null;
+		Connection conn = null;
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+			this.updateFormData(form, conn);
+			conn.commit();
+		} catch (Throwable t) {
+			this.executeRollback(conn);
+			logger.error("Error updating form {}", form.getId(),  t);
+			throw new RuntimeException("Error updating form", t);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
+	}
+
+	public void updateFormData(Form form, Connection conn) {
+		PreparedStatement stat = null;
+
+		try {
+			stat = conn.prepareStatement(UPDATE_FORM_DATA);
+			int index = 1;
+
+			stat.setString(index++, form.getData().toJson());
+			stat.setLong(index, form.getId());
 			stat.executeUpdate();
 		} catch (Throwable t) {
 			logger.error("Error updating form {}", form.getId(),  t);
@@ -273,8 +313,6 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
-
-
 	public Form loadForm(long id, Connection conn) {
 		Form form = null;
 		PreparedStatement stat = null;
@@ -304,33 +342,33 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 			form = new Form();
 			form.setId(res.getLong("id"));
 			form.setName(res.getString("name"));
-			form.setCampagna(res.getString("campagna"));
+			form.setCampaign(res.getString("campaign"));
 			Timestamp submittedValue = res.getTimestamp("submitted");
 			form.setDelivered(res.getBoolean("delivered"));
 			if (null != submittedValue) {
-				//form.setSubmitted(new Date(submittedValue.getTime()));
 				form.setSubmitted(submittedValue.toLocalDateTime());
 			}
-			String json = res.getString("data");
-			//Clob json = res.getClob("data");
 			ObjectMapper mapper = new ObjectMapper();
-			//FormPayload formPayload = mapper.readValue(json.getSubString(1, 500), FormPayload.class);*/
-			FormPayload formPayload = mapper.readValue(json, FormPayload.class);
-			//form.setData(data);
-			form.setFormPayload(formPayload);
-			form.setSeriale(res.getString("seriale"));
-
+			String tmpJson = res.getString("data");
+			FormData formPayload = mapper.readValue(tmpJson, FormData.class);
+			form.setData(formPayload);
+			form.setSerial(res.getString("serial"));
+			tmpJson = res.getString("config");
+			FormConfiguration formConfiguration = mapper.readValue(tmpJson, FormConfiguration.class);
+			form.setConfiguration(formConfiguration);
+			boolean isFirst = res.getBoolean("is_head");
+			form.setHead(isFirst);
+			tmpJson = res.getString("delivery");
+			DeliveryData deliveryData = mapper.readValue(tmpJson, DeliveryData.class);
+			form.setDelivery(deliveryData);
 		} catch (Throwable t) {
 			logger.error("Error in buildFormFromRes", t);
 		}
 		return form;
 	}
 
-
-
-	/**/
+	// REFACTOR THIS
 	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered){
-
 		List<Form> formList= getFormList();
 
 		if(formList == null || formList.isEmpty()){
@@ -342,9 +380,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				.collect(Collectors.toList());
 	}
 
-	/**/
+	// REFACTOR THIS
 	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered){
-
 		List<Form> formList= getFormList();
 
 		if(formList == null || formList.isEmpty()){
@@ -356,15 +393,13 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 				.collect(Collectors.toList());
 	}
 
-
-
-	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campagna, submitted, delivered, \"data\", seriale) VALUES (?, ?, ?, ?, ?, ?, ?)";
+	private static final String ADD_FORM = "INSERT INTO jpwebform_form (id, name, campaign, submitted, delivered, \"data\", serial, config, is_head, delivery) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private static final String UPDATE_FORM = "UPDATE jpwebform_form SET  delivered=? WHERE id = ?";
 
 	private static final String DELETE_FORM = "DELETE FROM jpwebform_form WHERE id = ?";
 
-	private static final String LOAD_FORM = "SELECT id, name, campagna, submitted, delivered, \"data\", seriale  FROM jpwebform_form WHERE id = ?";
+	private static final String LOAD_FORM = "SELECT id, name, campaign, submitted, delivered, \"data\", serial, config, is_head, delivery  FROM jpwebform_form WHERE id = ?";
 
 	private static final String LOAD_FORMS_ID  = "SELECT id FROM jpwebform_form";
 
@@ -372,7 +407,9 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 
 	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
-	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";//<========
+	private static final String UPDATE_FORM_DATA = "UPDATE jpwebform_form SET \"data\"=? WHERE id = ?";
 
-	private final String SEARCH_BY_DATE_BEFORE ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";//<========
+	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";
+
+	private final String SEARCH_BY_DATE_BEFORE ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted <= ? AND delivered = ?";
 }

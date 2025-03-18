@@ -8,7 +8,7 @@
 
 <s:property value="%{#formVar.id}" /> <br/>
 <s:property value="%{#formVar.name}" /> <br/>
-<s:property value="%{#formVar.campagna}" /> <br/>
+<s:property value="%{#formVar.campaign}" /> <br/>
 <%--                    <td><s:property value="%{#formVar.data.valore1}" /></td>--%>
 <s:property value="%{#formVar.submitted}" /> <br/>
 

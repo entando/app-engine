@@ -1,12 +1,10 @@
 package it.difesa.esercito.jpwebform.aps.system.services;
 
-import static it.difesa.esercito.jpwebform.aps.system.services.TestMapper.getFormForTest;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.exception.ApsSystemException;
-import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
@@ -32,12 +30,12 @@ public class TestMailManager extends BaseTestCase {
 
 
         form3.setName("Anco Marzio");
-        form3.setFormPayload(TestFormManager.getFormPayloadForTest());
+        form3.setData(TestFormManager.getFormDataForTest());
         form3.setSubmitted(LocalDateTime.now());
-        form3.setCampagna("campagna");
+        form3.setCampaign("campagna");
 
         form3.setDelivered(true);
-        form3.setSeriale("");
+        form3.setSerial("");
 
         _formManager.addForm(form3);
 

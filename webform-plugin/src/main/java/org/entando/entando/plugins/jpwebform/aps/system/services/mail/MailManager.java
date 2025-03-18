@@ -97,11 +97,11 @@ public class MailManager extends AbstractService implements IMailManager {
             // recipients TO, BCC
             message.setRecipients(
                     Message.RecipientType.TO,
-                    InternetAddress.parse(form.getFormPayload().getDeliveryData().getCc()) //form.getCc()
+                    InternetAddress.parse(form.getDelivery().getCc()) //form.getCc()
             );
-            log.info("Mail TO: {}", form.getFormPayload().getDeliveryData().getCc());
+            log.info("Mail TO: {}", form.getDelivery().getCc());
 
-            final String recipientId = form.getFormPayload().getDeliveryData().getRecipient();
+            final String recipientId = form.getDelivery().getRecipient();
             final String recipient = _recipients.get(recipientId);
 
             message.setRecipients(
@@ -109,8 +109,8 @@ public class MailManager extends AbstractService implements IMailManager {
                     InternetAddress.parse(recipient)
             );
             log.info("Mail BCC: {}", recipient);
-            if (StringUtils.isNotBlank(form.getFormPayload().getDeliveryData().getSubject())) {
-                message.setSubject(form.getFormPayload().getDeliveryData().getSubject());
+            if (StringUtils.isNotBlank(form.getDelivery().getSubject())) {
+                message.setSubject(form.getDelivery().getSubject());
             } else {
                 message.setSubject("Mail automatizzata");
             }
@@ -171,8 +171,7 @@ public class MailManager extends AbstractService implements IMailManager {
                 && form != null) {
             // process select options
             final StringBuilder sb = new StringBuilder();
-            final FormPayload fp = form.getFormPayload();
-            final FormData fd = fp.getFormData();
+            final FormData fd = form.getData();
             final SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
             String selectText = null;
 
@@ -246,8 +245,8 @@ public class MailManager extends AbstractService implements IMailManager {
                 template = template.replace("${DATA}", formattedDate);
             }
             // user qualified name
-            if (StringUtils.isNotBlank(form.getFormPayload().getDeliveryData().getQualifiedName())) {
-                template = template.replace("${UTENTE}", form.getFormPayload().getDeliveryData().getQualifiedName());
+            if (StringUtils.isNotBlank(form.getDelivery().getQualifiedName())) {
+                template = template.replace("${UTENTE}", form.getDelivery().getQualifiedName());
             }
 
         }

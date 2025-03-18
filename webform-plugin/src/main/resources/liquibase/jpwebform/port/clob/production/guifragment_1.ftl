@@ -44,7 +44,7 @@
 		</@s.if>
 
 
-		<form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/deliver.action"/>" method="post">
+		<form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/deliver.action"   escapeAmp=false/>" method="post">
 			<p class="noscreen">
 				<input type="hidden" name="idDestinatario" value="<@s.property value="#idDestinatarioVar" />"/>
 				<input type="hidden" name="pageCode" value="<@wp.currentPage param="code"/>"/>
@@ -60,7 +60,7 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="etichetta1"><@s.property value="etichetta1Var"/></label>
 
-						<@wpsf.select list="#dropdown1" name="formPayload.formData.valore1" cssClass="form-control" id="etichetta1"/>
+						<@wpsf.select list="#dropdown1" name="formData.valore1" cssClass="form-control" id="etichetta1"/>
 					</div>
 				</div>
 			</@s.if>
@@ -73,7 +73,7 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="etichetta2"><@s.property value="etichetta2Var"/></label>
 
-						<@wpsf.select list="#dropdown2" name="formPayload.formData.valore2" cssClass="form-control" id="etichetta2"/>
+						<@wpsf.select list="#dropdown2" name="formData.valore2" cssClass="form-control" id="etichetta2"/>
 					</div>
 				</div>
 			</@s.if>
@@ -86,7 +86,7 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="etichetta3"><@s.property value="etichetta3Var"/></label>
 
-						<@wpsf.select list="#dropdown3" name="formPayload.formData.valore3" cssClass="form-control" id="etichetta3"/>
+						<@wpsf.select list="#dropdown3" name="formData.valore3" cssClass="form-control" id="etichetta3"/>
 					</div>
 				</div>
 			</@s.if>
@@ -99,7 +99,7 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="etichetta4"><@s.property value="etichetta4Var"/></label>
 
-						<@wpsf.select list="#dropdown4" name="formPayload.formData.valore4" cssClass="form-control" id="etichetta4"/>
+						<@wpsf.select list="#dropdown4" name="formData.valore4" cssClass="form-control" id="etichetta4"/>
 					</div>
 				</div>
 			</@s.if>
@@ -112,19 +112,20 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="etichetta5"><@s.property value="etichetta5Var"/></label>
 
-						<@wpsf.select list="#dropdown5" name="formPayload.formData.valore5" cssClass="form-control" id="etichetta5"/>
+						<@wpsf.select list="#dropdown5" name="formData.valore5" cssClass="form-control" id="etichetta5"/>
 					</div>
 				</div>
 			</@s.if>
 
 			<#-- RENDERIZZAZIONE TEXTFIELD -->
+
 			<@s.set var="etichetta1Var"><@wp.currentWidget param="config" configParam="etichetta1"/></@s.set>
 			<@s.if test="%{#etichetta1Var != null && !#etichetta1Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="testo1"><@s.property value="#etichetta1Var"/></label>
 
-						<@wpsf.textarea name="formPayload.formData.testo1" cssClass="form-control" id="testo1"/>
+						<@wpsf.textarea name="formData.testo1" cssClass="form-control" id="testo1"/>
 					</div>
 				</div>
 			</@s.if>
@@ -135,7 +136,7 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="testo2"><@s.property value="#etichetta2Var"/></label>
 
-						<@wpsf.textarea name="formPayload.formData.testo2" cssClass="form-control" id="testo2"/>
+						<@wpsf.textarea name="formData.testo2" cssClass="form-control" id="testo2"/>
 					</div>
 				</div>
 			</@s.if>
@@ -146,7 +147,7 @@
 					<div class="form-group col-md-6 col-sm-13">
 						<label for="testo3"><@s.property value="#etichetta3Var"/></label>
 
-						<@wpsf.textarea name="formPayload.formData.testo3" cssClass="form-control" id="testo3"/>
+						<@wpsf.textarea name="formData.testo3" cssClass="form-control" id="testo3"/>
 					</div>
 				</div>
 			</@s.if>
@@ -157,7 +158,7 @@
 					<div class="form-group col-md-6 col-sm-13">
 						<label for="testo4"><@s.property value="#etichetta4Var"/></label>
 
-						<@wpsf.textarea name="formPayload.formData.testo4" cssClass="form-control" id="testo4"/>
+						<@wpsf.textarea name="formData.testo4" cssClass="form-control" id="testo4"/>
 					</div>
 				</div>
 			</@s.if>
@@ -169,7 +170,7 @@
 					<div class="form-group col-md-6 col-sm-12">
 						<label for="testo5"><@s.property value="#etichetta5Var"/></label>
 
-						<@wpsf.textarea name="formPayload.formData.testo5" cssClass="form-control" id="testo5"/>
+						<@wpsf.textarea name="formData.testo5" cssClass="form-control" id="testo5"/>
 
 					</div>
 				</div>

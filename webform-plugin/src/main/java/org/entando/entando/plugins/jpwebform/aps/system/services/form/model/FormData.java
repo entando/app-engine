@@ -1,5 +1,6 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.form.model;
 
+import com.agiletec.aps.util.ApsProperties;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,28 +8,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FormData {
 
-    public String valore1;
-    public String valore2;
-    public String valore3;
-    public String valore4;
-    public String valore5;
+    private String valore1;
+    private String valore2;
+    private String valore3;
+    private String valore4;
+    private String valore5;
 
-    public String testo1;
-    public String testo2;
-    public String testo3;
-    public String testo4;
-    public String testo5;
-    public String etichettaSel1;
-    public String etichettaSel2;
-    public String etichettaSel3;
-    public String etichettaSel4;
-    public String etichettaSel5;
+    private String testo1;
+    private String testo2;
+    private String testo3;
+    private String testo4;
+    private String testo5;
+    private String etichettaSel1;
+    private String etichettaSel2;
+    private String etichettaSel3;
+    private String etichettaSel4;
+    private String etichettaSel5;
 
-    public String etichetta1;
-    public String etichetta2;
-    public String etichetta3;
-    public String etichetta4;
-    public String etichetta5;
+    private String etichetta1;
+    private String etichetta2;
+    private String etichetta3;
+    private String etichetta4;
+    private String etichetta5;
+
 
     public String toJson() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -195,4 +197,5 @@ public class FormData {
     public void setEtichetta5(String etichetta5) {
         this.etichetta5 = etichetta5;
     }
+
 }

@@ -38,7 +38,6 @@
 			<interceptor-ref name="entandoFrontEndFreeValidationStack"></interceptor-ref>
 		</action>
 
-		<!-- Operazioni di amministrazione  -->
 		<action name="list" class="jpwebformFormFrontEndAction">
 			<result type="guiFragment">
 				<param name="code">jpwebform_form_list</param>
@@ -75,6 +74,18 @@
 			</result>
 			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
 		</action>
+
+		<action name="update" class="jpwebformFormFrontEndAction" method="update">
+			<result name="input" type="guiFragment">
+				<param name="code">jpwebform_form_detail</param>
+				<param name="jspLocation">/WEB-INF/plugins/jpwebform/aps/jsp/internalservlet/admin/frontend-form-detail.jsp</param>
+			</result>
+			<result type="frontRedirectAction">
+				<param name="actionName">list</param>
+			</result>
+			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
+		</action>
+
 		<!-- CAMBIARE INTERCEPTOR PER CONTROLLARE IL PERMESSO DI AMMINISTRAZIONE FORM -->
 
 	</package>

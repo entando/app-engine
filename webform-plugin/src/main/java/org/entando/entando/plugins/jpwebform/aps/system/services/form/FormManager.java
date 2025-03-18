@@ -14,17 +14,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FormManager extends AbstractService implements IFormManager {
 
 	private static final Logger log =  LoggerFactory.getLogger(FormManager.class);
-//	public static final ZoneId ZONE_ITALY = ZoneId.of("Europe/Rome");
 	private static final int MAX_AGE_HOURS = 6;
 	private static final int MAX_NUMBER_HASH_CODE = 18;
-//	static final String CHARACTERS = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789";
-//	static final Random RANDOM = new SecureRandom();
 
 	private File _formPath;
 	private Integer _ageHours;
@@ -72,11 +70,12 @@ public class FormManager extends AbstractService implements IFormManager {
 	public void addForm(Form form) throws ApsSystemException {
 
 		try {
-
-			if(form.getSeriale() == null || form.getSeriale().isBlank()){
-				form.setSeriale(RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE));
+			if (StringUtils.isBlank(form.getSerial())) {
+				form.setSerial(RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE));
+				form.setHead(Boolean.TRUE);
+			} else {
+				form.setHead(Boolean.FALSE);
 			}
-
 			_formDAO.insertForm(form);
 
 		} catch (Throwable t) {
@@ -102,8 +101,8 @@ public class FormManager extends AbstractService implements IFormManager {
 		try {
 			listForm= _formDAO.getFormList();
 		} catch (Throwable t) {
-			log.error("Error to get list form",t);
-			throw new ApsSystemException("Error to get list form", t);
+			log.error("Error getting the list of forms",t);
+			throw new ApsSystemException("Error getting the list of forms", t);
 		}
 		return listForm;
 	}
@@ -114,8 +113,8 @@ public class FormManager extends AbstractService implements IFormManager {
 		try {
 			listForm= _formDAO.searchByDateAfter(data, delivered);
 		} catch (Throwable t) {
-			log.error("Error to get date list form",t);
-			throw new ApsSystemException("Error to get date list form", t);
+			log.error("Error getting date list form",t);
+			throw new ApsSystemException("Error getting date list form", t);
 		}
 		return listForm;
 	}
@@ -126,8 +125,8 @@ public class FormManager extends AbstractService implements IFormManager {
 		try {
 			listForm= _formDAO.searchByDateBefore(data, delivered);
 		} catch (Throwable t) {
-			log.error("Error to get date list form",t);
-			throw new ApsSystemException("Error to get date list form", t);
+			log.error("Error getting date list form",t);
+			throw new ApsSystemException("Error getting date list form", t);
 		}
 		return listForm;
 	}
@@ -137,15 +136,6 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _formDAO.searchForms(filter);
 	}
 
-/*	public static String generateRandomHash(int length) {
-		StringBuilder hash = new StringBuilder(length);
-		for (int i = 0; i < length; i++) {
-			int index = RANDOM.nextInt(CHARACTERS.length());
-			hash.append(CHARACTERS.charAt(index));
-		}
-		return hash.toString();
-	}*/
-
 	public Integer getAgeHours() {
 		if (_ageHours == null) {
 			_ageHours = MAX_AGE_HOURS;
@@ -153,22 +143,26 @@ public class FormManager extends AbstractService implements IFormManager {
 		return _ageHours;
 	}
 
-	//@Override
-/*	public void cronJob() throws ApsSystemException {
-		_formDAO.cronJob();
-	}*/
-
-	/**/
 	@Override
 	public void updateForm(Form form) {
 		try {
+			log.info("updating form ID ", form.getId());
 			_formDAO.updateForm(form);
 		} catch (Throwable t) {
-			log.error("Error to update form",t);
-			new ApsSystemException("Error to update form", t);
+			log.error("Error updating form",t);
+			new ApsSystemException("Error updating form", t);
 		}
+	}
 
-
+	@Override
+	public void updateFormData(Form form) {
+		try {
+			log.info("updating payload of the form ID ", form.getId());
+			_formDAO.updateFormData(form);
+		} catch (Throwable t) {
+			log.error("Error updating form payload",t);
+			new ApsSystemException("Error updating form payload", t);
+		}
 	}
 
 	public IFormDAO getFormDAO() {

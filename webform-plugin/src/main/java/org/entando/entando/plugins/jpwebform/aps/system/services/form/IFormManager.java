@@ -66,4 +66,10 @@ public interface IFormManager {
 	 * @return
 	 */
 	List<Long> search(FieldSearchFilter[] filter);
+
+	/**
+	 * Update form data ONLY
+	 * @param form
+	 */
+    void updateFormData(Form form);
 }

@@ -1,20 +1,19 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
-
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 
 
-public class
-DtoHelper {
+public class DtoHelper {
 
     public static FormData toFormData(String json) throws IOException {
         if (StringUtils.isNotBlank(json)) {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
 
             return mapper.readValue(json, FormData.class);
         }
@@ -24,6 +23,7 @@ DtoHelper {
     public static Form toForm(String json) throws IOException {
         if (StringUtils.isNotBlank(json)) {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
 
             return mapper.readValue(json, Form.class);
         }

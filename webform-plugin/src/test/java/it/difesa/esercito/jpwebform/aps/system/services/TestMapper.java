@@ -5,14 +5,13 @@
  */
 package it.difesa.esercito.jpwebform.aps.system.services;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import junit.framework.TestCase;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.DtoHelper;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
 
 public class TestMapper extends TestCase {
 
@@ -35,31 +34,31 @@ public class TestMapper extends TestCase {
 	private void verifyFormData(FormData data) {
 		assertNotNull(data);
 
-		assertEquals("setValore1", data.valore1);
-		assertEquals("setValore2", data.valore2);
-		assertEquals("setValore3", data.valore3);
-		assertEquals("setValore4", data.valore4);
-		assertEquals("setValore5", data.valore5);
+		assertEquals("setValore1", data.getValore1());
+		assertEquals("setValore2", data.getValore2());
+		assertEquals("setValore3", data.getValore3());
+		assertEquals("setValore4", data.getValore4());
+		assertEquals("setValore5", data.getValore5());
 
-		assertEquals("setTesto1", data.testo1);
-		assertEquals("setTesto2", data.testo2);
-		assertEquals("setTesto3", data.testo3);
-		assertEquals("setTesto4", data.testo4);
-		assertEquals("setTesto5", data.testo5);
+		assertEquals("setTesto1", data.getTesto1());
+		assertEquals("setTesto2", data.getTesto2());
+		assertEquals("setTesto3", data.getTesto3());
+		assertEquals("setTesto4", data.getTesto4());
+		assertEquals("setTesto5", data.getTesto5());
 
-		assertEquals("setEtichettaSel1", data.etichettaSel1);
-		assertEquals("setEtichettaSel3", data.etichettaSel2);
+		assertEquals("setEtichettaSel1", data.getEtichettaSel1());
+		assertEquals("setEtichettaSel3", data.getEtichettaSel2());
 
-		assertNull(data.etichettaSel3);
+		assertNull(data.getEtichettaSel3());
 
-		assertEquals("setEtichettaSel4", data.etichettaSel4);
-		assertEquals("setEtichettaSel5", data.etichettaSel5);
+		assertEquals("setEtichettaSel4", data.getEtichettaSel4());
+		assertEquals("setEtichettaSel5", data.getEtichettaSel5());
 
-		assertEquals("setEtichetta1", data.etichetta1);
-		assertEquals("setEtichetta2", data.etichetta2);
-		assertEquals("setEtichetta3", data.etichetta3);
-		assertEquals("setEtichetta4", data.etichetta4);
-		assertEquals("setEtichetta5", data.etichetta5);
+		assertEquals("setEtichetta1", data.getEtichetta1());
+		assertEquals("setEtichetta2", data.getEtichetta2());
+		assertEquals("setEtichetta3", data.getEtichetta3());
+		assertEquals("setEtichetta4", data.getEtichetta4());
+		assertEquals("setEtichetta5", data.getEtichetta5());
 	}
 
 	@Test
@@ -74,11 +73,11 @@ public class TestMapper extends TestCase {
 
 		assertEquals(verify.getName(), "Oettam");
 		assertEquals(verify.getSubmitted(), TODAY);
-		assertEquals("address@email.it", verify.getFormPayload().getDeliveryData().getRecipient());
-		assertEquals("cc@email.it", verify.getFormPayload().getDeliveryData().getCc());
-		assertEquals("QualifiedName", verify.getFormPayload().getDeliveryData().getQualifiedName());
-		assertEquals("mail subject", verify.getFormPayload().getDeliveryData().getSubject());
-		verifyFormData(verify.getFormPayload().getFormData());
+		assertEquals("address@email.it", verify.getDelivery().getRecipient());
+		assertEquals("cc@email.it", verify.getDelivery().getCc());
+		assertEquals("QualifiedName", verify.getDelivery().getQualifiedName());
+		assertEquals("mail subject", verify.getDelivery().getSubject());
+		verifyFormData(verify.getData());
 
 	}
 
@@ -118,11 +117,9 @@ public class TestMapper extends TestCase {
 		form.setId(2677L);
 		form.setName("Oettam");
 		form.setSubmitted(TODAY);
-		form.setFormPayload(TestFormManager.getFormPayloadForTest());
-/*		form.setRecipient("address@email.it");
-		form.setQualifiedName("Esq. John Doe");
-		form.setCc("cc@email.it");
-		form.setSubject("mail subject");*/
+		form.setData(TestFormManager.getFormDataForTest());
+		form.setDelivery(TestFormManager.getDeliveryDataForTest());
+		form.setConfiguration(TestFormManager.getFormConfigForTests());
 		return form;
 	}
 

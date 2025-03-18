@@ -8,9 +8,11 @@ package it.difesa.esercito.jpwebform.aps.system.services;
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
+import com.agiletec.aps.util.ApsProperties;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,15 +38,12 @@ public class TestFormManager extends BaseTestCase {
 			LocalDate.of(2024,5,9), LocalTime.of(23,01,45,000000)
 	);
 
-
 	@BeforeEach
 	public void init() {
 		this._formManager = (IFormManager) this.getService(BEAN_ID);
 		assertNotNull(_formManager);
 		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
 	}
-
-
 
 	@Test
 	public void testListForm() throws ApsSystemException {
@@ -60,53 +59,60 @@ public class TestFormManager extends BaseTestCase {
 		try {
 
 			form0.setName("Romolo");
-			form0.setCampagna("Romolo");
+			form0.setCampaign("Romolo");
 			form0.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
 			form0.setDelivered(true);
-			form0.setFormPayload(getFormPayloadForTest());
-
+			form0.setData(getFormDataForTest());
+			form0.setConfiguration(getFormConfigForTests());
+			form0.setDelivery(getDeliveryDataForTest());
 
 			form1.setName("Numa Pompilio");
-			form1.setCampagna("Numa Pompilio");
+			form1.setCampaign("Numa Pompilio");
 			form1.setSubmitted(LocalDateTime.parse("2024-05-09T23:01:45.000000"));
 			form1.setDelivered(true);
-			form1.setFormPayload(getFormPayloadForTest());
-
+			form1.setData(getFormDataForTest());
+			form1.setConfiguration(getFormConfigForTests());
+			form1.setDelivery(getDeliveryDataForTest());
 
 			form2.setName("Tullo Ostilio");
-			form2.setCampagna("Tullo Ostilio");
+			form2.setCampaign("Tullo Ostilio");
 			form2.setSubmitted(LocalDateTime.parse("2024-05-09T03:27:50.000000"));
 			form2.setDelivered(false);
-			form2.setFormPayload(getFormPayloadForTest());
-
+			form2.setData(getFormDataForTest());
+			form2.setConfiguration(getFormConfigForTests());
+			form2.setDelivery(getDeliveryDataForTest());
 
 			form3.setName("Anco Marzio");
-			form3.setCampagna("Anco Marzio");
+			form3.setCampaign("Anco Marzio");
 			form3.setSubmitted(TODAY);
 			form3.setDelivered(false);
-			form3.setFormPayload(getFormPayloadForTest());
-
+			form3.setData(getFormDataForTest());
+			form3.setConfiguration(getFormConfigForTests());
+			form3.setDelivery(getDeliveryDataForTest());
 
 			form4.setName("Tarquinio Prisco");
-			form4.setCampagna("Tarquinio Prisco");
+			form4.setCampaign("Tarquinio Prisco");
 			form4.setSubmitted(LocalDateTime.parse("2024-05-09T05:20:15.000000"));
 			form4.setDelivered(true);
-			form4.setFormPayload(getFormPayloadForTest());
-
+			form4.setData(getFormDataForTest());
+			form4.setConfiguration(getFormConfigForTests());
+			form4.setDelivery(getDeliveryDataForTest());
 
 			form5.setName("Servio Tullio");
-			form5.setCampagna("Servio Tullio");
+			form5.setCampaign("Servio Tullio");
 			form5.setSubmitted(LocalDateTime.parse("2024-05-09T15:25:30.000000"));
 			form5.setDelivered(false);
-			form5.setFormPayload(getFormPayloadForTest());
-
+			form5.setData(getFormDataForTest());
+			form5.setConfiguration(getFormConfigForTests());
+			form5.setDelivery(getDeliveryDataForTest());
 
 			form6.setName("Tarquinio il superbo");
-			form6.setCampagna("Tarquinio il superbo");
+			form6.setCampaign("Tarquinio il superbo");
 			form6.setSubmitted(LocalDateTime.parse("2024-05-09T08:40:14.000000"));
 			form6.setDelivered(true);
-			form6.setFormPayload(getFormPayloadForTest());
-
+			form6.setData(getFormDataForTest());
+			form6.setConfiguration(getFormConfigForTests());
+			form6.setDelivery(getDeliveryDataForTest());
 
 			_formManager.addForm(form0);
 			_formManager.addForm(form1);
@@ -130,7 +136,7 @@ public class TestFormManager extends BaseTestCase {
 
 
 
-		}finally {
+		} finally {
 			_formManager.deleteForm(form0.getId());
 			_formManager.deleteForm(form2.getId());
 			_formManager.deleteForm(form3.getId());
@@ -143,16 +149,16 @@ public class TestFormManager extends BaseTestCase {
 	@Test
 	public void testGetForm() throws Exception {
 		Form form = _formManager.getForm(2677L);
-		
+
 		assertNotNull(form);
 		assertEquals(2677L, form.getId());
 		assertEquals("Oettam", form.getName());
-		assertEquals("basic", form.getCampagna());
-		testFormData(form.getFormPayload().getFormData());
-		testDeliveryData(form.getFormPayload().getDeliveryData());
+		assertEquals("basic", form.getCampaign());
+		testFormData(form.getData());
+		testDeliveryData(form.getDelivery());
 		assertEquals(true, form.getDelivered());
 		assertEquals( LocalDateTime.of(2024, Month.SEPTEMBER,5,10,30), form.getSubmitted());
-		assertEquals(form.getSeriale(), "AAAAbbAeAR4Akl1234");
+		assertEquals(form.getSerial(), "AAAAbbAeAR4Akl1234");
 
 	}
 
@@ -168,10 +174,12 @@ public class TestFormManager extends BaseTestCase {
 		Form form = new Form();
 
 		form.setName("Aristotele");
-		form.setCampagna("basic");
+		form.setCampaign("basic");
 		form.setSubmitted(TODAY);
 		form.setDelivered(false);
-		form.setFormPayload(getFormPayloadForTest());
+		form.setData(getFormDataForTest());
+		form.setDelivery(getDeliveryDataForTest());
+		form.setConfiguration(getFormConfigForTests());
 
 		_formManager.addForm(form);
 
@@ -191,11 +199,12 @@ public class TestFormManager extends BaseTestCase {
 		Form form = new Form();
 
 		form.setName("Platone");
-		form.setCampagna("basic");
+		form.setCampaign("basic");
 		form.setSubmitted(TODAY);
 		form.setDelivered(true);
-		form.setFormPayload(getFormPayloadForTest());
-
+		form.setData(getFormDataForTest());
+		form.setConfiguration(getFormConfigForTests());
+		form.setDelivery(getDeliveryDataForTest());
 
 		_formManager.addForm(form);
 
@@ -211,7 +220,7 @@ public class TestFormManager extends BaseTestCase {
 		_formManager.deleteForm(id);
 
 		verify = _formManager.getForm(id);
-		
+
 		assertNull(verify);
 	}
 
@@ -250,22 +259,24 @@ public class TestFormManager extends BaseTestCase {
 
 		Form form0 = _formManager.getForm(2677L);
 
-		assertNotNull(form0.getSeriale());
+		assertNotNull(form0.getSerial());
 
 		Form form1 = new Form();
 
 		form1.setName("Romolo");
-		form1.setCampagna("Romolo");
+		form1.setCampaign("Romolo");
 		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000")); //2024-05-09T05:28:15.000000
 		form1.setDelivered(true);
-		form1.setFormPayload(getFormPayloadForTest());
+		form1.setData(getFormDataForTest());
+		form1.setConfiguration(getFormConfigForTests());
+		form1.setDelivery(getDeliveryDataForTest());
 
 		_formManager.addForm(form1);
 
 		Form verify = _formManager.getForm(form1.getId());
 
-		assertNotNull(verify.getSeriale());
-		assertNotEquals(form0.getSeriale(), form1.getSeriale());
+		assertNotNull(verify.getSerial());
+		assertNotEquals(form0.getSerial(), form1.getSerial());
 
 		_formManager.deleteForm(form1.getId());
 
@@ -274,27 +285,24 @@ public class TestFormManager extends BaseTestCase {
 	@Test
 	public void generateAndNullSerialeTest() throws ApsSystemException {
 
-
-
-//caso in cui il seriale non è presente
-
-
 		Form form1 = new Form();
 
 		form1.setName("Romolo");
-		form1.setCampagna("Romolo");
+		form1.setCampaign("Romolo");
 		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form1.setDelivered(true);
-		form1.setSeriale("");
-		form1.setFormPayload(getFormPayloadForTest());
+		form1.setSerial("");
+		form1.setData(getFormDataForTest());
+		form1.setConfiguration(getFormConfigForTests());
+		form1.setDelivery(getDeliveryDataForTest());
 
-		assertEquals("", form1.getSeriale());
+		assertEquals("", form1.getSerial());
 
 		_formManager.addForm(form1);
 
 		Form verify = _formManager.getForm(form1.getId());
 
-		assertNotNull(verify.getSeriale()); //generato in automatico perchè non presente durante l'aggiunta
+		assertNotNull(verify.getSerial()); //generato in automatico perchè non presente durante l'aggiunta
 
 		_formManager.deleteForm(form1.getId());
 
@@ -305,15 +313,17 @@ public class TestFormManager extends BaseTestCase {
 		Form form2 = new Form();
 
 		form2.setName("Tarquinio Prisco");
-		form2.setCampagna("Tarquinio Prisco");
+		form2.setCampaign("Tarquinio Prisco");
 		form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
 		form2.setDelivered(true);
-		form2.setSeriale("AAACBvwEA14AJl1834");
-		form2.setFormPayload(getFormPayloadForTest());
+		form2.setSerial("AAACBvwEA14AJl1834");
+		form2.setData(getFormDataForTest());
+		form2.setConfiguration(getFormConfigForTests());
+		form2.setDelivery(getDeliveryDataForTest());
 
 		_formManager.addForm(form2);
 
-		assertEquals(form2.getSeriale(),"AAACBvwEA14AJl1834");
+		assertEquals(form2.getSerial(),"AAACBvwEA14AJl1834");
 
 		_formManager.deleteForm(form2.getId());
 
@@ -353,31 +363,31 @@ public class TestFormManager extends BaseTestCase {
 
 		assertNotNull(data);
 
-		assertEquals("setValore1", data.valore1);
-		assertEquals("setValore2", data.valore2);
-		assertEquals("setValore3", data.valore3);
-		assertEquals("setValore4", data.valore4);
-		assertEquals("setValore5", data.valore5);
+		assertEquals("setValore1", data.getValore1());
+		assertEquals("setValore2", data.getValore2());
+		assertEquals("setValore3", data.getValore3());
+		assertEquals("setValore4", data.getValore4());
+		assertEquals("setValore5", data.getValore5());
 
-		assertEquals("setTesto1", data.testo1);
-		assertEquals("setTesto2", data.testo2);
-		assertEquals("setTesto3", data.testo3);
-		assertEquals("setTesto4", data.testo4);
-		assertEquals("setTesto5", data.testo5);
+		assertEquals("setTesto1", data.getTesto1());
+		assertEquals("setTesto2", data.getTesto2());
+		assertEquals("setTesto3", data.getTesto3());
+		assertEquals("setTesto4", data.getTesto4());
+		assertEquals("setTesto5", data.getTesto5());
 
-		assertEquals("setEtichettaSel1", data.etichettaSel1);
-		assertEquals("setEtichettaSel3", data.etichettaSel2);
+		assertEquals("setEtichettaSel1", data.getEtichettaSel1());
+		assertEquals("setEtichettaSel3", data.getEtichettaSel2());
 
-		assertNull(data.etichettaSel3);
+		assertNull(data.getEtichettaSel3());
 
-		assertEquals("setEtichettaSel4", data.etichettaSel4);
-		assertEquals("setEtichettaSel5", data.etichettaSel5);
+		assertEquals("setEtichettaSel4", data.getEtichettaSel4());
+		assertEquals("setEtichettaSel5", data.getEtichettaSel5());
 
-		assertEquals("setEtichetta1", data.etichetta1);
-		assertEquals("setEtichetta2", data.etichetta2);
-		assertEquals("setEtichetta3", data.etichetta3);
-		assertEquals("setEtichetta4", data.etichetta4);
-		assertEquals("setEtichetta5", data.etichetta5);
+		assertEquals("setEtichetta1", data.getEtichetta1());
+		assertEquals("setEtichetta2", data.getEtichetta2());
+		assertEquals("setEtichetta3", data.getEtichetta3());
+		assertEquals("setEtichetta4", data.getEtichetta4());
+		assertEquals("setEtichetta5", data.getEtichetta5());
 
 	}
 
@@ -398,22 +408,33 @@ public class TestFormManager extends BaseTestCase {
 
 		form.setId(2677L);
 		form.setName("Plinio");
-		form.setCampagna("basic");
+		form.setCampaign("basic");
 		form.setSubmitted(TODAY);
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());
-		form.setSeriale(this.generateRandomHash2());
+		form.setSerial(this.generateRandomHash2());
 
 		return form;
 	}*/
 
-	public static FormPayload getFormPayloadForTest(){
-		FormPayload formPayload = new FormPayload();
+//	public static FormPayload getFormPayloadForTest(){
+//		FormPayload formPayload = new FormPayload();
+//
+//		formPayload.setFormData(getFormDataForTest());
+//		formPayload.setDeliveryData(getDeliveryDataForTest());
+//
+//		return formPayload;
+//	}
 
-		formPayload.setFormData(getFormDataForTest());
-		formPayload.setDeliveryData(getDeliveryDataForTest());
+	public static FormConfiguration getFormConfigForTests() {
+		FormConfiguration config = new FormConfiguration();
+		ApsProperties prop = new ApsProperties();
+		FormData data = getFormDataForTest();
 
-		return formPayload;
+		config.setProperties(prop);
+		prop.setProperty("key", "value");
+
+		return config;
 	}
 
 	public static DeliveryData getDeliveryDataForTest(){
@@ -433,7 +454,7 @@ public class TestFormManager extends BaseTestCase {
 				System.out.println(form.getId()
 						+form.getName()+"\n"
 						+form.getSubmitted()+"\n"
-						+form.getSeriale()+"\n"
+						+form.getSerial()+"\n"
 						+form.getFormPayload().getFormData().getTesto1()+"\n"
 						+form.getFormPayload().getDeliveryData().getCc()+"\n"
 						+form.getFormPayload().getDeliveryData().getQualifiedName()+"\n"

@@ -7,9 +7,10 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
-
 import java.time.LocalDateTime;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 
 
 public class Form {
@@ -41,40 +42,68 @@ public class Form {
 		this.submitted = submitted;
 	}
 
-	public FormPayload getFormPayload() {
-		return this.data;
-	}
-
-	public void setFormPayload(FormPayload data) {
-		this.data = data;
-	}
-
 	public Boolean getDelivered(){
 		return delivered;
 	}
 	public void setDelivered(Boolean delivered){this.delivered=delivered;}
 
-	public String getCampagna() {
-		return campagna;
+	public String getCampaign() {
+		return campaign;
 	}
-	public void setCampagna(String campagna) {
-		this.campagna = campagna;
-	}
-
-	public String getSeriale() {
-		return seriale;
+	public void setCampaign(String campaign) {
+		this.campaign = campaign;
 	}
 
-	public void setSeriale(String seriale) {
-		this.seriale = seriale;
+	public String getSerial() {
+		return serial;
+	}
+
+	public void setSerial(String serial) {
+		this.serial = serial;
+	}
+
+	public FormConfiguration getConfiguration() {
+		return configuration;
+	}
+
+	public void setConfiguration(FormConfiguration configuration) {
+		this.configuration = configuration;
+	}
+
+	public Boolean getHead() {
+		return isHead;
+	}
+
+	public void setHead(Boolean head) {
+		isHead = head;
+	}
+
+	public DeliveryData getDelivery() {
+		return delivery;
+	}
+
+	public void setDelivery(DeliveryData delivery) {
+		this.delivery = delivery;
+	}
+
+	public FormData getData() {
+		return data;
+	}
+
+	public void setData(FormData data) {
+		this.data = data;
 	}
 
 	private Long id;
 	private String name;
 	private LocalDateTime submitted;
-	private FormPayload data;
-	private String campagna;
+	private FormData data;
+	private String campaign;
 	private Boolean delivered;
-	private String seriale;
+	private String serial;
+	private FormConfiguration configuration;
+	private Boolean isHead;
+	private DeliveryData delivery;
+	// TODO aggiungere gruppo!
 
 }

@@ -9,20 +9,19 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
+import com.agiletec.aps.system.services.user.UserDetails;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.entando.plugins.jpversioning.web.resource.model.FileResourceDTO;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
-import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +72,7 @@ public class FormFrontEndAction extends FormAction {
             getFormData().setEtichetta3(etichetta3);
             getFormData().setEtichetta4(etichetta4);
             getFormData().setEtichetta5(etichetta5);
-            
+
             if (StringUtils.isNotBlank(etichettaSel1)
                     && StringUtils.isBlank(getFormData().getValore1())) {
                 addFieldError(etichettaSel1, "Deve essere specificato un valore");
@@ -142,8 +141,9 @@ public class FormFrontEndAction extends FormAction {
     public String deliver() {
         final Form form = new Form();
 
-        form.setFormPayload(getFormPayload());
-        form.getFormPayload().setDeliveryData(new DeliveryData());
+        form.setData(getFormData());
+        form.setDelivery(new DeliveryData());
+        form.setConfiguration(new FormConfiguration());
 
         try {
             Widget widget = getWidgetConfig();
@@ -153,7 +153,7 @@ public class FormFrontEndAction extends FormAction {
                 return INPUT;
             }
 
-            form.setCampagna((String) widget.getConfig().get("titolo"));
+            form.setCampaign((String) widget.getConfig().get("titolo"));
 
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
@@ -161,11 +161,11 @@ public class FormFrontEndAction extends FormAction {
             final String json = null; // getSigeManager().getUserInfoById(currentUser);
             final String fullName = this.getCurrentUser().getUsername();
 
-            form.getFormPayload().getDeliveryData().setQualifiedName(fullName);
+            form.getDelivery().setQualifiedName(fullName);
 //            if (StringUtils.isNotBlank(json)) {
-                final String emailFromSPID = "email@email.it";
-                //form.setCc(emailFromSPID);
-            form.getFormPayload().getDeliveryData().setCc(emailFromSPID);
+            final String emailFromSPID = "email@email.it";
+            //form.setCc(emailFromSPID);
+            form.getDelivery().setCc(emailFromSPID);
 //            } else {
 //                log.warn("Could not get SIGE data for user '{}'", currentUser);
 //            }
@@ -182,20 +182,21 @@ public class FormFrontEndAction extends FormAction {
 //                log.warn("Could not find email with key '{}'", IMailManager.CFG_FROM);
 //            }
 
-            form.getFormPayload().getDeliveryData().setRecipient(getIdDestinatario());
-            form.getFormPayload().getDeliveryData().setSubject(getSubject());
+            form.getDelivery().setRecipient(getIdDestinatario());
+            form.getDelivery().setSubject(getSubject());
 
             if (getMailManager().sendMail(form)) {
-                log.debug("Form successfully delivered to {}", form.getFormPayload().getDeliveryData().getRecipient());
+                log.debug("Form successfully delivered to {}", form.getDelivery().getRecipient());
                 form.setDelivered(true);
             } else {
-                log.warn("Could not deliver email to {}, saving for later", form.getFormPayload().getDeliveryData().getRecipient());
+                log.warn("Could not deliver email to {}, saving for later", form.getDelivery().getRecipient());
                 form.setDelivered(false);
             }
+            form.getConfiguration().setProperties(widget.getConfig());
             getFormManager().addForm(form);
         } catch (Exception e) {
             log.error("unexpected exception while processing the form from user {}", getCurrentUser());
-            return FAILURE;
+            return "not_delivered";
         }
         if (!form.getDelivered()) {
             return "not_delivered";
@@ -203,8 +204,24 @@ public class FormFrontEndAction extends FormAction {
         return SUCCESS;
     }
 
+    public String update() {
+        Form form = new Form();
+
+        try {
+            form.setId(getId());
+            form.setData(getFormData());
+            // this will overwrite data only, the rest is left untouched
+            getFormManager().updateFormData(form);
+        } catch (Throwable t) {
+            log.error("unexpected exception while processing the form from user {}", getCurrentUser());
+            return FAILURE;
+        }
+        return SUCCESS;
+    }
+
     public List<Long> getFormsId() {
         try {
+            // TODO restrict by user
             FieldSearchFilter[] filters = (FieldSearchFilter[]) createFilters();
             return getFormManager().search(filters);
         } catch (Exception e) {
@@ -217,6 +234,7 @@ public class FormFrontEndAction extends FormAction {
     public String detail() {
         return SUCCESS;
     }
+
     public String trash() {
         return SUCCESS;
     }
@@ -234,12 +252,47 @@ public class FormFrontEndAction extends FormAction {
 
     public Form getForm(Long id) {
         try {
-            return getFormManager().getForm(id);
+            final Form form = getFormManager().getForm(id);
+
+            userHasAccess(form);
+
+            log.info("loading form id {}", id);
+            if (form.getName().equals(getCurrentUser().getUsername())) {
+                return form;
+            } else {
+                log.info("Form {} does not belong to user {}", form.getName(), this.getCurrentUser().getUsername());
+            }
         } catch (Exception e) {
             log.error("error loading form {}", id, e);
         }
         return null;
     }
+
+    protected boolean userHasAccess(Form form) {
+        if (form != null) {
+            UserDetails user = this.getCurrentUser();
+
+            // user owns the form
+            if (form.getName().equals(user.getUsername())) {
+                return true;
+            }
+            // user has admin privileges
+            user.getAuthorizations().forEach(a -> {
+                String groupName = "<no group>";
+
+                if (a.getGroup() != null) {
+                    groupName = a.getGroup().getName();
+                }
+                String roleName = "<no role>";
+                if (a.getRole() != null) {
+                    roleName = a.getRole().getName();
+                }
+                System.out.println(">>> " + groupName + " " + roleName);
+            });
+        }
+        return false;
+    }
+
 
     private Object[] createFilters() {
         final List<FieldSearchFilter> filters = new ArrayList<>();
@@ -272,12 +325,24 @@ public class FormFrontEndAction extends FormAction {
         return filters.toArray(new FieldSearchFilter[filters.size()]);
     }
 
+
+    public Map<String, String> retrieveDropDown(final Form form, final String paramName) {
+        if (StringUtils.isNotBlank(paramName)
+                && form != null
+                && form.getConfiguration() != null)  {
+            String param =
+                    (String) form.getConfiguration().getProperties().get(paramName);
+            return generateDropDown(param);
+        }
+        return null;
+    }
+
     /**
      * Genera la lista delle opzioni dato l'ingresso della configurazione del widget
      * @param options CSV inserito in configurazione con le opzioni
      * @return lista delle opzioni come richiesto dal tag di Struts
      */
-    public Map<String, String> generateDropDown(String options) {
+    public Map<String, String> generateDropDown(final String options) {
         final Map<String, String> map = new LinkedHashMap<>();
 
         if (StringUtils.isNotBlank(options)) {
@@ -289,17 +354,12 @@ public class FormFrontEndAction extends FormAction {
         return map;
     }
 
-
     public String getIdDestinatario() {
         return _idDestinatario;
     }
 
     public void setIdDestinatario(String idDestinatario) {
         this._idDestinatario = idDestinatario;
-    }
-
-    public FormData getFormData() {
-        return getFormPayload().getFormData();
     }
 
     public String getPageCode() {
@@ -384,13 +444,14 @@ public class FormFrontEndAction extends FormAction {
         this._seriale = _seriale;
     }
 
-    public FormPayload getFormPayload() {
-        return _formPayload;
+    public void setFormData(FormData formData) {
+        this._formData = formData;
     }
 
-    public void setFormPayload(FormPayload _formPayload) {
-        this._formPayload = _formPayload;
+    public FormData getFormData() {
+        return _formData;
     }
+
     // search parameter
     private Long _id;
     private Date _from;
@@ -401,9 +462,7 @@ public class FormFrontEndAction extends FormAction {
     private String _campagna;
     private String _seriale;
 
-    private Form form;
-
-    private FormPayload _formPayload;
+    private FormData _formData;
     private String _idDestinatario;
     public String _pageCode;
     public String _subject;

@@ -8,6 +8,7 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
 
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public interface IFormDAO {
 	public Form loadForm(long id);
 
 	public List<Long> loadForms();
+
+	void updateFormData(Form form);
 
 	public void removeForm(long id);
 	
@@ -30,6 +33,7 @@ public interface IFormDAO {
 	public List<Form>getFormList();
 
 	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
+
 	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered);
 
 }

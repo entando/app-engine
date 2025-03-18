@@ -59,7 +59,7 @@
             <label for="form_name"><wp:i18n key="jpwebform_FORM_NAME" /></label>
             <input type="text" name="name" id="form_name" value="<s:property value="name" />" />   <br/>
             <label for="form_campaign"><wp:i18n key="jpwebform_FORM_CAMPAIGN" /></label>
-            <input type="text" name="campagna" id="form_campaign" value="<s:property value="campagna" />" />   <br/>
+            <input type="text" name="campaign" id="form_campaign" value="<s:property value="campaign" />" />   <br/>
             <label for="form_submittedStart_cal"><wp:i18n key="jpwebform_FORM_SUBMITTEDSTART" /></label>
             <input type="text" name="submittedStart" id="form_submittedStart_cal" data-isdate="true" value="<s:property value="from" />" />   <br/>
             <label for="form_submittedEnd_cal"><wp:i18n key="jpwebform_FORM_SUBMITTEDEND" /></label>
@@ -114,7 +114,7 @@
                             </a>
                         </td>
                         <td><s:property value="%{#formVar.name}" /></td>
-                        <td><s:property value="%{#formVar.campagna}" /></td>
+                        <td><s:property value="%{#formVar.campaign}" /></td>
                             <%--                    <td><s:property value="%{#formVar.data.valore1}" /></td>--%>
                         <td><s:property value="%{#formVar.submitted}" /></td>
                         <td>
