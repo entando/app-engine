@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+imageUrl="$1"
+registryUrl="$2"
+registryUser="$3"
+registryPass="$4"
+isReleaseImage="$5"
+
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo "~> Pushing image \"$imageUrl\" to registry \"${registryUrl:-<default-registry>\""
+echo "~"
+
+imageFullUrl="${registryUrl:+$registryUrl/}$imageUrl"
+
+if $isReleaseImage; then
+  docker manifest inspect "$imageFullUrl" &>/dev/null && {
+    echo "::error::Refusing to overwrite a release image (\"$imageFullUrl\")"
+    exit 101
+  }
+fi
+
+docker login ${registryUrl:+"$registryUrl"} --username="$dockerUser" --password-stdin <<<"$registryPass"
+
+docker tag "$imageUrl" "$imageFullUrl"
+docker push "$imageFullUrl"
+
+echo "~"
+echo "~> Image sha:"
+
+docker images --no-trunc --quiet "$imageUrl"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"

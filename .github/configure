@@ -1,0 +1,27 @@
+#!/bin/bash
+
+{
+  echo "~>"
+  echo "~> Configuring \"$1\""
+  echo "~>"
+} 1>&2
+
+declare -a CONFIGURED_VARS
+
+{
+  . .github/base.configure
+  [ "$1" == "build" ] && [ -f github/tests.configure ] && . .github/tests.configure
+  [ "$1" == "publish" ] && [ -f github/docker.configure ] && . .github/docker.configure
+} || true
+
+{
+  echo "~> Configuration complete; new or updated variables:"
+  for v in "${CONFIGURED_VARS[@]}"; do
+    export "$v"
+    env | grep -E "(^$v=)" >> $GITHUB_ENV
+    printf "~>   %-20s %s\n" "${v}:" "${!v}"
+  done
+  echo "~>"
+} 1>&2
+
+

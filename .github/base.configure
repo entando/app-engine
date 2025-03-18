@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "~> PR_TITLE: $PR_TITLE"
+echo "~> PR_NUMBER: $PR_NUMBER"
+
+PRJ_VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+echo "~> FOUND VERSION: $PRJ_VERSION"
+
+ARTIFACT_VERSION="$(.github/ppl/artifact.version.generate "$PRJ_VERSION" "$PR_TITLE" "$PR_NUMBER")"
+
+[ -z "$ARTIFACT_VERSION" ] && {
+    echo "::error::Unable to determine the artifact version, please check the PR TITLE"
+    exit 99
+}
+
+if [[ "$ARTIFACT_VERSION" = *"-PR-"* ]]; then
+  ARTIFACT_VERSION_IS_RELEASE=false
+else
+  ARTIFACT_VERSION_IS_RELEASE=true
+fi
+
+echo ""
+
+CONFIGURED_VARS+=("PRJ_VERSION" "ARTIFACT_VERSION" "ARTIFACT_VERSION_IS_RELEASE")
