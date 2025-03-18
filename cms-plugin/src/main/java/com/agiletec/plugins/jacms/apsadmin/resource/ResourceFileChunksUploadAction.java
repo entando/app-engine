@@ -13,14 +13,15 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.resource;
 
+import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
-import static com.opensymphony.xwork2.Action.SUCCESS;
+import org.apache.commons.io.FileUtils;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.io.*;
 import java.util.Arrays;
-import org.apache.commons.io.FileUtils;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 public class ResourceFileChunksUploadAction extends AbstractResourceAction {
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ResourceFileChunksUploadAction.class);
@@ -38,8 +39,9 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
     private Long end;
     private InputStream inputStream;
     private String uploadId;
-    private String fileSize;
-    private boolean valid = true;
+    private long fileSize;
+    private boolean valid = false;
+    private long maxFileUploadSize;
 
     public String newResource() {
         return SUCCESS;
@@ -49,18 +51,22 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
     public void validate() {
         logger.info("ResourceFileChunksUploadAction validate");
         logger.info("resourceTypeCode {}", resourceTypeCode);
-        if (null==resourceTypeCode || null==fileName)
-        {
+        String errorMessage = null;
+        if (this.hasErrors() || null == resourceTypeCode || null == fileName) {
             valid = false;
-        }
-        else if (resourceTypeCode.equals("Image") || resourceTypeCode.equals("Attach")) {
-
+        } else if (resourceTypeCode.equals(JacmsSystemConstants.RESOURE_IMAGE_CODE) ||
+                resourceTypeCode.equals(JacmsSystemConstants.RESOURE_ATTACH_CODE)) {
             setResourceTypeCode(resourceTypeCode);
-
-            if (null != this.getResourceTypeCode()) {
+            if (this.getFileSize() > this.getMaxFileUploadSize()) {
+                valid = false;
+                errorMessage = this.getText("error.resource.file.tooBig", new String[]{fileName});
+            } else if (null != this.getResourceTypeCode()) {
                 ResourceInterface resourcePrototype = this.getResourceManager().createResourceType(this.getResourceTypeCode());
                 if (null != resourcePrototype) {
                     valid = this.checkRightFileType(resourcePrototype, fileName);
+                    if (!valid) {
+                        errorMessage = this.getText("error.resource.file.wrongFormat", new String[]{fileName});
+                    }
                 } else {
                     valid = false;
                 }
@@ -69,6 +75,14 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
             }
         } else {
             valid = false;
+        }
+        if (!valid) {
+            resultMessage = RESULT_VALIDATION_ERROR;
+            if (errorMessage == null) {
+                this.addActionError(this.getText("error.resource.filename.uploadError", new String[]{fileName}));
+            } else {
+                this.addActionError(errorMessage);
+            }
         }
         logger.info("valid {}", valid);
     }
@@ -103,26 +117,30 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
     }
 
     public String upload() {
-        if (valid) {
-            logger.info("ResourceFileChunksUploadAction Save {}",fileName);
-            logger.debug("start {}", start);
-            logger.debug("end {}", end);
-            logger.debug("fileUpload {}", fileUpload);
-            logger.debug("contentType {}", fileUploadContentType);
-            logger.debug("filename {}", fileName);
-            logger.debug("uploadId {}", uploadId);
-            logger.debug("fileSize {}", fileSize);
-            logger.debug("resourceTypeCode {}", resourceTypeCode);
-            try {
-                processChunk(fileUpload, uploadId + ".tmp", start, end);
-            } catch (IOException ex) {
-                resultMessage = RESULT_FAILED;
-                inputStream = new ByteArrayInputStream(RESULT_FAILED.getBytes());
-                logger.error("Error processing the file chunk {}", ex);
-            }
+        if (!valid) {
+            return INPUT;
+        }
+        logger.info("ResourceFileChunksUploadAction Save {}",fileName);
+        logger.debug("start {}", start);
+        logger.debug("end {}", end);
+        logger.debug("fileUpload {}", fileUpload);
+        logger.debug("contentType {}", fileUploadContentType);
+        logger.debug("filename {}", fileName);
+        logger.debug("uploadId {}", uploadId);
+        logger.debug("fileSize {}", fileSize);
+        logger.debug("resourceTypeCode {}", resourceTypeCode);
+        try {
+            processChunk(fileUpload, uploadId + ".tmp", start, end);
             resultMessage = RESULT_SUCCESS;
-        } else {
+        } catch (IOException ex) {
+            logger.error("Error processing the file chunk {}", ex);
+            this.addActionError(this.getText("error.resource.filename.uploadError", new String[]{fileName}));
+            resultMessage = RESULT_FAILED;
+            return FAILURE;
+        } catch (MaxUploadSizeExceededException ex) {
+            this.addActionError(this.getText("error.resource.file.tooBig", new String[]{fileName}));
             resultMessage = RESULT_VALIDATION_ERROR;
+            return INPUT;
         }
         inputStream = new ByteArrayInputStream(resultMessage.getBytes());
         logger.debug("result {}", resultMessage);
@@ -136,7 +154,6 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
         } else {
             this.appendChunk(fileChunk, filename);
         }
-
     }
 
     protected void appendChunk(File fileChunk, String filename) throws IOException {
@@ -147,9 +164,14 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
         byte[] fileChunkBytes = FileUtils.readFileToByteArray(fileChunk);
         logger.debug("appendChunk bytes {}", fileChunkBytes.length);
 
+        if (file.length() + fileChunkBytes.length > maxFileUploadSize) {
+            logger.error("Max upload size exceeded. File size: {}, chunk size: {}, limit: {}",
+                    file.length(), fileChunkBytes.length, maxFileUploadSize);
+            throw new MaxUploadSizeExceededException(maxFileUploadSize);
+        }
+
         FileUtils.writeByteArrayToFile(file, fileChunkBytes, true);
         logger.debug("appendChunk done");
-
     }
 
     protected void createTempFile(File firstChunk, String filename) throws IOException {
@@ -187,6 +209,14 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
                 }
             }
         }
+    }
+
+    protected long getMaxFileUploadSize() {
+        return maxFileUploadSize;
+    }
+
+    public void setMaxFileUploadSize(long maxFileUploadSize) {
+        this.maxFileUploadSize = maxFileUploadSize;
     }
 
     public String getFileUploadContentType() {
@@ -241,11 +271,11 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
         this.uploadId = uploadId;
     }
 
-    public String getFileSize() {
+    public long getFileSize() {
         return fileSize;
     }
 
-    public void setFileSize(String fileSize) {
+    public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
     }
 

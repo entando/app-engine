@@ -216,17 +216,39 @@ var FileUploadManager = function (config) {
                     fileUploadManager.pieceUploadDone(nextPendingFileIndex);
                     console.log("DONE PIECE UPLOAD");
                     fileUploadManager.processNextFileR()
-
                 } else {
-                    // Retry failed upload
-                    fileUploadManager.uploadPiece(piece, file, nextPendingFileIndex);
+                    const errorResponse = JSON.parse(this.response);
+                    let errors = [];
+                    if (errorResponse.actionErrors) {
+                        errors = errors.concat(errorResponse.actionErrors);
+                    }
+                    if (errorResponse.fieldErrors) {
+                        errors = errors.concat(Object.values(errorResponse.fieldErrors).flatMap(e => e));
+                    }
+                    createErrorAlert(errors);
+                    $('#submit').removeAttr('in-progress');
+                    $('#submit').removeAttr('disabled');
                 }
-
             }
         };
 
         xhr.send(formData);
     };
+
+    function createErrorAlert(errors) {
+        let alertDivHtml = `<div class="alert alert-danger alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+                <span class="pficon pficon-close"></span>
+            </button>
+            <span class="pficon pficon-error-circle-o"></span>
+            <strong>Errors</strong>
+            <ul>`;
+        for (const error of errors) {
+            alertDivHtml += '<li>' + error + '</li>';
+        }
+        alertDivHtml += '</ul></div>';
+        $('#save').prepend($(alertDivHtml));
+    }
 
     this.pieceUploadDone = function (fileIndex) {
         this.updateProgressBar(fileIndex);
