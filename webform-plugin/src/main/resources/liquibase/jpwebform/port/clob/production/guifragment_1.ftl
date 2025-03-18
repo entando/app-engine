@@ -44,7 +44,7 @@
 		</@s.if>
 
 
-		<form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/deliver.action"   escapeAmp=false/>" method="post">
+		<form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/deliver.action" escapeAmp=false/>" method="post">
 			<p class="noscreen">
 				<input type="hidden" name="idDestinatario" value="<@s.property value="#idDestinatarioVar" />"/>
 				<input type="hidden" name="pageCode" value="<@wp.currentPage param="code"/>"/>

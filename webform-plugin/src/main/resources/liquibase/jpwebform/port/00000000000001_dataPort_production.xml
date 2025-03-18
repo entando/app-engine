@@ -40,7 +40,6 @@
 
         <insert tableName="guifragment">
             <column name="code" value="jpwebform_form_render" />
-<!--            <column name="widgettypecode" value="jpseo_content_viewer" />-->
             <column name="plugincode" value="jpwebform" />
             <column name="defaultgui" valueClobFile="clob/production/guifragment_1.ftl" />
             <column name="locked" valueNumeric="1" />
@@ -48,7 +47,6 @@
 
         <insert tableName="guifragment">
             <column name="code" value="jpwebform_form_ko" />
-<!--            <column name="widgettypecode" value="jpseo_content_viewer" />-->
             <column name="plugincode" value="jpwebform" />
             <column name="defaultgui" valueClobFile="clob/production/guifragment_2.ftl" />
             <column name="locked" valueNumeric="1" />
@@ -56,12 +54,17 @@
 
         <insert tableName="guifragment">
             <column name="code" value="jpwebform_form_ok" />
-<!--            <column name="widgettypecode" value="jpseo_content_viewer" />-->
             <column name="plugincode" value="jpwebform" />
             <column name="defaultgui" valueClobFile="clob/production/guifragment_3.ftl" />
             <column name="locked" valueNumeric="1" />
         </insert>
 
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebform_form_detail" />
+            <column name="plugincode" value="jpwebform" />
+            <column name="defaultgui" valueClobFile="clob/production/guifragment_4.ftl" />
+            <column name="locked" valueNumeric="1" />
+        </insert>
 
     </changeSet>
 

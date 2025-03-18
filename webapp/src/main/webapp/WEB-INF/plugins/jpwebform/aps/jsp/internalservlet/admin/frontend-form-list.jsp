@@ -4,48 +4,11 @@
 <%@ taglib prefix="wpsa" uri="/apsadmin-core" %>
 <%@ taglib prefix="wpsf" uri="/apsadmin-form" %>
 
+
+<%-- linguaggio corrente --%>
 <wp:info key="currentLang" var="currentLang" />
-
-<c:set var="js_for_datepicker">
-    /* Italian initialisation for the jQuery UI date picker plugin. */
-    /* Written by Antonello Pasella (antonello.pasella@gmail.com). */
-    jQuery(function($){
-    $.datepicker.regional['it'] = {
-    closeText: 'Chiudi',
-    prevText: '&#x3c;Prec',
-    nextText: 'Succ&#x3e;',
-    currentText: 'Oggi',
-    monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-    'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
-    monthNamesShort: ['Gen','Feb','Mar','Apr','Mag','Giu',
-    'Lug','Ago','Set','Ott','Nov','Dic'],
-    dayNames: ['Domenica','Luned&#236','Marted&#236','Mercoled&#236','Gioved&#236','Venerd&#236','Sabato'],
-    dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
-    dayNamesMin: ['Do','Lu','Ma','Me','Gi','Ve','Sa'],
-    weekHeader: 'Sm',
-    dateFormat: 'dd/mm/yy',
-    firstDay: 1,
-    isRTL: false,
-    showMonthAfterYear: false,
-    yearSuffix: ''};
-    });
-
-    jQuery(function($){
-    if (Modernizr.touch && Modernizr.inputtypes.date) {
-    $.each( $("input[data-isdate=true]"), function(index, item) {
-    item.type = 'date';
-    });
-    } else {
-    $.datepicker.setDefaults( $.datepicker.regional[ "<c:out value="${currentLang}" />" ] );
-    $("input[data-isdate=true]").datepicker({
-    changeMonth: true,
-    changeYear: true,
-    dateFormat: "dd/mm/yy"
-    });
-    }
-    });
-</c:set>
-
+<%-- Utente privilegiato? --%>
+<s:set var="formAdminVar" value="privilegedUser" />
 
 <section class="form_list" style="margin-top: 1rem">
 
@@ -56,8 +19,12 @@
         <fieldset>
             <label for="form_id"><wp:i18n key="jpwebform_FORM_ID" /></label>
             <input type="text" name="id" id="form_id" value="<s:property value="id" />" />   <br/>
-            <label for="form_name"><wp:i18n key="jpwebform_FORM_NAME" /></label>
-            <input type="text" name="name" id="form_name" value="<s:property value="name" />" />   <br/>
+
+            <s:if test="#formAdminVar">
+                <label for="form_name"><wp:i18n key="jpwebform_FORM_NAME" /></label>
+                <input type="text" name="name" id="form_name" value="<s:property value="name" />" />   <br/>
+            </s:if>
+
             <label for="form_campaign"><wp:i18n key="jpwebform_FORM_CAMPAIGN" /></label>
             <input type="text" name="campaign" id="form_campaign" value="<s:property value="campaign" />" />   <br/>
             <label for="form_submittedStart_cal"><wp:i18n key="jpwebform_FORM_SUBMITTEDSTART" /></label>
@@ -65,7 +32,9 @@
             <label for="form_submittedEnd_cal"><wp:i18n key="jpwebform_FORM_SUBMITTEDEND" /></label>
             <input type="text" name="submittedEnd" id="form_submittedEnd_cal" data-isdate="true" value="<s:property value="to" />" />   <br/>
             <label for="form_delivered"><wp:i18n key="jpwebform_FORM_DELIVERED" /></label>
-            <wpsf:select name="delivered" id="form_delivered" list="{'--', 'true', 'false'}" value="%{delivered}" />
+            <wpsf:select name="delivered" id="form_delivered" list="{'--', 'true', 'false'}" value="%{delivered}" />  <br/>
+            <label for="form_is_head"><wp:i18n key="jpwebform_FORM_IS_HEAD" /></label>
+            <wpsf:select name="isHead" id="form_is_head" list="{'--', 'true', 'false'}" value="%{isHead}" />
         </fieldset>
 
         <button type="submit" class="btn btn-primary">
@@ -85,17 +54,17 @@
                 <thead>
                 <tr>
                     <th
-                            ><wp:i18n key="jpwebform_FORM_ID" /></th>
+                    ><wp:i18n key="jpwebform_FORM_ID" /></th>
                     <th
-                            ><wp:i18n key="jpwebform_FORM_NAME" /></th>
+                    ><wp:i18n key="jpwebform_FORM_NAME" /></th>
                     <th
-                            ><wp:i18n key="jpwebform_FORM_CAMPAIGN" /></th>
+                    ><wp:i18n key="jpwebform_FORM_CAMPAIGN" /></th>
                         <%--                <th--%>
                         <%--                        ><wp:i18n key="jpwebform_FORM_DATA" /></th>--%>
                     <th
-                            ><wp:i18n key="jpwebform_FORM_SUBMITTED" /></th>
+                    ><wp:i18n key="jpwebform_FORM_SUBMITTED" /></th>
                     <th
-                            ><wp:i18n key="jpwebform_FORM_DELIVERED" /></th>
+                    ><wp:i18n key="jpwebform_FORM_DELIVERED" /></th>
                     <th>
                         <wp:i18n key="jpwebform_FORM_ACTIONS" /> </th>
                 </tr>

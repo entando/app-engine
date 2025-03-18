@@ -3,8 +3,6 @@
 <%@ taglib prefix="wpsf" uri="/apsadmin-form" %>
 <%@ taglib prefix="c" uri="/struts-tags" %>
 
-<h2>TEO</h2></br>
-
 
 <h1><wp:i18n key="jpwebform_FORM_SEARCH_DETAIL" /></h1>
 

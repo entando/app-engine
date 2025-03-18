@@ -5,17 +5,23 @@
  */
 package org.entando.entando.plugins.jpwebform.aps.internalservlet.form;
 
+import static com.agiletec.aps.system.SystemConstants.ADMIN_USER_NAME;
+
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.services.authorization.Authorization;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.system.services.user.UserDetails;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
@@ -220,8 +226,25 @@ public class FormFrontEndAction extends FormAction {
 
     public List<Long> getFormsId() {
         try {
-            // TODO restrict by user
             FieldSearchFilter[] filters = (FieldSearchFilter[]) createFilters();
+
+            // in case of standard user we restrict form by owner
+            if (!isPrivilegedUser()) {
+                List<Object> safeFilters = Arrays.stream(filters)
+                        .filter(f ->
+                                !((FieldSearchFilter<?>)f).getKey().equals("name")  // exclude NAME filter
+                        )
+                        .collect(Collectors.toList());
+                // impose the username
+                FieldSearchFilter nameFilter = new FieldSearchFilter("name", getCurrentUser().getUsername(), false);
+                safeFilters.add(nameFilter);
+                FieldSearchFilter[] userFilters = (FieldSearchFilter[])
+                        safeFilters.toArray(FieldSearchFilter[]::new);
+                return getFormManager().search(userFilters);
+            }
+            // if the user belongs to form group we restrict by group
+            // TODO
+            // we return the full list
             return getFormManager().search(filters);
         } catch (Exception e) {
             log.error("errore caricamento forms", e);
@@ -253,10 +276,10 @@ public class FormFrontEndAction extends FormAction {
         try {
             final Form form = getFormManager().getForm(id);
 
-            userHasAccess(form);
-
             log.info("loading form id {}", id);
-            if (form.getName().equals(getCurrentUser().getUsername())) {
+            // TODO controllare gruppo qui
+            if (isPrivilegedUser()
+                    || (!isPrivilegedUser() && form.getName().equals(getCurrentUser().getUsername()))) {
                 return form;
             } else {
                 log.info("Form {} does not belong to user {}", form.getName(), this.getCurrentUser().getUsername());
@@ -267,29 +290,52 @@ public class FormFrontEndAction extends FormAction {
         return null;
     }
 
-    protected boolean userHasAccess(Form form) {
-        if (form != null) {
-            UserDetails user = this.getCurrentUser();
 
-            // user owns the form
-            if (form.getName().equals(user.getUsername())) {
-                return true;
-            }
-            // user has admin privileges
-            user.getAuthorizations().forEach(a -> {
-                String groupName = "<no group>";
+    /**
+     * Check whether the user has admin privileges on form
+     * @return
+     */
+    public boolean isPrivilegedUser() {
+        final UserDetails user = this.getCurrentUser();
+        return user.getUsername().equals(ADMIN_USER_NAME)
+                || isFormPrivilegedUser(user, true)
+                || isFormPrivilegedUser(user, false);
+    }
 
-                if (a.getGroup() != null) {
-                    groupName = a.getGroup().getName();
-                }
-                String roleName = "<no role>";
-                if (a.getRole() != null) {
-                    roleName = a.getRole().getName();
-                }
-                System.out.println(">>> " + groupName + " " + roleName);
-            });
-        }
-        return false;
+    /**
+     * Check whether the current user has privileged permissions on form management
+     *
+     * @param user       the current user
+     * @param checkGroup if true the grooup is checked, the permission otherwise
+     * @return
+     */
+    private static boolean isFormPrivilegedUser(UserDetails user, boolean checkGroup) {
+        Optional<Authorization> isPrivileged = user.getAuthorizations()
+                .stream()
+                .filter(a -> {
+                    Optional<String> isPrivilegedFormUser = Optional.ofNullable(null);
+                    String groupName = "<no group>";
+
+                    if (checkGroup) {
+                        if (a.getGroup() != null) {
+                            groupName = a.getGroup().getName();
+                            if (groupName.startsWith("form-grp-")) {
+                                return true;
+                            }
+                        }
+                    } else {
+                        String roleName = "<no role>";
+                        if (a.getRole() != null) {
+                            roleName = a.getRole().getName();
+                            isPrivilegedFormUser = a.getRole().getPermissions().stream()
+                                    .filter(p -> p.equals("form-admin"))
+                                    .findFirst();
+                        }
+                    }
+                    return isPrivilegedFormUser.isPresent();
+                })
+                .findFirst();
+        return isPrivileged.isPresent();
     }
 
 
@@ -320,6 +366,11 @@ public class FormFrontEndAction extends FormAction {
             Boolean delivered = Boolean.parseBoolean(getDelivered());
             FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", delivered, false);
             filters.add(deliveredFilter);
+        }
+        if (StringUtils.isNotBlank(getIsHead()) && !getIsHead().equals("--")) {
+            Boolean isHead = Boolean.parseBoolean(getIsHead());
+            FieldSearchFilter isHeaddFilter = new FieldSearchFilter("is_head", isHead, false);
+            filters.add(isHeaddFilter);
         }
         return filters.toArray(new FieldSearchFilter[filters.size()]);
     }
@@ -451,6 +502,14 @@ public class FormFrontEndAction extends FormAction {
         return _formData;
     }
 
+    public String getIsHead() {
+        return _isHead;
+    }
+
+    public void setIsHead(String isHead) {
+        this._isHead = isHead;
+    }
+
     // search parameter
     private Long _id;
     private Date _from;
@@ -460,6 +519,7 @@ public class FormFrontEndAction extends FormAction {
     private String _name;
     private String _campagna;
     private String _seriale;
+    private String _isHead;
 
     private FormData _formData;
     private String _idDestinatario;
