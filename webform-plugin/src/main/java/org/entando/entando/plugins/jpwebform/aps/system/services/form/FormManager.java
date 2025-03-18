@@ -146,7 +146,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public void updateForm(Form form) {
 		try {
-			log.info("updating form ID ", form.getId());
+			log.info("updating form ID {}", form.getId());
 			_formDAO.updateForm(form);
 		} catch (Throwable t) {
 			log.error("Error updating form",t);
@@ -157,7 +157,7 @@ public class FormManager extends AbstractService implements IFormManager {
 	@Override
 	public void updateFormData(Form form) {
 		try {
-			log.info("updating payload of the form ID ", form.getId());
+			log.info("updating payload of the form ID {}", form.getId());
 			_formDAO.updateFormData(form);
 		} catch (Throwable t) {
 			log.error("Error updating form payload",t);

@@ -3,16 +3,18 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 import static org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate.EMAIL_TEMPLATE;
 
 import com.agiletec.aps.system.common.AbstractService;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.exception.ApsSystemException;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import javax.mail.Message;
 import javax.mail.PasswordAuthentication;
@@ -20,11 +22,13 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import liquibase.pro.packaged.B;
 import org.apache.commons.lang3.StringUtils;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
+import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.agiletec.aps.system.common.FieldSearchFilter;
 
 public class MailManager extends AbstractService implements IMailManager {
 
@@ -261,12 +265,14 @@ public class MailManager extends AbstractService implements IMailManager {
     public void retry() throws ApsSystemException {
 
         FieldSearchFilter dateFilter = new FieldSearchFilter("submitted", LocalDateTime.now().minus(MAX_HOURS, ChronoUnit.HOURS), false);
+        FieldSearchFilter deliveryFilter = new FieldSearchFilter("delivered", Boolean.FALSE, false);
+
 
         log.info("retry service triggered");
 
-        List<Long> forms = getFormManager().search(new FieldSearchFilter[]{dateFilter});
+        List<Long> forms = getFormManager().search(new FieldSearchFilter[]{dateFilter, deliveryFilter});
 
-        if (forms != null || !forms.isEmpty()) {
+        if (forms != null && !forms.isEmpty()) {
 
             forms.forEach(f -> {
                 try {

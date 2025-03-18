@@ -21,7 +21,6 @@ import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormPayload;
 import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

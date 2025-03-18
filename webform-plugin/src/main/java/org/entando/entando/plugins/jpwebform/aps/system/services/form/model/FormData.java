@@ -1,6 +1,5 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.form.model;
 
-import com.agiletec.aps.util.ApsProperties;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

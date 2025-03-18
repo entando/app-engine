@@ -6,34 +6,31 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.form;
 
 import com.agiletec.aps.system.common.FieldSearchFilter;
-import com.agiletec.aps.system.exception.ApsSystemException;
-
-import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IFormDAO {
 
-	public List<Long> searchForms(FieldSearchFilter[] filters);
+	List<Long> searchForms(FieldSearchFilter[] filters);
 	
-	public Form loadForm(long id);
+	Form loadForm(long id);
 
-	public List<Long> loadForms();
+	List<Long> loadForms();
 
 	void updateFormData(Form form);
 
-	public void removeForm(long id);
+	void removeForm(long id);
 	
-	public void updateForm(Form form);
+	void updateForm(Form form);
 
-	public void insertForm(Form form);
+	void insertForm(Form form);
 
-    public int countForms(FieldSearchFilter[] filters);
+    int countForms(FieldSearchFilter[] filters);
 
-	public List<Form>getFormList();
+	List<Form>getFormList();
 
-	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
+	List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
 
-	public List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered);
+	List<Form> searchByDateBefore(LocalDateTime data, Boolean delivered);
 
 }
