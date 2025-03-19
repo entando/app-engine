@@ -72,4 +72,6 @@ public interface IFormManager {
 	 * @param form
 	 */
     void updateFormData(Form form);
+
+    boolean existSerial(String serial);
 }

@@ -10,6 +10,8 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.PageContext;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import javax.servlet.ServletRequest;
@@ -22,12 +24,17 @@ import org.slf4j.LoggerFactory;
 public class FormTag extends TagSupport {
 
 	private static final Logger _logger =  LoggerFactory.getLogger(FormTag.class);
-	
+
+	private static final String QUERY_STRING_FORM_ID = "formId";
+
 	@Override
 	public int doStartTag() throws JspException {
 		ServletRequest request =  this.pageContext.getRequest();
 		IFormManager formManager = (IFormManager) ApsWebApplicationUtils.getBean("jpwebformFormManager", this.pageContext);
 		RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
+		String value = request.getParameter(QUERY_STRING_FORM_ID);
+
+		System.out.println("\n@@@ " + value + "\n");
 		try {
 		Form form = null;
 			if (null != this.getFormId()) {

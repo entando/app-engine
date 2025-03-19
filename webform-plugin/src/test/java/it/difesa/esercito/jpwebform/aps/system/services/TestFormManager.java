@@ -263,12 +263,10 @@ public class TestFormManager extends BaseTestCase {
 
 	@Test
 	public void randomSerialeTest() throws ApsSystemException {
-
 		Form form0 = _formManager.getForm(2677L);
+		Form form1 = new Form();
 
 		assertNotNull(form0.getSerial());
-
-		Form form1 = new Form();
 
 		form1.setName("Romolo");
 		form1.setCampaign("Romolo");
@@ -283,58 +281,74 @@ public class TestFormManager extends BaseTestCase {
 		Form verify = _formManager.getForm(form1.getId());
 
 		assertNotNull(verify.getSerial());
+		assertNotNull(form0.getSerial());
 		assertNotEquals(form0.getSerial(), form1.getSerial());
 
 		_formManager.deleteForm(form1.getId());
-
 	}
 
 	@Test
 	public void generateAndNullSerialeTest() throws ApsSystemException {
+		final Form form1 = new Form();
+		final Form form2 = new Form();
 
-		Form form1 = new Form();
+		try {
+			form1.setName("Romolo");
+			form1.setCampaign("Romolo");
+			form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+			form1.setDelivered(true);
+			form1.setSerial("");
+			form1.setData(getFormDataForTest());
+			form1.setConfiguration(getFormConfigForTests());
+			form1.setDelivery(getDeliveryDataForTest());
 
-		form1.setName("Romolo");
-		form1.setCampaign("Romolo");
-		form1.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
-		form1.setDelivered(true);
-		form1.setSerial("");
-		form1.setData(getFormDataForTest());
-		form1.setConfiguration(getFormConfigForTests());
-		form1.setDelivery(getDeliveryDataForTest());
+			assertEquals("", form1.getSerial());
 
-		assertEquals("", form1.getSerial());
+			_formManager.addForm(form1);
 
-		_formManager.addForm(form1);
+			Form verify = _formManager.getForm(form1.getId());
 
-		Form verify = _formManager.getForm(form1.getId());
-
-		assertNotNull(verify.getSerial()); //generato in automatico perchè non presente durante l'aggiunta
-
-		_formManager.deleteForm(form1.getId());
-
-
- //caso in cui il seriale è presente
+			assertNotNull(verify.getSerial());
 
 
-		Form form2 = new Form();
+			//caso in cui il seriale è presente
 
-		form2.setName("Tarquinio Prisco");
-		form2.setCampaign("Tarquinio Prisco");
-		form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
-		form2.setDelivered(true);
-		form2.setSerial("AAACBvwEA14AJl1834");
-		form2.setData(getFormDataForTest());
-		form2.setConfiguration(getFormConfigForTests());
-		form2.setDelivery(getDeliveryDataForTest());
+			form2.setName("Tarquinio Prisco");
+			form2.setCampaign("Tarquinio Prisco");
+			form2.setSubmitted(LocalDateTime.parse("2024-05-09T05:28:15.000000"));
+			form2.setDelivered(true);
+			// non existent serial
+			form2.setSerial("AAACBvwEA14AJl1834");
+			form2.setData(getFormDataForTest());
+			form2.setConfiguration(getFormConfigForTests());
+			form2.setDelivery(getDeliveryDataForTest());
 
-		_formManager.addForm(form2);
+			try {
+				_formManager.addForm(form2);
+			} catch (Exception e) {
+				assertNull(form2.getId());
+			}
 
-		assertEquals(form2.getSerial(),"AAACBvwEA14AJl1834");
+			form2.setSerial(verify.getSerial());
+			_formManager.addForm(form2);
+			assertNotNull(form2.getId());
+			assertEquals(verify.getSerial(), form2.getSerial());
 
-		_formManager.deleteForm(form2.getId());
-
+		} finally {
+			_formManager.deleteForm(form1.getId());
+			_formManager.deleteForm(form2.getId());
+		}
 	}
+
+	@Test
+	public void serialeTest() throws ApsSystemException {
+		Form form0 = _formManager.getForm(2677L);
+		assertNotNull(form0.getSerial());
+		boolean exists = _formManager.existSerial(form0.getSerial());
+		assertTrue(exists);
+		assertFalse(_formManager.existSerial("oiqwrh!form0.getSerial()"));
+	}
+
 
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();

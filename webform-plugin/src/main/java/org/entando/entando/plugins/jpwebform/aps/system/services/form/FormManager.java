@@ -70,10 +70,21 @@ public class FormManager extends AbstractService implements IFormManager {
 	public void addForm(Form form) throws ApsSystemException {
 
 		try {
+			// void ID by default, will be assigned later
+			form.setId(null);
+			// handle serial generation or association
 			if (StringUtils.isBlank(form.getSerial())) {
-				form.setSerial(RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE));
+				String serial;
+				do {
+					serial = RandomStringUtils.randomAlphanumeric(MAX_NUMBER_HASH_CODE);
+				} while (_formDAO.existsSerial(serial));
+				form.setSerial(serial);
 				form.setHead(Boolean.TRUE);
 			} else {
+				if (!_formDAO.existsSerial(form.getSerial())) {
+					log.error("Aborting the insertion of a form with unknown serial {}", form.getSerial());
+					throw new RuntimeException("Aborting the insertion of a form with unknown serial " + form.getSerial());
+				}
 				form.setHead(Boolean.FALSE);
 			}
 			_formDAO.insertForm(form);
@@ -163,6 +174,18 @@ public class FormManager extends AbstractService implements IFormManager {
 			log.error("Error updating form payload",t);
 			new ApsSystemException("Error updating form payload", t);
 		}
+	}
+
+	@Override
+	public boolean existSerial(String serial) {
+		try {
+			log.info("checking existing serial {}", serial);
+			return _formDAO.existsSerial(serial);
+		} catch (Throwable t) {
+			log.error("Error checking for serial",t);
+			new ApsSystemException("Error checking for serial", t);
+		}
+		return false;
 	}
 
 	public IFormDAO getFormDAO() {

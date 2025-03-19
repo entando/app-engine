@@ -20,8 +20,10 @@ public interface IFormDAO {
 	void updateFormData(Form form);
 
 	void removeForm(long id);
-	
-	void updateForm(Form form);
+
+    boolean existsSerial(String serial);
+
+    void updateForm(Form form);
 
 	void insertForm(Form form);
 

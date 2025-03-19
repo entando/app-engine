@@ -151,6 +151,30 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return id;
 	}
 
+	@Override
+	public boolean existsSerial(String serial) {
+		boolean result = false;
+		PreparedStatement stat = null;
+		ResultSet res = null;
+		Connection conn  = null;
+
+		try {
+			conn = this.getConnection();
+			stat = conn.prepareStatement(VERIFY_SERIAL);
+			stat.setString(1, serial);
+			res = stat.executeQuery();
+			if (res.next()) {
+				result = res.getBoolean(1);
+			}
+		} catch (Throwable t) {
+			logger.error("Error extracting next id", t);
+			throw new RuntimeException("Error extracting next id", t);
+		} finally {
+			closeDaoResources(res, stat, conn);
+		}
+		return result;
+	}
+
 	public void insertForm(Form form, Connection conn) {
 		PreparedStatement stat = null;
 		int index = 1;
@@ -411,6 +435,8 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	private final String ALL_FORM ="SELECT * FROM jpwebform_form";
 
 	private static final String UPDATE_FORM_DATA = "UPDATE jpwebform_form SET \"data\"=? WHERE id = ?";
+
+	private static final String VERIFY_SERIAL = "SELECT 1 FROM AGILE.jpwebform_form WHERE serial = ?";
 
 	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";
 

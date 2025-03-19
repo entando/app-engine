@@ -2,6 +2,9 @@
 <#assign wp=JspTaglibs["/aps-core"]>
 <#assign wpsf=JspTaglibs["/apsadmin-form"]>
 
+<h2>TEO FTL</h2></br>
+
+
 <h1><@wp.i18n key="jpwebform_FORM_SEARCH_DETAIL" /></h1>
 
 <section style="margin-top: 1rem">
@@ -159,8 +162,8 @@
 
     <@wp.pageWithWidget var="pgVar" widgetTypeCode="form_follow_up" />
     <a style="margin-top: 1rem"
-       href="<@wp.url escapeAmp=false page="${pgVar.code}"/>?formId=<@s.property value="%{#formVar.id}" />"
-       title="<@wp.i18n key="jpwebform_FORM_TRASH" />: <@s.property value="id" />"
+       href="<@wp.url escapeAmp=false page="${pgVar.code}"/>?seriale=<@s.property value="%{#formVar.serial}" />"
+       title="<@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />: <@s.property value="id" />"
        class="label label-info display-block">
         <@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />:<@s.property value="id" />&#32;<span class="icon-edit icon-white"></span>
     </a>

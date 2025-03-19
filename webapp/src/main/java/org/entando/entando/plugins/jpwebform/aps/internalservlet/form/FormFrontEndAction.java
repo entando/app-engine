@@ -149,6 +149,11 @@ public class FormFrontEndAction extends FormAction {
         form.setData(getFormData());
         form.setDelivery(new DeliveryData());
         form.setConfiguration(new FormConfiguration());
+        if (StringUtils.isNotBlank(getSeriale())) {
+            form.setSerial(getSeriale());
+            log.info("chaining form with serial {}", getSeriale());
+        }
+
 
         try {
             Widget widget = getWidgetConfig();

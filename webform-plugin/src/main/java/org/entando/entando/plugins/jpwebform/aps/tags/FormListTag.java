@@ -5,11 +5,7 @@
  */
 package org.entando.entando.plugins.jpwebform.aps.tags;
 
-import com.agiletec.aps.system.RequestContext;
-import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
-import com.agiletec.aps.system.services.page.Widget;
-import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -59,6 +55,10 @@ public class FormListTag extends TagSupport {
 				FieldSearchFilter serialeFilter = new FieldSearchFilter("seriale", getSeriale(), true);
 				filterList.add(serialeFilter);
 			}
+			if (getIsHead() != null) {
+				FieldSearchFilter isHeadFilter = new FieldSearchFilter("is_head", getIsHead(), false);
+				filterList.add(isHeadFilter);
+			}
 			FieldSearchFilter[] filterArray = filterList.toArray(new FieldSearchFilter[filterList.size()]);
 			List<Long> list = formManager.search(filterArray);
 			this.pageContext.setAttribute(this.getVar(), list);
@@ -88,16 +88,6 @@ public class FormListTag extends TagSupport {
 		}
 		return calendar.getTime();
 	}
-
-/*	private Widget extractWidget(RequestContext reqCtx) {
-		Widget widget = null;
-		widget = (Widget) reqCtx.getExtraParam((SystemConstants.EXTRAPAR_CURRENT_WIDGET));
-		return widget;
-	}
-
-	protected String extractWidgetParameter(String parameterName, ApsProperties widgetConfig, RequestContext reqCtx) {
-		return (String) widgetConfig.get(parameterName);
-	}*/
 
 	@Override
 	public int doEndTag() throws JspException {
@@ -167,6 +157,14 @@ public class FormListTag extends TagSupport {
 		this._formId = _formId;
 	}
 
+	public Boolean getIsHead() {
+		return _isHead;
+	}
+
+	public void setIsHead(Boolean _ishead) {
+		this._isHead = _ishead;
+	}
+
 	private String _var;
 
 	// search param
@@ -176,5 +174,6 @@ public class FormListTag extends TagSupport {
 	private String _name;
 	private String _seriale;
 	private Boolean _delivered;
+	private Boolean _isHead;
 
 }

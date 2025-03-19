@@ -3,6 +3,7 @@
 <#assign wpsa=JspTaglibs["/apsadmin-core"]>
 <#assign wpsf=JspTaglibs["/apsadmin-form"]>
 
+<#assign serial = RequestParameters.seriale?if_exists>
 
 <div class="container">
 
@@ -48,6 +49,13 @@
 			<p class="noscreen">
 				<input type="hidden" name="idDestinatario" value="<@s.property value="#idDestinatarioVar" />"/>
 				<input type="hidden" name="pageCode" value="<@wp.currentPage param="code"/>"/>
+
+				<#if serial??>
+					<input type="hidden" name="seriale" value="${serial}"/>
+				<#else>
+					<!-- no serial -->
+				</#if>
+
 			</p>
 
 			<#-- RENDERIZZAZIONE DROPDOWN -->
@@ -118,7 +126,6 @@
 			</@s.if>
 
 			<#-- RENDERIZZAZIONE TEXTFIELD -->
-
 			<@s.set var="etichetta1Var"><@wp.currentWidget param="config" configParam="etichetta1"/></@s.set>
 			<@s.if test="%{#etichetta1Var != null && !#etichetta1Var.isEmpty()}">
 				<div class="row mt-3">
