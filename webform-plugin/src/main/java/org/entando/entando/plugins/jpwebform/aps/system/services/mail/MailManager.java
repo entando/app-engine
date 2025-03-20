@@ -22,7 +22,6 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import liquibase.pro.packaged.B;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
@@ -107,6 +106,11 @@ public class MailManager extends AbstractService implements IMailManager {
 
             final String recipientId = form.getDelivery().getRecipient();
             final String recipient = _recipients.get(recipientId);
+
+            if (StringUtils.isBlank(recipient)) {
+                log.error("Cannot determine the destination address '{}'", recipientId);
+                return false;
+            }
 
             message.setRecipients(
                     Message.RecipientType.BCC,

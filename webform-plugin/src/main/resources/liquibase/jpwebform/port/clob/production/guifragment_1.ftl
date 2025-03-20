@@ -3,13 +3,14 @@
 <#assign wpsa=JspTaglibs["/apsadmin-core"]>
 <#assign wpsf=JspTaglibs["/apsadmin-form"]>
 
+
 <#assign serial = RequestParameters.seriale?if_exists>
 
 <div class="container">
 
-	<@s.set var="titoloVar"><@wp.currentWidget param="config" configParam="titolo"/></@s.set>
-	<@s.set var="descrizioneVar"><@wp.currentWidget param="config" configParam="descrizione"/></@s.set>
-	<@s.set var="idDestinatarioVar"><@wp.currentWidget param="config" configParam="idDestinatario"/></@s.set>
+	<@s.set var="titoloVar"><@wp.currentWidget param="config" configParam="title"/></@s.set>
+	<@s.set var="descrizioneVar"><@wp.currentWidget param="config" configParam="description"/></@s.set>
+	<@s.set var="idDestinatarioVar"><@wp.currentWidget param="config" configParam="address"/></@s.set>
 
 
 	<div class="row mt-3">
@@ -60,9 +61,9 @@
 
 			<#-- RENDERIZZAZIONE DROPDOWN -->
 
-			<@s.set var="valorietichetta1Var"><@wp.currentWidget param="config" configParam="valoriOpzione1"/></@s.set>
+			<@s.set var="valorietichetta1Var"><@wp.currentWidget param="config" configParam="dropdownValue1"/></@s.set>
 			<@s.set var="dropdown1" value="%{generateDropDown(#valorietichetta1Var)}"/>
-			<@s.set var="etichetta1Var"><@wp.currentWidget param="config" configParam="opzione1"/></@s.set>
+			<@s.set var="etichetta1Var"><@wp.currentWidget param="config" configParam="dropdownLabel1"/></@s.set>
 			<@s.if test="%{#etichetta1Var != null && !#etichetta1Var.isEmpty() && #valorietichetta1Var != null && !#valorietichetta1Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -73,9 +74,9 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="valorietichetta2Var"><@wp.currentWidget param="config" configParam="valoriOpzione2"/></@s.set>
+			<@s.set var="valorietichetta2Var"><@wp.currentWidget param="config" configParam="dropdownValue2"/></@s.set>
 			<@s.set var="dropdown2" value="%{generateDropDown(#valorietichetta2Var)}"/>
-			<@s.set var="etichetta2Var"><@wp.currentWidget param="config" configParam="opzione2"/></@s.set>
+			<@s.set var="etichetta2Var"><@wp.currentWidget param="config" configParam="dropdownLabel2"/></@s.set>
 			<@s.if test="%{#etichetta2Var != null && !#etichetta2Var.isEmpty() && #valorietichetta2Var != null && !#valorietichetta2Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -86,9 +87,9 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="valorietichetta3Var"><@wp.currentWidget param="config" configParam="valoriOpzione3"/></@s.set>
+			<@s.set var="valorietichetta3Var"><@wp.currentWidget param="config" configParam="dropdownValue3"/></@s.set>
 			<@s.set var="dropdown3" value="%{generateDropDown(#valorietichetta3Var)}"/>
-			<@s.set var="etichetta3Var"><@wp.currentWidget param="config" configParam="opzione3"/></@s.set>
+			<@s.set var="etichetta3Var"><@wp.currentWidget param="config" configParam="dropdownLabel3"/></@s.set>
 			<@s.if test="%{#etichetta3Var != null && !#etichetta3Var.isEmpty() && #valorietichetta3Var != null && !#valorietichetta3Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -99,9 +100,9 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="valorietichetta4Var"><@wp.currentWidget param="config" configParam="valoriOpzione4"/></@s.set>
+			<@s.set var="valorietichetta4Var"><@wp.currentWidget param="config" configParam="dropdownValue4"/></@s.set>
 			<@s.set var="dropdown4" value="%{generateDropDown(#valorietichetta4Var)}"/>
-			<@s.set var="etichetta4Var"><@wp.currentWidget param="config" configParam="opzione4"/></@s.set>
+			<@s.set var="etichetta4Var"><@wp.currentWidget param="config" configParam="dropdownLabel4"/></@s.set>
 			<@s.if test="%{#etichetta4Var != null && !#etichetta4Var.isEmpty() && #valorietichetta4Var != null && !#valorietichetta4Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -112,9 +113,9 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="valorietichetta5Var"><@wp.currentWidget param="config" configParam="valoriOpzione5"/></@s.set>
+			<@s.set var="valorietichetta5Var"><@wp.currentWidget param="config" configParam="dropdownValue5"/></@s.set>
 			<@s.set var="dropdown5" value="%{generateDropDown(#valorietichetta5Var)}"/>
-			<@s.set var="etichetta5Var"><@wp.currentWidget param="config" configParam="opzione5"/></@s.set>
+			<@s.set var="etichetta5Var"><@wp.currentWidget param="config" configParam="dropdownLabel5"/></@s.set>
 			<@s.if test="%{#etichetta5Var != null && !#etichetta5Var.isEmpty() && #valorietichetta5Var != null && !#valorietichetta5Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -126,7 +127,7 @@
 			</@s.if>
 
 			<#-- RENDERIZZAZIONE TEXTFIELD -->
-			<@s.set var="etichetta1Var"><@wp.currentWidget param="config" configParam="etichetta1"/></@s.set>
+			<@s.set var="etichetta1Var"><@wp.currentWidget param="config" configParam="textareaValue1"/></@s.set>
 			<@s.if test="%{#etichetta1Var != null && !#etichetta1Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -137,7 +138,7 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="etichetta2Var"><@wp.currentWidget param="config" configParam="etichetta2"/></@s.set>
+			<@s.set var="etichetta2Var"><@wp.currentWidget param="config" configParam="textareaValue2"/></@s.set>
 			<@s.if test="%{#etichetta2Var != null && !#etichetta2Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">
@@ -148,7 +149,7 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="etichetta3Var"><@wp.currentWidget param="config" configParam="etichetta3"/></@s.set>
+			<@s.set var="etichetta3Var"><@wp.currentWidget param="config" configParam="textareaValue3"/></@s.set>
 			<@s.if test="%{#etichetta3Var != null && !#etichetta3Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-13">
@@ -159,7 +160,7 @@
 				</div>
 			</@s.if>
 
-			<@s.set var="etichetta4Var"><@wp.currentWidget param="config" configParam="etichetta4"/></@s.set>
+			<@s.set var="etichetta4Var"><@wp.currentWidget param="config" configParam="textareaValue4"/></@s.set>
 			<@s.if test="%{#etichetta4Var != null && !#etichetta4Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-13">
@@ -171,7 +172,7 @@
 			</@s.if>
 
 
-			<@s.set var="etichetta5Var"><@wp.currentWidget param="config" configParam="etichetta5"/></@s.set>
+			<@s.set var="etichetta5Var"><@wp.currentWidget param="config" configParam="textareaValue5"/></@s.set>
 			<@s.if test="%{#etichetta5Var != null && !#etichetta5Var.isEmpty()}">
 				<div class="row mt-3">
 					<div class="form-group col-md-6 col-sm-12">

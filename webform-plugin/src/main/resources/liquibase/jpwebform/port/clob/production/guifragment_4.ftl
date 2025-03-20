@@ -39,7 +39,7 @@
         <@s.else>
             <@wp.i18n key="FORM_NOT_DELIVERED" /> <br/>
         </@s.else>
-    </div>
+    </div>  </br>
 
     <form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/update.action" escapeAmp=false />" method="post">
         <p class="noscreen">
@@ -48,7 +48,7 @@
 
 
         <@s.set var="etichetta1Var" value="#formVar.data.etichettaSel1"/>
-        <@s.set var="dropdownVar1" value="%{retrieveDropDown(#formVar, 'valoriOpzione1')}"/>
+        <@s.set var="dropdownVar1" value="%{retrieveDropDown(#formVar, 'dropdownValue1')}"/>
         <@s.if test="%{#etichetta1Var != null && !#etichetta1Var.isEmpty()}">
             <div class="row mt-3">
                 <div class="form-group col-md-6 col-sm-12">
@@ -61,7 +61,7 @@
         </@s.if>
 
         <@s.set var="etichetta2Var" value="#formVar.data.etichettaSel2"/>
-        <@s.set var="dropdownVar2" value="%{retrieveDropDown(#formVar, 'valoriOpzione2')}"/>
+        <@s.set var="dropdownVar2" value="%{retrieveDropDown(#formVar, 'dropdownValue2')}"/>
         <@s.if test="%{#etichetta2Var != null && !#etichetta2Var.isEmpty()}">
             <div class="row mt-3">
                 <div class="form-group col-md-6 col-sm-22">
@@ -74,7 +74,7 @@
         </@s.if>
 
         <@s.set var="etichetta3Var" value="#formVar.data.etichettaSel3"/>
-        <@s.set var="dropdownVar3" value="%{retrieveDropDown(#formVar, 'valoriOpzione3')}"/>
+        <@s.set var="dropdownVar3" value="%{retrieveDropDown(#formVar, 'dropdownValue3')}"/>
         <@s.if test="%{#etichetta3Var != null && !#etichetta3Var.isEmpty()}">
             <div class="row mt-3">
                 <div class="form-group col-md-6 col-sm-22">
@@ -87,7 +87,7 @@
         </@s.if>
 
         <@s.set var="etichetta4Var" value="#formVar.data.etichettaSel4"/>
-        <@s.set var="dropdownVar4" value="%{retrieveDropDown(#formVar, 'valoriOpzione4')}"/>
+        <@s.set var="dropdownVar4" value="%{retrieveDropDown(#formVar, 'dropdownValue4')}"/>
         <@s.if test="%{#etichetta4Var != null && !#etichetta4Var.isEmpty()}">
             <div class="row mt-3">
                 <div class="form-group col-md-6 col-sm-22">
@@ -100,7 +100,7 @@
         </@s.if>
 
         <@s.set var="etichetta5Var" value="#formVar.data.etichettaSel5"/>
-        <@s.set var="dropdownVar5" value="%{retrieveDropDown(#formVar, 'valoriOpzione5')}"/>
+        <@s.set var="dropdownVar5" value="%{retrieveDropDown(#formVar, 'dropdownValue5')}"/>
         <@s.if test="%{#etichetta5Var != null && !#etichetta5Var.isEmpty()}">
             <div class="row mt-3">
                 <div class="form-group col-md-6 col-sm-22">
@@ -161,12 +161,14 @@
     </br>
 
     <@wp.pageWithWidget var="pgVar" widgetTypeCode="form_follow_up" />
-    <a style="margin-top: 1rem"
-       href="<@wp.url escapeAmp=false page="${pgVar.code}"/>?seriale=<@s.property value="%{#formVar.serial}" />"
-       title="<@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />: <@s.property value="id" />"
-       class="label label-info display-block">
-        <@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />:<@s.property value="id" />&#32;<span class="icon-edit icon-white"></span>
-    </a>
+    <@s.if test="#pgVar != null && !#pgVar.isEmpty()">
+        <a style="margin-top: 1rem"
+           href="<@wp.url escapeAmp=false page="${pgVar.code}"/>?seriale=<@s.property value="%{#formVar.serial}" />"
+           title="<@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />: <@s.property value="id" />"
+           class="label label-info display-block">
+            <@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />:<@s.property value="id" />&#32;<span class="icon-edit icon-white"></span>
+        </a>
+    </@s.if>
 
     </br>
 

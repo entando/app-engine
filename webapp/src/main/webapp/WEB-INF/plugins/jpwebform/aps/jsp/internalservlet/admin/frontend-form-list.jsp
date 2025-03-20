@@ -26,7 +26,7 @@
             </s:if>
 
             <label for="form_campaign"><wp:i18n key="jpwebform_FORM_CAMPAIGN" /></label>
-            <input type="text" name="campaign" id="form_campaign" value="<s:property value="campaign" />" />   <br/>
+            <input type="text" name="campagna" id="form_campaign" value="<s:property value="campagna" />" />   <br/>
             <label for="form_submittedStart_cal"><wp:i18n key="jpwebform_FORM_SUBMITTEDSTART" /></label>
             <input type="text" name="submittedStart" id="form_submittedStart_cal" data-isdate="true" value="<s:property value="from" />" />   <br/>
             <label for="form_submittedEnd_cal"><wp:i18n key="jpwebform_FORM_SUBMITTEDEND" /></label>
@@ -34,7 +34,7 @@
             <label for="form_delivered"><wp:i18n key="jpwebform_FORM_DELIVERED" /></label>
             <wpsf:select name="delivered" id="form_delivered" list="{'--', 'true', 'false'}" value="%{delivered}" />  <br/>
             <label for="form_is_head"><wp:i18n key="jpwebform_FORM_IS_HEAD" /></label>
-            <wpsf:select name="isHead" id="form_is_head" list="{'--', 'true', 'false'}" value="%{isHead}" />
+            <wpsf:select name="isHead" id="form_is_head" list="{'--', 'all', 'true', 'false'}" value="%{isHead}" />
         </fieldset>
 
         <button type="submit" class="btn btn-primary">

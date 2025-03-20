@@ -66,6 +66,13 @@
             <column name="locked" valueNumeric="1" />
         </insert>
 
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebform_form_list" />
+            <column name="plugincode" value="jpwebform" />
+            <column name="defaultgui" valueClobFile="clob/production/guifragment_5.ftl" />
+            <column name="locked" valueNumeric="1" />
+        </insert>
+
     </changeSet>
 
 </databaseChangeLog>

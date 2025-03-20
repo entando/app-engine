@@ -6,6 +6,23 @@
 package org.entando.entando.plugins.jpwebform.aps.internalservlet.form;
 
 import static com.agiletec.aps.system.SystemConstants.ADMIN_USER_NAME;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_DROPDOWN_LABEL_1;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_DROPDOWN_LABEL_2;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_DROPDOWN_LABEL_3;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_DROPDOWN_LABEL_4;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_DROPDOWN_LABEL_5;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_MAIL_OBJECT;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_LABEL_1;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_LABEL_2;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_LABEL_3;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_LABEL_4;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_LABEL_5;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_1;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_2;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_3;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_4;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_5;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TITLE;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
@@ -27,6 +44,7 @@ import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
 import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,25 +63,25 @@ public class FormFrontEndAction extends FormAction {
         }
 
         if (widget != null) {
-            String etichettaSel1 = (String) widget.getConfig().get("opzione1");
-            String etichettaSel2 = (String) widget.getConfig().get("opzione2");
-            String etichettaSel3 = (String) widget.getConfig().get("opzione3");
-            String etichettaSel4 = (String) widget.getConfig().get("opzione4");
-            String etichettaSel5 = (String) widget.getConfig().get("opzione5");
+            String etichettaSel1 = (String) widget.getConfig().get(CFG_DROPDOWN_LABEL_1);
+            String etichettaSel2 = (String) widget.getConfig().get(CFG_DROPDOWN_LABEL_2);
+            String etichettaSel3 = (String) widget.getConfig().get(CFG_DROPDOWN_LABEL_3);
+            String etichettaSel4 = (String) widget.getConfig().get(CFG_DROPDOWN_LABEL_4);
+            String etichettaSel5 = (String) widget.getConfig().get(CFG_DROPDOWN_LABEL_5);
 
-            String etichetta1 = (String) widget.getConfig().get("etichetta1");
-            String etichetta2 = (String) widget.getConfig().get("etichetta2");
-            String etichetta3 = (String) widget.getConfig().get("etichetta3");
-            String etichetta4 = (String) widget.getConfig().get("etichetta4");
-            String etichetta5 = (String) widget.getConfig().get("etichetta5");
+            String etichetta1 = (String) widget.getConfig().get(CFG_TEXT_LABEL_1);
+            String etichetta2 = (String) widget.getConfig().get(CFG_TEXT_LABEL_2);
+            String etichetta3 = (String) widget.getConfig().get(CFG_TEXT_LABEL_3);
+            String etichetta4 = (String) widget.getConfig().get(CFG_TEXT_LABEL_4);
+            String etichetta5 = (String) widget.getConfig().get(CFG_TEXT_LABEL_5);
 
-            String obbligatorio1 = (String) widget.getConfig().get("obbligatorio1");
-            String obbligatorio2 = (String) widget.getConfig().get("obbligatorio2");
-            String obbligatorio3 = (String) widget.getConfig().get("obbligatorio3");
-            String obbligatorio4 = (String) widget.getConfig().get("obbligatorio4");
-            String obbligatorio5 = (String) widget.getConfig().get("obbligatorio5");
+            String obbligatorio1 = (String) widget.getConfig().get(CFG_TEXT_REQUIRED_1);
+            String obbligatorio2 = (String) widget.getConfig().get(CFG_TEXT_REQUIRED_2);
+            String obbligatorio3 = (String) widget.getConfig().get(CFG_TEXT_REQUIRED_3);
+            String obbligatorio4 = (String) widget.getConfig().get(CFG_TEXT_REQUIRED_4);
+            String obbligatorio5 = (String) widget.getConfig().get(CFG_TEXT_REQUIRED_5);
 
-            setSubject((String) widget.getConfig().get("oggetto"));
+            setSubject((String) widget.getConfig().get(CFG_MAIL_OBJECT));
 
             // update form data
             getFormData().setEtichettaSel1(etichettaSel1);
@@ -149,6 +167,10 @@ public class FormFrontEndAction extends FormAction {
         form.setData(getFormData());
         form.setDelivery(new DeliveryData());
         form.setConfiguration(new FormConfiguration());
+        if (StringUtils.isNotBlank(getSeriale())) {
+            form.setSerial(getSeriale());
+            log.info("chaining form with serial {}", getSeriale());
+        }
 
         try {
             Widget widget = getWidgetConfig();
@@ -158,7 +180,7 @@ public class FormFrontEndAction extends FormAction {
                 return INPUT;
             }
 
-            form.setCampaign((String) widget.getConfig().get("titolo"));
+            form.setCampaign((String) widget.getConfig().get(CFG_TITLE));
 
             final String currentUser = this.getCurrentUser().getUsername();
             log.debug("looking for user '{}'", currentUser);
@@ -252,7 +274,6 @@ public class FormFrontEndAction extends FormAction {
         return null;
     }
 
-
     public String detail() {
         return SUCCESS;
     }
@@ -290,7 +311,6 @@ public class FormFrontEndAction extends FormAction {
         return null;
     }
 
-
     /**
      * Check whether the user has admin privileges on form
      * @return
@@ -300,6 +320,18 @@ public class FormFrontEndAction extends FormAction {
         return user.getUsername().equals(ADMIN_USER_NAME)
                 || isFormPrivilegedUser(user, true)
                 || isFormPrivilegedUser(user, false);
+    }
+
+    public String getRedirectionUrl() {
+        final Widget currentWidget = this.getWidgetConfig();
+        String redirection = "";
+
+        if (currentWidget != null
+                && currentWidget.getConfig() != null
+                && currentWidget.getConfig().contains("redirectionUrl")) {
+            redirection = (String) currentWidget.getConfig().get("redirectUrl");
+        }
+        return redirection;
     }
 
     /**
@@ -355,7 +387,7 @@ public class FormFrontEndAction extends FormAction {
             filters.add(nameFilter);
         }
         if (StringUtils.isNotBlank(getCampagna())) {
-            FieldSearchFilter nameFilter = new FieldSearchFilter("campagna", getCampagna(), true);
+            FieldSearchFilter nameFilter = new FieldSearchFilter("campaign", getCampagna(), true);
             filters.add(nameFilter);
         }
         if (StringUtils.isNotBlank(getSeriale())) {
@@ -367,10 +399,17 @@ public class FormFrontEndAction extends FormAction {
             FieldSearchFilter deliveredFilter = new FieldSearchFilter("delivered", delivered, false);
             filters.add(deliveredFilter);
         }
-        if (StringUtils.isNotBlank(getIsHead()) && !getIsHead().equals("--")) {
-            Boolean isHead = Boolean.parseBoolean(getIsHead());
-            FieldSearchFilter isHeaddFilter = new FieldSearchFilter("is_head", isHead, false);
-            filters.add(isHeaddFilter);
+        if (StringUtils.isNotBlank(getIsHead()) ) {
+            if (getIsHead().equals("--")) {
+                FieldSearchFilter isHeaddFilter = new FieldSearchFilter("is_head", Boolean.TRUE, false);
+                filters.add(isHeaddFilter);
+            } else {
+                if (!getIsHead().equals("all")) {
+                    Boolean isHead = Boolean.parseBoolean(getIsHead());
+                    FieldSearchFilter isHeaddFilter = new FieldSearchFilter("is_head", isHead, false);
+                    filters.add(isHeaddFilter);
+                }
+            }
         }
         return filters.toArray(new FieldSearchFilter[filters.size()]);
     }
