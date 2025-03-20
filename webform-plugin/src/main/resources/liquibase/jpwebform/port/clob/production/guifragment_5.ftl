@@ -27,7 +27,7 @@
         <label for="form_campaign"><@wp.i18n key="jpwebform_FORM_CAMPAIGN" /></label>
         <input type="text" name="campagna" id="form_campaign" value="<@s.property value="campagna" />" />   <br/>
 
-        <label for="form_seriale"><@wp.i18n key="jpwebform_FORM_CAMPAIGN" /></label>
+        <label for="form_seriale"><@wp.i18n key="jpwebform_SERIAL" /></label>
         <input type="text" name="seriale" id="form_seriale" value="<@s.property value="seriale" />" />   <br/>
 
         <label for="form_submittedStart_cal"><@wp.i18n key="jpwebform_FORM_SUBMITTEDSTART" /></label>
