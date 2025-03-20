@@ -2,9 +2,6 @@
 <#assign wp=JspTaglibs["/aps-core"]>
 <#assign wpsf=JspTaglibs["/apsadmin-form"]>
 
-<h2>TEO FTL</h2></br>
-
-
 <h1><@wp.i18n key="jpwebform_FORM_SEARCH_DETAIL" /></h1>
 
 <section style="margin-top: 1rem">
@@ -31,6 +28,15 @@
     <div style="margin-top: 1rem">
         <@s.property value="%{#formVar.serial}" />
     </div>
+
+    <a style="margin-top: 1rem"
+       href="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/list.action" escapeAmp=false ><@wp.parameter name="seriale" ><@s.property value="#formVar.serial" /></@wp.parameter><@wp.parameter name="isHead" >all</@wp.parameter></@wp.action>"
+       title="<@wp.i18n key="jpwebform_FOLLOW_THREAD" />: <@s.property value="id" />"
+       class="label label-info display-block">
+        <@wp.i18n key="jpwebform_FOLLOW_THREAD" />:<@s.property value="id" />&#32;<span class="icon-edit icon-white"></span>
+    </a>
+
+
 
     <div style="margin-top: 1rem">
         <@s.if test="%{#formVar.delivered}">
@@ -161,14 +167,14 @@
     </br>
 
     <@wp.pageWithWidget var="pgVar" widgetTypeCode="form_follow_up" />
-    <@s.if test="#pgVar != null && !#pgVar.isEmpty()">
-        <a style="margin-top: 1rem"
-           href="<@wp.url escapeAmp=false page="${pgVar.code}"/>?seriale=<@s.property value="%{#formVar.serial}" />"
-           title="<@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />: <@s.property value="id" />"
-           class="label label-info display-block">
-            <@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />:<@s.property value="id" />&#32;<span class="icon-edit icon-white"></span>
-        </a>
-    </@s.if>
+
+    <a style="margin-top: 1rem"
+       href="<@wp.url escapeAmp=false page="${pgVar.code}"/>?seriale=<@s.property value="%{#formVar.serial}" />"
+       title="<@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />: <@s.property value="id" />"
+       class="label label-info display-block">
+        <@wp.i18n key="jpwebform_FORM_FOLLOW_UP" />:<@s.property value="id" />&#32;<span class="icon-edit icon-white"></span>
+    </a>
+
 
     </br>
 

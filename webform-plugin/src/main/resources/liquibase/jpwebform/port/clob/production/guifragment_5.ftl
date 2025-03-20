@@ -13,108 +13,108 @@
 
     <h1><@wp.i18n key="jpwebform_FORM_SEARCH_FORM" /></h1>
 
-    <form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/list.action" />" method="post" >
+    <form action="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/list.action" escapeAmp=false />" method="post" >
 
-    <fieldset>
-        <label for="form_id"><@wp.i18n key="jpwebform_FORM_ID" /></label>
-        <input type="text" name="id" id="form_id" value="<@s.property value="id" />" />   <br/>
+        <fieldset>
+            <label for="form_id"><@wp.i18n key="jpwebform_FORM_ID" /></label>
+            <input type="text" name="id" id="form_id" value="<@s.property value="id" />" />   <br/>
 
-        <@s.if test="#formAdminVar">
-            <label for="form_name"><@wp.i18n key="jpwebform_FORM_NAME" /></label>
-            <input type="text" name="name" id="form_name" value="<@s.property value="name" />" />   <br/>
-        </@s.if>
+            <@s.if test="#formAdminVar">
+                <label for="form_name"><@wp.i18n key="jpwebform_FORM_NAME" /></label>
+                <input type="text" name="name" id="form_name" value="<@s.property value="name" />" />   <br/>
+            </@s.if>
 
-        <label for="form_campaign"><@wp.i18n key="jpwebform_FORM_CAMPAIGN" /></label>
-        <input type="text" name="campagna" id="form_campaign" value="<@s.property value="campagna" />" />   <br/>
+            <label for="form_campaign"><@wp.i18n key="jpwebform_FORM_CAMPAIGN" /></label>
+            <input type="text" name="campagna" id="form_campaign" value="<@s.property value="campagna" />" />   <br/>
 
-        <label for="form_seriale"><@wp.i18n key="jpwebform_SERIAL" /></label>
-        <input type="text" name="seriale" id="form_seriale" value="<@s.property value="seriale" />" />   <br/>
+            <label for="form_seriale"><@wp.i18n key="jpwebform_SERIAL" /></label>
+            <input type="text" name="seriale" id="form_seriale" value="<@s.property value="seriale" />" />   <br/>
 
-        <label for="form_submittedStart_cal"><@wp.i18n key="jpwebform_FORM_SUBMITTEDSTART" /></label>
-        <input type="text" name="submittedStart" id="form_submittedStart_cal" data-isdate=true value="<@s.property value="from" />" />   <br/>
-        <label for="form_submittedEnd_cal"><@wp.i18n key="jpwebform_FORM_SUBMITTEDEND" /></label>
-        <input type="text" name="submittedEnd" id="form_submittedEnd_cal" data-isdate=true value="<@s.property value="to" />" />   <br/>
-        <label for="form_delivered"><@wp.i18n key="jpwebform_FORM_DELIVERED" /></label>
-        <@wpsf.select name="delivered" id="form_delivered" list="{'--', 'true', 'false'}" value="%{delivered}" />  <br/>
-        <label for="form_is_head"><@wp.i18n key="jpwebform_FORM_IS_HEAD" /></label>
-        <@wpsf.select name="isHead" id="form_is_head" list="{'--', 'all', 'true', 'false'}" value="%{isHead}" />
-    </fieldset>
+            <label for="form_submittedStart_cal"><@wp.i18n key="jpwebform_FORM_SUBMITTEDSTART" /></label>
+            <input type="text" name="submittedStart" id="form_submittedStart_cal" data-isdate=true value="<@s.property value="from" />" />   <br/>
+            <label for="form_submittedEnd_cal"><@wp.i18n key="jpwebform_FORM_SUBMITTEDEND" /></label>
+            <input type="text" name="submittedEnd" id="form_submittedEnd_cal" data-isdate=true value="<@s.property value="to" />" />   <br/>
+            <label for="form_delivered"><@wp.i18n key="jpwebform_FORM_DELIVERED" /></label>
+            <@wpsf.select name="delivered" id="form_delivered" list="{'--', 'true', 'false'}" value="%{delivered}" />  <br/>
+            <label for="form_is_head"><@wp.i18n key="jpwebform_FORM_IS_HEAD" /></label>
+            <@wpsf.select name="isHead" id="form_is_head" list="{'--', 'all', 'true', 'false'}" value="%{getIsHead()}" />
+        </fieldset>
 
-    <button type="submit" class="btn btn-primary">
-        <@wp.i18n key="SEARCH" />
-    </button>
+        <button type="submit" class="btn btn-primary">
+            <@wp.i18n key="SEARCH" />
+        </button>
 
-    <@wpsa.subset source="formsId" count=10 objectName="groupForm" advanced=true offset=5>
-        <@s.set var="group" value="#groupForm" />
+        <@wpsa.subset source="formsId" count=10 objectName="groupForm" advanced=true offset=5>
+            <@s.set var="group" value="#groupForm" />
 
-        <div class="margin-medium-vertical text-center">
-            <@s.include value="/WEB-INF/apsadmin/jsp/common/inc/pagerInfo.jsp" />
-            <@s.include value="/WEB-INF/apsadmin/jsp/common/inc/pager_formBlock.jsp" />
-        </div>
+            <div class="margin-medium-vertical text-center">
+                <@s.include value="/WEB-INF/apsadmin/jsp/common/inc/pagerInfo.jsp" />
+                <@s.include value="/WEB-INF/apsadmin/jsp/common/inc/pager_formBlock.jsp" />
+            </div>
 
 
-        <table >
-            <thead>
-            <tr>
-                <th
-                ><@wp.i18n key="jpwebform_FORM_ID" /></th>
-                <th
-                ><@wp.i18n key="jpwebform_FORM_NAME" /></th>
-                <th
-                ><@wp.i18n key="jpwebform_FORM_CAMPAIGN" /></th>
-                <th
-                ><@wp.i18n key="jpwebform_FORM_SUBMITTED" /></th>
-                <th
-                ><@wp.i18n key="jpwebform_FORM_DELIVERED" /></th>
-                <th>
-                    <@wp.i18n key="jpwebform_FORM_ACTIONS" /> </th>
-            </tr>
-            </thead>
-            <tbody>
-            <@s.iterator var="formIdVar">
-                <@s.set var="formVar" value="%{getForm(#formIdVar)}" />
+            <table >
+                <thead>
                 <tr>
-                    <td>
-                        <a
-                                href="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/detail.action" escapeAmp=false><@wp.parameter name="id"><@s.property value="#formVar.id" /></@wp.parameter></@wp.action>"
-                        title="<@wp.i18n key="DETAIL" />: <@s.property value="#formVar.id" />"
-                        class="label label-info display-block">
-                        <@s.property value="#formVar.id" />&#32;
-                        <span class="icon-edit icon-white"></span>
-                        </a>
-                    </td>
-                    <td><@s.property value="%{#formVar.name}" /></td>
-                    <td><@s.property value="%{#formVar.campaign}" /></td>
-                    <#--                    <td><@s.property value="%{#formVar.data.valore1}" /></td>-->
-                    <td><@s.property value="%{#formVar.submitted}" /></td>
-                    <td>
-                        <@s.if test="%{#formVar.delivered}">
-                            <@wp.i18n key="FORM_DELIVERED" />
-                        </@s.if>
-                        <@s.else>
-                            <@wp.i18n key="FORM_NOT_DELIVERED" />
-                        </@s.else>
-                    </td>
-
-                    <td >
-                        <a
-                                href="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/trash.action" escapeAmp=false><@wp.parameter name="id"><@s.property value="#formVar.id" /></@wp.parameter></@wp.action>"
-                        title="<@wp.i18n key="jpwebform_FORM_TRASH" />: <@s.property value="#formVar.id" />"
-                        class="btn btn-warning btn-small">
-                        <span class="icon-trash icon-white"></span>&#32;
-                        <@wp.i18n key="jpwebform_FORM_TRASH" />
-                        </a>
-                    </td>
-
+                    <th
+                    ><@wp.i18n key="jpwebform_FORM_ID" /></th>
+                    <th
+                    ><@wp.i18n key="jpwebform_FORM_NAME" /></th>
+                    <th
+                    ><@wp.i18n key="jpwebform_FORM_CAMPAIGN" /></th>
+                    <th
+                    ><@wp.i18n key="jpwebform_FORM_SUBMITTED" /></th>
+                    <th
+                    ><@wp.i18n key="jpwebform_FORM_DELIVERED" /></th>
+                    <th>
+                        <@wp.i18n key="jpwebform_FORM_ACTIONS" /> </th>
                 </tr>
-            </@s.iterator>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                <@s.iterator var="formIdVar">
+                    <@s.set var="formVar" value="%{getForm(#formIdVar)}" />
+                    <tr>
+                        <td>
+                            <a
+                                    href="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/detail.action" escapeAmp=false><@wp.parameter name="id"><@s.property value="#formVar.id" /></@wp.parameter></@wp.action>"
+                                    title="<@wp.i18n key="DETAIL" />: <@s.property value="#formVar.id" />"
+                                    class="label label-info display-block">
+                                <@s.property value="#formVar.id" />&#32;
+                                <span class="icon-edit icon-white"></span>
+                            </a>
+                        </td>
+                        <td><@s.property value="%{#formVar.name}" /></td>
+                        <td><@s.property value="%{#formVar.campaign}" /></td>
+                        <#--                    <td><@s.property value="%{#formVar.data.valore1}" /></td>-->
+                        <td><@s.property value="%{#formVar.submitted}" /></td>
+                        <td>
+                            <@s.if test="%{#formVar.delivered}">
+                                <@wp.i18n key="FORM_DELIVERED" />
+                            </@s.if>
+                            <@s.else>
+                                <@wp.i18n key="FORM_NOT_DELIVERED" />
+                            </@s.else>
+                        </td>
 
-        <div class="margin-medium-vertical text-center">
-            <@s.include value="/WEB-INF/apsadmin/jsp/common/inc/pager_formBlock.jsp" />
-        </div>
+                        <td >
+                            <a
+                                    href="<@wp.action path="/ExtStr2/do/FrontEnd/jpwebform/Form/trash.action" escapeAmp=false><@wp.parameter name="id"><@s.property value="#formVar.id" /></@wp.parameter></@wp.action>"
+                                    title="<@wp.i18n key="jpwebform_FORM_TRASH" />: <@s.property value="#formVar.id" />"
+                                    class="btn btn-warning btn-small">
+                                <span class="icon-trash icon-white"></span>&#32;
+                                <@wp.i18n key="jpwebform_FORM_TRASH" />
+                            </a>
+                        </td>
 
-    </@wpsa.subset>
+                    </tr>
+                </@s.iterator>
+                </tbody>
+            </table>
+
+            <div class="margin-medium-vertical text-center">
+                <@s.include value="/WEB-INF/apsadmin/jsp/common/inc/pager_formBlock.jsp" />
+            </div>
+
+        </@wpsa.subset>
     </form>
 </section>
