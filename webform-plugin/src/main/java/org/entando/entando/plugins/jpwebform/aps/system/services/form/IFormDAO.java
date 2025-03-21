@@ -23,6 +23,8 @@ public interface IFormDAO {
 
     boolean existsSerial(String serial);
 
+    Integer countFormThread(String serial);
+
     void updateForm(Form form);
 
 	void insertForm(Form form);
@@ -30,6 +32,8 @@ public interface IFormDAO {
     int countForms(FieldSearchFilter[] filters);
 
 	List<Form>getFormList();
+
+	void deleteFormThread(long id);
 
 	List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered);
 

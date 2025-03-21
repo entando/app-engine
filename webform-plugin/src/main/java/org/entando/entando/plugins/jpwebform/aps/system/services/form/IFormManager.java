@@ -41,6 +41,8 @@ public interface IFormManager {
 	 */
 	public void addForm(Form form) throws ApsSystemException;
 
+	void deleteForm(long id, boolean all) throws ApsSystemException;
+
 	/**
 	 * Delete a form from disk
 	 *
@@ -74,4 +76,6 @@ public interface IFormManager {
     void updateFormData(Form form);
 
     boolean existSerial(String serial);
+
+    Integer getFormThreadCount(String serial);
 }

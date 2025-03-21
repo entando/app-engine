@@ -129,17 +129,17 @@ public class TestFormManager extends BaseTestCase {
 			_formManager.addForm(form5);
 			_formManager.addForm(form6);
 
-		List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERIFY, true);
-		assertEquals(3,listSearchFormAfter1.size());
+			List<Form> listSearchFormAfter1 = _formManager.searchByDateAfter(LDT_VERIFY, true);
+			assertEquals(3,listSearchFormAfter1.size());
 
-		List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERIFY, false);
-		assertEquals(2,listSearchFormAfter2.size());
+			List<Form> listSearchFormAfter2 = _formManager.searchByDateAfter(LDT_VERIFY, false);
+			assertEquals(2,listSearchFormAfter2.size());
 
-		List<Form> listSearchFormBefore1 = _formManager.searchByDateBefore(LDT_VERIFY, true);
-		assertEquals(1,listSearchFormBefore1.size());
+			List<Form> listSearchFormBefore1 = _formManager.searchByDateBefore(LDT_VERIFY, true);
+			assertEquals(1,listSearchFormBefore1.size());
 
-		List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERIFY, false);
-		assertEquals(1,listSearchFormBefore2.size());
+			List<Form> listSearchFormBefore2 = _formManager.searchByDateBefore(LDT_VERIFY, false);
+			assertEquals(1,listSearchFormBefore2.size());
 
 
 
@@ -349,6 +349,46 @@ public class TestFormManager extends BaseTestCase {
 		assertFalse(_formManager.existSerial("oiqwrh!form0.getSerial()"));
 	}
 
+	@Test
+	public void deleteThread() throws ApsSystemException {
+		final Form form = getFormForTest();
+		final Form anotherForm = getFormForTest();
+
+		_formManager.addForm(form);
+		anotherForm.setSerial(form.getSerial());
+		_formManager.addForm(anotherForm);
+
+		Integer num = _formManager.getFormThreadCount(anotherForm.getSerial());
+		assertEquals((Integer) 2, num);
+
+		_formManager.deleteForm(anotherForm.getId(), true);
+		num = _formManager.getFormThreadCount(anotherForm.getSerial());
+		assertEquals((Integer) 0, num);
+		Form verify = _formManager.getForm(form.getId());
+		assertNull(verify);
+	}
+
+	@Test
+	public void countThreadTest() throws ApsSystemException {
+		final Form form0 = _formManager.getForm(2677L);
+		final Form form = getFormForTest();
+
+		try {
+			assertNotNull(form0.getSerial());
+			form.setSerial(form0.getSerial());
+
+			Integer num = _formManager.getFormThreadCount(form0.getSerial());
+			assertEquals((Integer) 1, num);
+			_formManager.addForm(form);
+			num = _formManager.getFormThreadCount(form0.getSerial());
+			assertEquals((Integer) 2, num);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			_formManager.deleteForm(form.getId());
+		}
+	}
+
 
 	public static FormData getFormDataForTest() {
 		FormData fd = new FormData();
@@ -381,7 +421,6 @@ public class TestFormManager extends BaseTestCase {
 	}
 
 	private void testFormData(FormData data) {
-
 		assertNotNull(data);
 
 		assertEquals("setValore1", data.getValore1());
@@ -424,28 +463,19 @@ public class TestFormManager extends BaseTestCase {
 
 	}
 
-/*	private Form getFormForTest() {
+	private Form getFormForTest() {
 		Form form = new Form();
 
-		form.setId(2677L);
 		form.setName("Plinio");
-		form.setCampaign("basic");
+		form.setCampaign("testing");
 		form.setSubmitted(TODAY);
 		form.setDelivered(false);
 		form.setData(getFormDataForTest());
-		form.setSerial(this.generateRandomHash2());
+		form.setDelivery(getDeliveryDataForTest());
+		form.setConfiguration(getFormConfigForTests());
 
 		return form;
-	}*/
-
-//	public static FormPayload getFormPayloadForTest(){
-//		FormPayload formPayload = new FormPayload();
-//
-//		formPayload.setFormData(getFormDataForTest());
-//		formPayload.setDeliveryData(getDeliveryDataForTest());
-//
-//		return formPayload;
-//	}
+	}
 
 	public static FormConfiguration getFormConfigForTests() {
 		FormConfiguration config = new FormConfiguration();

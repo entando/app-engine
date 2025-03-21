@@ -1,6 +1,6 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 
-import static org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate.EMAIL_TEMPLATE;
+import static org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate.EMAIL_TEMPLATE_FIRST_SUBMIT;
 
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.common.FieldSearchFilter;
@@ -90,9 +90,9 @@ public class MailManager extends AbstractService implements IMailManager {
 
     @Override
     public boolean sendMail(Form form) {
-        Message message = getMessage();
+        MimeMessage message = getMessage();
         final String from = _recipients.get(IMailManager.CFG_FROM);
-        final String body = processTemplate(EMAIL_TEMPLATE, form);
+        final String body = processTemplate(EMAIL_TEMPLATE_FIRST_SUBMIT, form);
 
         try {
             // from
@@ -243,6 +243,7 @@ public class MailManager extends AbstractService implements IMailManager {
                 }
                 template = template.replace("${TESTO}", sb.toString());
             }
+            template = template.replace("${SERIALE}", form.getSerial());
             // date
             if (form.getSubmitted() != null) {
                 LocalDateTime localDateTime = form.getSubmitted();

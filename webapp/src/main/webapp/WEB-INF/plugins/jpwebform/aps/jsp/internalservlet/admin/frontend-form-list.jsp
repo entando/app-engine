@@ -84,7 +84,6 @@
                         </td>
                         <td><s:property value="%{#formVar.name}" /></td>
                         <td><s:property value="%{#formVar.campaign}" /></td>
-                            <%--                    <td><s:property value="%{#formVar.data.valore1}" /></td>--%>
                         <td><s:property value="%{#formVar.submitted}" /></td>
                         <td>
                             <s:if test="%{#formVar.delivered}">

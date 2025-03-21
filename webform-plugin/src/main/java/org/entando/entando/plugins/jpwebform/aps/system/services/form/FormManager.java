@@ -96,6 +96,15 @@ public class FormManager extends AbstractService implements IFormManager {
 	}
 
 	@Override
+	public void deleteForm(long id, boolean all) throws ApsSystemException {
+		if (!all) {
+			deleteForm(id);
+		} else {
+			_formDAO.deleteFormThread(id);
+		}
+	}
+
+	@Override
 	public void deleteForm(long id) throws ApsSystemException {
 
 		try {
@@ -186,6 +195,19 @@ public class FormManager extends AbstractService implements IFormManager {
 			new ApsSystemException("Error checking for serial", t);
 		}
 		return false;
+	}
+
+	@Override
+	public Integer getFormThreadCount(String serial) {
+		Integer count = 0;
+
+		try {
+			count = _formDAO.countFormThread(serial);
+		} catch (Exception e) {
+			log.error("Error counting form", e);
+			new ApsSystemException("counting form", e);
+		}
+		return count;
 	}
 
 	public IFormDAO getFormDAO() {

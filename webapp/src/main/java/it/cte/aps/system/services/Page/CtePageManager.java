@@ -70,6 +70,9 @@ public class CtePageManager extends PageManager implements IPageManager, GroupUt
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(CtePageManager.class);
     public static final String ERRMSG_ERROR_WHILE_MOVING_A_PAGE = "Error while moving a page";
 
+    private static final String TARGET_REPLACE_FROM = "dropdown-form-widget-";
+    private static final String TARGET_REPLACE_TO = "jpwebform";
+
     @Autowired
     @Qualifier(value = "PageManagerParameterNames")
     public transient List<String> parameterNames;
@@ -116,7 +119,14 @@ public class CtePageManager extends PageManager implements IPageManager, GroupUt
             throw new EntException("Invalid null value found in either the Widget or the widgetType");
         }
 
+        // ESB-356 -- start
         System.out.println("\n>>>\n>>> " + widget.getTypeCode() + "\n>>>\n");
+        if (widget.getTypeCode().startsWith(TARGET_REPLACE_FROM)) {
+            logger.info("Changing on the fly the widget type code from {} to {} in the frame {} of page {}",
+                    TARGET_REPLACE_FROM, TARGET_REPLACE_TO, pos, pageCode);
+            widget.setTypeCode(TARGET_REPLACE_TO);
+        }
+        // ESB-356 -- end
 
         try {
             IPage currentPage = this.getDraftPage(pageCode);

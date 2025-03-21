@@ -175,6 +175,30 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return result;
 	}
 
+	@Override
+	public Integer countFormThread(String serial) {
+		PreparedStatement stat = null;
+		ResultSet res = null;
+		Connection conn  = null;
+		int count = 0;
+
+		try {
+			conn = this.getConnection();
+			stat = conn.prepareStatement(COUNT_THREAD);
+			stat.setString(1, serial);
+			res = stat.executeQuery();
+			if (res.next()) {
+				count = res.getInt(1);
+			}
+		} catch (Exception e) {
+			logger.error("Error getting form count by serial", e);
+			throw new RuntimeException("Error getting form count by serial", e);
+		} finally {
+			closeDaoResources(res, stat, conn);
+		}
+		return count;
+	}
+
 	public void insertForm(Form form, Connection conn) {
 		PreparedStatement stat = null;
 		int index = 1;
@@ -394,6 +418,24 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 		return form;
 	}
 
+	@Override
+	public void deleteFormThread(long id) {
+		PreparedStatement stat = null;
+		Connection conn  = null;
+
+		try {
+			conn = this.getConnection();
+			stat = conn.prepareStatement(DELETE_FORM_THREAD);
+			stat.setLong(1, id);
+			stat.execute();
+		} catch (Exception e) {
+			logger.error("Error deleting form thread", e);
+			throw new RuntimeException("Error deleting form thread", e);
+		} finally {
+			closeDaoResources(null, stat, conn);
+		}
+	}
+
 	// REFACTOR THIS
 	public List<Form> searchByDateAfter(LocalDateTime data, Boolean delivered){
 		List<Form> formList= getFormList();
@@ -437,6 +479,10 @@ public class FormDAO extends AbstractSearcherDAO implements IFormDAO {
 	private static final String UPDATE_FORM_DATA = "UPDATE jpwebform_form SET \"data\"=? WHERE id = ?";
 
 	private static final String VERIFY_SERIAL = "SELECT 1 FROM AGILE.jpwebform_form WHERE serial = ?";
+
+	private static final String DELETE_FORM_THREAD = "DELETE FROM jpwebform_form WHERE serial = (SELECT serial FROM jpwebform_form WHERE id = ?)";
+
+	private static final String COUNT_THREAD = "SELECT COUNT(*) FROM jpwebform_form WHERE serial = ?";
 
 	private final String SEARCH_BY_DATE_AFTER ="SELECT id, name, submitted, delivered, \"data\", seriale FROM jpwebform_form WHERE submitted >= ? AND delivered = ?";
 
