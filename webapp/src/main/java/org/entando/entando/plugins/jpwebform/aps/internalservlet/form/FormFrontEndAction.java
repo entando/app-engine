@@ -23,6 +23,9 @@ import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_T
 import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_4;
 import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TEXT_REQUIRED_5;
 import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_TITLE;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.ENTANDO_GROUP_BASE;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.FOLLOW_UP_ADMITTED;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.PERM_FORM_ADMIN;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.FieldSearchFilter;
@@ -37,14 +40,13 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.DeliveryData;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormConfiguration;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.model.FormData;
-import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate;
 import org.entando.entando.plugins.jpwebform.apsadmin.form.FormAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,7 +181,6 @@ public class FormFrontEndAction extends FormAction {
                 log.error("couldn't find the widget configuration");
                 return INPUT;
             }
-
             form.setCampaign((String) widget.getConfig().get(CFG_TITLE));
 
             final String currentUser = this.getCurrentUser().getUsername();
@@ -212,7 +213,7 @@ public class FormFrontEndAction extends FormAction {
             form.getDelivery().setRecipient(getIdDestinatario());
             form.getDelivery().setSubject(getSubject());
 
-            if (getMailManager().sendMail(form)) {
+            if (getMailManager().sendMail(form, MailTemplate.EMAIL_TEMPLATE_FIRST_SUBMIT, true)) {
                 log.debug("Form successfully delivered to {}", form.getDelivery().getRecipient());
                 form.setDelivered(true);
             } else {
@@ -253,10 +254,10 @@ public class FormFrontEndAction extends FormAction {
             // in case of standard user we restrict form by owner
             if (!isPrivilegedUser()) {
                 List<Object> safeFilters = Arrays.stream(filters)
-                .filter(f ->
-                        !((FieldSearchFilter<?>)f).getKey().equals("name")  // exclude NAME filter
-                )
-                .collect(Collectors.toList());
+                        .filter(f ->
+                                !((FieldSearchFilter<?>)f).getKey().equals("name")  // exclude NAME filter
+                        )
+                        .collect(Collectors.toList());
                 // impose the username
                 FieldSearchFilter nameFilter = new FieldSearchFilter("name", getCurrentUser().getUsername(), false);
                 safeFilters.add(nameFilter);
@@ -284,7 +285,9 @@ public class FormFrontEndAction extends FormAction {
 
     public String delete() {
         try {
+            final Form form = getFormManager().getForm(getId());
             this.getFormManager().deleteForm(getId());
+            this.getMailManager().sendMail(form, MailTemplate.EMAIL_TEMPLATE_DELETE, false);
             log.error("deleted form id {}", getId());
         } catch (Exception e) {
             log.error("error deleting form id {}", getId(), e);
@@ -322,18 +325,6 @@ public class FormFrontEndAction extends FormAction {
                 || isFormPrivilegedUser(user, false);
     }
 
-    public String getRedirectionUrl() {
-        final Widget currentWidget = this.getWidgetConfig();
-        String redirection = "";
-
-        if (currentWidget != null
-        && currentWidget.getConfig() != null
-        && currentWidget.getConfig().contains("redirectionUrl")) {
-            redirection = (String) currentWidget.getConfig().get("redirectUrl");
-        }
-        return redirection;
-    }
-
     /**
      * Check whether the current user has privileged permissions on form management
      *
@@ -341,33 +332,17 @@ public class FormFrontEndAction extends FormAction {
      * @param checkGroup if true the grooup is checked, the permission otherwise
      * @return
      */
-    private static boolean isFormPrivilegedUser(UserDetails user, boolean checkGroup) {
-        Optional<Authorization> isPrivileged = user.getAuthorizations()
-                .stream()
-                .filter(a -> {
-                    Optional<String> isPrivilegedFormUser = Optional.ofNullable(null);
-                    String groupName = "<no group>";
+    private boolean isFormPrivilegedUser(UserDetails user, boolean checkGroup) {
+        return user.getAuthorizations().stream()
+                .anyMatch(auth -> isPrivileged(auth, checkGroup));
+    }
 
-                    if (checkGroup) {
-                        if (a.getGroup() != null) {
-                            groupName = a.getGroup().getName();
-                            if (groupName.startsWith("form-grp-")) {
-                                return true;
-                            }
-                        }
-                    } else {
-                        String roleName = "<no role>";
-                        if (a.getRole() != null) {
-                            roleName = a.getRole().getName();
-                            isPrivilegedFormUser = a.getRole().getPermissions().stream()
-                                    .filter(p -> p.equals("form-admin"))
-                                    .findFirst();
-                        }
-                    }
-                    return isPrivilegedFormUser.isPresent();
-                })
-                .findFirst();
-        return isPrivileged.isPresent();
+    private boolean isPrivileged(Authorization auth, boolean checkGroup) {
+        if (checkGroup) {
+            return auth.getGroup() != null && auth.getGroup().getName().startsWith(ENTANDO_GROUP_BASE);
+        } else {
+            return auth.getRole() != null && auth.getRole().getPermissions().contains(PERM_FORM_ADMIN);
+        }
     }
 
 
@@ -441,6 +416,25 @@ public class FormFrontEndAction extends FormAction {
             }
         }
         return map;
+    }
+
+    public String getRedirectionUrl() {
+        final Widget currentWidget = this.getWidgetConfig();
+        String redirection = "";
+
+        if (currentWidget != null
+                && currentWidget.getConfig() != null
+                && currentWidget.getConfig().contains("redirectionUrl")) {
+            redirection = (String) currentWidget.getConfig().get("redirectUrl");
+        }
+        return redirection;
+    }
+
+    public boolean enableFollowUp(String seriale) {
+        if (StringUtils.isNotBlank(seriale)) {
+            return getFormManager().getFormThreadCount(seriale) - 1 < FOLLOW_UP_ADMITTED;
+        }
+        return false;
     }
 
     public String getIdDestinatario() {

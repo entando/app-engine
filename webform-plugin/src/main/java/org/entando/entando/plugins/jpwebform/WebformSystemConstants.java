@@ -23,4 +23,13 @@ public interface WebformSystemConstants {
     String CFG_MAIL_OBJECT = "subject"; // oggetto
 
     String CFG_TITLE = "title"; // titolo
+
+    int FOLLOW_UP_ADMITTED = 1;
+
+    String CFG_DEFAULT_MAIL_SUBJECT = "Mail automatizzata";
+
+    String ENTANDO_GROUP_BASE = "form-grp-";
+
+    String PERM_FORM_ADMIN = "form-admin";
+    String PERM_FORM_USER = "form-user";
 }

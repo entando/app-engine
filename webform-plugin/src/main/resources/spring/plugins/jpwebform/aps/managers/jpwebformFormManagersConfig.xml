@@ -18,16 +18,16 @@
 	<bean id="jpwebformMailManager" class="org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailManager"
 			parent="abstractService">
 		<property name="formManager" ref="jpwebformFormManager" />
-		<property name="mailHost" value="${SME_SMTP_HOST}"/>
-		<property name="debug" value="${SME_SMTP_DEBUG:true}"/>
-		<property name="mailPort" value="${SME_SMTP_PORT}"/>
-		<property name="mailUsername" value="${SME_SMTP_USERNAME}"/>
-		<property name="mailPassword" value="${SME_SMTP_PASSWORD}"/>
-		<property name="mailAuth" value="${SME_SMTP_AUTH}"/>
-		<property name="startTls" value="${SME_SMTP_STARTTLS}"/>
-		<property name="tlsRequired" value="${SME_SMTP_STARTTLS_REQUIRED}"/>
-		<property name="sslEnable" value="${SME_SSL_ENABLE}"/>
-		<property name="recipientsCSV" value="${SME_SMTP_RECIPIENTS}"/>
+		<property name="mailHost" value="${SME_SMTP_HOST:}"/>
+		<property name="debug" value="${SME_SMTP_DEBUG:false}"/>
+		<property name="mailPort" value="${SME_SMTP_PORT:25}"/>
+		<property name="mailUsername" value="${SME_SMTP_USERNAME:}"/>
+		<property name="mailPassword" value="${SME_SMTP_PASSWORD:}"/>
+		<property name="mailAuth" value="${SME_SMTP_AUTH:false}"/>
+		<property name="startTls" value="${SME_SMTP_STARTTLS:false}"/>
+		<property name="tlsRequired" value="${SME_SMTP_STARTTLS_REQUIRED:false}"/>
+		<property name="sslEnable" value="${SME_SSL_ENABLE:false}"/>
+		<property name="recipientsCSV" value="${SME_SMTP_RECIPIENTS:}"/>
 	</bean>
 
 	<task:scheduled-tasks>

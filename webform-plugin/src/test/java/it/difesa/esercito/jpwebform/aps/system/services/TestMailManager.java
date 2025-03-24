@@ -8,6 +8,7 @@ import com.agiletec.aps.system.exception.ApsSystemException;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.IFormManager;
 import org.entando.entando.plugins.jpwebform.aps.system.services.mail.IMailManager;
+import org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ public class TestMailManager extends BaseTestCase {
 
         Form verify = _formManager.getForm(form3.getId());
         
-        assertTrue(_mailManager.sendMail(verify));
+        assertTrue(_mailManager.sendMail(verify, MailTemplate.EMAIL_TEMPLATE_FIRST_SUBMIT, true));
 
         _formManager.deleteForm(form3.getId());
 

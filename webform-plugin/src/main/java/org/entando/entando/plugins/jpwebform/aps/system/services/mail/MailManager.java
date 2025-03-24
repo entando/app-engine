@@ -1,6 +1,6 @@
 package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 
-import static org.entando.entando.plugins.jpwebform.aps.system.services.mail.MailTemplate.EMAIL_TEMPLATE_FIRST_SUBMIT;
+import static org.entando.entando.plugins.jpwebform.WebformSystemConstants.CFG_DEFAULT_MAIL_SUBJECT;
 
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.common.FieldSearchFilter;
@@ -89,39 +89,47 @@ public class MailManager extends AbstractService implements IMailManager {
 
 
     @Override
-    public boolean sendMail(Form form) {
+    public boolean sendMail(Form form, String template, Boolean notifyUser) {
         MimeMessage message = getMessage();
         final String from = _recipients.get(IMailManager.CFG_FROM);
-        final String body = processTemplate(EMAIL_TEMPLATE_FIRST_SUBMIT, form);
+        final String body = processTemplate(template, form);
+
+        if (StringUtils.isBlank(template)) {
+            log.error("empty email template for form {} ['{}'], aborting delivery",
+                    form.getId(), form.getCampaign());
+            return false;
+        }
 
         try {
-            // from
-            message.setFrom(new InternetAddress(from));
-            // recipients TO, BCC
-            message.setRecipients(
-                    Message.RecipientType.TO,
-                    InternetAddress.parse(form.getDelivery().getCc()) //form.getCc()
-            );
-            log.info("Mail TO: {}", form.getDelivery().getCc());
-
             final String recipientId = form.getDelivery().getRecipient();
-            final String recipient = _recipients.get(recipientId);
+            final String adminMail = _recipients.get(recipientId);
+            final String userMail = form.getDelivery().getCc();
 
-            if (StringUtils.isBlank(recipient)) {
+            if (StringUtils.isBlank(adminMail)) {
                 log.error("Cannot determine the destination address '{}'", recipientId);
                 return false;
             }
-
+            // FROM
+            message.setFrom(new InternetAddress(from));
+            // TO
             message.setRecipients(
-                    Message.RecipientType.BCC,
-                    InternetAddress.parse(recipient)
+                    Message.RecipientType.TO,
+                    InternetAddress.parse(adminMail)
             );
-            log.info("Mail BCC: {}", recipient);
-            if (StringUtils.isNotBlank(form.getDelivery().getSubject())) {
-                message.setSubject(form.getDelivery().getSubject());
-            } else {
-                message.setSubject("Mail automatizzata");
+            log.debug("Mail TO: {}", adminMail);
+            // BCC
+            if (notifyUser) {
+                message.setRecipients(
+                        Message.RecipientType.BCC,
+                        InternetAddress.parse(userMail)
+                );
+                log.debug("Mail BCC: {}", userMail);
             }
+
+            final String subject = StringUtils.isNotBlank(form.getDelivery().getSubject()) ?
+                    form.getDelivery().getSubject() : CFG_DEFAULT_MAIL_SUBJECT;
+                message.setSubject(subject);
+                log.debug("Mail subject: {}", subject);
             // body
             message.setText(body);
             // finally
@@ -283,7 +291,7 @@ public class MailManager extends AbstractService implements IMailManager {
                 try {
                     Form form = getFormManager().getForm(f);
                     log.debug("delivering mail originally intended for {}", form.getSubmitted());
-                    if (sendMail(form)) {
+                    if (sendMail(form, MailTemplate.EMAIL_TEMPLATE_FIRST_SUBMIT, true)) {
                         getFormManager().updateForm(form);
                     } else {
                         log.error("Could not deliver the form {} again", form.getId());

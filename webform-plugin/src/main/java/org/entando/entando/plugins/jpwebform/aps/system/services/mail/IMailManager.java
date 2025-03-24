@@ -3,8 +3,6 @@ package org.entando.entando.plugins.jpwebform.aps.system.services.mail;
 import com.agiletec.aps.system.exception.ApsSystemException;
 import org.entando.entando.plugins.jpwebform.aps.system.services.form.Form;
 
-import java.util.List;
-
 public interface IMailManager {
 
     String BEAN_ID = "jpwebformMailManager";
@@ -16,10 +14,12 @@ public interface IMailManager {
     /**
      * Deliver mail with the form prospect
      *
-     * @param form submitted data
+     * @param form       submitted data
+     * @param template
+     * @param notifyUser
      * @return true if the mail was delivered, false otherwise
      */
-    boolean sendMail(Form form);
+    boolean sendMail(Form form, String template, Boolean notifyUser);
 
     /**
      * Return the email associated to the given key
