@@ -43,7 +43,7 @@ class UrlUtilsTest {
     @Mock private HttpServletRequest requestMock;
 
     @BeforeEach
-    private void init() throws Exception {
+    void init() throws Exception {
         Mockito.reset(requestMock);
     }
 
