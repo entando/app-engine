@@ -1,6 +1,7 @@
 package org.entando.entando.web.configuration;
 
 import com.google.common.collect.ImmutableList;
+import java.util.stream.Stream;
 import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.ent.util.EntLogging;
 
@@ -47,7 +48,6 @@ public class ServletContextConfigurator implements ServletContextListener {
 
     private void configureSpecialFiles() {
         servletContext.setInitParameter("welcomeFileList", "index.jsp,adminindex.jsp");
-        servletContext.setInitParameter("welcomeFileList", "index.jsp,adminindex.jsp");
     }
 
     private void configureSessionManagement() {
@@ -72,6 +72,8 @@ public class ServletContextConfigurator implements ServletContextListener {
         registerServlet("PreviewControllerServlet", ENTANDO_PREVIEW_SERVLET, 1, withAlsoVirtualContexts("/preview/*"));
         registerServlet("ResourceControllerServlet", ENTANDO_PROTECTED_RESOURCE_SERVLET, 1, withAlsoVirtualContexts("/protected/*"));
         registerServlet("Struts2ExtServlet", ENTANDO_STRUTS_2_SERVLET_DISPATCHER, withAlsoVirtualContexts("/ExtStr2/do/*"));
+
+        registerHomepageRoutes();
     }
 
     private void registerFilters() {
@@ -88,6 +90,16 @@ public class ServletContextConfigurator implements ServletContextListener {
         filter.setInitParameter("encoding", "UTF-8");
         filter.setInitParameter("forceEncoding", "true");
         filter.addMappingForUrlPatterns(null, false, "*");
+    }
+
+    private void registerHomepageRoutes() {
+        String[] mappings = Stream.concat(
+                virtualContexts.stream().filter(t -> !t.isBlank()).map(t -> "/" + t),
+                virtualContexts.stream().filter(t -> !t.isBlank()).map(t -> "/" + t + "/")
+        ).toArray(String[]::new);
+        if (mappings.length > 0) {
+            servletContext.addJspFile("TenantHome", "/index.jsp").addMapping(mappings);
+        }
     }
 
     private void initParameters() {

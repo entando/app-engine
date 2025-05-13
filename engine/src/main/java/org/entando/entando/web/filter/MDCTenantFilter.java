@@ -25,19 +25,9 @@ public class MDCTenantFilter extends HttpFilter {
                     .orElseGet(() -> ApsTenantApplicationUtils.extractCurrentTenantCode(request).orElse(""));
             log.trace("Adding to MDC the key:'{}' with value:'{}'", MDC_KEY_TENANT, tenant);
             MDC.put(MDC_KEY_TENANT, tenant);
-            if (this.isSecondaryTenantOnRootFolder(tenant, request)) {
-                request.getRequestDispatcher("/index.jsp").forward(request, response);
-            }
             chain.doFilter(request, response);
         } finally {
             MDC.remove(MDC_KEY_TENANT);
         }
     }
-
-    protected boolean isSecondaryTenantOnRootFolder(String tenant, HttpServletRequest request) {
-        String servletPath = request.getServletPath();
-        log.debug("Tenant {} - Servlet Path {}", tenant, servletPath);
-        return StringUtils.isNoneEmpty(tenant) && (StringUtils.isEmpty(servletPath) || servletPath.equals("/"));
-    }
-
 }
