@@ -25,6 +25,9 @@ import org.apache.struts2.dispatcher.mapper.DefaultActionMapper;
  * @author E.Santoboni
  */
 public class ExtendedDefaultActionMapper extends DefaultActionMapper {
+
+    public static final String STRUTS2_PATH_PREFIX = "/ExtStr2";
+    public static final int STRUTS2_PATH_PREFIX_LENGTH = STRUTS2_PATH_PREFIX.length();
 	
 	@Override
 	public ActionMapping getMapping(HttpServletRequest request, ConfigurationManager configManager) {
@@ -53,7 +56,7 @@ public class ExtendedDefaultActionMapper extends DefaultActionMapper {
         if (uri == null || "".equals(uri)) {
         	uri = (String) request.getAttribute("javax.servlet.include.servlet_path");
         } else {
-        	return uri.substring((request.getContextPath()+"/ExtStr2").length());
+        	return uri.substring(uri.indexOf(STRUTS2_PATH_PREFIX) + STRUTS2_PATH_PREFIX_LENGTH);
         }
         if (uri != null && !"".equals(uri)) {
             return uri;
