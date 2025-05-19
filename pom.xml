@@ -93,7 +93,7 @@
         <json-path-assert.version>2.6.0</json-path-assert.version>
         <springfox-swagger2.version>2.10.5</springfox-swagger2.version>
         <byte-buddy.version>1.11.6</byte-buddy.version>
-        <guava.version>30.1.1-jre</guava.version>
+        <guava.version>33.4.8-jre</guava.version>
         <spring-data-rest-webmvc.version>3.5.6</spring-data-rest-webmvc.version>
         <commons-beanutils.version>1.9.4</commons-beanutils.version>
         <commons-chain.version>1.2</commons-chain.version>
@@ -106,7 +106,7 @@
         <taglibs-standard-impl.version>1.2.5</taglibs-standard-impl.version>
         <assertj-core.version>3.20.2</assertj-core.version>
         <commons-digester.version>2.1</commons-digester.version>
-        <logback.version>1.2.7</logback.version>
+        <logback.version>1.2.13</logback.version>
         <logback-json.version>0.1.5</logback-json.version>
         <logback-jackson.version>0.1.5</logback-jackson.version>
         <aspectj.version>1.9.7</aspectj.version>
@@ -195,6 +195,8 @@
         <commons-fileupload.version>1.5</commons-fileupload.version>
         <solr-solrj.version>8.11.1</solr-solrj.version>
         <spring-hateoas.version>1.5.5</spring-hateoas.version>
+        <fasterxml-woodstox.version>7.1.0</fasterxml-woodstox.version>
+        <snappy-java.version>1.1.10.7</snappy-java.version>
     </properties>
     <issueManagement>
         <system>Github</system>
@@ -1563,6 +1565,17 @@
                 <groupId>org.springframework.hateoas</groupId>
                 <artifactId>spring-hateoas</artifactId>
                 <version>${spring-hateoas.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.woodstox</groupId>
+                <artifactId>woodstox-core</artifactId>
+                <version>${fasterxml-woodstox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>${snappy-java.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
