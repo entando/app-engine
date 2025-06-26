@@ -13,18 +13,17 @@
  */
 package com.agiletec.apsadmin.system.conversion;
 
+import com.agiletec.aps.util.DateConverter;
+import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
+import org.apache.struts2.StrutsException;
+import org.apache.struts2.util.StrutsTypeConverter;
+
 import java.lang.reflect.Constructor;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
-
-import org.apache.struts2.util.StrutsTypeConverter;
-
-import com.agiletec.aps.util.DateConverter;
-import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import com.opensymphony.xwork2.XWorkException;
 
 /**
  * Class converter for data type property. 
@@ -39,7 +38,7 @@ public class ApsDateTypeConverter extends StrutsTypeConverter {
 	public Object convertFromString(Map context, String[] values, Class toType) {
 		if (null == values) return null;
 		if (values.length > 1) {
-			throw new XWorkException("Multiple values");
+			throw new StrutsException("Multiple values");
 		}
 		Date result = null;
 		String value = values[0];
@@ -54,11 +53,11 @@ public class ApsDateTypeConverter extends StrutsTypeConverter {
                         Constructor constructor = toType.getConstructor(new Class[]{long.class});
                         return constructor.newInstance(new Object[]{Long.valueOf(result.getTime())});
                     } catch (Exception e) {
-                        throw new XWorkException("Couldn't create class " + toType + " using default (long) constructor", e);
+                        throw new StrutsException("Couldn't create class " + toType + " using default (long) constructor", e);
                     }
                 }
             } catch (ParseException e) {
-                throw new XWorkException("Could not parse date", e);
+                throw new StrutsException("Could not parse date", e);
             }
         }
         return result;

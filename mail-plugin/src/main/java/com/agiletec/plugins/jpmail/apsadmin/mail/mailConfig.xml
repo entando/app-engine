@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE struts PUBLIC
-    "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
-    "http://struts.apache.org/dtds/struts-2.5.dtd">
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+        "https://struts.apache.org/dtds/struts-6.0.dtd">
 
 <struts>
 	
@@ -21,8 +21,8 @@
         </action>
 		
     	<action name="testSmtp" class="jpmailSmtpConfigAction" method="testSmtp">
-            <result name="input" type="dispatcher">/WEB-INF/plugins/jpmail/apsadmin/jsp/mail/inc/smtp-messages.jsp</result>
-        	<result type="dispatcher">/WEB-INF/plugins/jpmail/apsadmin/jsp/mail/inc/smtp-messages.jsp</result>
+            <result name="input" type="tiles">admin.jpmail.MailConfig.entrySmtpServer</result>
+            <result type="tiles">admin.jpmail.MailConfig.entrySmtpServer</result>
         	<interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
 		

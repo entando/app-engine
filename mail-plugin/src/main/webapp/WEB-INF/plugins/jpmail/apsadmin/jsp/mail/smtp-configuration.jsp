@@ -2,7 +2,6 @@
 <%@ taglib uri="/aps-core" prefix="wp" %>
 <%@ taglib uri="/apsadmin-core" prefix="wpsa" %>
 <%@ taglib uri="/apsadmin-form" prefix="wpsf" %>
-<%@ taglib prefix="sj" uri="/struts-jquery-tags"%>
 
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="jpmail.admin"/></li>
@@ -166,9 +165,9 @@
         <div class="form-group">
             <div class="col-xs-12">
                 <div class="pull-right">
-                    <sj:submit parentTheme="simple" formIds="configurationForm" value="%{getText('label.testConnection')}" targets="messages" cssClass="btn btn-success"/>
-                    <wpsf:submit name="testMail"  value="%{getText('label.sendEmail')}" action="testMail" cssClass="btn btn-success" onclick="overrideSubmit('testMail')"/>
-                    <wpsf:submit name="save" type="button" action="saveSmtp" cssClass="btn btn-primary" onclick="overrideSubmit('saveSmtp')">
+                    <wpsf:submit name="testSmtp" value="%{getText('label.testConnection')}" action="testSmtp" cssClass="btn btn-success" />
+                    <wpsf:submit name="testMail"  value="%{getText('label.sendEmail')}" action="testMail" cssClass="btn btn-success" />
+                    <wpsf:submit name="save" type="button" action="saveSmtp" cssClass="btn btn-primary" >
                         <s:text name="%{getText('label.save')}"/>
                     </wpsf:submit>
                 </div>

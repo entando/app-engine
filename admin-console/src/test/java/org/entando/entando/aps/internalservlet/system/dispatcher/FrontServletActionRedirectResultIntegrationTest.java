@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.struts2.url.QueryStringBuilder;
 import org.apache.struts2.views.util.UrlHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,11 +87,11 @@ class FrontServletActionRedirectResultIntegrationTest extends ApsAdminBaseTestCa
     }
 
     private void executeServlet(String expectedProtocol, String expectedAuthority, String expectedPath) throws Exception {
-        UrlHelper urlHelper = this.getContainerObject(UrlHelper.class);
+        QueryStringBuilder queryStringBuilder = this.getContainerObject(QueryStringBuilder.class);
         this.initAction("/do/Api/Service", "list", true);
         FrontServletActionRedirectResult servlet = new FrontServletActionRedirectResult();
         servlet.setActionName("details");
-        servlet.setUrlHelper(urlHelper);
+        servlet.setQueryStringBuilder(queryStringBuilder);
         servlet.execute(super.getActionContext().getActionInvocation());
         URL aURL = new URL(servlet.getLocation());
         assertEquals(expectedProtocol, aURL.getProtocol());

@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.struts2.interceptor.ServletResponseAware;
+import org.apache.struts2.action.ServletResponseAware;
 import org.apache.struts2.json.JSONUtil;
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
 import org.entando.entando.apsadmin.portal.model.helper.IPageModelActionHelper;
@@ -52,8 +52,8 @@ public class PageModelAction extends AbstractPageModelAction implements ServletR
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(PageModelAction.class);
 
     @Override
-    public void setServletResponse(HttpServletResponse response) {
-        this._response = response;
+    public void withServletResponse(HttpServletResponse httpServletResponse) {
+        this._response = httpServletResponse;
     }
 
     @Override

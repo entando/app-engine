@@ -28,7 +28,6 @@
         <s:text name="activity.stream.note.no.activity" />
     </s:else>
     <% } %>
-</div> 
-</html>
+</div>
 
 

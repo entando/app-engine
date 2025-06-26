@@ -14,6 +14,8 @@
 package org.entando.entando.aps.util;
 
 import com.google.common.net.HttpHeaders;
+
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -23,10 +25,12 @@ import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.owasp.encoder.Encode;
+import org.springframework.lang.Nullable;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -38,8 +42,41 @@ public final class UrlUtils {
     public static final String ENTANDO_APP_ENGINE_EXTERNAL_PORT = "ENTANDO_APP_ENGINE_EXTERNAL_PORT";
     public static final String HTTP_SCHEME = "http";
     public static final String HTTPS_SCHEME = "https";
+    private static final String PATH_SEPARATOR = "/";
 
     private UrlUtils(){}
+
+    public static boolean urlContains(String baseUrl, String targetUrl, boolean baseIncludesBase) {
+        try {
+            URI base = new URI(baseUrl).normalize();
+            URI target = new URI(targetUrl).normalize();
+
+            // Check scheme and authority first (e.g., https://example.com)
+            if (base.getScheme() == null || target.getScheme() == null || (!base.getScheme().replace("https", "http")
+                    .equalsIgnoreCase(target.getScheme().replace("https", "http")) ||
+                    !base.getHost().equalsIgnoreCase(target.getHost()) ||
+                    base.getPort() != target.getPort())) {
+                return false;
+            }
+
+            // Normalize and compare path segments
+            String basePath = normalizePathForComparison(base.getPath());
+            String targetPath = normalizePathForComparison(target.getPath());
+
+            return basePath != null && targetPath != null && targetPath.startsWith(basePath) && (
+                    baseIncludesBase || targetPath.length() > basePath.length()
+            );
+        } catch (URISyntaxException e) {
+            return false;
+        }
+    }
+
+    private static String normalizePathForComparison(@Nullable String path) {
+        if (path == null) return null;
+        path = FilenameUtils.normalize(path, true);
+        if (path == null) return null;
+        return (path.endsWith(PATH_SEPARATOR)) ? path : path + PATH_SEPARATOR;
+    }
 
     public static String fetchScheme(HttpServletRequest request){
         return getProtoFromEnv().filter(UrlUtils::isHttps)

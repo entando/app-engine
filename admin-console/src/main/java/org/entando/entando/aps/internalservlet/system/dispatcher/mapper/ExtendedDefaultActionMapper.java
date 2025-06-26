@@ -17,6 +17,8 @@ import com.opensymphony.xwork2.config.ConfigurationManager;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.RequestUtils;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.dispatcher.mapper.DefaultActionMapper;
 
@@ -57,10 +59,15 @@ public class ExtendedDefaultActionMapper extends DefaultActionMapper {
         }
         if (uri != null && !"".equals(uri)) {
             return uri;
+        } else {
+            uri = RequestUtils.getServletPath(request);
+            if (StringUtils.isNotEmpty(uri)) {
+                return uri;
+            } else {
+                uri = request.getRequestURI();
+                return uri.substring(request.getContextPath().length());
+            }
         }
-        uri = request.getRequestURI();
-        uri = uri.substring(request.getContextPath().length());
-        return uri;
     }
-    
+
 }

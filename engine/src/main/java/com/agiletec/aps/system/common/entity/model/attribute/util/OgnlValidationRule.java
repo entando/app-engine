@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
+
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
@@ -135,7 +136,7 @@ public class OgnlValidationRule implements Serializable {
     }
     
     protected OgnlContext createContextForExpressionValidation(AttributeInterface attribute, AttributeTracer tracer, ILangManager langManager) {
-        OgnlContext context = new OgnlContext();
+        OgnlContext context = (OgnlContext) Ognl.createDefaultContext(attribute);
         Map<String, Lang> langs = new HashMap<>();
         List<Lang> langList = langManager.getLangs();
         for (int i = 0; i < langList.size(); i++) {

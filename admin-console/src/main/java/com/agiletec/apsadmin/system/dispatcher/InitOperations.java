@@ -20,6 +20,8 @@ import java.util.Map;
 import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.HostConfig;
 
+import javax.servlet.ServletContext;
+
 /**
  * Extension of the InitOperations class used by Struts2 main filter.
  * The extension lets to place the base configuration for Struts2 (the definition of the configuration files) 
@@ -29,22 +31,25 @@ import org.apache.struts2.dispatcher.HostConfig;
  * @author E.Santoboni
  */
 public class InitOperations extends org.apache.struts2.dispatcher.InitOperations {
-	
+
 	@Override
-	public Dispatcher initDispatcher(HostConfig filterConfig) {
-		Map<String, String> params = new HashMap<String, String>();
-		for (Iterator<String> e = filterConfig.getInitParameterNames(); e.hasNext();) {
-			String name = (String) e.next();
+	protected Dispatcher createDispatcher(HostConfig filterConfig) {
+		Map<String, String> params = new HashMap();
+		Iterator<String> parameterNames = filterConfig.getInitParameterNames();
+
+		while (parameterNames.hasNext()) {
+			String name = parameterNames.next();
 			String value = filterConfig.getInitParameter(name);
 			params.put(name, value);
 		}
-		String struts2Config = filterConfig.getServletContext().getInitParameter(ApsAdminSystemConstants.STRUTS2_CONFIG_INIT_PARAM_NAME);
+
+		ServletContext servletContext = filterConfig.getServletContext();
+		String struts2Config = servletContext.getInitParameter(ApsAdminSystemConstants.STRUTS2_CONFIG_INIT_PARAM_NAME);
 		if (null != struts2Config) {
 			params.put("config", struts2Config);
 		}
-		Dispatcher dispatcher = new Dispatcher(filterConfig.getServletContext(), params);
-		dispatcher.init();
-		return dispatcher;
+
+		return new Dispatcher(servletContext, params);
 	}
-	
+
 }

@@ -67,18 +67,6 @@ public class Submit extends org.apache.struts2.components.Submit {
 		//addParameter("align", findString(align));
 	}
 	
-	@Override
-	protected void populateComponentHtmlId(Form form) {
-        String _tmp_id = "";
-        if (id != null) {
-            // this check is needed for backwards compatibility with 2.1.x
-        	_tmp_id = super.findStringIfAltSyntax(id);
-        }
-		if (!StringUtils.isEmpty(_tmp_id)) {
-			this.addParameter("id", _tmp_id);
-		}
-    }
-	
 	static final String BUTTONTYPE_INPUT = "input";
     static final String BUTTONTYPE_BUTTON = "button";
     static final String BUTTONTYPE_IMAGE = "image";

@@ -1,13 +1,5 @@
 <#--
-NOTE:
-
-1) Leggerissimo cambiamento della condizione che visualizza l'id: DA <#if parameters.id??>
-   A <#if parameters.id?exists>
--->
-<#--
 /*
- * $Id: hidden.ftl 720258 2008-11-24 19:05:16Z musachy $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,20 +19,20 @@ NOTE:
  */
 -->
 <input type="hidden"<#rt/>
- name="${parameters.name?default("")?html}"<#rt/>
+ name="${(parameters.name!"")}"<#rt/>
 <#if parameters.nameValue??>
  value="<@s.property value="parameters.nameValue"/>"<#rt/>
 </#if>
-<#if parameters.id?exists>
- id="${parameters.id?html}"<#rt/>
+<#if parameters.id?has_content>
+ id="${parameters.id}"<#rt/>
 </#if>
-<#if parameters.cssClass??>
- class="${parameters.cssClass?html}"<#rt/>
+<#if parameters.cssClass?has_content>
+ class="${parameters.cssClass}"<#rt/>
 </#if>
-<#if parameters.cssStyle??>
- style="${parameters.cssStyle?html}"<#rt/>
+<#if parameters.cssStyle?has_content>
+ style="${parameters.cssStyle}"<#rt/>
 </#if>
-<#if parameters.disabled?default(false)>
+<#if parameters.disabled!false>
  disabled="disabled"<#rt/>
 </#if>
 <#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />

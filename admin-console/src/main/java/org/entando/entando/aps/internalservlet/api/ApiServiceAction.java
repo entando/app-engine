@@ -18,7 +18,7 @@ import com.agiletec.aps.system.services.url.IURLManager;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.struts2.interceptor.ServletResponseAware;
+import org.apache.struts2.action.ServletResponseAware;
 import org.entando.entando.aps.system.services.api.model.ApiService;
 
 import org.entando.entando.ent.exception.EntException;
@@ -91,9 +91,10 @@ public class ApiServiceAction extends org.entando.entando.apsadmin.api.ApiServic
 	protected HttpServletResponse getResponse() {
 		return _response;
 	}
+
 	@Override
-	public void setServletResponse(HttpServletResponse response) {
-		this._response = response;
+	public void withServletResponse(HttpServletResponse httpServletResponse) {
+		this._response = httpServletResponse;
 	}
 
 	protected IURLManager getUrlManager() {

@@ -54,7 +54,6 @@ public class Struts2ServletDispatcher extends HttpServlet {
         Dispatcher dispatcher = null;
         try {
             ServletHostConfig config = new ServletHostConfig(filterConfig);
-            init.initLogging(config);
             dispatcher = init.initDispatcher(config);
             init.initStaticContentLoader(config, dispatcher);
             prepare = new PrepareOperations(dispatcher);
@@ -82,8 +81,8 @@ public class Struts2ServletDispatcher extends HttpServlet {
             prepare.assignDispatcherToThread();
             prepare.setEncodingAndLocale(request, response);
             request = prepare.wrapRequest(request);
-			ActionMapper actionMapper = new ExtendedDefaultActionMapper();
 			Dispatcher dispatcher = prepare.getDispatcher();
+            ActionMapper actionMapper = dispatcher.getActionMapper();
 			String entandoActionName = EntandoActionUtils.extractEntandoActionName(request);
 			ActionMapping mapping = actionMapper.getMapping(request, dispatcher.getConfigurationManager());
 			if (mapping != null && null != entandoActionName && executeCustomAction) {

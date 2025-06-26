@@ -75,7 +75,7 @@ class TestCustomTokenInterceptor extends ApsAdminBaseTestCase {
         String token = TokenHelper.setToken();
         super.addParameter(TokenHelper.TOKEN_NAME_FIELD, new String[]{TokenHelper.DEFAULT_TOKEN_NAME});
         super.addParameter(TokenHelper.DEFAULT_TOKEN_NAME, new String[]{token});
-        this.getActionContext().setParameters(HttpParameters.create(this.getRequest().getParameterMap()).build());
+        this.getActionContext().withParameters(HttpParameters.create(this.getRequest().getParameterMap()).build());
         return super.getActionInvocation();
     }
 

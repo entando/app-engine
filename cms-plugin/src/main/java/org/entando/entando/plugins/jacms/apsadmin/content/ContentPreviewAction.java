@@ -20,7 +20,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.struts2.interceptor.ServletResponseAware;
+import org.apache.struts2.action.ServletResponseAware;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -122,8 +122,8 @@ public class ContentPreviewAction extends AbstractContentAction implements Servl
     }
 
     @Override
-    public void setServletResponse(HttpServletResponse response) {
-        this._response = response;
+    public void withServletResponse(HttpServletResponse httpServletResponse) {
+        this._response = httpServletResponse;
     }
     public HttpServletResponse getServletResponse() {
         return _response;
