@@ -3,8 +3,6 @@ removed iteration cycle (no list expected as it used to be in the original Strut
 -->
 <#--
 /*
- * $Id: radiomap.ftl 1379561 2012-08-31 19:40:40Z lukaszlenart $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,41 +21,6 @@ removed iteration cycle (no list expected as it used to be in the original Strut
  * under the License.
  */
 -->
-<#--
-<@s.iterator value="parameters.list">
-    <#if parameters.listKey??>
-        <#assign itemKey = stack.findValue(parameters.listKey)/>
-    <#else>
-        <#assign itemKey = stack.findValue('top')/>
-    </#if>
-    <#assign itemKeyStr = itemKey.toString() />
-    <#if parameters.listValue??>
-        <#assign itemValue = stack.findString(parameters.listValue)/>
-    <#else>
-        <#assign itemValue = stack.findString('top')/>
-    </#if>
-    <#if parameters.listCssClass??>
-        <#if stack.findString(parameters.listCssClass)??>
-          <#assign itemCssClass= stack.findString(parameters.listCssClass)/>
-        <#else>
-          <#assign itemCssClass = ''/>
-        </#if>
-    </#if>
-    <#if parameters.listCssStyle??>
-        <#if stack.findString(parameters.listCssStyle)??>
-          <#assign itemCssStyle= stack.findString(parameters.listCssStyle)/>
-        <#else>
-          <#assign itemCssStyle = ''/>
-        </#if>
-    </#if>
-    <#if parameters.listTitle??>
-        <#if stack.findString(parameters.listTitle)??>
-          <#assign itemTitle= stack.findString(parameters.listTitle)/>
-        <#else>
-          <#assign itemTitle = ''/>
-        </#if>
-    </#if>
--->
 
 <#-- added block for entando - start -->
 <#assign itemKey = stack.findValue('top')/>
@@ -66,22 +29,11 @@ removed iteration cycle (no list expected as it used to be in the original Strut
 <#-- added block for entando - end -->
 
 <input type="radio"<#rt/>
-<#if parameters.name??>
- name="${parameters.name?html}"<#rt/>
+<#if parameters.name?has_content>
+ name="${parameters.name?no_esc}"<#rt/>
 
 <#-- modified block for entando -->
-</#if> id="${parameters.id?html}"<#rt/>
-
-<#--
-</#if>
- id="${parameters.id?html}${itemKeyStr?html}"<#rt/>
-<#if tag.contains(parameters.nameValue?default(''), itemKeyStr)>
- checked="checked"<#rt/>
-</#if>
-<#if itemKey??>
- value="${itemKeyStr?html}"<#rt/>
-</#if>
--->
+</#if> id="${parameters.id}"<#rt/>
 
 <#-- added block for entando - start -->
 <#if parameters.nameValue?exists>
@@ -89,36 +41,37 @@ removed iteration cycle (no list expected as it used to be in the original Strut
 </#if>
 <#-- added block for entando - end -->
 
-<#if parameters.disabled?default(false)>
+<#if parameters.disabled!false>
  disabled="disabled"<#rt/>
 </#if>
-<#if parameters.tabindex??>
- tabindex="${parameters.tabindex?html}"<#rt/>
+<#if parameters.tabindex?has_content>
+ tabindex="${parameters.tabindex}"<#rt/>
 </#if>
-<#if itemCssClass?if_exists != "">
- class="${itemCssClass?html}"<#rt/>
+<#if itemCssClass?has_content>
+ class="${itemCssClass}"<#rt/>
 <#else>
-    <#if parameters.cssClass??>
- class="${parameters.cssClass?html}"<#rt/>
+    <#if parameters.cssClass?has_content>
+        class="${parameters.cssClass}"<#rt/>
     </#if>
 </#if>
-<#if itemCssStyle?if_exists != "">
- style="${itemCssStyle?html}"<#rt/>
+<#if itemCssStyle?has_content>
+ style="${itemCssStyle}"<#rt/>
 <#else>
-    <#if parameters.cssStyle??>
- style="${parameters.cssStyle?html}"<#rt/>
+    <#if parameters.cssStyle?has_content>
+        style="${parameters.cssStyle}"<#rt/>
     </#if>
 </#if>
-<#if itemTitle?if_exists != "">
- title="${itemTitle?html}"<#rt/>
+<#if itemTitle?has_content>
+ title="${itemTitle}"<#rt/>
 <#else>
-    <#if parameters.title??>
- title="${parameters.title?html}"<#rt/>
+    <#if parameters.title?has_content>
+ title="${parameters.title}"<#rt/>
     </#if>
 </#if>
 <#include "/${parameters.templateDir}/simple/css.ftl" />
 <#include "/${parameters.templateDir}/simple/scripting-events.ftl" />
 <#include "/${parameters.templateDir}/simple/common-attributes.ftl" />
+<#global evaluate_dynamic_attributes = true/>
 <#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />
 
 <#-- added block for entando - start -->
@@ -130,14 +83,4 @@ removed iteration cycle (no list expected as it used to be in the original Strut
 /><#rt/>
 
 <#-- modified block for entando -->
-<label for="${parameters.id?html}"<#include "/${parameters.templateDir}/simple/css.ftl"/>><#rt/></label>
-
-<#--
-<label for="${parameters.id?html}${itemKeyStr?html}"<#include "/${parameters.templateDir}/simple/css.ftl"/>><#rt/>
-    ${itemValue}<#t/>
-</label>
--->
-
-<#--
-</@s.iterator>
--->
+<label for="${parameters.id}"<#include "/${parameters.templateDir}/simple/css.ftl"/>><#rt/></label>

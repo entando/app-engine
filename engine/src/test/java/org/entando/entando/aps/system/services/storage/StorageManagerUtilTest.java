@@ -194,6 +194,42 @@ class StorageManagerUtilTest {
     }
 
     @Test
+    void testDoesUrlContainsUrl() throws IOException {
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/", "http://www.mysite.com/x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("https://www.mysite.com", "http://www.mysite.com/x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/", "https://www.mysite.com/x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com//x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.comx/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com /x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/./x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com//x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/zz/../x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/zz/./../x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/../path/x"));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/path/../path/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/../path /x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/../path/ x"));
+        // "..." is a proper file/dir name
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/..."));
+        // "..." is a proper fil/dir name
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/...path/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/../..path/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/../../zpath/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.com/../../path/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.org/x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com", "http://www.mysite.org/../x"));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/a/b/c", "http://www.mysite.com/a/b/c", false));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/a/b/c/", "http://www.mysite.com/a/b/c", false));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/a/b/c", "http://www.mysite.com/a/b/c", true));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/a/b/c/", "http://www.mysite.com/a/b/c", true));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/a/b/../b/c/", "http://www.mysite.com/a/b/c", true));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl(null, null, true));
+        Assertions.assertFalse(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/..", "http://www.mysite.com/..", true));
+        Assertions.assertTrue(StorageManagerUtil.doesUrlContainsUrl("http://www.mysite.com/path/..", "http://www.mysite.com/path/..", true));
+    }
+
+    @Test
     void testIsSamePath() {
         Assertions.assertTrue(StorageManagerUtil.isSamePath("a/b/c", "a/b/c/"));
         Assertions.assertTrue(StorageManagerUtil.isSamePath("a/b/../b/c", "a/b/c/"));

@@ -322,7 +322,7 @@ public class CdsStorageManager implements IStorageManager {
                     .path(resourceRelativePath)
                     .build().toString();
 
-            if (!StorageManagerUtil.doesPathContainsPath(baseUrl, fullPath, true)) {
+            if (!StorageManagerUtil.doesUrlContainsUrl(baseUrl, fullPath, true)) {
                 throw mkPathValidationErr(baseUrl, fullPath);
             }
 

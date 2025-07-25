@@ -41,7 +41,7 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.struts2.interceptor.ServletResponseAware;
+import org.apache.struts2.action.ServletResponseAware;
 import org.entando.entando.aps.system.services.actionlog.model.ActivityStreamInfo;
 import org.entando.entando.apsadmin.portal.PageActionConstants;
 import org.entando.entando.apsadmin.portal.rs.model.PageResponse;
@@ -253,7 +253,7 @@ public class PageAction extends AbstractPortalAction implements ServletResponseA
     public String joinExtraGroup() {
         try {
             this.updateTitles();
-            String[] groupNameList = super.getParameters().get("extraGroupNameToAdd");
+            String[] groupNameList = super.getParameters().get("extraGroupNameToAdd").getMultipleValues();
             if (groupNameList != null) {
                 for (String groupName : groupNameList) {
                     this.getExtraGroups().add(groupName);
@@ -982,8 +982,8 @@ public class PageAction extends AbstractPortalAction implements ServletResponseA
     }
 
     @Override
-    public void setServletResponse(HttpServletResponse response) {
-        this.response = response;
+    public void withServletResponse(HttpServletResponse httpServletResponse) {
+        this.response = httpServletResponse;
     }
 
     public HttpServletResponse getServletResponse() {

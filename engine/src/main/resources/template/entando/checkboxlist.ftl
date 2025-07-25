@@ -1,7 +1,10 @@
 <#--
+NOTE:
+1) Removed hidden field
+-->
+
+<#--
 /*
- * $Id: Action.java 502296 2007-02-01 17:33:39Z niallp $
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,42 +24,100 @@
  */
 -->
 <#assign itemCount = 0/>
-<#if parameters.list?exists>
+<#if parameters.list??>
 <ul
 <#if parameters.cssClass?exists>
- class="${parameters.cssClass?html}"<#rt/>
+ class="${parameters.cssClass}"<#rt/>
 </#if>
 >
     <@s.iterator value="parameters.list">
         <#assign itemCount = itemCount + 1/>
-        <#if parameters.listKey?exists>
+        <#if parameters.listKey??>
             <#assign itemKey = stack.findValue(parameters.listKey)/>
+            <#assign itemKeyStr = stack.findString(parameters.listKey)/>
         <#else>
             <#assign itemKey = stack.findValue('top')/>
+            <#assign itemKeyStr = stack.findString('top')>
         </#if>
-        <#if parameters.listValue?exists>
-            <#assign itemValue = stack.findString(parameters.listValue)/>
+        <#if parameters.listLabelKey??>
+          <#-- checks the valueStack for the 'valueKey.' The valueKey is then looked-up in the locale
+             file for it's localized value.  This is then used as a label -->
+            <#assign itemValue = struts.getText(stack.findString(parameters.listLabelKey))/>
+        <#elseif parameters.listValue??>
+            <#assign itemValue = stack.findString(parameters.listValue)!""/>
         <#else>
             <#assign itemValue = stack.findString('top')/>
         </#if>
-<#assign itemKeyStr=itemKey.toString() />
-<li><input type="checkbox" name="${parameters.name?html}" value="${itemKeyStr?html}" id="${parameters.name?html}-${itemCount}"<#rt/>
-        <#if tag.contains(parameters.nameValue, itemKey)>
- checked="checked"<#rt/>
+        <#if parameters.listCssClass??>
+            <#if stack.findString(parameters.listCssClass)??>
+               <#assign itemCssClass= stack.findString(parameters.listCssClass)/>
+            <#else>
+               <#assign itemCssClass = ''/>
+            </#if>
         </#if>
-        <#if parameters.disabled?default(false)>
- disabled="disabled"<#rt/>
+        <#if parameters.listCssStyle??>
+            <#if stack.findString(parameters.listCssStyle)??>
+              <#assign itemCssStyle= stack.findString(parameters.listCssStyle)/>
+            <#else>
+              <#assign itemCssStyle = ''/>
+            </#if>
         </#if>
-        <#if parameters.title?exists>
- title="${parameters.title?html}"<#rt/>
+        <#if parameters.listTitle??>
+            <#if stack.findString(parameters.listTitle)??>
+              <#assign itemTitle= stack.findString(parameters.listTitle)/>
+            <#else>
+              <#assign itemTitle = ''/>
+            </#if>
         </#if>
-    	<#include "/${parameters.templateDir}/simple/css.ftl" />
-        <#include "/${parameters.templateDir}/simple/scripting-events.ftl" />
-        <#include "/${parameters.templateDir}/simple/common-attributes.ftl" />
-/>
-<label for="${parameters.name?html}-${itemCount}">${itemValue?html}</label></li>
+        <li>
+        <input type="checkbox" name="${parameters.name}" value="${itemKeyStr}"<#rt/>
+                <#if parameters.id?has_content>
+                  id="${parameters.id}-${itemCount}"<#rt/>
+                <#else>
+                  id="${parameters.name}-${itemCount}"<#rt/>
+                </#if>
+                <#if tag.contains(parameters.nameValue, itemKey)>
+                  checked="checked"<#rt/>
+                </#if>
+                <#if parameters.disabled!false>
+                  disabled="disabled"<#rt/>
+                </#if>
+                <#if itemCssClass??>
+                  class="${itemCssClass}"<#rt/>
+                <#else>
+                  <#if parameters.cssClass?has_content>
+                    class="${parameters.cssClass}"<#rt/>
+                  </#if>
+                </#if>
+                <#if itemCssStyle??>
+                  style="${itemCssStyle}"<#rt/>
+                <#else>
+                  <#if parameters.cssStyle?has_content>
+                    style="${parameters.cssStyle}"<#rt/>
+                  </#if>
+                </#if>
+                <#if itemTitle??>
+                  title="${itemTitle}"<#rt/>
+                <#else>
+                  <#if parameters.title?has_content>
+                    title="${parameters.title}"<#rt/>
+                  </#if>
+                </#if>
+                <#include "/${parameters.templateDir}/simple/css.ftl" />
+                <#include "/${parameters.templateDir}/simple/scripting-events.ftl" />
+                <#include "/${parameters.templateDir}/simple/common-attributes.ftl" />
+                <#global evaluate_dynamic_attributes = true/>
+                <#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />
+        />
+        <label<#rt/>
+                <#if parameters.id?has_content>
+                  for="${parameters.id}-${itemCount}"<#rt/>
+                <#else>
+                  for="${parameters.name}-${itemCount}"<#rt/>
+                </#if>
+                class="checkboxLabel">${itemValue}</label>
+      </li>
     </@s.iterator>
 </ul>
 <#else>
-  &nbsp;
 </#if>

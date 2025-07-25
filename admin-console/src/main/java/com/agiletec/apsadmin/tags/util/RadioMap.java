@@ -65,21 +65,6 @@ public class RadioMap extends UIBean {
 		}
 	}
 
-	/**
-	 * If the ID is not provided, don't generate it!
-	 */
-	@Override
-	protected void populateComponentHtmlId(Form form) {
-		String tryId = null;
-		if (this.getId() != null) {
-			// this check is needed for backwards compatibility with 2.1.x
-			tryId = this.findStringIfAltSyntax(this.getId());
-		}
-		this.addParameter("id", tryId);
-		this.addParameter("escapedId", this.escape(tryId));
-	}
-
-
 	public void setChecked(String checked) {
 		this._checked = checked;
 	}

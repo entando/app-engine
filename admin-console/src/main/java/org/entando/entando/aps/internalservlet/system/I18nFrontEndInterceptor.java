@@ -38,7 +38,7 @@ public class I18nFrontEndInterceptor extends AbstractInterceptor {
 		if (null != reqCtx) {
 			Lang currentLang = (Lang) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_LANG);
 			Locale locale = new Locale(currentLang.getCode(), "");
-			invocation.getInvocationContext().setLocale(locale);
+			invocation.getInvocationContext().withLocale(locale);
 		}
 		return invocation.invoke();
 	}

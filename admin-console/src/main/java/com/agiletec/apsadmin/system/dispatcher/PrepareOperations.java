@@ -20,8 +20,6 @@ import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
-import com.opensymphony.xwork2.inject.Container;
-
 /**
  * @author E.Santoboni
  */
@@ -29,36 +27,44 @@ public class PrepareOperations extends org.apache.struts2.dispatcher.PrepareOper
 	
 	public PrepareOperations(Dispatcher dispatcher) {
         super(dispatcher);
-		this._dispatcher = dispatcher;
+		this.dispatcher = dispatcher;
     }
 	
 	@Override
 	public ActionMapping findActionMapping(HttpServletRequest request, HttpServletResponse response, boolean forceLookup) {
-        ActionMapping mapping = (ActionMapping) request.getAttribute(STRUTS_ACTION_MAPPING_KEY);
-        if (mapping == null || forceLookup) {
+        ActionMapping mapping = null;
+        Object mappingAttr = request.getAttribute(STRUTS_ACTION_MAPPING_KEY);
+        if (mappingAttr != null && !forceLookup) {
+            if (!"noActionMapping".equals(mappingAttr)) {
+                mapping = (ActionMapping) mappingAttr;
+            }
+        } else {
             try {
-				Container container = this._dispatcher.getContainer();
-				ActionMapper mapper = container.getInstance(ActionMapper.class);
-				String entandoActionName = EntandoActionUtils.extractEntandoActionName(request);
-				mapping = mapper.getMapping(request, this._dispatcher.getConfigurationManager());
+                ActionMapper mapper = this.dispatcher.getActionMapper();
+                String entandoActionName = EntandoActionUtils.extractEntandoActionName(request);
+                mapping = mapper.getMapping(request, this.dispatcher.getConfigurationManager());
 				if (null != entandoActionName) {
 					mapping.setName(entandoActionName);
 				}
                 if (mapping != null) {
                     request.setAttribute(STRUTS_ACTION_MAPPING_KEY, mapping);
+                } else {
+                    request.setAttribute(STRUTS_ACTION_MAPPING_KEY, "noActionMapping");
                 }
             } catch (Exception ex) {
-                this._dispatcher.sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex);
+                if (this.dispatcher.isHandleException() || this.dispatcher.isDevMode()) {
+                    this.dispatcher.sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex);
+                }
             }
         }
         return mapping;
     }
 	
 	public Dispatcher getDispatcher() {
-		return this._dispatcher;
+		return this.dispatcher;
 	}
 	
-	private Dispatcher _dispatcher;
+	private Dispatcher dispatcher;
 	
 	private static final String STRUTS_ACTION_MAPPING_KEY = "struts.actionMapping";
 	
