@@ -101,7 +101,7 @@
         <commons-codec.version>1.15</commons-codec.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
-        <freemarker.version>2.3.31</freemarker.version>
+        <freemarker.version>2.3.32</freemarker.version>
         <commons-validator.version>1.7</commons-validator.version>
         <taglibs-standard-impl.version>1.2.5</taglibs-standard-impl.version>
         <assertj-core.version>3.20.2</assertj-core.version>
@@ -118,7 +118,7 @@
         <httpclient.version>4.5.13</httpclient.version>
         <jaxb-impl.version>3.0.1</jaxb-impl.version>
         <jaxb-xjc.version>3.0.1</jaxb-xjc.version>
-        <derby.version>10.9.1.0</derby.version>
+        <derby.version>10.16.1.1</derby.version>
         <javax-validator.version>2.0.1.Final</javax-validator.version>
         <javax.el.version>2.2.6</javax.el.version>
         <javax.el-api.version>3.0.0</javax.el-api.version>
@@ -168,7 +168,7 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <activation.version>1.1.1</activation.version>
         <jakarta-activation.version>1.2.2</jakarta-activation.version>
-        <commons-compress.version>1.21</commons-compress.version>
+        <commons-compress.version>1.22</commons-compress.version>
         <spring-data-redis.version>2.1.9.RELEASE</spring-data-redis.version>
         <spring-session-data-redis.version>2.7.4</spring-session-data-redis.version>
         <lettuce-core.version>6.1.5.RELEASE</lettuce-core.version>
@@ -184,7 +184,7 @@
         <encoder-jsp.version>1.2.3</encoder-jsp.version>
         <tiles-request-api.version>1.0.7</tiles-request-api.version>
         <httpcore.version>4.4.13</httpcore.version>
-        <log4j-core.version>2.17.1</log4j-core.version>
+        <log4j-core.version>2.20.0</log4j-core.version>
         <classmate.version>1.3.4</classmate.version>
         <spring-data-commons.version>2.5.3</spring-data-commons.version>
         <hamcrest.version>2.2</hamcrest.version>
