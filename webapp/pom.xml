@@ -40,7 +40,7 @@
         <autoCreateNetwork>true</autoCreateNetwork>
 
         <entando.version>${project.version}</entando.version>
-        <postgres.driver.version>42.2.25</postgres.driver.version>
+        <postgres.driver.version>42.5.5</postgres.driver.version>
         <oracle.driver.version>21.4.0.0.1</oracle.driver.version>
         <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
         <derby.version>10.9.1.0</derby.version>

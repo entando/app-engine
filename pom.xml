@@ -118,7 +118,7 @@
         <httpclient.version>4.5.13</httpclient.version>
         <jaxb-impl.version>3.0.1</jaxb-impl.version>
         <jaxb-xjc.version>3.0.1</jaxb-xjc.version>
-        <derby.version>10.16.1.1</derby.version>
+        <derby.version>10.15.2.0</derby.version>
         <javax-validator.version>2.0.1.Final</javax-validator.version>
         <javax.el.version>2.2.6</javax.el.version>
         <javax.el-api.version>3.0.0</javax.el-api.version>
