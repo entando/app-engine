@@ -13,8 +13,11 @@
  */
 package org.entando.entando.aps.system.services.storage;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.aps.util.UrlUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -178,11 +181,37 @@ public final class StorageManagerUtil {
         pathToCheck = normalizePathForComparison(pathToCheck);
         if (basePath == null || pathToCheck == null) return false;
         try {
-            if (FilenameUtils.directoryContains(basePath, pathToCheck)) {
-                return true;
-            } else {
-                return baseIncludesBase && isSamePath(basePath, pathToCheck);
-            }
+            return basePath != null && pathToCheck != null && pathToCheck.startsWith(basePath) && (
+                    baseIncludesBase || pathToCheck.length() > basePath.length()
+            );
+        } catch (IllegalArgumentException ignore) {
+            // caught but it never occurs due to the
+            return false;   //NOSONAR
+        }
+    }
+
+    /**
+     * Tells if a actual url is contained in another actual url
+     * Note that for this function a url doesn't contain itself
+     *
+     * @see #doesUrlContainsUrl(String, String, boolean)
+     */
+    public static boolean doesUrlContainsUrl(String basePath, String pathToCheck) throws IOException {
+        return doesUrlContainsUrl(basePath, pathToCheck, false);
+    }
+
+    /**
+     * Tells if a actual path is contained in another actual path
+     *
+     * @param baseUrl         the path that should contain
+     * @param urlToCheck      the path that should be contained
+     * @param baseIncludesBase if the paths are the same path, function returns this result
+     * @throws IOException throw by the internal use of {@link UrlUtils#urlContains}
+     */
+    public static boolean doesUrlContainsUrl(String baseUrl, String urlToCheck, boolean baseIncludesBase) throws IOException {
+        if (baseUrl == null || urlToCheck == null) return false;
+        try {
+            return UrlUtils.urlContains(baseUrl, urlToCheck, baseIncludesBase);
         } catch (IllegalArgumentException ignore) {
             // caught but it never occurs due to the
             return false;   //NOSONAR

@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>app-engine</artifactId>
-        <version>7.3.0</version>
+        <version>7.3.0-fix.2</version>
     </parent>
     <artifactId>entando-plugin-jpmail</artifactId>
     <groupId>org.entando.entando.plugins</groupId>
@@ -105,26 +105,14 @@
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.jgeppert.struts2.jquery</groupId>
-            <artifactId>struts2-jquery-grid-plugin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jgeppert.struts2.jquery</groupId>
-            <artifactId>struts2-jquery-richtext-plugin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jgeppert.struts2.jquery</groupId>
-            <artifactId>struts2-jquery-tree-plugin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jgeppert.struts2.jquery</groupId>
-            <artifactId>struts2-jquery-mobile-plugin</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>mailapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.subethamail</groupId>

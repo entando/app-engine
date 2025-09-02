@@ -28,13 +28,22 @@ import org.apache.struts2.interceptor.FileUploadInterceptor;
  */
 public class ApsFileUploadInterceptor extends FileUploadInterceptor {
 
+    private Long maximumSize;
+
+    @Override
+    public void setMaximumSize(Long maximumSize) {
+        super.setMaximumSize(maximumSize);
+        this.maximumSize = maximumSize;
+    }
+
     @Override
     public String intercept(ActionInvocation invocation) throws Exception {
-        if (null == super.maximumSize || super.maximumSize == 0) {
+        if (null == this.maximumSize || this.maximumSize == 0) {
             ConfigInterface configManager = (ConfigInterface) ApsWebApplicationUtils.getBean(
                     SystemConstants.BASE_CONFIG_MANAGER, ServletActionContext.getRequest());
             this.setMaximumSize(FileUploadUtils.getFileUploadMaxSize(configManager));
         }
         return super.intercept(invocation);
     }
+
 }

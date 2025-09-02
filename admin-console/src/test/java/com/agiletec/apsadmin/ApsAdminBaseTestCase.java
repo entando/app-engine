@@ -23,26 +23,9 @@ import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionProxy;
-import com.opensymphony.xwork2.ActionProxyFactory;
-import com.opensymphony.xwork2.ActionSupport;
+import com.opensymphony.xwork2.*;
 import com.opensymphony.xwork2.inject.Container;
 import com.opensymphony.xwork2.inject.ContainerBuilder;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.HttpParameters;
 import org.apache.struts2.dispatcher.Parameter;
@@ -56,6 +39,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.*;
 
 /**
  * The base Class for all test of admin area. A Spacial thanks to Arsenalist.
@@ -175,16 +162,18 @@ public class ApsAdminBaseTestCase {
         // by default, don't pass in any request parameters
 
         // set the actions context to the one which the proxy is using
-        this.proxy.getInvocation().getInvocationContext().setSession(new HashMap<>());
-        ServletActionContext.setContext(this.proxy.getInvocation().getInvocationContext());
-        ServletActionContext.setRequest(this.request);
         if (refreshResponse) {
-            response = new MockHttpServletResponse();
-            RequestContext reqCtx = (RequestContext) getRequest().getAttribute(RequestContext.REQCTX);
-            reqCtx.setResponse(response);
+            this.response = new MockHttpServletResponse();
+            RequestContext reqCtx = (RequestContext) this.request.getAttribute(RequestContext.REQCTX);
+            reqCtx.setResponse(this.response);
         }
-        ServletActionContext.setResponse(this.response);
-        ServletActionContext.setServletContext(servletContext);
+        ActionContext actionContext = this.proxy.getInvocation().getInvocationContext()
+                .withSession(new HashMap<>())
+                .withServletRequest(this.request)
+                .withServletContext(this.servletContext)
+                .withServletResponse(this.response)
+                .withLocale(Locale.ENGLISH);
+        ActionContext.bind(actionContext);
         this.action = (ActionSupport) this.proxy.getAction();
 
         //reset previsious params
@@ -310,7 +299,7 @@ public class ApsAdminBaseTestCase {
 
     protected String executeAction() throws Throwable {
         ActionContext ac = this.getActionContext();
-        ac.setParameters(HttpParameters.create(this.request.getParameterMap()).build());
+        ac.withParameters(HttpParameters.create(this.request.getParameterMap()).build());
         ac.getParameters().appendAll(this.parameters);
         String result = this.proxy.execute();
         return result;

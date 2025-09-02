@@ -26,24 +26,25 @@ import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.opensymphony.xwork2.ActionSupport;
 import org.apache.commons.beanutils.BeanComparator;
-import org.apache.struts2.interceptor.ParameterAware;
-import org.apache.struts2.interceptor.ServletRequestAware;
+import org.apache.struts2.action.ServletRequestAware;
+import org.apache.struts2.action.ParametersAware;
+import org.apache.struts2.dispatcher.HttpParameters;
 import org.entando.entando.aps.system.init.IComponentManager;
 import org.entando.entando.aps.system.services.actionlog.model.ActivityStreamInfo;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.aps.system.services.tenants.ITenantManager;
+import org.entando.entando.aps.system.services.tenants.TenantConfig;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-import org.entando.entando.aps.system.services.tenants.ITenantManager;
-import org.entando.entando.aps.system.services.tenants.TenantConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Class beneath all actions.
  * @author E.Santoboni
  */
-public class BaseAction extends ActionSupport implements ServletRequestAware, ParameterAware {
+public class BaseAction extends ActionSupport implements ServletRequestAware, ParametersAware {
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(BaseAction.class);
 	
@@ -77,16 +78,16 @@ public class BaseAction extends ActionSupport implements ServletRequestAware, Pa
 	}
 	
 	@Override
-	public void setParameters(Map<String, String[]> params) {
-		this._params = params;
+	public void withParameters(HttpParameters params) {
+		this.params = params;
 	}
-	
-	protected Map<String, String[]> getParameters() {
-		return this._params;
+
+	protected HttpParameters getParameters() {
+		return this.params;
 	}
 	
 	protected String getParameter(String paramName) {
-		Object param = this.getParameters().get(paramName);
+		Object param = this.getParameters().get(paramName).getMultipleValues();
 		if (param != null && param instanceof String[]) {
 			return ((String[])param)[0];
 		} else if (param instanceof String) {
@@ -221,9 +222,9 @@ public class BaseAction extends ActionSupport implements ServletRequestAware, Pa
     public TenantConfig getCurrentTenantConfig() {
         return ApsTenantApplicationUtils.getTenant().flatMap(getTenantManager()::getConfigOfReadyTenant).orElse(null);
     }
-	
+
 	@Override
-	public void setServletRequest(HttpServletRequest request) {
+	public void withServletRequest(HttpServletRequest request) {
 		this._request = request;
 	}
 	protected HttpServletRequest getRequest() {
@@ -273,7 +274,7 @@ public class BaseAction extends ActionSupport implements ServletRequestAware, Pa
 	public static final String FAILURE = "failure";
 	
 	private HttpServletRequest _request;
-	private Map<String, String[]> _params;
+	private HttpParameters params;
 	private Set<String> _requiredPermissions;
 	private List<Group> _actualAllowedGroups;
 	

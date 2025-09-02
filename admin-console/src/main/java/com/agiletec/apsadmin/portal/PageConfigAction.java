@@ -20,7 +20,7 @@ import com.agiletec.apsadmin.portal.helper.IPageActionHelper;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.struts2.interceptor.ServletResponseAware;
+import org.apache.struts2.action.ServletResponseAware;
 import org.entando.entando.aps.system.services.actionlog.model.ActivityStreamInfo;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.apsadmin.portal.rs.model.DeleteWidgetResponse;
@@ -426,8 +426,8 @@ public class PageConfigAction extends AbstractPortalAction implements ServletRes
 	}
 
 	@Override
-	public void setServletResponse(HttpServletResponse response) {
-		this.response = response;
+	public void withServletResponse(HttpServletResponse httpServletResponse) {
+		this.response = httpServletResponse;
 	}
 
 	public SwapWidgetRequest getSwapWidgetRequest() {

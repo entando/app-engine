@@ -38,13 +38,8 @@ import com.opensymphony.xwork2.ActionProxyFactory;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.inject.Container;
 import com.opensymphony.xwork2.inject.ContainerBuilder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.struts2.ServletActionContext;
@@ -175,16 +170,18 @@ public abstract class ApsAdminPluginBaseTestCase {
         // by default, don't pass in any request parameters
 
         // set the actions context to the one which the proxy is using
-        this.proxy.getInvocation().getInvocationContext().setSession(new HashMap<>());
-        ServletActionContext.setContext(this.proxy.getInvocation().getInvocationContext());
-        ServletActionContext.setRequest(this.request);
         if (refreshResponse) {
-            response = new MockHttpServletResponse();
-            RequestContext reqCtx = (RequestContext) getRequest().getAttribute(RequestContext.REQCTX);
-            reqCtx.setResponse(response);
+            this.response = new MockHttpServletResponse();
+            RequestContext reqCtx = (RequestContext) this.request.getAttribute(RequestContext.REQCTX);
+            reqCtx.setResponse(this.response);
         }
-        ServletActionContext.setResponse(this.response);
-        ServletActionContext.setServletContext(servletContext);
+        ActionContext actionContext = this.proxy.getInvocation().getInvocationContext()
+                .withSession(new HashMap<>())
+                .withServletRequest(this.request)
+                .withServletContext(this.servletContext)
+                .withServletResponse(this.response)
+                .withLocale(Locale.ENGLISH);
+        ActionContext.bind(actionContext);
         this.action = (ActionSupport) this.proxy.getAction();
 
         //reset previsious params
@@ -305,7 +302,7 @@ public abstract class ApsAdminPluginBaseTestCase {
 
     protected String executeAction() throws Exception {
         ActionContext ac = this.getActionContext();
-        ac.setParameters(HttpParameters.create(this.request.getParameterMap()).build());
+        ac.withParameters(HttpParameters.create(this.request.getParameterMap()).build());
         ac.getParameters().appendAll(this.parameters);
         String result = this.proxy.execute();
         return result;

@@ -46,7 +46,7 @@ class ApsFileUploadInterceptorTest {
 
             actionContext.when(ActionContext::getContext).thenReturn(context);
             Mockito.when(actionInvocation.getInvocationContext()).thenReturn(context);
-            Mockito.when(context.get(ServletActionContext.HTTP_REQUEST)).thenReturn(servletRequest);
+            Mockito.when(context.getServletRequest()).thenReturn(servletRequest);
 
             fileUploadUtils.when(() -> FileUploadUtils.getFileUploadMaxSize(Mockito.any())).thenReturn(MAX_SIZE);
 

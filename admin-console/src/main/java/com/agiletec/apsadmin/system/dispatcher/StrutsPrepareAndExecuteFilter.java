@@ -13,11 +13,9 @@
  */
 package com.agiletec.apsadmin.system.dispatcher;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
 import org.apache.struts2.dispatcher.Dispatcher;
-import org.apache.struts2.dispatcher.ExecuteOperations;
-import org.apache.struts2.dispatcher.filter.FilterHostConfig;
+import org.apache.struts2.dispatcher.InitOperations;
+import org.apache.struts2.dispatcher.PrepareOperations;
 
 /**
  * Extension of the Struts2 main filter.
@@ -25,26 +23,15 @@ import org.apache.struts2.dispatcher.filter.FilterHostConfig;
  * @author E.Santoboni
  */
 public class StrutsPrepareAndExecuteFilter extends org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter {
-	
+
 	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
-		InitOperations init = new InitOperations();
-		Dispatcher dispatcher = null;
-        try {
-			FilterHostConfig config = new FilterHostConfig(filterConfig);
-			init.initLogging(config);
-			dispatcher = init.initDispatcher(config);
-			init.initStaticContentLoader(config, dispatcher);
-			this.prepare = new PrepareOperations(dispatcher);
-			this.execute = new ExecuteOperations(dispatcher);
-			this.excludedPatterns = init.buildExcludedPatternsList(dispatcher);
-			this.postInit(dispatcher, filterConfig);
-		} finally {
-			if (dispatcher != null) {
-                dispatcher.cleanUpAfterInit();
-            }
-            init.cleanup();
-		}
+	protected InitOperations createInitOperations() {
+		return new com.agiletec.apsadmin.system.dispatcher.InitOperations();
 	}
-	
+
+	@Override
+	protected PrepareOperations createPrepareOperations(Dispatcher dispatcher) {
+		return new com.agiletec.apsadmin.system.dispatcher.PrepareOperations(dispatcher);
+	}
+
 }
