@@ -12,11 +12,11 @@
     "carbon-icons": "^7.0.7",
     "classnames": "^2.2.6",
     "keycloak-js": "^6.0.1",
-    "node-sass": "^4.12.0",
+    "node-sass": "^9.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "3.4.3",
+    "react-scripts": "5.0.1",
     "redux": "^4.0.5",
     "renamer": "^4.0.0"
   },
