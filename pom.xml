@@ -178,7 +178,7 @@
         <quartz.version>2.3.2</quartz.version>
         <tallison-metadata-extractor.version>2.15.0.1</tallison-metadata-extractor.version>
         <jakarta.ws.rs-api.version>2.1.6</jakarta.ws.rs-api.version>
-        <hibernate-validator.version>6.0.20.Final</hibernate-validator.version>
+        <hibernate-validator.version>6.2.0.Final</hibernate-validator.version>
         <jakarta.xml.bind-api.version>2.3.3</jakarta.xml.bind-api.version>
         <encoder.version>1.2.3</encoder.version>
         <encoder-jsp.version>1.2.3</encoder-jsp.version>
