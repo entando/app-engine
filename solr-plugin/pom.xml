@@ -91,7 +91,7 @@
             <artifactId>entando-portal-ui</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+<!--    This needs to be tested. Fix CVE-2024-31391 CVE-2024-52012 CVE-2025-24814 CVE-2023-50298 -->
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>

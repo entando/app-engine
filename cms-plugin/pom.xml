@@ -81,7 +81,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers</artifactId>
+            <artifactId>tika-parsers-standard-package</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
@@ -140,8 +140,14 @@
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-core</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.tallison</groupId>-->
+<!--            <artifactId>metadata-extractor</artifactId>-->
+<!--        </dependency>-->
+
+        <!-- This needs to be tested. Fix CVE-2022-24613 and CVE-2022-24614. It's also the same version that Tika uses -->
         <dependency>
-            <groupId>org.tallison</groupId>
+            <groupId>com.drewnoakes</groupId>
             <artifactId>metadata-extractor</artifactId>
         </dependency>
         <dependency>
