@@ -43,7 +43,7 @@
         <postgres.driver.version>42.5.5</postgres.driver.version>
         <oracle.driver.version>21.4.0.0.1</oracle.driver.version>
         <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
-        <derby.version>10.9.1.0</derby.version>
+        <derby.version>10.15.2.0</derby.version>
         <jetty.version>10.0.7</jetty.version>
         <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
 
@@ -180,6 +180,11 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -1054,6 +1059,11 @@
                     <dependency>
                         <groupId>org.apache.derby</groupId>
                         <artifactId>derbyclient</artifactId>
+                        <version>${derby.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derbytools</artifactId>
                         <version>${derby.version}</version>
                     </dependency>
                     <dependency>
