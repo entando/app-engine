@@ -27,7 +27,7 @@ import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.springframework.beans.factory.BeanFactory;
 
 /**

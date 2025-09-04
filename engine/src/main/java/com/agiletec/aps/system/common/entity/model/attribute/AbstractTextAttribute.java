@@ -13,7 +13,7 @@
  */
 package com.agiletec.aps.system.common.entity.model.attribute;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.entity.model.attribute.util.IAttributeValidationRules;
 import com.agiletec.aps.system.common.entity.model.attribute.util.TextAttributeValidationRules;

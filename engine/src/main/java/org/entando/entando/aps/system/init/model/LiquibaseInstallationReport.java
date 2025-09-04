@@ -15,7 +15,7 @@ package org.entando.entando.aps.system.init.model;
 
 import java.util.Iterator;
 import java.util.List;
-import org.jdom.Element;
+import org.jdom2.Element;
 
 public class LiquibaseInstallationReport extends AbstractReport {
 

@@ -16,7 +16,7 @@ package org.entando.entando.aps.system.init.model;
 import org.entando.entando.ent.exception.EntException;
 import java.io.Serializable;
 import java.util.Map;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 

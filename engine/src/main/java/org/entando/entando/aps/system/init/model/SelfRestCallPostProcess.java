@@ -19,7 +19,7 @@ import java.util.Properties;
 import org.springframework.http.MediaType;
 
 import org.entando.entando.aps.system.services.api.model.ApiMethod;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
