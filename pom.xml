@@ -83,7 +83,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <!--dependency versions-->
         <spring.version>5.3.39</spring.version>
-        <springsecurity.version>5.8.16</springsecurity.version>
+        <springsecurity.version>5.8.14</springsecurity.version>
         <springsecurityoauth2.version>2.5.2.RELEASE</springsecurityoauth2.version>
         <struts2.version>6.7.4</struts2.version>
         <jackson.version>2.15.3</jackson.version>

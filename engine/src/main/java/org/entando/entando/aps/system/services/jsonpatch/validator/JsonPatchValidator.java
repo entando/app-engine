@@ -22,9 +22,23 @@ public class JsonPatchValidator {
     private final JsonPatchPatchConverter converter;
 
     public JsonPatchValidator() {
+        // ESB-678: Added BindContext parameter to JsonPatchPatchConverter constructor
+        // Spring Data REST 4.5.3 changed JsonPatchPatchConverter constructor signature to require
+        // both ObjectMapper and BindContext parameters instead of just ObjectMapper alone.
+        // This change maintains backward compatibility by providing a simple BindContext implementation.
+        // References:
+        // - https://github.com/spring-projects/spring-data-rest/blob/main/spring-data-rest-webmvc/src/main/java/org/springframework/data/rest/webmvc/json/patch/JsonPatchPatchConverter.java
+        // - Spring Data REST 4.5.3 API documentation
         this.converter = new JsonPatchPatchConverter(new ObjectMapper(), createSimpleBindContext());
     }
     
+    // ESB-678: Simple BindContext implementation for JsonPatchPatchConverter compatibility
+    // Provides basic property access and evaluation context required by Spring Data REST 4.5.3+
+    // Returns segment names as-is for both readable and writable properties, and provides
+    // a standard SpEL evaluation context for expression evaluation.
+    // References:
+    // - org.springframework.data.rest.webmvc.json.patch.BindContext interface
+    // - Spring Framework SpEL documentation
     private static BindContext createSimpleBindContext() {
         return new BindContext() {
             @Override

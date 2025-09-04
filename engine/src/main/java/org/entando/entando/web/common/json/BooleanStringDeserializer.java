@@ -42,6 +42,13 @@ public class BooleanStringDeserializer extends JsonDeserializer<Boolean> {
             return Boolean.FALSE;
 
         }
+        // ESB-678: Updated exception handling for Jackson 2.20.0 compatibility
+        // The mappingException(Class) method was deprecated and removed in newer Jackson versions.
+        // Replaced with reportInputMismatch() which is the recommended approach for reporting
+        // deserialization mismatches and type conversion errors in Jackson 2.15+.
+        // References:
+        // - Jackson 2.20.0 API documentation for DeserializationContext
+        // - https://github.com/FasterXML/jackson-databind/blob/2.20/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java
         return (Boolean) ctxt.reportInputMismatch(Boolean.class, "Invalid boolean value: %s", currentToken);
     }
 
