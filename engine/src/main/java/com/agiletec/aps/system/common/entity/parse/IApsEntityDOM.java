@@ -13,7 +13,7 @@
  */
 package com.agiletec.aps.system.common.entity.parse;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * JDOM Interface that maps an Entity Type to a XML object.

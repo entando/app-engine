@@ -16,7 +16,7 @@ package org.entando.entando.aps.system.services.api.model;
 import java.io.Serializable;
 
 import org.entando.entando.aps.system.services.api.ApiResourcesDefDOM;
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * The representation of an API parameter

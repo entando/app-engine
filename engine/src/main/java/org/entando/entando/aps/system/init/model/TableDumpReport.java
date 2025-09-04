@@ -13,7 +13,7 @@
  */
 package org.entando.entando.aps.system.init.model;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * @author E.Santoboni

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -41,7 +42,7 @@ public class BooleanStringDeserializer extends JsonDeserializer<Boolean> {
             return Boolean.FALSE;
 
         }
-        throw ctxt.mappingException(Boolean.class);
+        return (Boolean) ctxt.reportInputMismatch(Boolean.class, "Invalid boolean value: %s", currentToken);
     }
 
     @Override

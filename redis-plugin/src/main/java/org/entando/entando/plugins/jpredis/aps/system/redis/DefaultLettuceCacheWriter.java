@@ -22,6 +22,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.data.redis.cache.CacheStatistics;
+import org.springframework.data.redis.cache.CacheStatisticsCollector;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -249,6 +251,21 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 
 	private static byte[] createCacheLockKey(String name) {
 		return (name + "~lock").getBytes(StandardCharsets.UTF_8);
+	}
+
+	@Override
+	public RedisCacheWriter withStatisticsCollector(CacheStatisticsCollector cacheStatisticsCollector) {
+		return this;
+	}
+
+	@Override
+	public void clearStatistics(String name) {
+		// No-op implementation for statistics clearing
+	}
+
+	@Override
+	public CacheStatistics getCacheStatistics(String cacheName) {
+		return null;
 	}
     
 }

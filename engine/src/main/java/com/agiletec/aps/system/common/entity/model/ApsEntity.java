@@ -28,7 +28,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * This class represents an entity. The structure of the entity, defined during the configuration process, is built

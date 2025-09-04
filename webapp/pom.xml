@@ -40,12 +40,12 @@
         <autoCreateNetwork>true</autoCreateNetwork>
 
         <entando.version>${project.version}</entando.version>
-        <postgres.driver.version>42.2.25</postgres.driver.version>
+        <postgres.driver.version>42.2.28</postgres.driver.version>
         <oracle.driver.version>21.4.0.0.1</oracle.driver.version>
-        <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
-        <derby.version>10.9.1.0</derby.version>
+        <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
+        <derby.version>10.16.1.1</derby.version>
         <jetty.version>10.0.7</jetty.version>
-        <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
+        <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
 
         <!-- Keycloak Configuration -->
         <keycloak.enabled>false</keycloak.enabled>
@@ -62,7 +62,7 @@
         <cors.access.control.allow.methods>GET, POST, PUT, DELETE, OPTIONS, PATCH</cors.access.control.allow.methods>
         <cors.access.control.allow.credentials>true</cors.access.control.allow.credentials>
         <cors.access.control.maxAge>3600</cors.access.control.maxAge>
-        <log4j.version>2.17.0</log4j.version>
+        <log4j.version>2.20.0</log4j.version>
 
         <!-- frontend-maven-plugin Configuration -->
         <npm.version>6.14.17</npm.version>

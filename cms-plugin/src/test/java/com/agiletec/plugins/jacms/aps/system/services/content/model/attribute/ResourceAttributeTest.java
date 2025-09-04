@@ -15,7 +15,7 @@ package com.agiletec.plugins.jacms.aps.system.services.content.model.attribute;
 
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ImageResource;
 import java.util.List;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 

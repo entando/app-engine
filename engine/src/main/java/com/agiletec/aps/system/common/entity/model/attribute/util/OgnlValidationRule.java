@@ -24,8 +24,8 @@ import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 
-import org.jdom.CDATA;
-import org.jdom.Element;
+import org.jdom2.CDATA;
+import org.jdom2.Element;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 

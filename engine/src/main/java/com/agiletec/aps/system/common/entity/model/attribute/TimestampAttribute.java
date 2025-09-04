@@ -15,7 +15,7 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.util.List;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;

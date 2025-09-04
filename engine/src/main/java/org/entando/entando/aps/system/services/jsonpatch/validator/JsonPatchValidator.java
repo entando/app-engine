@@ -1,14 +1,17 @@
 package org.entando.entando.aps.system.services.jsonpatch.validator;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.ImmutableSet;
+import org.springframework.data.rest.webmvc.json.patch.BindContext;
 import org.springframework.data.rest.webmvc.json.patch.JsonPatchPatchConverter;
 import org.springframework.data.rest.webmvc.json.patch.PatchException;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,7 +22,26 @@ public class JsonPatchValidator {
     private final JsonPatchPatchConverter converter;
 
     public JsonPatchValidator() {
-        this.converter = new JsonPatchPatchConverter(new ObjectMapper());
+        this.converter = new JsonPatchPatchConverter(new ObjectMapper(), createSimpleBindContext());
+    }
+    
+    private static BindContext createSimpleBindContext() {
+        return new BindContext() {
+            @Override
+            public Optional<String> getWritableProperty(String segment, Class<?> type) {
+                return Optional.of(segment);
+            }
+            
+            @Override
+            public Optional<String> getReadableProperty(String segment, Class<?> type) {
+                return Optional.of(segment);
+            }
+            
+            @Override
+            public org.springframework.expression.EvaluationContext getEvaluationContext() {
+                return new StandardEvaluationContext();
+            }
+        };
     }
 
     public JsonPatchValidator(JsonPatchPatchConverter converter) {

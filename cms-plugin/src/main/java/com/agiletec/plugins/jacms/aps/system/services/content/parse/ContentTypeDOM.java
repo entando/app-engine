@@ -13,7 +13,7 @@
  */
 package com.agiletec.plugins.jacms.aps.system.services.content.parse;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.parse.EntityTypeDOM;
