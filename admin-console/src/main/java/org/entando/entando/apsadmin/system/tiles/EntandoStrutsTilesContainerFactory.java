@@ -22,7 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import org.apache.struts2.tiles.StrutsTilesContainerFactory;
-import org.apache.tiles.definition.DefinitionsFactory;
+import org.apache.tiles.core.definition.DefinitionsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
