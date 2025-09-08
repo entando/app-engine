@@ -258,18 +258,6 @@
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-spring-plugin</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.tiles</groupId>-->
-<!--            <artifactId>tiles-core</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.tiles</groupId>-->
-<!--            <artifactId>tiles-request-api</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.tiles</groupId>-->
-<!--            <artifactId>tiles-ognl</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
