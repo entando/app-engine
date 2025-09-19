@@ -119,6 +119,7 @@ public class WidgetValidatorCmsHelper {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static List<Object> extractConfig(WidgetConfigurationRequest widget, String key) {
         Map<String, Object> config = (Map<String, Object>) widget.getConfig();
         if (null != config) {

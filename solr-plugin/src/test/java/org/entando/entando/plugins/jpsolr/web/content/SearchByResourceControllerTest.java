@@ -58,11 +58,6 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
     @Autowired
     private IResourceManager resourceManager;
 
-    @BeforeAll
-    public static void setup() throws Exception {
-        AbstractControllerIntegrationTest.setup();
-    }
-
     @Override
     @BeforeEach
     public void setUp() throws Exception {

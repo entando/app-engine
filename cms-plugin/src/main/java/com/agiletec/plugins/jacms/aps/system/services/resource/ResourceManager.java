@@ -59,8 +59,8 @@ import org.xml.sax.SAXException;
  *
  * @author W.Ambu - E.Santoboni
  */
-public class ResourceManager extends AbstractService implements IResourceManager, GroupUtilizer, CategoryUtilizer,
-        RefreshableBeanTenantAware {
+public class ResourceManager extends AbstractService 
+        implements IResourceManager, GroupUtilizer<String>, CategoryUtilizer<String, String>, RefreshableBeanTenantAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 
@@ -603,7 +603,7 @@ public class ResourceManager extends AbstractService implements IResourceManager
     }
 
     @Override
-    public List getCategoryUtilizers(String categoryCode) throws EntException {
+    public List<String> getCategoryUtilizers(String categoryCode) throws EntException {
         List<String> resourcesId = null;
         try {
             resourcesId = this.getResourceDAO().searchResourcesId(null, null, null, categoryCode, null);
@@ -643,7 +643,7 @@ public class ResourceManager extends AbstractService implements IResourceManager
     }
 
     @Override
-    public List getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException {
+    public List<String> getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException {
         List<String> resourcesId = null;
         try {
             resourcesId = this.getCategoryUtilizers(categoryCode);
