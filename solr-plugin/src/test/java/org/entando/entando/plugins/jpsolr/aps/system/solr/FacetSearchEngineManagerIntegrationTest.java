@@ -13,13 +13,14 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import org.entando.entando.plugins.jpsolr.SolrBaseTestCase;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
 import com.agiletec.aps.system.services.category.Category;
@@ -34,52 +35,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
-import org.entando.entando.plugins.jpsolr.CustomConfigTestUtils;
-import org.entando.entando.plugins.jpsolr.SolrTestExtension;
 import org.entando.entando.plugins.jpsolr.SolrTestUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.FileSystemResourceLoader;
-import org.springframework.mock.web.MockServletContext;
 
-/**
- * @author eu
- */
-@ExtendWith(SolrTestExtension.class)
-class FacetSearchEngineManagerIntegrationTest {
+class FacetSearchEngineManagerIntegrationTest extends SolrBaseTestCase {
 
     private IContentManager contentManager = null;
     private ICmsSearchEngineManager searchEngineManager = null;
     private ICategoryManager categoryManager;
 
-    private static ApplicationContext applicationContext;
-
-    public static ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    public static void setApplicationContext(ApplicationContext applicationContext) {
-        FacetSearchEngineManagerIntegrationTest.applicationContext = applicationContext;
-    }
-
-    @BeforeAll
-    public static void startUp() throws Exception {
-        ServletContext srvCtx = new MockServletContext("", new FileSystemResourceLoader());
-        applicationContext = new CustomConfigTestUtils().createApplicationContext(srvCtx);
-        setApplicationContext(applicationContext);
-    }
-
-    @AfterAll
-    public static void tearDown() throws Exception {
-        BaseTestCase.tearDown();
-    }
 
     @BeforeEach
     protected void init() throws Exception {
@@ -88,7 +55,7 @@ class FacetSearchEngineManagerIntegrationTest {
         this.categoryManager = getApplicationContext().getBean(ICategoryManager.class);
         ((ISolrSearchEngineManager) this.searchEngineManager).refreshCmsFields();
     }
-
+    
     @Test
     void testSearchAllContents() throws Exception {
         Thread thread = this.searchEngineManager.startReloadContentsReferences();
