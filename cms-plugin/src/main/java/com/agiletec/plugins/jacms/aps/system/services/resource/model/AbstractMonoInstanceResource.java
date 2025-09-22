@@ -16,7 +16,7 @@ package com.agiletec.plugins.jacms.aps.system.services.resource.model;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.plugins.jacms.aps.system.services.resource.parse.ResourceDOM;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.InputStream;
 import org.entando.entando.ent.exception.EntResourceNotFoundException;

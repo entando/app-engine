@@ -17,9 +17,9 @@ import com.agiletec.aps.system.common.entity.ApsEntityManager;
 import java.io.Serializable;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.XMLOutputter;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.output.XMLOutputter;
 
 /**
  * This class generates the XML of the single entity, and it is used by all those managers that manages

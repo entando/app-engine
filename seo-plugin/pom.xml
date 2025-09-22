@@ -129,7 +129,7 @@
         </dependency>
         <dependency>
             <groupId>org.jdom</groupId>
-            <artifactId>jdom</artifactId>
+            <artifactId>jdom2</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -182,6 +182,10 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
         </dependency>
     </dependencies>
 

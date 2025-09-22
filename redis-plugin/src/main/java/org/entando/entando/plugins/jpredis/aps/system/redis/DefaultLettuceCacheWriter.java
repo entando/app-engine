@@ -22,6 +22,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.data.redis.cache.CacheStatistics;
+import org.springframework.data.redis.cache.CacheStatisticsCollector;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -249,6 +251,42 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 
 	private static byte[] createCacheLockKey(String name) {
 		return (name + "~lock").getBytes(StandardCharsets.UTF_8);
+	}
+
+	// ESB-678: Added withStatisticsCollector method for Spring Data Redis compatibility
+	// Spring Data Redis 2.5.12+ requires RedisCacheWriter implementations to support
+	// cache statistics collection. This method returns 'this' to maintain the current
+	// instance while indicating statistics collection capability is available.
+	// References:
+	// - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheWriter.html
+	// - Spring Data Redis 2.5.12 API documentation
+	@Override
+	public RedisCacheWriter withStatisticsCollector(CacheStatisticsCollector cacheStatisticsCollector) {
+		return this;
+	}
+
+	// ESB-678: Added clearStatistics method for Spring Data Redis cache statistics support
+	// This method provides a no-op implementation for clearing cache statistics as required
+	// by the RedisCacheWriter interface in Spring Data Redis 2.5.12+. Custom implementations
+	// can override this to provide actual statistics clearing functionality if needed.
+	// References:
+	// - org.springframework.data.redis.cache.RedisCacheWriter interface
+	// - Spring Data Redis cache statistics documentation
+	@Override
+	public void clearStatistics(String name) {
+		// No-op implementation for statistics clearing
+	}
+
+	// ESB-678: Added getCacheStatistics method for Spring Data Redis statistics interface
+	// Required by CacheStatisticsProvider interface in Spring Data Redis 2.5.12+.
+	// Returns null to indicate no statistics are currently collected by this implementation.
+	// Can be enhanced to return actual CacheStatistics if monitoring is needed.
+	// References:
+	// - org.springframework.data.redis.cache.CacheStatisticsProvider interface  
+	// - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/CacheStatistics.html
+	@Override
+	public CacheStatistics getCacheStatistics(String cacheName) {
+		return null;
 	}
     
 }

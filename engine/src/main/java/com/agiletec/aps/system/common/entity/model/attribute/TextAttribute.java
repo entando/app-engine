@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.entity.model.AttributeSearchInfo;
 import com.agiletec.aps.system.services.lang.Lang;

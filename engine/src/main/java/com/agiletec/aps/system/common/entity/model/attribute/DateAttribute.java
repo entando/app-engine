@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
