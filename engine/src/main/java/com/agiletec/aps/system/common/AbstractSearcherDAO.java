@@ -20,10 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -424,11 +423,20 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
     }
 
     protected String getDataSourceClassName() {
-        return dataSourceClassName;
+        return ApsTenantApplicationUtils.getTenant()
+                .map(tenantCode -> getTenantManager().getDatasource(tenantCode))
+                .map(ds -> {
+                    try {
+                        return ds.getClass().getDeclaredMethod("getDriverClassName").invoke(this.getDataSource()).toString();
+                    } catch (Exception e) {
+                        logger.error("Extracting datasource class - errors {}: return static class name", e.getMessage());
+                        return null;
+                    }
+                }).orElse(this.dataSourceClassName);
     }
 
     public void setDataSourceClassName(String dataSourceClassName) {
         this.dataSourceClassName = dataSourceClassName;
     }
-    
+
 }
