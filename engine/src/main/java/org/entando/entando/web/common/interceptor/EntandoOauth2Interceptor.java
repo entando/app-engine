@@ -32,12 +32,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * @author P.Addeo - E.Santoboni
  */
-public class EntandoOauth2Interceptor implements HandlerInterceptor {
+public class EntandoOauth2Interceptor implements AsyncHandlerInterceptor {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 

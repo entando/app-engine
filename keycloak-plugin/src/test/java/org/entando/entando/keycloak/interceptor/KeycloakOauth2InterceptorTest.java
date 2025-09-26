@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.aps.servlet.security.UserAuthentication;
 import org.entando.entando.keycloak.services.oidc.model.AccessToken;
 import org.entando.entando.web.common.annotation.RestAccessControl;

@@ -5,10 +5,14 @@ import org.entando.entando.keycloak.services.KeycloakConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Order(70)
@@ -29,29 +33,27 @@ public class KeycloakSecurityConfig extends OAuth2SecurityConfiguration {
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         if (configuration.isEnabled()) {
             if (StringUtils.isNotEmpty(configuration.getSecureUris())) {
                 final String[] urls = configuration.getSecureUris().split(",");
                 ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry requests = http.authorizeRequests();
                 for (String url : urls) {
                     if (StringUtils.isNotEmpty(url)) {
-                        requests = requests.antMatchers(url).authenticated();
+                        requests = requests.requestMatchers(url).authenticated();
                     }
                 }
             }
 
-            http
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                .and()
-                .headers().frameOptions().sameOrigin()
-                .and()
+            http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+                    .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                     .addFilterBefore(keycloakAuthenticationFilter, BasicAuthenticationFilter.class)
-                    .anonymous().disable()
-                    .csrf().disable()
-                    .cors();
+                    .anonymous(AbstractHttpConfigurer::disable)
+                    .csrf(AbstractHttpConfigurer::disable) //NOSONAR
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+            return http.build();
         } else {
-            super.configure(http);
+            return super.filterChain(http);
         }
     }
 

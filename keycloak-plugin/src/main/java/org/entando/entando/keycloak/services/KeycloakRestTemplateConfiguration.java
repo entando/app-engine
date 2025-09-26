@@ -13,15 +13,19 @@
  */
 package org.entando.entando.keycloak.services;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.LaxRedirectStrategy;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
 
 @Configuration
 public class KeycloakRestTemplateConfiguration {
@@ -39,13 +43,19 @@ public class KeycloakRestTemplateConfiguration {
 
     @Bean(name="keycloakRestTemplate")
     public RestTemplate keycloakRestTemplate() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(Timeout.of(Duration.ofMillis(connReqTimeout)))
+                .setConnectTimeout(Timeout.of(Duration.ofMillis(connTimeout)))
+                .setResponseTimeout(Timeout.of(Duration.ofMillis(connSocketTimeout)))
+                .build();
+
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(maxConnTotal);
+        connectionManager.setDefaultMaxPerRoute(maxConnPerRoute);
+
         HttpClientBuilder builder = HttpClients.custom()
-                .setMaxConnPerRoute(maxConnPerRoute)
-                .setMaxConnTotal(maxConnTotal)
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setConnectionRequestTimeout(connReqTimeout)
-                        .setConnectTimeout(connTimeout)
-                        .setSocketTimeout(connSocketTimeout).build());
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig);
 
         HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
         httpRequestFactory.setHttpClient(builder.build());
@@ -55,14 +65,20 @@ public class KeycloakRestTemplateConfiguration {
 
     @Bean(name="keycloakRestTemplateWithRedirect")
     public RestTemplate keycloakRestTemplateWithRedirect() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(Timeout.of(Duration.ofMillis(connReqTimeout)))
+                .setConnectTimeout(Timeout.of(Duration.ofMillis(connTimeout)))
+                .setResponseTimeout(Timeout.of(Duration.ofMillis(connSocketTimeout)))
+                .build();
+
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(maxConnTotal);
+        connectionManager.setDefaultMaxPerRoute(maxConnPerRoute);
+
         HttpClientBuilder builder = HttpClients.custom()
                 .setRedirectStrategy(new LaxRedirectStrategy())
-                .setMaxConnPerRoute(maxConnPerRoute)
-                .setMaxConnTotal(maxConnTotal)
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setConnectionRequestTimeout(connReqTimeout)
-                        .setConnectTimeout(connTimeout)
-                        .setSocketTimeout(connSocketTimeout).build());
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig);
 
         HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
         httpRequestFactory.setHttpClient(builder.build());

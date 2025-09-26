@@ -114,6 +114,7 @@
         <log4j2slf4j.version>2.20.0</log4j2slf4j.version>
         <jettison.version>1.5.4</jettison.version>
         <httpclient.version>4.5.14</httpclient.version>
+        <httpclient5.version>5.5</httpclient5.version>
         <jaxb-impl.version>3.0.1</jaxb-impl.version>
         <jaxb-xjc.version>3.0.1</jaxb-xjc.version>
         <derby.version>10.15.2.0</derby.version>
@@ -1132,6 +1133,11 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>${httpclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5</artifactId>
+                <version>${httpclient5.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
