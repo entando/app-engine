@@ -20,9 +20,25 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Configuration
 public class CryptoBeansConfig {
 
-    @Bean
-    public BCryptPasswordEncoder getBCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
+    /**
+     * BCryptPasswordEncoder wrapper that is NOT a PasswordEncoder interface
+     * This prevents Spring OAuth2 from auto-discovering it as a PasswordEncoder
+     */
+    public static class BCryptEncoderWrapper {
+        private final BCryptPasswordEncoder delegate;
+
+        public BCryptEncoderWrapper() {
+            this.delegate = new BCryptPasswordEncoder();
+        }
+
+        public BCryptPasswordEncoder getEncoder() {
+            return delegate;
+        }
     }
-    
+
+    @Bean("bcryptEncoder")
+    public BCryptEncoderWrapper getBCryptPasswordEncoder() {
+        return new BCryptEncoderWrapper();
+    }
+
 }

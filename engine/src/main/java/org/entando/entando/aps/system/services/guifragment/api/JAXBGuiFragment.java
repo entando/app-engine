@@ -13,11 +13,13 @@
  */
 package org.entando.entando.aps.system.services.guifragment.api;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.entando.entando.aps.system.services.guifragment.GuiFragment;
 
@@ -25,6 +27,7 @@ import org.entando.entando.aps.system.services.guifragment.GuiFragment;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "guiFragment")
+@JsonRootName("guiFragment")
 @XmlType(propOrder = {"code", "widgetTypeCode", "pluginCode", "gui", "defaultGui", "locked"})
 public class JAXBGuiFragment {
 	
@@ -54,6 +57,7 @@ public class JAXBGuiFragment {
     }
 	
 	@XmlElement(name = "code", required = true)
+	@JsonProperty("code")
 	public String getCode() {
 		return _code;
 	}
@@ -62,6 +66,7 @@ public class JAXBGuiFragment {
 	}
 	
 	@XmlElement(name = "widgetTypeCode", required = true)
+	@JsonProperty("widgetTypeCode")
 	public String getWidgetTypeCode() {
 		return _widgetTypeCode;
 	}
@@ -70,6 +75,7 @@ public class JAXBGuiFragment {
 	}
 	
 	@XmlElement(name = "pluginCode", required = true)
+	@JsonProperty("pluginCode")
 	public String getPluginCode() {
 		return _pluginCode;
 	}
@@ -78,6 +84,7 @@ public class JAXBGuiFragment {
 	}
 
 	@XmlElement(name = "gui", required = true)
+	@JsonProperty("gui")
 	public String getGui() {
 		return _gui;
 	}
@@ -86,6 +93,7 @@ public class JAXBGuiFragment {
 	}
 
 	@XmlElement(name = "defaultGui", required = true)
+	@JsonProperty("defaultGui")
 	public String getDefaultGui() {
 		return _defaultGui;
 	}
@@ -94,6 +102,7 @@ public class JAXBGuiFragment {
 	}
 	
 	@XmlElement(name = "locked", required = true)
+	@JsonProperty("locked")
 	public boolean isLocked() {
 		return _locked;
 	}

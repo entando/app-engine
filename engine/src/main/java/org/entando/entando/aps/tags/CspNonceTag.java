@@ -16,8 +16,8 @@ package org.entando.entando.aps.tags;
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import java.io.IOException;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
 import org.apache.commons.lang3.StringUtils;
 
 /**

@@ -13,13 +13,13 @@
  */
 package org.entando.entando.aps.tags;
 
-import static javax.servlet.jsp.tagext.Tag.EVAL_BODY_INCLUDE;
+import static jakarta.servlet.jsp.tagext.Tag.EVAL_BODY_INCLUDE;
 import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.system.RequestContext;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
 import org.entando.entando.aps.system.services.controller.executor.ExecutorBeanContainer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

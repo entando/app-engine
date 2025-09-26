@@ -13,6 +13,7 @@
  */
 package org.entando.entando.web;
 
+import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.UserDetails;
@@ -21,6 +22,11 @@ import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
 import org.entando.entando.web.common.interceptor.EntandoOauth2Interceptor;
 import org.entando.entando.web.utils.OAuth2TestUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +44,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.annotation.Resource;
-import javax.servlet.Filter;
+import jakarta.annotation.Resource;
+import jakarta.servlet.Filter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -51,59 +57,73 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(locations = {
-    "classpath*:spring/testpropertyPlaceholder.xml",
-    "classpath*:spring/baseSystemConfig.xml",
-    "classpath*:spring/aps/**/**.xml",
-    "classpath*:spring/apsadmin/**/**.xml",
-    "classpath*:spring/plugins/**/aps/**/**.xml",
-    "classpath*:spring/plugins/**/apsadmin/**/**.xml",
-    "classpath*:spring/web/**.xml"
-})
-@WebAppConfiguration(value = "")
-public class AbstractControllerIntegrationTest {
+//@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
+//@ContextConfiguration(locations = {
+//    "classpath*:spring/testpropertyPlaceholder.xml",
+//    "classpath*:spring/baseSystemConfig.xml",
+//    "classpath*:spring/aps/**/**.xml",
+//    "classpath*:spring/apsadmin/**/**.xml",
+//    "classpath*:spring/plugins/**/aps/**/**.xml",
+//    "classpath*:spring/plugins/**/apsadmin/**/**.xml",
+//    "classpath*:spring/web/**.xml"
+//})
+//@WebAppConfiguration(value = "")
+public class AbstractControllerIntegrationTest extends BaseTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractControllerIntegrationTest.class);
 
     protected MockMvc mockMvc;
 
-    @Resource
     protected WebApplicationContext webApplicationContext;
 
-    @Autowired
     private Filter springSecurityFilterChain;
 
+    @Mock
     protected IApiOAuth2TokenManager apiOAuth2TokenManager;
 
+    @Mock
     protected IAuthenticationProviderManager authenticationProviderManager;
 
+    @Mock
     protected IAuthorizationManager authorizationManager;
-    
-    @Autowired
+
+    @InjectMocks
     protected EntandoOauth2Interceptor entandoOauth2Interceptor;
 
-    @Autowired
     protected CorsFilter corsFilter;
 
-    @BeforeAll
-    public static void setup() throws Exception {
-        TestEntandoJndiUtils.setupJndi();
-    }
-
     @BeforeEach
-    public void setUp() throws Exception {
-        this.apiOAuth2TokenManager = Mockito.mock(IApiOAuth2TokenManager.class);
-        this.authenticationProviderManager = Mockito.mock(IAuthenticationProviderManager.class);
-        this.authorizationManager = Mockito.mock(IAuthorizationManager.class);
+    public void init() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        this.corsFilter = this.getApplicationContext().getBean("corsFilter", CorsFilter.class);
+        this.springSecurityFilterChain = this.getApplicationContext().getBean("springSecurityFilterChain", Filter.class);
+
         this.entandoOauth2Interceptor.setAuthenticationProviderManager(this.authenticationProviderManager);
         this.entandoOauth2Interceptor.setAuthorizationManager(this.authorizationManager);
         this.entandoOauth2Interceptor.setoAuth2TokenManager(this.apiOAuth2TokenManager);
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+        this.webApplicationContext = (WebApplicationContext) this.getApplicationContext();
+
+        // Get the controllers needed for this test
+        Object[] controllers = getControllersForTest();
+        org.springframework.http.converter.json.MappingJackson2HttpMessageConverter jsonConverter =
+            new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter();
+        mockMvc = MockMvcBuilders.standaloneSetup(controllers)
                 .dispatchOptions(true)
+                .addInterceptors(entandoOauth2Interceptor)
                 .addFilters(springSecurityFilterChain, corsFilter)
+                .setControllerAdvice(this.getApplicationContext().getBean("restExceptionHandler"))
+                .setMessageConverters(jsonConverter)
                 .build();
         accessToken = null;
+    }
+
+    /**
+     * Override this method in subclasses to specify which controllers are needed for the test.
+     * By default, returns userController for backward compatibility.
+     */
+    protected Object[] getControllersForTest() {
+        return new Object[]{this.getApplicationContext().getBean("userController")};
     }
 
     protected String mockOAuthInterceptor(UserDetails user) {
@@ -116,7 +136,7 @@ public class AbstractControllerIntegrationTest {
 
     private String accessToken;
 
-    private String getAccessToken() {
+    protected String getAccessToken() {
         if (this.accessToken == null) {
             UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
             this.accessToken = OAuth2TestUtils.mockOAuthInterceptor(apiOAuth2TokenManager, authenticationProviderManager, authorizationManager, user);

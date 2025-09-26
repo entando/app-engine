@@ -42,6 +42,7 @@ import org.entando.entando.web.pagemodel.model.PageModelFrameReq;
 import org.entando.entando.web.pagemodel.model.PageModelRequest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.hamcrest.CoreMatchers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -67,13 +68,14 @@ class PageModelControllerIntegrationTest extends AbstractControllerIntegrationTe
 
     private ObjectMapper jsonMapper = new ObjectMapper().setSerializationInclusion(NON_NULL);
 
-    @Autowired
+//    @Autowired
     private PageModelManager pageModelManager;
 
     @Override
     @BeforeEach
-    public void setUp() throws Exception {
-        super.setUp();
+    public void init() throws Exception {
+        super.init();
+        this.pageModelManager = this.getApplicationContext().getBean("PageModelManager", PageModelManager.class);
         this.setupAuthenticationDetails();
         this.deletePageModelsFromPreviousTests();
     }

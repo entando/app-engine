@@ -13,7 +13,7 @@
  */
 package org.entando.entando.aps.tags;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 import org.entando.entando.ent.util.EntLogging.EntLogger;

@@ -23,8 +23,8 @@ import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsProperties;
 
 import java.io.StringWriter;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Marshaller;
 
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +100,7 @@ class TestJaxbPageModel extends BaseTestCase {
     }
 
     @BeforeEach
-    private void init() throws Exception {
+    public void init() throws Exception {
         this._widgetTypeManager = (IWidgetTypeManager) this.getService(SystemConstants.WIDGET_TYPE_MANAGER);
         this._pageModelManager = (IPageModelManager) this.getService(SystemConstants.PAGE_MODEL_MANAGER);
     }

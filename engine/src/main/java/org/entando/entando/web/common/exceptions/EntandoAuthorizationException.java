@@ -13,7 +13,7 @@
  */
 package org.entando.entando.web.common.exceptions;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class EntandoAuthorizationException extends RuntimeException {
 

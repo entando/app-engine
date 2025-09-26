@@ -15,7 +15,7 @@ package com.agiletec.aps.tags.util;
 
 import java.util.Collection;
 
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

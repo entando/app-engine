@@ -14,7 +14,7 @@
 package org.entando.entando.web.userpreferences;
 
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.userpreferences.IUserPreferencesService;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;

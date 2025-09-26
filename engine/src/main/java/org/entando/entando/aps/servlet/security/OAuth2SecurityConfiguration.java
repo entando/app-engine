@@ -18,8 +18,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,10 +27,10 @@ import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
-public class OAuth2SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class OAuth2SecurityConfiguration {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         /*
          * About: .csrf().disable()
          *
@@ -38,13 +38,13 @@ public class OAuth2SecurityConfiguration extends WebSecurityConfigurerAdapter {
          * OWASP csrf mitigations by checking origin and host header
          */
         http
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-            .and()
-            .headers().frameOptions().sameOrigin()
-            .and()
-                .anonymous().disable()
-                .csrf().disable()   //NOSONAR
-                .cors();
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .headers(headers -> headers.frameOptions().sameOrigin())
+            .anonymous(anonymous -> anonymous.disable())
+            .csrf(csrf -> csrf.disable())   //NOSONAR
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
+        return http.build();
     }
 
     @Autowired

@@ -14,7 +14,7 @@
 package org.entando.entando.aps.system.services.api.model;
 
 import java.io.Serializable;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * @author E.Santoboni

@@ -15,7 +15,7 @@ package org.entando.entando.aps.servlet.security;
 
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * Inizializer Class for Spring Security

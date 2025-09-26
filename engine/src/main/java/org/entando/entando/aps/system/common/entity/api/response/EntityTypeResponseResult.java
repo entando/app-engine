@@ -13,7 +13,7 @@
  */
 package org.entando.entando.aps.system.common.entity.api.response;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.entando.entando.aps.system.common.entity.api.JAXBEntityType;
 import org.entando.entando.aps.system.services.api.model.AbstractApiResponseResult;

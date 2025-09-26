@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -37,11 +38,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.oauth2.common.DefaultOAuth2RefreshToken;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.OAuth2Request;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 /**
  * @author E.Santoboni
@@ -349,7 +352,7 @@ class OAuth2TokenDAOTest {
         Mockito.when(resForSearchId.getString(Mockito.anyString())).thenReturn("refresh_token");
         OAuth2RefreshToken refreshToken = this.tokenDAO.readRefreshToken("refresh_token");
         Assertions.assertNotNull(refreshToken);
-        Assertions.assertEquals("refresh_token", refreshToken.getValue());
+        Assertions.assertEquals("refresh_token", refreshToken.getTokenValue());
         Mockito.verify(statForSearchId, Mockito.times(1)).setString(Mockito.anyInt(), Mockito.anyString());
         Mockito.verify(resForSearchId, Mockito.times(1)).getString(Mockito.anyString());
         this.executeFinalCheckForSearchId(true);
@@ -394,11 +397,11 @@ class OAuth2TokenDAOTest {
         Mockito.when(res.getString("localuser")).thenReturn("username");
         Mockito.when(res.getString("clientid")).thenReturn("client_id");
         Mockito.when(res.getString("granttype")).thenReturn("password");
-        OAuth2RefreshToken refreshToken = new DefaultOAuth2RefreshToken("value_X1");
-        OAuth2Authentication auth = this.tokenDAO.readAuthenticationForRefreshToken(refreshToken);
+        OAuth2RefreshToken refreshToken = new OAuth2RefreshToken("value_X1", Instant.now());
+        OAuth2Authorization auth = this.tokenDAO.readAuthenticationForRefreshToken(refreshToken);
         Assertions.assertNotNull(auth);
-        Assertions.assertEquals("username", auth.getPrincipal());
-        Assertions.assertEquals("password", auth.getOAuth2Request().getGrantType());
+        Assertions.assertEquals("username", auth.getPrincipalName());
+        Assertions.assertEquals("password", auth.getAuthorizationGrantType().getValue());
         Mockito.verify(stat, Mockito.times(1)).setString(Mockito.anyInt(), Mockito.anyString());
         Mockito.verify(res, Mockito.times(3)).getString(Mockito.anyString());
         Mockito.verify(res, Mockito.times(0)).getTimestamp(Mockito.anyString());
@@ -410,14 +413,14 @@ class OAuth2TokenDAOTest {
     @Test
     void failReadAuthenticationForRefreshToken() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
-        OAuth2RefreshToken refreshToken = new DefaultOAuth2RefreshToken("value_X2");
+        OAuth2RefreshToken refreshToken = new OAuth2RefreshToken("value_X2", Instant.now());
         try {
             when(this.stat.executeQuery()).thenReturn(res);
             Mockito.when(res.next()).thenReturn(true).thenReturn(false);
             Mockito.when(res.getString("localuser")).thenReturn("username");
             Mockito.when(res.getString("clientid")).thenThrow(SQLException.class);
             Mockito.lenient().when(res.getString("granttype")).thenReturn("password");
-            OAuth2Authentication auth = this.tokenDAO.readAuthenticationForRefreshToken(refreshToken);
+            OAuth2Authorization auth = this.tokenDAO.readAuthenticationForRefreshToken(refreshToken);
             Assertions.fail();
         } catch (RuntimeException e) {
             Mockito.verify(stat, Mockito.times(1)).setString(Mockito.anyInt(), Mockito.anyString());
@@ -433,21 +436,37 @@ class OAuth2TokenDAOTest {
 
     private OAuth2AccessToken createMockAccessToken() {
         OAuth2AccessTokenImpl token = new OAuth2AccessTokenImpl("token");
-        token.setValue("token");
+//        token.setValue("token");
         token.setClientId("client_id");
         token.setExpiration(new Date());
         token.setGrantType("password");
         token.setLocalUser("username");
-        token.setRefreshToken(new DefaultOAuth2RefreshToken("refresh"));
-        token.setTokenType("bearer");
+        token.setRefreshToken(new OAuth2RefreshToken("refresh", Instant.now()));
+//        token.setTokenType("bearer");
         return token;
     }
 
-    private OAuth2Authentication createMockAuthentication() {
-        TestingAuthenticationToken mock = new TestingAuthenticationToken("username", "password");
-        OAuth2Request oAuth2Request = new OAuth2Request(null, "clientId", null, true, null, null, null, null, null);
-        OAuth2Authentication authentication = new OAuth2Authentication(oAuth2Request, mock);
-        return authentication;
+    private OAuth2Authorization createMockAuthentication() {
+        // Create a registered client for testing
+        RegisteredClient registeredClient = RegisteredClient.withId("client-1")
+                .clientId("clientId")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("http://localhost:8080/callback")
+                .build();
+
+        // Create authentication token
+        TestingAuthenticationToken authenticationToken = new TestingAuthenticationToken("username", "password");
+
+        // Build OAuth2Authorization using the builder pattern
+        OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
+                .principalName("username")
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .attribute("java.security.Principal", authenticationToken)
+                .build();
+
+        return authorization;
     }
 
     private void executeFinalCheck(boolean resExist) throws Exception {

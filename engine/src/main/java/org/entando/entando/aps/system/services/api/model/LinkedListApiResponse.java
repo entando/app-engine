@@ -13,19 +13,23 @@
  */
 package org.entando.entando.aps.system.services.api.model;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * @author E.Santoboni
  */
 @XmlRootElement(name = "response")
+@JsonRootName("response")
 @XmlSeeAlso({LinkedListItem.class})
 public class LinkedListApiResponse extends AbstractApiResponse {
     
 	@Override
     @XmlElement(name = "result", required = true)
+    @JsonProperty("result")
     public LinkedListApiResponseResult getResult() {
         return (LinkedListApiResponseResult) super.getResult();
     }

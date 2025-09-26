@@ -17,7 +17,7 @@ import org.springframework.validation.MessageCodeFormatter;
  * <p>
  * When and errorCode is found into <code>validationErrorCodeMapping</code> then the specific value is appended to the returned code array
  * <p>
- * The purpose in to translate {@link javax.validation.constraints} codes into custom codes
+ * The purpose in to translate {@link jakarta.validation.constraints} codes into custom codes
  * 
  * @author spuddu
  *

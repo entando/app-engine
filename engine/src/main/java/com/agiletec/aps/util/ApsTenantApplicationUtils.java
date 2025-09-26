@@ -17,7 +17,7 @@ import static org.entando.entando.aps.system.services.tenants.ITenantManager.PRI
 
 import com.agiletec.aps.system.EntThreadLocal;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.aps.util.UrlUtils;

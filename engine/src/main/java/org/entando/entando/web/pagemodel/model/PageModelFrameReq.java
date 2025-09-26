@@ -13,8 +13,8 @@
  */
 package org.entando.entando.web.pagemodel.model;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import com.agiletec.aps.system.services.pagemodel.FrameSketch;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

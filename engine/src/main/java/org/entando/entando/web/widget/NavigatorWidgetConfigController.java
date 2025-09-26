@@ -18,7 +18,7 @@ import com.agiletec.aps.system.services.page.widget.NavigatorExpression;
 import com.agiletec.aps.system.services.role.Permission;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.web.widget.model.NavigatorExpressionDto;
 import org.entando.entando.web.common.annotation.RestAccessControl;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;

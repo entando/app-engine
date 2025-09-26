@@ -13,7 +13,7 @@
  */
 package org.entando.entando.aps.system.services.i18n.response;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.entando.entando.aps.system.services.api.model.AbstractApiResponseResult;
 import org.entando.entando.aps.system.services.i18n.model.JAXBI18nLabel;

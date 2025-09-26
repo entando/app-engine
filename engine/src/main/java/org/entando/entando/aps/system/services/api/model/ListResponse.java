@@ -14,9 +14,10 @@
 package org.entando.entando.aps.system.services.api.model;
 
 import java.util.List;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * @author E.Santoboni
@@ -33,6 +34,7 @@ public class ListResponse<T> {
     }
 
     @XmlElement(name = "size", required = false)
+    @JsonProperty("size")
     public String getSize() {
         if (null != this.entity) {
             return String.valueOf(this.entity.size());
@@ -43,7 +45,12 @@ public class ListResponse<T> {
     @XmlElement(name = "item", required = false)
     private List<T> entity;
 
+    @JsonProperty("item")
     public List<T> getEntity() {
         return this.entity;
+    }
+
+    public void setEntity(List<T> entity) {
+        this.entity = entity;
     }
 }

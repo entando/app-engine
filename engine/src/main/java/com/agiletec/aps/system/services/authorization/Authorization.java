@@ -18,8 +18,8 @@ import com.agiletec.aps.system.services.role.Role;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import org.springframework.security.core.GrantedAuthority;
 
 /**

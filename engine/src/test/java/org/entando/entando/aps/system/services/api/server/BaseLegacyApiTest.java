@@ -93,6 +93,7 @@ public abstract class BaseLegacyApiTest extends AbstractControllerTest {
         ApiMethod apiMethod = Mockito.mock(ApiMethod.class);
         Mockito.when(apiMethod.getHttpMethod()).thenReturn(method);
         Mockito.lenient().when(apiMethod.getNamespace()).thenReturn(namespace);
+        Mockito.lenient().when(apiMethod.getResourceName()).thenReturn(resourceName);
         Mockito.when(apiMethod.isActive()).thenReturn(true);
         Mockito.when(apiCatalogManager.getMethod(method, namespace, resourceName)).thenReturn(apiMethod);
         return apiMethod;

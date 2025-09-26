@@ -14,9 +14,9 @@
 package org.entando.entando.aps.tags;
 
 import java.io.IOException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 /**

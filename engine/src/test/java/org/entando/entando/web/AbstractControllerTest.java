@@ -108,7 +108,10 @@ public class AbstractControllerTest {
 
         ExceptionHandlerExceptionResolver exceptionResolver = new ExceptionHandlerExceptionResolver() {
 
-            @Override
+            //TODO getExceptionHandlerMethod nuova firma
+            //          ServletInvocableHandlerMethod getExceptionHandlerMethod(
+            //			@Nullable HandlerMethod handlerMethod, Exception exception, ServletWebRequest webRequest)
+//            @Override
             protected ServletInvocableHandlerMethod getExceptionHandlerMethod(HandlerMethod handlerMethod, Exception exception) {
                 Method method = new ExceptionHandlerMethodResolver(RestExceptionHandler.class).resolveMethod(exception);
                 RestExceptionHandler validationHandler = new RestExceptionHandler();

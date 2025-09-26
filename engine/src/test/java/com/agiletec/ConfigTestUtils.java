@@ -15,21 +15,20 @@ package com.agiletec;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Properties;
+import java.util.*;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.entando.entando.ent.util.EntLogging;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.mock.jndi.SimpleNamingContextBuilder;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.support.XmlWebApplicationContext;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  * Classe di utilità per i test. Fornisce la lista di file di configurazione di
@@ -39,6 +38,8 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
  * @author W.Ambu - E.Santoboni
  */
 public class ConfigTestUtils {
+
+    private static final EntLogging.EntLogger logger = EntLogging.EntLogFactory.getSanitizedLogger(ConfigTestUtils.class);
 
     /**
      * Crea e restituisce il Contesto dell'Applicazione.
@@ -57,46 +58,80 @@ public class ConfigTestUtils {
         return applicationContext;
     }
 
-    protected SimpleNamingContextBuilder createNamingContext() {
-        SimpleNamingContextBuilder builder = null;
+    /**
+     * JNDI setup using Simple-JNDI. This part remains unchanged.
+     */
+    protected void createNamingContext() {
         try {
-            builder = SimpleNamingContextBuilder.emptyActivatedContextBuilder();
-            InputStream in = new FileInputStream("target/test/conf/contextTestParams.properties");
+            String path = "target/test/conf/contextTestParams.properties";
+            logger.debug("ATTEMPTING TO CREATE JNDI RESOURCES BASED ON " + path + " (test)");
+
+            // Use the exact same approach as TestEntandoJndiUtils which works
+            System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.osjava.sj.MemoryContextFactory");
+            System.setProperty("org.osjava.sj.jndi.shared", "true");
+
+            // Additional Simple-JNDI properties for better context sharing
+            System.setProperty("org.osjava.sj.jndi.ignoreClose", "true");
+
+            // Load properties file to get the JNDI names for datasources
             Properties testConfig = new Properties();
-            testConfig.load(in);
-            in.close();
-
-            builder.bind("java:comp/env/logName", testConfig.getProperty("logName"));
-            builder.bind("java:comp/env/logFileRotatePattern", testConfig.getProperty("logFileRotatePattern"));
-            builder.bind("java:comp/env/logLevel", testConfig.getProperty("logLevel"));
-            builder.bind("java:comp/env/logFileSize", testConfig.getProperty("logFileSize"));
-            builder.bind("java:comp/env/logFilesCount", testConfig.getProperty("logFilesCount"));
-
-            builder.bind("java:comp/env/configVersion", testConfig.getProperty("configVersion"));
-
-            builder.bind("java:comp/env/applicationBaseURL", testConfig.getProperty("applicationBaseURL"));
-            builder.bind("java:comp/env/resourceRootURL", testConfig.getProperty("resourceRootURL"));
-            builder.bind("java:comp/env/protectedResourceRootURL", testConfig.getProperty("protectedResourceRootURL"));
-            builder.bind("java:comp/env/resourceDiskRootFolder", testConfig.getProperty("resourceDiskRootFolder"));
-            builder.bind("java:comp/env/protectedResourceDiskRootFolder", testConfig.getProperty("protectedResourceDiskRootFolder"));
-
-            builder.bind("java:comp/env/indexDiskRootFolder", testConfig.getProperty("indexDiskRootFolder"));
-
-            Iterator<Entry<Object, Object>> configIter = testConfig.entrySet().iterator();
-            while (configIter.hasNext()) {
-                Entry<Object, Object> entry = configIter.next();
-                builder.bind("java:comp/env/" + (String) entry.getKey(), (String) entry.getValue());
+            try (InputStream in = new FileInputStream(path)) {
+                testConfig.load(in);
             }
 
-            this.createDatasources(builder, testConfig);
+            InitialContext builder = new InitialContext();
+
+            try {
+                builder.createSubcontext("java:comp/env");
+            } catch (javax.naming.NameAlreadyBoundException e) {
+                // Context already exists, continue
+            }
+            try {
+                builder.createSubcontext("java:comp/env/jdbc");
+            } catch (javax.naming.NameAlreadyBoundException e) {
+                // Context already exists, continue
+            }
+
+            buildContextProperties(builder, testConfig);
+
+            createDatasources(builder, testConfig);
+
+            logger.debug("JNDI RESOURCES CREATED SUCCESSFULLY");
         } catch (Throwable t) {
+            logger.debug("JNDI setup failed. " + t.getMessage());
             t.printStackTrace();
-            throw new RuntimeException("Error on creation naming context", t);
         }
-        return builder;
     }
 
-    private void createDatasources(SimpleNamingContextBuilder builder, Properties testConfig) {
+    private static void buildContextProperties(InitialContext builder, Properties testConfig) throws NamingException {
+        bindOrRebind(builder, "java:comp/env/logName", testConfig.getProperty("logName"));
+        bindOrRebind(builder, "java:comp/env/logFileRotatePattern", testConfig.getProperty("logFileRotatePattern"));
+        bindOrRebind(builder, "java:comp/env/logLevel", testConfig.getProperty("logLevel"));
+        bindOrRebind(builder, "java:comp/env/logFileSize", testConfig.getProperty("logFileSize"));
+        bindOrRebind(builder, "java:comp/env/logFilesCount", testConfig.getProperty("logFilesCount"));
+
+        bindOrRebind(builder, "java:comp/env/configVersion", testConfig.getProperty("configVersion"));
+
+        bindOrRebind(builder, "java:comp/env/applicationBaseURL", testConfig.getProperty("applicationBaseURL"));
+        bindOrRebind(builder, "java:comp/env/resourceRootURL", testConfig.getProperty("resourceRootURL"));
+        bindOrRebind(builder, "java:comp/env/protectedResourceRootURL", testConfig.getProperty("protectedResourceRootURL"));
+        bindOrRebind(builder, "java:comp/env/resourceDiskRootFolder", testConfig.getProperty("resourceDiskRootFolder"));
+        bindOrRebind(builder, "java:comp/env/protectedResourceDiskRootFolder", testConfig.getProperty("protectedResourceDiskRootFolder"));
+
+        bindOrRebind(builder, "java:comp/env/indexDiskRootFolder", testConfig.getProperty("indexDiskRootFolder"));
+        bindOrRebind(builder, "java:comp/env/portDataSourceClassName", testConfig.getProperty("portDataSourceClassName"));
+        bindOrRebind(builder, "java:comp/env/servDataSourceClassName", testConfig.getProperty("servDataSourceClassName"));
+    }
+
+    private static void bindOrRebind(InitialContext context, String name, String value) throws NamingException {
+        try {
+            context.bind(name, value);
+        } catch (javax.naming.NameAlreadyBoundException e) {
+            context.rebind(name, value);
+        }
+    }
+
+    private void createDatasources(InitialContext builder, Properties testConfig) {
         List<String> dsNameControlKeys = new ArrayList<String>();
         Enumeration<Object> keysEnum = testConfig.keys();
         while (keysEnum.hasMoreElements()) {
@@ -112,7 +147,7 @@ public class ConfigTestUtils {
         }
     }
 
-    private void createDatasource(String dsNameControlKey, SimpleNamingContextBuilder builder, Properties testConfig) {
+    private void createDatasource(String dsNameControlKey, InitialContext builder, Properties testConfig) {
         String beanName = testConfig.getProperty("jdbc." + dsNameControlKey + ".beanName");
         try {
             String className = testConfig.getProperty("jdbc." + dsNameControlKey + ".driverClassName");
@@ -127,11 +162,17 @@ public class ConfigTestUtils {
             ds.setMaxTotal(12);
             ds.setMaxIdle(4);
             ds.setDriverClassName(className);
-            builder.bind("java:comp/env/jdbc/" + beanName, ds);
+            try {
+                builder.bind("java:comp/env/jdbc/" + beanName, ds);
+            } catch (javax.naming.NameAlreadyBoundException e) {
+                builder.rebind("java:comp/env/jdbc/" + beanName, ds);
+            }
+            logger.debug("created datasource " + beanName);
         } catch (Throwable t) {
             throw new RuntimeException("Error on creation datasource '" + beanName + "'", t);
         }
     }
+
 
     /**
      * Restituisce l'insieme dei file di configurazione dei bean definiti nel
@@ -141,19 +182,20 @@ public class ConfigTestUtils {
      * @return L'insieme dei file di configurazione definiti nel sistema.
      */
     protected String[] getSpringConfigFilePaths() {
-        String[] filePaths = new String[6];
+        String[] filePaths = new String[7];
         filePaths[0] = "classpath:spring/testpropertyPlaceholder.xml";
         filePaths[1] = "classpath:spring/baseSystemConfig.xml";
         filePaths[2] = "classpath*:spring/aps/**/**.xml";
         filePaths[3] = "classpath*:spring/apsadmin/**/**.xml";
         filePaths[4] = "classpath*:spring/plugins/**/aps/**/**.xml";
         filePaths[5] = "classpath*:spring/plugins/**/apsadmin/**/**.xml";
+        filePaths[6] =  "classpath*:spring/web/**.xml";
         return filePaths;
     }
 
     public void destroyContext(ApplicationContext applicationContext) throws Exception {
         if (applicationContext instanceof AbstractApplicationContext) {
-            ((AbstractApplicationContext) applicationContext).destroy();
+            ((AbstractApplicationContext) applicationContext).close();
         }
     }
 

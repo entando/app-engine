@@ -15,7 +15,7 @@ package org.entando.entando.aps.system.services.pagemodel.api;
 
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.entando.entando.aps.system.services.api.model.AbstractApiResponseResult;
 

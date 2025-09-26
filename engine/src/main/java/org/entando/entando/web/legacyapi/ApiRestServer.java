@@ -26,7 +26,7 @@ import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.entando.aps.system.services.api.IApiErrorCodes;
 import org.entando.entando.aps.system.services.api.LegacyApiUnmarshaller;

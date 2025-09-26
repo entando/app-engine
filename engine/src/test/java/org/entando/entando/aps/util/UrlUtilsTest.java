@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.net.HttpHeaders;
 import java.net.URI;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.entando.entando.aps.util.UrlUtils.EntUrlBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;

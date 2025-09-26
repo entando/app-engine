@@ -3,7 +3,7 @@ package org.entando.entando.web.common.model;
 import org.springframework.data.annotation.Transient;
 import org.springframework.lang.Nullable;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Optional;
 

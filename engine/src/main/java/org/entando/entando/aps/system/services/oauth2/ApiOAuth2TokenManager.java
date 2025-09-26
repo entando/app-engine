@@ -14,6 +14,7 @@
 package org.entando.entando.aps.system.services.oauth2;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -26,10 +27,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.entando.entando.aps.system.services.oauth2.model.OAuth2AccessTokenImpl;
 import org.springframework.security.crypto.codec.Hex;
-import org.springframework.security.oauth2.common.DefaultOAuth2RefreshToken;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 
 public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiOAuth2TokenManager {
 
@@ -58,20 +59,20 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
         this.scheduler.shutdown();
     }
 
-    @Override
-    public OAuth2Authentication readAuthentication(OAuth2AccessToken token) {
+//    @Override
+    public OAuth2Authorization readAuthentication(OAuth2AccessToken token) {
+        logger.warn("readAuthentication Not supported yet.");
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+//    @Override
+    public OAuth2Authorization readAuthentication(String tokenValue) {
         logger.warn("readAuthentication Not supported yet.");
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public OAuth2Authentication readAuthentication(String tokenValue) {
-        logger.warn("readAuthentication Not supported yet.");
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void storeAccessToken(OAuth2AccessToken accessToken, OAuth2Authentication authentication) {
+    public void storeAccessToken(OAuth2AccessToken accessToken, OAuth2Authorization authentication) {
         this.getOAuth2TokenDAO().storeAccessToken(accessToken, authentication);
     }
 
@@ -82,11 +83,16 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
 
     @Override
     public void removeAccessToken(OAuth2AccessToken token) {
-        this.getOAuth2TokenDAO().removeAccessToken(token.getValue());
+        this.getOAuth2TokenDAO().removeAccessToken(token.getTokenValue());
     }
 
     @Override
-    public void storeRefreshToken(OAuth2RefreshToken refreshToken, OAuth2Authentication authentication) {
+    public void removeAccessToken(String tokenValue) {
+        this.getOAuth2TokenDAO().removeAccessToken(tokenValue);
+    }
+
+    @Override
+    public void storeRefreshToken(OAuth2RefreshToken refreshToken, OAuth2Authorization authentication) {
         logger.info("storeRefreshToken - nothing to do");
     }
 
@@ -95,19 +101,19 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
         return this.getOAuth2TokenDAO().readRefreshToken(tokenValue);
     }
 
-    @Override
-    public OAuth2Authentication readAuthenticationForRefreshToken(OAuth2RefreshToken refreshToken) {
+//    @Override
+    public OAuth2Authorization readAuthenticationForRefreshToken(OAuth2RefreshToken refreshToken) {
         return this.getOAuth2TokenDAO().readAuthenticationForRefreshToken(refreshToken);
     }
 
     @Override
     public void removeRefreshToken(OAuth2RefreshToken refreshToken) {
-        this.getOAuth2TokenDAO().removeAccessTokenUsingRefreshToken(refreshToken.getValue());
+        this.getOAuth2TokenDAO().removeAccessTokenUsingRefreshToken(refreshToken.getTokenValue());
     }
 
-    @Override
+//    @Override
     public void removeAccessTokenUsingRefreshToken(OAuth2RefreshToken refreshToken) {
-        this.getOAuth2TokenDAO().removeAccessTokenUsingRefreshToken(refreshToken.getValue());
+        this.getOAuth2TokenDAO().removeAccessTokenUsingRefreshToken(refreshToken.getTokenValue());
     }
 
     @Override
@@ -117,11 +123,11 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
         return token;
     }
 
-    @Override
-    public OAuth2AccessToken getAccessToken(OAuth2Authentication authentication) {
-        String principal = authentication.getPrincipal().toString();
-        String clientId = authentication.getOAuth2Request().getClientId();
-        String grantType = authentication.getOAuth2Request().getGrantType();
+//    @Override
+    public OAuth2AccessToken getAccessToken(OAuth2Authorization authorization) {
+        String principal = authorization.getPrincipalName();
+        String clientId = authorization.getRegisteredClientId();
+        String grantType = authorization.getAuthorizationGrantType().getValue();
         return this.getAccessToken(principal, clientId, grantType);
     }
 
@@ -134,17 +140,31 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
         byte[] array2 = new byte[8];
         new SecureRandom().nextBytes(array2);
         String tokenPrefix2 = principal + Arrays.toString(Hex.encode(array2));
-        final String refreshToken = DigestUtils.sha256Hex(tokenPrefix2 + "_refreshToken").substring(0, ACCESS_TOKEN_LEN);
+        final String refreshTokenValue = DigestUtils.sha256Hex(tokenPrefix2 + "_refreshToken").substring(0, ACCESS_TOKEN_LEN);
 
-        final OAuth2AccessTokenImpl oAuth2Token = new OAuth2AccessTokenImpl(accessToken);
-        oAuth2Token.setRefreshToken(new DefaultOAuth2RefreshToken(refreshToken));
-        oAuth2Token.setClientId(clientId);
-        oAuth2Token.setGrantType(grantType);
-        oAuth2Token.setLocalUser(principal);
-        Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
+        // Calculate expiration times using Instant
+        Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, this.getAccessTokenValiditySeconds());
-        oAuth2Token.setExpiration(calendar.getTime());
-        return oAuth2Token;
+        final Instant accessTokenExpiresAt = calendar.toInstant();
+
+        // Create refresh token with expiration (typically longer than access token)
+        Calendar refreshCalendar = Calendar.getInstance();
+        refreshCalendar.add(Calendar.SECOND, this.getRefreshTokenValiditySeconds());
+        final Instant refreshTokenExpiresAt = refreshCalendar.toInstant();
+
+        // Create refresh token using the helper method
+        final OAuth2RefreshToken refreshToken = OAuth2AccessTokenImpl.createRefreshToken(
+                refreshTokenValue, refreshTokenExpiresAt);
+
+        // Create OAuth2AccessToken with all required parameters in constructor
+        return new OAuth2AccessTokenImpl(
+                accessToken,
+                accessTokenExpiresAt,
+                clientId,
+                grantType,
+                principal,
+                refreshToken
+        );
     }
 
     @Override
@@ -170,4 +190,66 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
         this.oAuth2TokenDAO = oAuth2TokenDAO;
     }
 
+    //TODO da rimuovere quasi sicuramente
+    // OAuth2AuthorizationService implementation
+    // These methods bridge between Entando's token management and Spring Security 6.x OAuth2AuthorizationService
+
+    @Override
+    public void save(OAuth2Authorization authorization) {
+        // Extract access token from authorization and store using DAO
+        OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
+        if (accessToken != null) {
+            this.getOAuth2TokenDAO().storeAccessToken(accessToken.getToken(), authorization);
+        }
+
+        // Store refresh token if present
+        OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
+        if (refreshToken != null) {
+            this.storeRefreshToken(refreshToken.getToken(), authorization);
+        }
+    }
+
+    @Override
+    public void remove(OAuth2Authorization authorization) {
+        // Remove access token
+        OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
+        if (accessToken != null) {
+            this.removeAccessToken(accessToken.getToken());
+        }
+
+        // Remove refresh token
+        OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
+        if (refreshToken != null) {
+            this.removeRefreshToken(refreshToken.getToken());
+        }
+    }
+
+    @Override
+    public OAuth2Authorization findById(String id) {
+        // This method is required by OAuth2AuthorizationService but not directly used by Entando
+        // Could be implemented if needed for full authorization server functionality
+        logger.warn("findById not implemented - authorization server functionality not fully supported");
+        return null;
+    }
+
+    @Override
+    public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
+        // This method is required by OAuth2AuthorizationService
+        // Implementation would need to reverse-lookup from token to authorization
+        if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
+            OAuth2AccessToken accessToken = this.readAccessToken(token);
+            if (accessToken != null) {
+                // Would need to reconstruct OAuth2Authorization from token data
+                // For now, return null as this is complex to implement without more context
+                logger.warn("findByToken not fully implemented - would need authorization reconstruction logic");
+            }
+        } else if (OAuth2TokenType.REFRESH_TOKEN.equals(tokenType)) {
+            OAuth2RefreshToken refreshToken = this.readRefreshToken(token);
+            if (refreshToken != null) {
+                // Similar issue - would need to reconstruct authorization
+                logger.warn("findByToken for refresh token not fully implemented");
+            }
+        }
+        return null;
+    }
 }

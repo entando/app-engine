@@ -30,8 +30,7 @@ import org.entando.entando.aps.system.services.oauth2.model.ConsumerRecordVO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.oauth2.provider.ClientDetails;
-import org.springframework.security.oauth2.provider.ClientRegistrationException;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
 /**
  * @author E.Santoboni
@@ -120,10 +119,10 @@ class OAuthConsumerManagerIntegrationTest extends BaseTestCase {
 
     @Test
     void testLoadClientByClientId() {
-        ClientDetails client = this.oauthConsumerManager.loadClientByClientId("test1_consumer");
+        RegisteredClient client = this.oauthConsumerManager.findByClientId("test1_consumer");
         assertNotNull(client);
-        assertEquals(3, client.getScope().size());
-        assertEquals(4, client.getAuthorizedGrantTypes().size());
+        assertEquals(3, client.getScopes().size());
+        assertEquals(4, client.getAuthorizationGrantTypes().size());
     }
 
     @Test
@@ -133,24 +132,20 @@ class OAuthConsumerManagerIntegrationTest extends BaseTestCase {
         oauthConsumerManager.addConsumer(consumer);
         ConsumerRecordVO extractedConsumer = oauthConsumerManager.getConsumerRecord(consumer.getKey());
         assertNotNull(extractedConsumer);
-        ClientRegistrationException exception = Assertions.assertThrows(ClientRegistrationException.class, () -> {
-            this.oauthConsumerManager.loadClientByClientId("key_3");
-        });
-        assertEquals("Client 'key_3' is expired", exception.getMessage());
+
+        // In Spring Security 6.x, expired clients return null instead of throwing exception
+        RegisteredClient expiredClient = this.oauthConsumerManager.findByClientId("key_3");
+        assertNull(expiredClient, "Expired client should return null");
+
         oauthConsumerManager.deleteConsumer(consumer.getKey());
         assertNull(this.oauthConsumerManager.getConsumerRecord(consumer.getKey()));
     }
 
     @Test
     void testLoadClientByInvalidClientId() {
-        try {
-            this.oauthConsumerManager.loadClientByClientId("invalid");
-            fail();
-        } catch (ClientRegistrationException t) {
-            assertEquals("Client with id 'invalid' does not exists", t.getMessage());
-        } catch (Throwable t) {
-            throw t;
-        }
+        // In Spring Security 6.x, invalid clients return null instead of throwing exception
+        RegisteredClient invalidClient = this.oauthConsumerManager.findByClientId("invalid");
+        assertNull(invalidClient, "Invalid client should return null");
     }
 
     private ConsumerRecordVO createConsumer(String key, String secret, boolean expired) {

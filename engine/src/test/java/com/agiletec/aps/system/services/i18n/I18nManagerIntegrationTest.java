@@ -37,7 +37,7 @@ class I18nManagerIntegrationTest extends BaseTestCase {
     private II18nManager i18nManager;
     
     @BeforeEach
-    private void init() {
+    public void init() {
         this.i18nManager = (II18nManager) this.getService(SystemConstants.I18N_MANAGER);
     }
     

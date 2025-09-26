@@ -21,12 +21,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 
 /**
  * @author E.Santoboni
  */
-public interface IOAuthConsumerManager extends ClientDetailsService {
+public interface IOAuthConsumerManager extends RegisteredClientRepository {
 
     public static final List<String> GRANT_TYPES = Collections.unmodifiableList(Arrays.asList(
             "authorization_code", "client_credentials", "implicit", "password", "refresh_token"));

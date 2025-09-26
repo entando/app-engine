@@ -14,7 +14,7 @@
 package com.agiletec.aps.system.services.baseconfig;
 
 import java.util.Map;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.AbstractService;

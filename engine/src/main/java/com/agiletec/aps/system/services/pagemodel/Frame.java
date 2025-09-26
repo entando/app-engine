@@ -18,7 +18,7 @@ import com.agiletec.aps.util.ApsProperties;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.entando.entando.aps.system.services.widgettype.*;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.*;
 

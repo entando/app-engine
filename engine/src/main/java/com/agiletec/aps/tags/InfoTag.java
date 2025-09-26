@@ -13,9 +13,9 @@
  */
 package com.agiletec.aps.tags;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -107,7 +107,7 @@ public class InfoTag extends ExtendedTagSupport {
 	/**
 	 * Performs the generation of the label and make it available for immediate output or places it
 	 * in a variable
-	 * @see javax.servlet.jsp.tagext.Tag#doEndTag()
+	 * @see jakarta.servlet.jsp.tagext.Tag#doEndTag()
 	 */
 	@Override
 	public int doEndTag() throws JspException {

@@ -39,6 +39,7 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 import com.agiletec.aps.util.ApsProperties;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -827,10 +828,12 @@ class PageManagerIntegrationTest extends BaseTestCase {
     }
 
     @BeforeEach
-    private void init() {
+    public void init() {
         this._pageManager = (IPageManager) this.getService(SystemConstants.PAGE_MANAGER);
         this._pageModelManager = (IPageModelManager) this.getService(SystemConstants.PAGE_MODEL_MANAGER);
     }
+
+
 
     private IPageManager _pageManager = null;
     private IPageModelManager _pageModelManager = null;

@@ -28,11 +28,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 import org.entando.entando.aps.system.common.entity.model.attribute.JAXBEnumeratorMapAttribute;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -42,6 +46,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
  */
 @XmlRootElement(name = "entity")
 @XmlType(propOrder = {"id", "description", "typeCode", "typeDescription", "mainGroup", "groups", "attributes"})
+@JsonRootName("entity")
 @XmlSeeAlso({ArrayList.class, HashMap.class, JAXBBooleanAttribute.class, JAXBEnumeratorMapAttribute.class, JAXBCompositeAttribute.class, JAXBDateAttribute.class, JAXBHypertextAttribute.class, JAXBListAttribute.class, JAXBNumberAttribute.class, JAXBTextAttribute.class})
 public class JAXBEntity implements Serializable {
 
@@ -111,6 +116,7 @@ public class JAXBEntity implements Serializable {
      * @return The identification string of the Entity.
      */
     @XmlElement(name = "id", required = true)
+    @JsonProperty("id")
     public String getId() {
         return this._id;
     }
@@ -149,6 +155,7 @@ public class JAXBEntity implements Serializable {
      * @return The description of the Content Type.
      */
     @XmlElement(name = "typeDescription", required = true)
+    @JsonProperty("typeDescription")
     public String getTypeDescription() {
         return this._typeDescription;
     }
@@ -168,6 +175,7 @@ public class JAXBEntity implements Serializable {
      * @return The Entity description.
      */
     @XmlElement(name = "description", required = true)
+    @JsonProperty("description")
     public String getDescription() {
         return this._description;
     }
@@ -187,6 +195,7 @@ public class JAXBEntity implements Serializable {
      * @return The main group this Entity belongs to.
      */
     @XmlElement(name = "mainGroup", required = true)
+    @JsonProperty("mainGroup")
     public String getMainGroup() {
         return _mainGroup;
     }
@@ -207,6 +216,7 @@ public class JAXBEntity implements Serializable {
      */
     @XmlElement(name = "group", required = true)
     @XmlElementWrapper(name = "groups")
+    @JsonAlias({"group", "groups"})
     public Set<String> getGroups() {
         return _groups;
     }
@@ -217,6 +227,7 @@ public class JAXBEntity implements Serializable {
 
     @XmlElement(name = "attribute", required = true)
     @XmlElementWrapper(name = "attributes")
+    @JsonAlias({"attribute", "attributes"})
     public List<AbstractJAXBAttribute> getAttributes() {
         return _attributes;
     }

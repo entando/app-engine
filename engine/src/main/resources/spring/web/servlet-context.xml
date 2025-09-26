@@ -99,10 +99,9 @@
         </property>
         <property name="formatterRegistrars">
             <set>
-                <bean class="org.springframework.format.datetime.joda.JodaTimeFormatterRegistrar">
-                    <!-- consider also timeFormatter and dateTimeFormatter -->
+                <bean class="org.springframework.format.datetime.standard.DateTimeFormatterRegistrar">
                     <property name="dateFormatter">
-                        <bean class="org.springframework.format.datetime.joda.DateTimeFormatterFactoryBean">
+                        <bean class="org.springframework.format.datetime.standard.DateTimeFormatterFactoryBean">
                             <property name="pattern" value="dd/MM/yyyy" />
                         </bean>
                     </property>

@@ -27,7 +27,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

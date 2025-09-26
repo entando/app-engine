@@ -14,7 +14,7 @@
 package org.entando.entando.web.widget.model;
 
 import java.util.List;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * @author E.Santoboni

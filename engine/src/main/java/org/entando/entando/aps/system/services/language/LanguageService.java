@@ -2,7 +2,7 @@ package org.entando.entando.aps.system.services.language;
 
 import java.util.List;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
 import org.entando.entando.aps.system.services.component.ComponentUsageEntity;

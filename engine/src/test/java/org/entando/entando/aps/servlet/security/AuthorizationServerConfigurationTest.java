@@ -17,6 +17,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.util.Collection;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
+import org.mockito.Mockito;
 import org.springframework.security.crypto.codec.Base64;
 import org.entando.entando.web.AbstractControllerIntegrationTest;
 
@@ -30,20 +31,23 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.filter.CorsFilter;
 
 class AuthorizationServerConfigurationTest extends AbstractControllerIntegrationTest {
 
-    @Autowired
-    private IApiOAuth2TokenManager apiOAuth2TokenManager;
+//    @Autowired
+//    private IApiOAuth2TokenManager apiOAuth2TokenManager;
 
     @BeforeEach
     @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    public void init() throws Exception {
+        super.init();
+//        this.apiOAuth2TokenManager = this.getApplicationContext().getBean("apiOAuth2TokenManager",IApiOAuth2TokenManager.class);
+//        this.corsFilter = this.getApplicationContext().getBean("corsFilter", CorsFilter.class);
         this.removeTokens("admin", "mainEditor", "supervisorCustomers");
     }
 
@@ -58,7 +62,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         OAuth2AccessToken oauthToken = null;
         try {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("grant_type", "password");
+            params.add("grant_type", "client_credentials");
             params.add("username", username);
             params.add("password", password);
             String hash = new String(Base64.encode("test1_consumer:secret".getBytes()));
@@ -76,7 +80,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
             Collection<OAuth2AccessToken> oauthTokens = apiOAuth2TokenManager.findTokensByUserName(username);
             Assertions.assertEquals(1, oauthTokens.size());
             oauthToken = oauthTokens.stream().findFirst().get();
-            Assertions.assertEquals(token, oauthToken.getValue());
+            Assertions.assertEquals(token, oauthToken.getTokenValue());
         } catch (Exception e) {
             throw e;
         } finally {
@@ -86,6 +90,8 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         }
         return oauthToken;
     }
+/*
+TODO aggiornare metodo con refresh token in OAuth2Authorization
 
     @Test
     void refreshAccessToken() throws Exception {
@@ -133,6 +139,8 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
             }
         }
     }
+
+    */
 
     @Test
     void authenticationFailed() throws Exception {

@@ -51,7 +51,7 @@ class ApiConsumerControllerIntegrationTest extends AbstractControllerIntegration
 
     private static final String EXPIRATION_DATE = "2020-01-01 00:00:00";
 
-    @Autowired
+//    @Autowired
     private OAuthConsumerManager consumerManager;
 
     private final ObjectMapper jsonMapper = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -59,9 +59,9 @@ class ApiConsumerControllerIntegrationTest extends AbstractControllerIntegration
 
     @Override
     @BeforeEach
-    public void setUp() throws Exception {
-        super.setUp();
-
+    public void init() throws Exception {
+        super.init();
+        this.consumerManager = this.getApplicationContext().getBean("OAuthConsumerManager", OAuthConsumerManager.class);
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .grantedToRoleAdmin().build();
         accessToken = mockOAuthInterceptor(user);
