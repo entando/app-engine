@@ -130,20 +130,62 @@ public class OAuthConsumerManager extends AbstractOAuthManager implements IOAuth
 
     @Override
     public void save(RegisteredClient registeredClient) {
-        // This method is required by RegisteredClientRepository
-        // Implementation would convert RegisteredClient back to ConsumerRecordVO and save
-        logger.warn("save(RegisteredClient) not implemented - would need to convert back to Entando consumer format");
-        throw new UnsupportedOperationException("Dynamic client registration not implemented");
+        try {
+            // Convert RegisteredClient to ConsumerRecordVO
+            ConsumerRecordVO consumer = new ConsumerRecordVO();
+            consumer.setKey(registeredClient.getClientId());
+            consumer.setSecret(registeredClient.getClientSecret());
+            consumer.setName(registeredClient.getClientName());
+            consumer.setDescription(registeredClient.getClientName() != null ? registeredClient.getClientName() : "Auto-registered client");
+
+            // Set callback URL (use first redirect URI if available)
+            if (!registeredClient.getRedirectUris().isEmpty()) {
+                consumer.setCallbackUrl(registeredClient.getRedirectUris().iterator().next());
+            }
+
+            // Set scopes
+            if (!registeredClient.getScopes().isEmpty()) {
+                consumer.setScope(String.join(",", registeredClient.getScopes()));
+            }
+
+            // Set grant types
+            Set<String> grantTypes = new HashSet<>();
+            for (AuthorizationGrantType grantType : registeredClient.getAuthorizationGrantTypes()) {
+                grantTypes.add(grantType.getValue());
+            }
+            consumer.setAuthorizedGrantTypes(String.join(",", grantTypes));
+
+            // Set dates
+            consumer.setIssuedDate(new Date());
+
+            // Check if consumer already exists and update or add accordingly
+            ConsumerRecordVO existingConsumer = this.getConsumerDAO().getConsumer(registeredClient.getClientId());
+            if (existingConsumer != null) {
+                this.updateConsumer(consumer);
+            } else {
+                this.addConsumer(consumer);
+            }
+
+            logger.debug("Successfully saved RegisteredClient: {}", registeredClient.getClientId());
+
+        } catch (Exception e) {
+            logger.error("Error saving RegisteredClient: {}", registeredClient.getClientId(), e);
+            throw new RuntimeException("Failed to save RegisteredClient", e);
+        }
     }
 
-    //TODO CHECK PERCHÉ RIMOSSO
-//    @Override
-    public void remove(RegisteredClient registeredClient) {
-        // This method is required by RegisteredClientRepository
+    /**
+     * Utility method to remove a RegisteredClient using Entando's consumer management
+     * Note: This is not part of RegisteredClientRepository interface in Spring Authorization Server 1.x
+     * //TODO
+     */
+    public void removeRegisteredClient(RegisteredClient registeredClient) {
         try {
             this.deleteConsumer(registeredClient.getClientId());
+            logger.debug("Successfully removed RegisteredClient: {}", registeredClient.getClientId());
         } catch (Exception e) {
             logger.error("Error removing client: {}", registeredClient.getClientId(), e);
+            throw new RuntimeException("Failed to remove RegisteredClient: " + registeredClient.getClientId(), e);
         }
     }
 

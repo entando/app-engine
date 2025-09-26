@@ -68,14 +68,13 @@ class PageModelControllerIntegrationTest extends AbstractControllerIntegrationTe
 
     private ObjectMapper jsonMapper = new ObjectMapper().setSerializationInclusion(NON_NULL);
 
-//    @Autowired
+    @Autowired
     private PageModelManager pageModelManager;
 
     @Override
     @BeforeEach
-    public void init() throws Exception {
-        super.init();
-        this.pageModelManager = this.getApplicationContext().getBean("PageModelManager", PageModelManager.class);
+    public void setUp() throws Exception {
+        super.setUp();
         this.setupAuthenticationDetails();
         this.deletePageModelsFromPreviousTests();
     }

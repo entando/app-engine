@@ -41,18 +41,17 @@ import org.junit.jupiter.api.Test;
 
 class UserSettingsControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
-//    @Autowired
+    @Autowired
     private IUserSettingsService userSettingsService;
 
-//    @Autowired
+    @Autowired
     private ConfigInterface configInterface;
 
     private ObjectMapper mapper;
 
     @BeforeEach
-    public void init() throws Exception {
-        super.init();
-        this.userSettingsService = this.getApplicationContext().getBean("UserSettingsService", IUserSettingsService.class);
+    public void setUp() throws Exception {
+        super.setUp();
         mapper = new ObjectMapper();
     }
 

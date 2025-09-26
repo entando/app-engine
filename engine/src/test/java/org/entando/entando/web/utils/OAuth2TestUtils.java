@@ -41,13 +41,19 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 public class OAuth2TestUtils {
 
     public static OAuth2AccessToken getOAuth2Token(String username, String accessToken) {
-        OAuth2AccessTokenImpl oAuth2Token = new OAuth2AccessTokenImpl(accessToken);
-        oAuth2Token.setRefreshToken(new OAuth2RefreshToken("refresh_token", Instant.now()));
-        oAuth2Token.setLocalUser(username);
-        Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
-        calendar.add(Calendar.SECOND, 3600);
-        oAuth2Token.setExpiration(calendar.getTime());
-        oAuth2Token.setGrantType("password");
+        // Create a proper expiration time (1 hour from now)
+        Instant expiresAt = Instant.now().plusSeconds(3600);
+
+        // Create token with proper constructor that sets expiration
+        OAuth2AccessTokenImpl oAuth2Token = new OAuth2AccessTokenImpl(
+            accessToken,
+            expiresAt,
+            "test_client",
+            "password",
+            username,
+            new OAuth2RefreshToken("refresh_token", Instant.now(), expiresAt)
+        );
+
         return oAuth2Token;
     }
 

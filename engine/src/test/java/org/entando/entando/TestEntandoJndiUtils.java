@@ -44,8 +44,18 @@ public class TestEntandoJndiUtils {
             System.setProperty("org.osjava.sj.jndi.shared", "true");
             System.setProperty("org.osjava.sj.jndi.ignoreClose", "true");
             builder = new InitialContext();
-            builder.createSubcontext("java:comp/env");
-            builder.createSubcontext("java:comp/env/jdbc");
+            try {
+                builder.createSubcontext("java:comp/env");
+            } catch (javax.naming.NameAlreadyBoundException e) {
+                // Context already exists, continue
+                logger.debug("Context already exists, continue");
+            }
+            try {
+                builder.createSubcontext("java:comp/env/jdbc");
+            } catch (javax.naming.NameAlreadyBoundException e) {
+                // Context already exists, continue
+                logger.debug("Context already exists, continue");
+            }
 
             Properties testConfig = new Properties();
             testConfig.load(in);
@@ -63,23 +73,23 @@ public class TestEntandoJndiUtils {
     }
 
     private static void buildContextProperties(InitialContext builder, Properties testConfig) throws NamingException {
-        builder.bind("java:comp/env/logName", testConfig.getProperty("logName"));
-        builder.bind("java:comp/env/logFileRotatePattern", testConfig.getProperty("logFileRotatePattern"));
-        builder.bind("java:comp/env/logLevel", testConfig.getProperty("logLevel"));
-        builder.bind("java:comp/env/logFileSize", testConfig.getProperty("logFileSize"));
-        builder.bind("java:comp/env/logFilesCount", testConfig.getProperty("logFilesCount"));
+        bindOrRebind(builder,"java:comp/env/logName", testConfig.getProperty("logName"));
+        bindOrRebind(builder,"java:comp/env/logFileRotatePattern", testConfig.getProperty("logFileRotatePattern"));
+        bindOrRebind(builder,"java:comp/env/logLevel", testConfig.getProperty("logLevel"));
+        bindOrRebind(builder,"java:comp/env/logFileSize", testConfig.getProperty("logFileSize"));
+        bindOrRebind(builder,"java:comp/env/logFilesCount", testConfig.getProperty("logFilesCount"));
 
-        builder.bind("java:comp/env/configVersion", testConfig.getProperty("configVersion"));
+        bindOrRebind(builder,"java:comp/env/configVersion", testConfig.getProperty("configVersion"));
 
-        builder.bind("java:comp/env/applicationBaseURL", testConfig.getProperty("applicationBaseURL"));
-        builder.bind("java:comp/env/resourceRootURL", testConfig.getProperty("resourceRootURL"));
-        builder.bind("java:comp/env/protectedResourceRootURL", testConfig.getProperty("protectedResourceRootURL"));
-        builder.bind("java:comp/env/resourceDiskRootFolder", testConfig.getProperty("resourceDiskRootFolder"));
-        builder.bind("java:comp/env/protectedResourceDiskRootFolder", testConfig.getProperty("protectedResourceDiskRootFolder"));
+        bindOrRebind(builder,"java:comp/env/applicationBaseURL", testConfig.getProperty("applicationBaseURL"));
+        bindOrRebind(builder,"java:comp/env/resourceRootURL", testConfig.getProperty("resourceRootURL"));
+        bindOrRebind(builder,"java:comp/env/protectedResourceRootURL", testConfig.getProperty("protectedResourceRootURL"));
+        bindOrRebind(builder,"java:comp/env/resourceDiskRootFolder", testConfig.getProperty("resourceDiskRootFolder"));
+        bindOrRebind(builder,"java:comp/env/protectedResourceDiskRootFolder", testConfig.getProperty("protectedResourceDiskRootFolder"));
 
-        builder.bind("java:comp/env/indexDiskRootFolder", testConfig.getProperty("indexDiskRootFolder"));
-        builder.bind("java:comp/env/portDataSourceClassName", testConfig.getProperty("portDataSourceClassName"));
-        builder.bind("java:comp/env/servDataSourceClassName", testConfig.getProperty("servDataSourceClassName"));
+        bindOrRebind(builder,"java:comp/env/indexDiskRootFolder", testConfig.getProperty("indexDiskRootFolder"));
+        bindOrRebind(builder,"java:comp/env/portDataSourceClassName", testConfig.getProperty("portDataSourceClassName"));
+        bindOrRebind(builder,"java:comp/env/servDataSourceClassName", testConfig.getProperty("servDataSourceClassName"));
 //        Iterator<Entry<Object, Object>> configIter = testConfig.entrySet().iterator();
 //        while (configIter.hasNext()) {
 //            Entry<Object, Object> entry = configIter.next();
@@ -119,7 +129,11 @@ public class TestEntandoJndiUtils {
             ds.setMaxTotal(12);
             ds.setMaxIdle(4);
             ds.setDriverClassName(className);
-            builder.bind("java:comp/env/jdbc/" + beanName, ds);
+            try {
+                builder.bind("java:comp/env/jdbc/" + beanName, ds);
+            } catch (javax.naming.NameAlreadyBoundException e) {
+                builder.rebind("java:comp/env/jdbc/" + beanName, ds);
+            }
         } catch (Throwable t) {
             throw new RuntimeException("Error on creation datasource '" + beanName + "'", t);
         }
@@ -144,6 +158,14 @@ public class TestEntandoJndiUtils {
         } catch (Exception e) {
             // Ignore exceptions during cleanup
             logger.debug("Error destroying JNDI context: {}", e.getMessage());
+        }
+    }
+
+    private static void bindOrRebind(InitialContext context, String name, String value) throws NamingException {
+        try {
+            context.bind(name, value);
+        } catch (javax.naming.NameAlreadyBoundException e) {
+            context.rebind(name, value);
         }
     }
 }

@@ -312,5 +312,10 @@ class GuiFragmentControllerIntegrationTest extends AbstractControllerIntegration
                 .andExpect(status().isOk());
     }
 
+    private String getAccessToken() {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        return mockOAuthInterceptor(user);
+    }
 
 }

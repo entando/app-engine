@@ -45,6 +45,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.annotation.ExceptionHandlerMethodResolver;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -108,15 +109,15 @@ public class AbstractControllerTest {
 
         ExceptionHandlerExceptionResolver exceptionResolver = new ExceptionHandlerExceptionResolver() {
 
-            //TODO getExceptionHandlerMethod nuova firma
-            //          ServletInvocableHandlerMethod getExceptionHandlerMethod(
-            //			@Nullable HandlerMethod handlerMethod, Exception exception, ServletWebRequest webRequest)
-//            @Override
-            protected ServletInvocableHandlerMethod getExceptionHandlerMethod(HandlerMethod handlerMethod, Exception exception) {
+            @Override
+            protected ServletInvocableHandlerMethod getExceptionHandlerMethod(HandlerMethod handlerMethod, Exception exception, ServletWebRequest webRequest) {
                 Method method = new ExceptionHandlerMethodResolver(RestExceptionHandler.class).resolveMethod(exception);
-                RestExceptionHandler validationHandler = new RestExceptionHandler();
-                validationHandler.setMessageSource(messageSource);
-                return new ServletInvocableHandlerMethod(validationHandler, method);
+                if (method != null) {
+                    RestExceptionHandler validationHandler = new RestExceptionHandler();
+                    validationHandler.setMessageSource(messageSource);
+                    return new ServletInvocableHandlerMethod(validationHandler, method);
+                }
+                return super.getExceptionHandlerMethod(handlerMethod, exception, webRequest);
             }
         };
 

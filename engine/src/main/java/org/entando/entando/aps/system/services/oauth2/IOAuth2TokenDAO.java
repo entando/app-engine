@@ -37,7 +37,16 @@ public interface IOAuth2TokenDAO {
     public OAuth2RefreshToken readRefreshToken(String tokenValue);
     
     public OAuth2Authorization readAuthenticationForRefreshToken(OAuth2RefreshToken refreshToken);
-    
+
     public void removeAccessTokenUsingRefreshToken(final String refreshToken);
+
+    // New methods for Spring Authorization Server support
+    public void storeAuthorization(OAuth2Authorization authorization);
+
+    public OAuth2Authorization findAuthorizationById(String id);
+
+    public OAuth2Authorization findAuthorizationByToken(String token, String tokenType);
+
+    public void removeAuthorization(String id);
 
 }

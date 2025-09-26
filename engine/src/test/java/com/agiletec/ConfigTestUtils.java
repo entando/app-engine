@@ -85,11 +85,13 @@ public class ConfigTestUtils {
                 builder.createSubcontext("java:comp/env");
             } catch (javax.naming.NameAlreadyBoundException e) {
                 // Context already exists, continue
+                logger.debug("Context already exists, continue");
             }
             try {
                 builder.createSubcontext("java:comp/env/jdbc");
             } catch (javax.naming.NameAlreadyBoundException e) {
                 // Context already exists, continue
+                logger.debug("Context already exists, continue");
             }
 
             buildContextProperties(builder, testConfig);
@@ -189,6 +191,7 @@ public class ConfigTestUtils {
         filePaths[3] = "classpath*:spring/apsadmin/**/**.xml";
         filePaths[4] = "classpath*:spring/plugins/**/aps/**/**.xml";
         filePaths[5] = "classpath*:spring/plugins/**/apsadmin/**/**.xml";
+        //TODO sicuramente da togliere se si tiene la classe TestEntandoJndiUtils
         filePaths[6] =  "classpath*:spring/web/**.xml";
         return filePaths;
     }

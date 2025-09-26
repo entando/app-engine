@@ -15,20 +15,32 @@ package org.entando.entando.web.user;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
+import com.agiletec.aps.system.services.user.IUserManager;
+import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
+import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
 import org.entando.entando.aps.system.services.user.IUserService;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.web.common.interceptor.EntandoOauth2Interceptor;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.user.UserController;
 import org.entando.entando.web.user.validator.UserValidator;
 import org.entando.entando.web.utils.OAuth2TestUtils;
+import org.junit.jupiter.api.BeforeAll;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.validation.BindingResult;
 import org.hamcrest.Matchers;
 import java.util.Collections;
@@ -41,108 +53,117 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.filter.CorsFilter;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(locations = {
+        "classpath*:spring/testpropertyPlaceholder.xml",
+        "classpath*:spring/baseSystemConfig.xml",
+        "classpath*:spring/aps/**/**.xml",
+        "classpath*:spring/plugins/**/aps/**/**.xml",
+        "classpath*:spring/web/**.xml",})
+@WebAppConfiguration(value = "")
 class UserControllerDeleteAuthoritiesIntegrationTest {
 
-    private MockMvc mockMvc;
+    protected MockMvc mockMvc;
+
+    @Autowired
+    protected WebApplicationContext webApplicationContext;
+
+    @Autowired
+    protected IAuthenticationProviderManager authenticationProviderManager;
+
+    @Autowired
+    protected IAuthorizationManager authorizationManager;
+
+    @Autowired
+    IUserManager userManager;
 
     @Mock
-    private IAuthenticationProviderManager authenticationProviderManager;
-    @Mock
-    private IAuthorizationManager authorizationManager;
-    @Mock
-    private IApiOAuth2TokenManager apiOAuth2TokenManager;
-    @Mock
-    private EntandoOauth2Interceptor entandoOauth2Interceptor;
-    @Mock
-    private IUserService userService;
-    @Mock
-    private UserValidator userValidator;
+    protected IApiOAuth2TokenManager apiOAuth2TokenManager;
 
-    private UserController userController;
+    @Autowired
+    @InjectMocks
+    protected EntandoOauth2Interceptor entandoOauth2Interceptor;
+
+    @Autowired
+    protected CorsFilter corsFilter;
+
+    @BeforeAll
+    public static void setup() throws Exception {
+        TestEntandoJndiUtils.setupJndi();
+    }
 
     @BeforeEach
-    void setUp() {
-        // Create real UserController instance with mocked dependencies
-        userController = new UserController();
-        userController.setUserService(userService);
-        userController.setUserValidator(userValidator);
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(userController)
-                .addInterceptors(entandoOauth2Interceptor)
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .addFilters(corsFilter)
                 .build();
+
+        //workaround for dirty context
+        entandoOauth2Interceptor.setAuthenticationProviderManager(authenticationProviderManager);
     }
 
     @Test
     void testDeleteAuthorities() throws Exception {
         String accessToken = "ok";
+        when(apiOAuth2TokenManager.readAccessToken(Mockito.anyString())).thenReturn(OAuth2TestUtils.getOAuth2Token("admin", "ok"));
+
         String username = "valid.username_ok";
+        String password = "valid.123_ok";
         String groupName = "coach";
         String roleName = "pageManager";
+        try {
+            this.addUserWithAuthorization(username, password, groupName, roleName);
+            UserDetails targetUser = this.authenticationProviderManager.getUser(username);
+            boolean hasAuthorities = this.authorizationManager.isAuthOnGroupAndRole(targetUser, groupName, roleName, false);
+            assertThat(hasAuthorities, is(true));
 
-        // Mock OAuth token
-        Mockito.lenient().when(apiOAuth2TokenManager.readAccessToken(Mockito.anyString()))
-                .thenReturn(OAuth2TestUtils.getOAuth2Token("admin", "ok"));
+            ResultActions result = this.executeDeleteUserAuthorities(username, accessToken);
+            result.andExpect(status().isOk());
 
-        // Mock user details
-        UserDetails targetUser = Mockito.mock(UserDetails.class);
-        Mockito.lenient().when(targetUser.getUsername()).thenReturn(username);
-        Mockito.lenient().when(authenticationProviderManager.getUser(username)).thenReturn(targetUser);
-
-        // Mock authorization checks
-        Mockito.lenient().when(authorizationManager.isAuthOnGroupAndRole(targetUser, groupName, roleName, false))
-                .thenReturn(true)  // initially has authorities
-                .thenReturn(false); // after deletion
-
-        ResultActions result = this.executeDeleteUserAuthorities(username, accessToken);
-        result.andExpect(status().isOk());
+            targetUser = this.authenticationProviderManager.getUser(username);
+            hasAuthorities = this.authorizationManager.isAuthOnGroupAndRole(targetUser, groupName, roleName, false);
+            assertThat(hasAuthorities, is(false));
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            this.userManager.removeUser(username);
+        }
     }
 
     @Test
     void testDeleteAuthoritiesSameUser() throws Exception {
         String currentUserName = "admin";
         String accessToken = "ok";
-
-        Mockito.lenient().when(apiOAuth2TokenManager.readAccessToken(Mockito.anyString()))
-                .thenReturn(OAuth2TestUtils.getOAuth2Token(currentUserName, "ok"));
-
-        // Mock that user has at least one authorization
-        Mockito.lenient().when(authorizationManager.getUserAuthorizations(currentUserName))
-                .thenReturn(java.util.Arrays.asList(Mockito.mock(com.agiletec.aps.system.services.authorization.Authorization.class)));
-
-        // Mock the validator to throw ValidationGenericException for self-update
-        Mockito.doAnswer(invocation -> {
-            String username = invocation.getArgument(0);
-            String currentUser = invocation.getArgument(1);
-            BindingResult bindingResult = invocation.getArgument(2);
-
-            if (username.equals(currentUser)) {
-                bindingResult.reject(UserValidator.ERRCODE_SELF_UPDATE, new String[]{username}, "user.authorities.self.update");
-                throw new ValidationGenericException(bindingResult);
-            }
-            return null;
-        }).when(userValidator).validateUpdateSelf(Mockito.anyString(), Mockito.anyString(), Mockito.any(BindingResult.class));
-
-        // Create a mock user for the request attribute
-        UserDetails mockUser = Mockito.mock(UserDetails.class);
-        Mockito.when(mockUser.getUsername()).thenReturn(currentUserName);
-
-        ResultActions result = mockMvc
-                .perform(delete("/users/{username}/authorities", currentUserName)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .requestAttr("user", mockUser));
-
-        result.andExpect(status().isForbidden());
-        result.andExpect(jsonPath("$.errors[0].code", is(UserValidator.ERRCODE_SELF_UPDATE)));
-        assertThat(this.authorizationManager.getUserAuthorizations(currentUserName).size(), is(Matchers.greaterThanOrEqualTo(1)));
+        when(apiOAuth2TokenManager.readAccessToken(Mockito.anyString())).thenReturn(OAuth2TestUtils.getOAuth2Token(currentUserName, "ok"));
+        try {
+            ResultActions result = this.executeDeleteUserAuthorities(currentUserName, accessToken);
+            result.andExpect(status().isForbidden());
+            result.andExpect(jsonPath("$.errors[0].code", is(UserValidator.ERRCODE_SELF_UPDATE)));
+            assertThat(this.authorizationManager.getUserAuthorizations(currentUserName).size(), is(Matchers.greaterThanOrEqualTo(1)));
+        } catch (Throwable e) {
+            throw e;
+        }
     }
 
+    protected void addUserWithAuthorization(String username, String password, String groupName, String roleName) throws EntException {
+        User testUser = new User();
+        testUser.setUsername(username);
+        testUser.setPassword(password);
+        this.userManager.addUser(testUser);
+        this.authorizationManager.addUserAuthorization(username, groupName, roleName);
+    }
 
     private ResultActions executeDeleteUserAuthorities(String username, String accessToken) throws Exception {
-        return mockMvc
-                .perform(delete("/users/{username}/authorities", username)
+        ResultActions result = mockMvc
+                .perform(delete("/users/{username}/authorities", new Object[]{username})
                         .header("Authorization", "Bearer " + accessToken));
+        return result;
     }
 
 }

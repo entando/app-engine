@@ -39,15 +39,13 @@ import org.springframework.web.filter.CorsFilter;
 
 class AuthorizationServerConfigurationTest extends AbstractControllerIntegrationTest {
 
-//    @Autowired
-//    private IApiOAuth2TokenManager apiOAuth2TokenManager;
+    @Autowired
+    private IApiOAuth2TokenManager apiOAuth2TokenManager;
 
     @BeforeEach
     @Override
-    public void init() throws Exception {
-        super.init();
-//        this.apiOAuth2TokenManager = this.getApplicationContext().getBean("apiOAuth2TokenManager",IApiOAuth2TokenManager.class);
-//        this.corsFilter = this.getApplicationContext().getBean("corsFilter", CorsFilter.class);
+    public void setUp() throws Exception {
+        super.setUp();
         this.removeTokens("admin", "mainEditor", "supervisorCustomers");
     }
 
@@ -62,7 +60,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         OAuth2AccessToken oauthToken = null;
         try {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("grant_type", "client_credentials");
+            params.add("grant_type", "password");
             params.add("username", username);
             params.add("password", password);
             String hash = new String(Base64.encode("test1_consumer:secret".getBytes()));
@@ -90,57 +88,55 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         }
         return oauthToken;
     }
-/*
-TODO aggiornare metodo con refresh token in OAuth2Authorization
 
-    @Test
-    void refreshAccessToken() throws Exception {
-        OAuth2AccessToken accessToken = this.obtainAccessToken("admin", "admin", false);
-        this.refreshAccessToken(accessToken, "admin");
-        accessToken = this.obtainAccessToken("mainEditor", "mainEditor", false);
-        this.refreshAccessToken(accessToken, "mainEditor");
-        accessToken = this.obtainAccessToken("supervisorCustomers", "supervisorCustomers", false);
-        this.refreshAccessToken(accessToken, "supervisorCustomers");
-    }
+    //TODO da aggiornare
 
-    private void refreshAccessToken(OAuth2AccessToken accessToken, String username) throws Exception {
-        String refreshToken = accessToken.getRefreshToken().getValue();
-        try {
-            Assertions.assertNotNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("grant_type", "refresh_token");
-            params.add("refresh_token", refreshToken);
-            String hash = new String(Base64.encode("test1_consumer:secret".getBytes()));
-            ResultActions result
-                    = mockMvc.perform(post("/oauth/token")
-                            .params(params)
-                            .header("Authorization", "Basic " + hash)
-                            .accept("application/json;charset=UTF-8"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType("application/json;charset=UTF-8"));
-            String resultString = result.andReturn().getResponse().getContentAsString();
-            Assertions.assertTrue(StringUtils.isNotBlank(resultString));
-            String newAccesstoken = JsonPath.parse(resultString).read("$.access_token");
-            Assertions.assertFalse(newAccesstoken.equals(accessToken.getValue()));
-            String newRefreshtoken = JsonPath.parse(resultString).read("$.refresh_token");
-            Assertions.assertNotEquals(newRefreshtoken, refreshToken);
-            Collection<OAuth2AccessToken> oauthTokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
-            Assertions.assertEquals(1, oauthTokens.size());
-            OAuth2AccessToken newOauthToken = oauthTokens.stream().findFirst().get();
-            Assertions.assertEquals(newAccesstoken, newOauthToken.getValue());
-            Assertions.assertEquals(newRefreshtoken, newOauthToken.getRefreshToken().getValue());
-            Assertions.assertNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            Collection<OAuth2AccessToken> tokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
-            for (OAuth2AccessToken token : tokens) {
-                this.apiOAuth2TokenManager.removeAccessToken(token);
-            }
-        }
-    }
-
-    */
+//    @Test
+//    void refreshAccessToken() throws Exception {
+//        OAuth2AccessToken accessToken = this.obtainAccessToken("admin", "admin", false);
+//        this.refreshAccessToken(accessToken, "admin");
+//        accessToken = this.obtainAccessToken("mainEditor", "mainEditor", false);
+//        this.refreshAccessToken(accessToken, "mainEditor");
+//        accessToken = this.obtainAccessToken("supervisorCustomers", "supervisorCustomers", false);
+//        this.refreshAccessToken(accessToken, "supervisorCustomers");
+//    }
+//
+//    private void refreshAccessToken(OAuth2AccessToken accessToken, String username) throws Exception {
+//        String refreshToken = accessToken.getRefreshToken().getValue();
+//        try {
+//            Assertions.assertNotNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
+//            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//            params.add("grant_type", "refresh_token");
+//            params.add("refresh_token", refreshToken);
+//            String hash = new String(Base64.encode("test1_consumer:secret".getBytes()));
+//            ResultActions result
+//                    = mockMvc.perform(post("/oauth/token")
+//                            .params(params)
+//                            .header("Authorization", "Basic " + hash)
+//                            .accept("application/json;charset=UTF-8"))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().contentType("application/json;charset=UTF-8"));
+//            String resultString = result.andReturn().getResponse().getContentAsString();
+//            Assertions.assertTrue(StringUtils.isNotBlank(resultString));
+//            String newAccesstoken = JsonPath.parse(resultString).read("$.access_token");
+//            Assertions.assertFalse(newAccesstoken.equals(accessToken.getValue()));
+//            String newRefreshtoken = JsonPath.parse(resultString).read("$.refresh_token");
+//            Assertions.assertNotEquals(newRefreshtoken, refreshToken);
+//            Collection<OAuth2AccessToken> oauthTokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
+//            Assertions.assertEquals(1, oauthTokens.size());
+//            OAuth2AccessToken newOauthToken = oauthTokens.stream().findFirst().get();
+//            Assertions.assertEquals(newAccesstoken, newOauthToken.getValue());
+//            Assertions.assertEquals(newRefreshtoken, newOauthToken.getRefreshToken().getValue());
+//            Assertions.assertNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
+//        } catch (Exception e) {
+//            throw e;
+//        } finally {
+//            Collection<OAuth2AccessToken> tokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
+//            for (OAuth2AccessToken token : tokens) {
+//                this.apiOAuth2TokenManager.removeAccessToken(token);
+//            }
+//        }
+//    }
 
     @Test
     void authenticationFailed() throws Exception {

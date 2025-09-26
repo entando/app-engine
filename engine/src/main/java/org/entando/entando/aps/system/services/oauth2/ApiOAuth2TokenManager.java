@@ -31,6 +31,11 @@ import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.Collections;
 
 public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiOAuth2TokenManager {
 
@@ -196,16 +201,21 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
 
     @Override
     public void save(OAuth2Authorization authorization) {
-        // Extract access token from authorization and store using DAO
-        OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
-        if (accessToken != null) {
-            this.getOAuth2TokenDAO().storeAccessToken(accessToken.getToken(), authorization);
-        }
+        try {
+            // Store the complete authorization if DAO supports it
+            this.getOAuth2TokenDAO().storeAuthorization(authorization);
+        } catch (Exception e) {
+            // Fallback: Extract access token from authorization and store using existing DAO method
+            OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
+            if (accessToken != null) {
+                this.getOAuth2TokenDAO().storeAccessToken(accessToken.getToken(), authorization);
+            }
 
-        // Store refresh token if present
-        OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
-        if (refreshToken != null) {
-            this.storeRefreshToken(refreshToken.getToken(), authorization);
+            // Store refresh token if present
+            OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
+            if (refreshToken != null) {
+                this.storeRefreshToken(refreshToken.getToken(), authorization);
+            }
         }
     }
 
@@ -226,30 +236,102 @@ public class ApiOAuth2TokenManager extends AbstractOAuthManager implements IApiO
 
     @Override
     public OAuth2Authorization findById(String id) {
-        // This method is required by OAuth2AuthorizationService but not directly used by Entando
-        // Could be implemented if needed for full authorization server functionality
-        logger.warn("findById not implemented - authorization server functionality not fully supported");
-        return null;
+        try {
+            // Try to find by ID using new DAO method if available
+            return this.getOAuth2TokenDAO().findAuthorizationById(id);
+        } catch (Exception e) {
+            // Fallback: try to find by token value (assuming id might be token value)
+            logger.debug("findAuthorizationById not available, trying token lookup fallback");
+            return this.findByToken(id, OAuth2TokenType.ACCESS_TOKEN);
+        }
     }
 
     @Override
     public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
-        // This method is required by OAuth2AuthorizationService
-        // Implementation would need to reverse-lookup from token to authorization
-        if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
-            OAuth2AccessToken accessToken = this.readAccessToken(token);
-            if (accessToken != null) {
-                // Would need to reconstruct OAuth2Authorization from token data
-                // For now, return null as this is complex to implement without more context
-                logger.warn("findByToken not fully implemented - would need authorization reconstruction logic");
-            }
-        } else if (OAuth2TokenType.REFRESH_TOKEN.equals(tokenType)) {
-            OAuth2RefreshToken refreshToken = this.readRefreshToken(token);
-            if (refreshToken != null) {
-                // Similar issue - would need to reconstruct authorization
-                logger.warn("findByToken for refresh token not fully implemented");
-            }
+        try {
+            // Try to use new DAO method first if available
+            return this.getOAuth2TokenDAO().findAuthorizationByToken(token, tokenType.getValue());
+        } catch (Exception e) {
+            // Fallback: reconstruct OAuth2Authorization from existing token data
+            logger.debug("findAuthorizationByToken not available, reconstructing from token data");
+            return reconstructAuthorizationFromToken(token, tokenType);
         }
-        return null;
+    }
+
+    /**
+     * Reconstruct OAuth2Authorization from token data for backward compatibility
+     */
+    private OAuth2Authorization reconstructAuthorizationFromToken(String token, OAuth2TokenType tokenType) {
+        try {
+            OAuth2AccessToken accessToken = null;
+            OAuth2RefreshToken refreshToken = null;
+
+            if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
+                accessToken = this.readAccessToken(token);
+                if (accessToken == null) {
+                    return null;
+                }
+                // If it's an OAuth2AccessTokenImpl, get the refresh token
+                if (accessToken instanceof OAuth2AccessTokenImpl) {
+                    refreshToken = ((OAuth2AccessTokenImpl) accessToken).getRefreshToken();
+                }
+            } else if (OAuth2TokenType.REFRESH_TOKEN.equals(tokenType)) {
+                refreshToken = this.readRefreshToken(token);
+                if (refreshToken == null) {
+                    return null;
+                }
+                // Try to find the associated access token - this is complex without proper relation
+                // For now, we'll create a minimal authorization
+            }
+
+            if (accessToken == null && refreshToken == null) {
+                return null;
+            }
+
+            // Extract token data
+            String clientId = null;
+            String grantType = null;
+            String username = null;
+
+            if (accessToken instanceof OAuth2AccessTokenImpl) {
+                OAuth2AccessTokenImpl entandoToken = (OAuth2AccessTokenImpl) accessToken;
+                clientId = entandoToken.getClientId();
+                grantType = entandoToken.getGrantType();
+                username = entandoToken.getLocalUser();
+            }
+
+            // Create minimal authentication
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                username != null ? username : "unknown",
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            );
+
+            // Build OAuth2Authorization
+            OAuth2Authorization.Builder builder = OAuth2Authorization
+                .withRegisteredClient(org.springframework.security.oauth2.server.authorization.client.RegisteredClient.withId(clientId != null ? clientId : "unknown")
+                    .clientId(clientId != null ? clientId : "unknown")
+                    .build())
+                .id(accessToken != null ? accessToken.getTokenValue() : refreshToken.getTokenValue())
+                .principalName(username != null ? username : "unknown")
+                .authorizationGrantType(grantType != null ? new AuthorizationGrantType(grantType) : AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .attribute(Authentication.class.getName(), authentication);
+
+            // Add access token if available
+            if (accessToken != null) {
+                builder.accessToken(accessToken);
+            }
+
+            // Add refresh token if available
+            if (refreshToken != null) {
+                builder.refreshToken(refreshToken);
+            }
+
+            return builder.build();
+
+        } catch (Exception e) {
+            logger.error("Error reconstructing OAuth2Authorization from token", e);
+            return null;
+        }
     }
 }

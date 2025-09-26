@@ -52,30 +52,18 @@ import org.junit.jupiter.api.BeforeEach;
 
 class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
-//    @Autowired
+    @Autowired
     private II18nManager ii18nManager;
 
-//    @Autowired
+    @Autowired
     private ILangManager langManager;
 
     private MockMvcHelper mockMvcHelper;
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    @Override
-    protected Object[] getControllersForTest() {
-        return new Object[]{
-                this.getApplicationContext().getBean("labelController"),
-                this.getApplicationContext().getBean("analysisController")
-        };
-    }
-
     @BeforeEach
-    @Override
-    public void init() throws Exception {
-        super.init();
-        this.ii18nManager = this.getApplicationContext().getBean("I18nManager", II18nManager.class);
-        this.langManager = this.getApplicationContext().getBean("LangManager", ILangManager.class);
+    public void init() {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         this.mockMvcHelper = new MockMvcHelper(mockMvc, mockOAuthInterceptor(user));
     }
@@ -154,7 +142,7 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result
                 = mockMvc.perform(get("/labels/{labelCode}", "THIS_LABEL_DO_NOT_EXISTS")
-                        .header("Authorization", "Bearer " + accessToken));
+                .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isNotFound());
         result.andExpect(jsonPath("$.errors[0].code", is("1")));
     }
@@ -163,11 +151,9 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
     void testValidateKey() throws Exception {
         String code = null;
         try {
-//            String accessToken = this.getAccessToken();
-
             UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
             String accessToken = mockOAuthInterceptor(user);
-            
+
             //Assert.assertNull(this.ii18nManager.getLabelGroup(code));
             String defaultLangCode = langManager.getDefaultLang().getCode();
 
@@ -176,31 +162,31 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
             Map<String, String> languages = new HashMap<>();
             languages.put(defaultLangCode, "this label has no name");
             request.setTitles(languages);
-            
+
             ResultActions result = this.executePost(request, accessToken, status().isBadRequest());
             result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
             result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
             result.andExpect(jsonPath("$.errors[0].code", is("53")));
             result.andExpect(jsonPath("$.metaData.size()", is(0)));
-            
+
             code = "veryLongCategoryCode_veryLongCategoryCode_veryLongCategoryCode";
             request.setKey(code);
-            
+
             result = this.executePost(request, accessToken, status().isBadRequest());
             result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
             result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
             result.andExpect(jsonPath("$.errors[0].code", is("54")));
             result.andExpect(jsonPath("$.metaData.size()", is(0)));
-            
+
             code = "Special_$_12&";
             request.setKey(code);
-            
+
             result = this.executePost(request, accessToken, status().isBadRequest());
             result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
             result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
             result.andExpect(jsonPath("$.errors[0].code", is("58")));
             result.andExpect(jsonPath("$.metaData.size()", is(0)));
-            
+
         } catch (Exception e) {
             this.ii18nManager.deleteLabelGroup(code);
             throw e;
@@ -311,7 +297,7 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
             Map<String, String> languages = new HashMap<>();
             languages.put(langManager.getDefaultLang().getCode(), "");
             request.setTitles(languages);
-            
+
             ResultActions result = this.executePost(request, accessToken, status().isConflict()).andDo(resultPrint());
             result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
             result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
@@ -336,7 +322,7 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
             Map<String, String> languages = new HashMap<>();
             languages.put("en", "hello");
             request.setTitles(languages);
-            
+
             ResultActions result = this.executePost(request, accessToken, status().isConflict());
             result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
             result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
@@ -362,7 +348,7 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
             languages.put(langManager.getDefaultLang().getCode(), "hello");
             languages.put("de", "hello");
             request.setTitles(languages);
-            
+
             ResultActions result = this.executePost(request, accessToken, status().isConflict());
             result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
             result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
@@ -397,9 +383,9 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
             ResultActions result
                     = mockMvc.perform(put("/labels/{code}", code)
-                            .content(payLoad)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE)
-                            .header("Authorization", "Bearer " + accessToken));
+                    .content(payLoad)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header("Authorization", "Bearer " + accessToken));
             result.andExpect(status().isBadRequest());
 
         } finally {
@@ -431,9 +417,9 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
             ResultActions result
                     = mockMvc.perform(put("/labels/{code}", code)
-                            .content(payLoad)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE)
-                            .header("Authorization", "Bearer " + accessToken));
+                    .content(payLoad)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header("Authorization", "Bearer " + accessToken));
             result.andExpect(status().isBadRequest());
 
         } finally {
@@ -461,9 +447,9 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
             ResultActions result
                     = mockMvc.perform(put("/labels/{code}", code)
-                            .content(payLoad)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE)
-                            .header("Authorization", "Bearer " + accessToken));
+                    .content(payLoad)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header("Authorization", "Bearer " + accessToken));
             result.andExpect(status().isNotFound());
 
         } finally {
@@ -493,22 +479,22 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
             ResultActions result
                     = mockMvc.perform(post("/labels")
-                            .content(payLoad)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE)
-                            .header("Authorization", "Bearer " + accessToken));
+                    .content(payLoad)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header("Authorization", "Bearer " + accessToken));
             result.andExpect(status().isConflict());
         } finally {
             this.ii18nManager.deleteLabelGroup(code);
         }
     }
-    
+
     private ResultActions executePost(LabelRequest request, String accessToken, ResultMatcher expected) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         String payLoad = mapper.writeValueAsString(request);
         ResultActions result = mockMvc.perform(post("/labels")
-                            .content(payLoad)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE)
-                            .header("Authorization", "Bearer " + accessToken))
+                        .content(payLoad)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken))
                 .andDo(resultPrint());
         result.andExpect(expected);
         return result;
@@ -593,12 +579,7 @@ class LabelControllerIntegrationTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("OAuth token conflict with stub - needs refactoring")
     void testComponentExistenceAnalysis() throws Exception {
-        // Setup additional user for analysis endpoints
-        UserDetails jackBauer = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
-                .grantedToRoleAdmin().build();
-        mockOAuthInterceptor(jackBauer);
 
         AnalysisControllerDiffAnalysisEngineTestsStubs.testComponentEngineAnalysisResult(
                 AnalysisControllerDiffAnalysisEngineTestsStubs.COMPONENT_LABELS,
