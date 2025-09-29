@@ -72,7 +72,7 @@
         <!-- OWASP -->
         <dependency>
             <groupId>org.owasp.encoder</groupId>
-            <artifactId>encoder-jsp</artifactId>
+            <artifactId>encoder-jakarta-jsp</artifactId>
         </dependency>
         <!-- -->
         <dependency>

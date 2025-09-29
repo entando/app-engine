@@ -1,6 +1,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="s" uri="/struts-tags" %>
-<%@ taglib prefix="e" uri="https://www.owasp.org/index.php/OWASP_Java_Encoder_Project" %>
+<%@ taglib prefix="e" uri="owasp.encoder.jakarta" %>
 
 <s:set var="prevCode"><e:forHtml value="${param.prevCode}" /></s:set>
 

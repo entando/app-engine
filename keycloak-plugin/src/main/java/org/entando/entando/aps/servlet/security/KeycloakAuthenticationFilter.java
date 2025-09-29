@@ -141,10 +141,13 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
     private void setUserOnContext(HttpServletRequest request, UserDetails user, Authentication authentication) {
         // IMPORTANT: Also set the SecurityContextHolder for Spring Security to recognize the authentication
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        request.getSession().setAttribute("user", user);
-        if(!API_PATH.equals(request.getServletPath())){
+        if (API_PATH.equals(request.getServletPath())) {
+            request.setAttribute("user", user);
+        } else {
+            request.getSession().setAttribute("user", user);
             request.getSession().setAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER, user);
         }
+
     }
 
     @Override
