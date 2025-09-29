@@ -26,6 +26,7 @@ import ognl.OgnlException;
 
 import org.jdom2.CDATA;
 import org.jdom2.Element;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -77,6 +78,7 @@ public class OgnlValidationRule implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Element getConfigElement() {
         if (null == this.getExpression() || this.getExpression().trim().length() == 0) {
             return null;

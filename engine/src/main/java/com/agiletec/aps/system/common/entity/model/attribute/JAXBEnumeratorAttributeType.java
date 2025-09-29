@@ -15,6 +15,7 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.entando.entando.aps.system.services.api.model.ApiException;
@@ -23,6 +24,7 @@ import org.entando.entando.aps.system.services.api.model.ApiException;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "attributeType")
+@JsonRootName(value = "attributeType")
 public class JAXBEnumeratorAttributeType extends DefaultJAXBAttributeType {
     
     public String getStaticItems() {

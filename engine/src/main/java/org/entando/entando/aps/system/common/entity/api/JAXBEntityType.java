@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -40,6 +43,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.JAXBListAttributeTy
  * @author E.Santoboni
  */
 @XmlRootElement(name = "entityType")
+@JsonRootName(value = "entityType")
 @XmlType(propOrder = {"typeCode", "typeDescription", "entityManagerName", "attributes"})
 @XmlSeeAlso({JAXBListAttributeType.class, JAXBCompositeAttributeType.class, JAXBEnumeratorAttributeType.class})
 public class JAXBEntityType {
@@ -91,6 +95,7 @@ public class JAXBEntityType {
     }
     
     @XmlElement(name = "entityManagerName", required = true)
+    @JsonProperty("entityManagerName")
     public String getEntityManagerName() {
         return _entityManagerName;
     }
@@ -99,6 +104,7 @@ public class JAXBEntityType {
     }
     
     @XmlElement(name = "typeCode", required = true)
+    @JsonProperty("typeCode")
     public String getTypeCode() {
         return _typeCode;
     }
@@ -107,6 +113,7 @@ public class JAXBEntityType {
     }
     
     @XmlElement(name = "typeDescription", required = true)
+    @JsonProperty("typeDescription")
     public String getTypeDescription() {
         return _typeDescription;
     }
@@ -116,6 +123,7 @@ public class JAXBEntityType {
     
     @XmlElement(name = "attribute", required = false)
     @XmlElementWrapper(name = "attributes")
+    @JsonAlias({"attributes", "attribute"})
     public List<DefaultJAXBAttributeType> getAttributes() {
         return _attributes;
     }

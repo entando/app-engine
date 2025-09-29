@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.xml.bind.annotation.XmlTransient;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.jdom2.Element;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -30,6 +32,7 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 /**
  * @author E.Santoboni
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BaseAttributeValidationRules implements IAttributeValidationRules {
 
 	private static final EntLogger _logger =  EntLogFactory.getSanitizedLogger(BaseAttributeValidationRules.class);
@@ -53,6 +56,7 @@ public class BaseAttributeValidationRules implements IAttributeValidationRules {
     
     @Override
     @XmlTransient
+    @JsonIgnore
     public Element getJDOMConfigElement() {
         Element configElement = null;
         try {
@@ -84,6 +88,7 @@ public class BaseAttributeValidationRules implements IAttributeValidationRules {
     
     @Override
     @XmlTransient
+    @JsonIgnore
     public void setConfig(Element attributeElement) {
         Element validationElement = attributeElement.getChild(VALIDATIONS_ELEMENT_NAME);
         if (null != validationElement) {
@@ -110,6 +115,7 @@ public class BaseAttributeValidationRules implements IAttributeValidationRules {
     }
 	
 	@Override
+    @JsonIgnore
     public boolean isEmpty() {
         return (!this.isRequired() && null == this.getOgnlValidationRule());
     }

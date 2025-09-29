@@ -15,6 +15,9 @@ package com.agiletec.plugins.jacms.aps.system.services.content.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
@@ -33,6 +36,7 @@ import jakarta.xml.bind.annotation.XmlType;
  * @author E.Santoboni - S.Didaci
  */
 @XmlRootElement(name = "symbolicLink")
+@JsonRootName("symbolicLink")
 @XmlType(propOrder = {"contentDestination", "pageDestination", "resourceDestination", "symbolicDestination"})
 public class SymbolicLink implements Serializable {
 	
@@ -98,6 +102,7 @@ public class SymbolicLink implements Serializable {
 	 * @return L'identificativo del contenuto di destinazione
 	 */
 	@XmlElement(name = "contentDestination", required = false)
+    @JsonProperty("contentDestination")
 	public String getContentDestination(){
 		return contentDestination;
 	}
@@ -112,6 +117,7 @@ public class SymbolicLink implements Serializable {
 	 * @return Il codice della pagina di destinazione.
 	 */
 	@XmlElement(name = "pageDestination", required = false)
+    @JsonProperty("pageDestination")
 	public String getPageDestination(){
 		return pageDestination;
 	}
@@ -130,11 +136,13 @@ public class SymbolicLink implements Serializable {
 	}
 
 	@XmlTransient
+    @JsonIgnore
 	public void setUrlDest(String urlDest) {
 		this.urlDestination = urlDest;
 	}
 
 	@XmlElement(name = "resourceDestination", required = false)
+    @JsonProperty("resourceDestination")
 	public String getResourceDestination() {
 		return resourceDestination;
 	}
@@ -151,6 +159,7 @@ public class SymbolicLink implements Serializable {
 	 * simbolica è malformata.
 	 */
 	@XmlElement(name = "symbolicDestination", required = true)
+    @JsonProperty("symbolicDestination")
 	public boolean setSymbolicDestination(String symbolicDestination) {
 		boolean ok = false;
 		String params[] = this.extractParams(symbolicDestination);

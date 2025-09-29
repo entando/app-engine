@@ -14,6 +14,8 @@
 package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlType;
 
@@ -24,6 +26,7 @@ import jakarta.xml.bind.annotation.XmlType;
 public class JAXBBooleanAttribute extends AbstractJAXBAttribute implements Serializable {
 
     @XmlElement(name = "value", required = false)
+    @JsonProperty("value")
     public Boolean getBoolean() {
         return value;
     }

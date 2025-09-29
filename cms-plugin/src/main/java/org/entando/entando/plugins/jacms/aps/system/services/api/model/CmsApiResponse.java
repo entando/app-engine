@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jacms.aps.system.services.api.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import org.entando.entando.aps.system.services.api.model.AbstractApiResponse;
@@ -23,10 +25,12 @@ import org.entando.entando.aps.system.services.api.model.AbstractApiResponseResu
  * @author super
  */
 @XmlRootElement(name = "response")
+@JsonRootName(value = "response")
 public class CmsApiResponse extends AbstractApiResponse {
 
     @Override
     @XmlElement(name = "result", required = false)
+    @JsonProperty("result")
     public JAXBCmsResult getResult() {
         return (JAXBCmsResult) super.getResult();
     }

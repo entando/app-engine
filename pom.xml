@@ -81,7 +81,7 @@
         <test.database.serv.url>jdbc:derby:memory:testServ;create=true</test.database.serv.url>
         <!--dependency versions-->
         <spring.version>6.2.1</spring.version>
-        <springsecurity.version>6.3.1</springsecurity.version>
+        <springsecurity.version>6.3.10</springsecurity.version>
         <!-- Spring Security OAuth2 integrated into main Spring Security 6 -->
         <struts2.version>7.0.3</struts2.version>
         <jackson.version>2.16.2</jackson.version>
@@ -101,7 +101,7 @@
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <freemarker.version>2.3.34</freemarker.version>
         <commons-validator.version>1.9.0</commons-validator.version>
-        <taglibs-standard-impl.version>1.2.5</taglibs-standard-impl.version>
+        <jakarta.servlet.jsp.jstl.version>3.0.1</jakarta.servlet.jsp.jstl.version>
         <assertj-core.version>3.20.2</assertj-core.version>
         <commons-digester.version>2.1</commons-digester.version>
         <logback.version>1.5.18</logback.version>
@@ -117,7 +117,7 @@
         <httpclient5.version>5.5</httpclient5.version>
         <jaxb-impl.version>3.0.1</jaxb-impl.version>
         <jaxb-xjc.version>3.0.1</jaxb-xjc.version>
-        <derby.version>10.17.1.0</derby.version>
+        <derby.version>10.16.1.1</derby.version>
         <!-- Legacy javax versions removed in Jakarta EE 10 migration -->
         <tomcat-servlet-api.version>10.1.33</tomcat-servlet-api.version>
         <im4java.version>1.4.0</im4java.version>
@@ -193,7 +193,8 @@
         <xercesImpl.version>2.12.2</xercesImpl.version>
         <junrar.version>7.4.1</junrar.version>
         <netty.version>4.1.125.Final</netty.version>
-        <commons-fileupload.version>1.6.0</commons-fileupload.version>
+<!--        <commons-fileupload.version>1.6.0</commons-fileupload.version>-->
+        <commons-fileupload2.version>2.0.0-M4</commons-fileupload2.version>
 <!--    This needs to be tested. Fix CVE-2024-31391 CVE-2024-52012 CVE-2025-24814 CVE-2023-50298 -->
         <solr-solrj.version>9.8.0</solr-solrj.version>
         <!--
@@ -579,10 +580,9 @@
                 
             </dependency>
             <dependency>
-                <groupId>org.apache.taglibs</groupId>
-                <artifactId>taglibs-standard-impl</artifactId>
-                <version>${taglibs-standard-impl.version}</version>
-                
+                <groupId>org.glassfish.web</groupId>
+                <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+                <version>${jakarta.servlet.jsp.jstl.version}</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -924,6 +924,10 @@
                         <groupId>org.apache.logging.log4j</groupId>
                         <artifactId>log4j-api</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -1083,11 +1087,6 @@
                 <groupId>org.glassfish.web</groupId>
                 <artifactId>jakarta.el</artifactId>
                 <version>${jakarta.el-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.web</groupId>
-                <artifactId>jakarta.servlet.jsp.jstl</artifactId>
-                <version>3.0.1</version>
             </dependency>
             <dependency>
                 <groupId>org.im4java</groupId>
@@ -1596,11 +1595,19 @@
                 <artifactId>netty-transport-native-unix-common</artifactId>
                 <version>${netty.version}</version>
             </dependency>
+<!--            <dependency>-->
+<!--                <groupId>commons-fileupload</groupId>-->
+<!--                <artifactId>commons-fileupload</artifactId>-->
+<!--                <version>${commons-fileupload.version}</version>-->
+<!--            </dependency>-->
+
+            <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-fileupload2-jakarta-servlet6 -->
             <dependency>
-                <groupId>commons-fileupload</groupId>
-                <artifactId>commons-fileupload</artifactId>
-                <version>${commons-fileupload.version}</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
+            <version>${commons-fileupload2.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.springframework.hateoas</groupId>
                 <artifactId>spring-hateoas</artifactId>

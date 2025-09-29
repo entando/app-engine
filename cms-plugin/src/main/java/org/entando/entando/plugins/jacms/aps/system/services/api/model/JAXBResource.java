@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jacms.aps.system.services.api.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
@@ -36,6 +38,7 @@ import java.security.SecureRandom;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "resource")
+@JsonRootName(value = "resource")
 @XmlType(propOrder = {"id", "typeCode", "description", "mainGroup", "fileName", "categories", "base64"})
 public class JAXBResource {
 
@@ -182,6 +185,7 @@ public class JAXBResource {
 	}
 
 	@XmlElement(name = "id", required = true)
+    @JsonProperty("id")
 	public String getId() {
 		return _id;
 	}
@@ -190,6 +194,7 @@ public class JAXBResource {
 	}
 
 	@XmlElement(name = "typeCode", required = true)
+    @JsonProperty("typeCode")
 	public String getTypeCode() {
 		return _typeCode;
 	}
@@ -198,6 +203,7 @@ public class JAXBResource {
 	}
 
 	@XmlElement(name = "description", required = true)
+    @JsonProperty("description")
 	public String getDescription() {
 		return _description;
 	}
@@ -206,6 +212,7 @@ public class JAXBResource {
 	}
 
 	@XmlElement(name = "mainGroup", required = true)
+    @JsonProperty("mainGroup")
 	public String getMainGroup() {
 		return _mainGroup;
 	}
@@ -214,6 +221,7 @@ public class JAXBResource {
 	}
 
 	@XmlElement(name = "fileName", required = true)
+    @JsonProperty("fileName")
 	public String getFileName() {
 		return _fileName;
 	}
@@ -223,6 +231,7 @@ public class JAXBResource {
 
 	@XmlElement(name = "category", required = true)
     @XmlElementWrapper(name = "categories")
+    @JsonProperty("categories")
 	public List<String> getCategories() {
 		return _categories;
 	}
@@ -231,6 +240,7 @@ public class JAXBResource {
 	}
 
 	@XmlElement(name = "base64", required = true)
+    @JsonProperty("base64")
 	public byte[] getBase64() {
 		return _base64;
 	}

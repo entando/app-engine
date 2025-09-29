@@ -32,6 +32,8 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -136,6 +138,7 @@ public class JAXBEntity implements Serializable {
      * @return The code of the Entity Type.
      */
     @XmlElement(name = "typeCode", required = true)
+    @JsonProperty("typeCode")
     public String getTypeCode() {
         return this._typeCode;
     }
@@ -227,7 +230,9 @@ public class JAXBEntity implements Serializable {
 
     @XmlElement(name = "attribute", required = true)
     @XmlElementWrapper(name = "attributes")
-    @JsonAlias({"attribute", "attributes"})
+    @JsonProperty("attribute")
+    @JacksonXmlElementWrapper(localName = "attributes") // Wrapper for XML
+    @JacksonXmlProperty(localName = "attribute")
     public List<AbstractJAXBAttribute> getAttributes() {
         return _attributes;
     }

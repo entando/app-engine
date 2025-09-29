@@ -15,6 +15,9 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.io.Serializable;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlType;
@@ -27,6 +30,7 @@ public class JAXBListAttribute extends AbstractJAXBAttribute implements Serializ
 
     @XmlElement(name = "attribute", required = true)
     @XmlElementWrapper(name = "attributes")
+    @JsonAlias({"attribute", "attributes"})
     public List<AbstractJAXBAttribute> getAttributes() {
         return attributes;
     }

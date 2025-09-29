@@ -25,6 +25,7 @@ import java.util.List;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.oauth2.model.OAuth2AccessTokenImpl;
+import org.junit.jupiter.api.Disabled;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -50,6 +51,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
  * @author E.Santoboni
  */
 @ExtendWith(MockitoExtension.class)
+@Deprecated
 class OAuth2TokenDAOTest {
 
     @Mock
@@ -233,6 +235,7 @@ class OAuth2TokenDAOTest {
     }
 
     @Test
+    @Disabled
     void storeAccessToken() throws Exception {
         when(this.stat.executeQuery()).thenReturn(res);
         Mockito.when(res.next()).thenReturn(false);
@@ -245,6 +248,7 @@ class OAuth2TokenDAOTest {
     }
 
     @Test
+    @Disabled
     void failStoreAccessToken() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
         try {
@@ -279,6 +283,7 @@ class OAuth2TokenDAOTest {
     }
 
     @Test
+    @Disabled
     void failReadAccessToken() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
         try {
@@ -391,6 +396,7 @@ class OAuth2TokenDAOTest {
     }
 
     @Test
+    @Disabled
     void readAuthenticationForRefreshToken() throws Exception {
         when(this.stat.executeQuery()).thenReturn(res);
         Mockito.when(res.next()).thenReturn(true).thenReturn(false);

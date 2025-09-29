@@ -14,6 +14,9 @@
 package org.entando.entando.plugins.jacms.aps.system.services.api.model;
 
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
@@ -22,6 +25,7 @@ import jakarta.xml.bind.annotation.XmlType;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "contentAttribute")
+@JsonRootName(value = "contentAttribute")
 @XmlType(propOrder = {"contentId", "attributeName", "langCode", "value"})
 public class JAXBContentAttribute implements Serializable {
 
@@ -59,6 +63,7 @@ public class JAXBContentAttribute implements Serializable {
 	private List<JAXBLabel> _labels;
 	 */
 	@XmlElement(name = "contentId", required = true)
+    @JsonProperty("contentId")
 	public String getContentId() {
 		return _contentId;
 	}
@@ -68,6 +73,7 @@ public class JAXBContentAttribute implements Serializable {
 	}
 
 	@XmlElement(name = "attributeName", required = true)
+    @JsonProperty("attributeName")
 	public String getAttributeName() {
 		return _attributeName;
 	}
@@ -77,6 +83,7 @@ public class JAXBContentAttribute implements Serializable {
 	}
 
 	@XmlElement(name = "langCode", required = true)
+    @JsonProperty("langCode")
 	public String getLangCode() {
 		return _langCode;
 	}
@@ -86,6 +93,7 @@ public class JAXBContentAttribute implements Serializable {
 	}
 
 	@XmlElement(name = "value", required = true)
+    @JsonProperty("value")
 	public String getValue() {
 		return _value;
 	}

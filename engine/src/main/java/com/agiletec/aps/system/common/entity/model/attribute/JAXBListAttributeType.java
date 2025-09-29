@@ -15,6 +15,7 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlSeeAlso;
 import jakarta.xml.bind.annotation.XmlType;
@@ -26,6 +27,7 @@ import org.entando.entando.aps.system.services.api.model.ApiException;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "attributeType")
+@JsonRootName(value = "attributeType")
 @XmlType(propOrder = {"nestedType"})
 @XmlSeeAlso({DefaultJAXBAttributeType.class, JAXBCompositeAttributeType.class, JAXBEnumeratorAttributeType.class})
 public class JAXBListAttributeType extends DefaultJAXBAttributeType {

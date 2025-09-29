@@ -56,7 +56,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = {
@@ -72,9 +74,15 @@ import org.springframework.context.annotation.Bean;
 @WebAppConfiguration(value = "")
 public class AbstractControllerIntegrationTest {
 
+    //TODO da rifinire per gestire autenticazione mockata
     @Bean
+    @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+        http
+            .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for tests
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .anonymous(anonymous -> anonymous.principal("anonymousUser"));
         return http.build();
     }
 
@@ -121,7 +129,7 @@ public class AbstractControllerIntegrationTest {
         this.entandoOauth2Interceptor.setoAuth2TokenManager(this.apiOAuth2TokenManager);
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .dispatchOptions(true)
-                .addFilters(springSecurityFilterChain, corsFilter)
+                .addFilters(corsFilter)
                 .build();
         accessToken = null;
     }

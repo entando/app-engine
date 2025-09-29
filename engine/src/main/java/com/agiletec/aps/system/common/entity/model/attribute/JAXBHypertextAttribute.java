@@ -14,6 +14,8 @@
 package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlType;
 
@@ -26,6 +28,7 @@ public class JAXBHypertextAttribute extends AbstractJAXBAttribute implements Ser
     private String htmlValue;
 
     @XmlElement(name = "htmlValue", required = false)
+    @JsonProperty("htmlValue")
     public String getHtmlValue() {
         return htmlValue;
     }

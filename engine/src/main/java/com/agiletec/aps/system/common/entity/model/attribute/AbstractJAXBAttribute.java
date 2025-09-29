@@ -13,6 +13,7 @@
  */
 package com.agiletec.aps.system.common.entity.model.attribute;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
 import java.util.List;
@@ -35,6 +36,7 @@ public abstract class AbstractJAXBAttribute implements Serializable {
     private List<String> roles;
 
     @XmlElement(name = "name", required = true)
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
@@ -44,6 +46,7 @@ public abstract class AbstractJAXBAttribute implements Serializable {
     }
 
     @XmlElement(name = "names", required = false)
+    @JsonProperty("names")
     public Map<String, String> getNames() {
         return names;
     }
@@ -53,6 +56,7 @@ public abstract class AbstractJAXBAttribute implements Serializable {
     }
 
     @XmlElement(name = "type", required = true)
+    @JsonProperty("type")
     public String getType() {
         return this.type;
     }
@@ -62,6 +66,7 @@ public abstract class AbstractJAXBAttribute implements Serializable {
     }
 
     @XmlElement(name = "description", required = false)
+    @JsonProperty("description")
     public String getDescription() {
         return description;
     }
@@ -72,6 +77,7 @@ public abstract class AbstractJAXBAttribute implements Serializable {
 
     @XmlElement(name = "role", required = false)
     @XmlElementWrapper(name = "roles")
+    @JsonProperty("roles")
     public List<String> getRoles() {
         return roles;
     }

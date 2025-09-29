@@ -15,6 +15,7 @@ package org.entando.entando.aps.system.services.api.model;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
@@ -23,6 +24,7 @@ import jakarta.xml.bind.annotation.XmlType;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "items")
+@JsonRootName(value = "items")
 @XmlType(propOrder = {"size", "entity"})
 public class ListResponse<T> {
 
@@ -43,14 +45,14 @@ public class ListResponse<T> {
     }
 
     @XmlElement(name = "item", required = false)
+    @JsonProperty("item")
     private List<T> entity;
 
-    @JsonProperty("item")
     public List<T> getEntity() {
         return this.entity;
     }
 
-    public void setEntity(List<T> entity) {
-        this.entity = entity;
-    }
+//    public void setEntity(List<T> entity) {
+//        this.entity = entity;
+//    }
 }

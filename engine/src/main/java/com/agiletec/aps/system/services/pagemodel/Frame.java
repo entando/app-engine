@@ -15,6 +15,9 @@ package com.agiletec.aps.system.services.pagemodel;
 
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.entando.entando.aps.system.services.widgettype.*;
 
@@ -26,6 +29,7 @@ import java.util.*;
  * Representation of a frame of page template
  */
 @XmlRootElement(name = "frame")
+@JsonRootName( value = "frame")
 @XmlType(propOrder = {"pos", "description", "mainFrame", "jaxbDefaultWidget", "sketch"})
 public class Frame implements Serializable {
 
@@ -40,6 +44,7 @@ public class Frame implements Serializable {
     private transient IWidgetTypeManager widgetTypeManager;
 
     @XmlElement(name = "code", required = true)
+    @JsonProperty("code")
     public int getPos() {
         return pos;
     }
@@ -49,6 +54,7 @@ public class Frame implements Serializable {
     }
 
     @XmlElement(name = "description", required = true)
+    @JsonProperty("description")
     public String getDescription() {
         return description;
     }
@@ -58,6 +64,7 @@ public class Frame implements Serializable {
     }
 
     @XmlElement(name = "mainFrame", required = false)
+    @JsonProperty("mainFrame")
     public boolean isMainFrame() {
         return mainFrame;
     }
@@ -67,6 +74,7 @@ public class Frame implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Widget getDefaultWidget() {
         if (shouldUseDefaultWidget()) {
             defaultWidget = jaxbDefaultWidget.createDefaultWidget(widgetTypeManager);
@@ -88,6 +96,7 @@ public class Frame implements Serializable {
     }
 
     @XmlElement(name = "defaultWidget", required = false)
+    @JsonProperty("defaultWidget")
     public JAXBDefaultWidget getJaxbDefaultWidget() {
         if (needToCreateNewJaxbDefaultWidget()) {
             jaxbDefaultWidget = new JAXBDefaultWidget(defaultWidget);
@@ -108,6 +117,7 @@ public class Frame implements Serializable {
     }
 
     @XmlElement(name = "sketch", required = false)
+    @JsonProperty("sketch")
     public FrameSketch getSketch() {
         return sketch;
     }
@@ -129,6 +139,7 @@ public class Frame implements Serializable {
 
     @XmlRootElement(name = "defaultWidget")
     @XmlType(propOrder = {"code", "properties"})
+    @JsonRootName( value = "defaultWidget")
     public static class JAXBDefaultWidget implements Serializable {
 
         private String code;
@@ -160,6 +171,7 @@ public class Frame implements Serializable {
         }
 
         @XmlElement(name = "code", required = true)
+        @JsonProperty("code")
         public String getCode() {
             return code;
         }
@@ -169,6 +181,7 @@ public class Frame implements Serializable {
         }
 
         @XmlElement(name = "configuration", required = false)
+        @JsonProperty("configuration")
         public Properties getProperties() {
             return properties;
         }

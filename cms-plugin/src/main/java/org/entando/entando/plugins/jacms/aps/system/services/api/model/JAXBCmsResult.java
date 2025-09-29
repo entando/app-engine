@@ -14,15 +14,19 @@
 package org.entando.entando.plugins.jacms.aps.system.services.api.model;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "cms")
+@JsonRootName(value = "cms")
 @XmlType(propOrder = {"id", "status"})
 public class JAXBCmsResult {
     
     @XmlElement(name = "id", required = true)
+    @JsonProperty("id")
     public String getId() {
         return _id;
     }
@@ -31,6 +35,7 @@ public class JAXBCmsResult {
     }
     
     @XmlElement(name = "status", required = true)
+    @JsonProperty("status")
     public String getStatus() {
         return _status;
     }

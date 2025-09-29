@@ -18,7 +18,6 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlType;
-import com.fasterxml.jackson.annotation.JsonAlias;
 
 /**
  * @author E.Santoboni
@@ -27,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 public class JAXBTextAttribute extends AbstractJAXBAttribute implements Serializable {
 
     @XmlElement(name = "value", required = false)
-    @JsonAlias("value")
+    @JsonProperty("value")
     public String getText() {
         return text;
     }

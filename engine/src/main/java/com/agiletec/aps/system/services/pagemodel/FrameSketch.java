@@ -15,6 +15,9 @@ package com.agiletec.aps.system.services.pagemodel;
 
 import java.io.Serializable;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
@@ -26,6 +29,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *
  */
 @XmlRootElement(name = "sketch")
+@JsonRootName( value = "sketch")
 @XmlType(propOrder = {"x1", "y1", "x2", "y2"})
 public class FrameSketch implements Serializable {
 
@@ -37,6 +41,7 @@ public class FrameSketch implements Serializable {
 	}
 
 	@XmlElement(name = "x1", required = true)
+    @JsonProperty("x1")
 	public int getX1() {
 		return x1;
 	}
@@ -46,6 +51,7 @@ public class FrameSketch implements Serializable {
 	}
 
 	@XmlElement(name = "y1", required = true)
+    @JsonProperty("y1")
 	public int getY1() {
 		return y1;
 	}
@@ -55,6 +61,7 @@ public class FrameSketch implements Serializable {
 	}
 
 	@XmlElement(name = "x2", required = true)
+    @JsonProperty("x2")
 	public int getX2() {
 		return x2;
 	}
@@ -64,6 +71,7 @@ public class FrameSketch implements Serializable {
 	}
 
 	@XmlElement(name = "y2", required = true)
+    @JsonProperty("y2")
 	public int getY2() {
 		return y2;
 	}
