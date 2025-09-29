@@ -14,7 +14,7 @@
 package org.entando.entando.plugins.jpsolr.web;
 
 import com.agiletec.aps.system.common.notify.NotifyManager;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;

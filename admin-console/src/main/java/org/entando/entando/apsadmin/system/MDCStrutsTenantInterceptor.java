@@ -1,8 +1,8 @@
 package org.entando.entando.apsadmin.system;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.interceptor.AbstractInterceptor;
 import org.slf4j.MDC;
 
 public class MDCStrutsTenantInterceptor extends AbstractInterceptor {

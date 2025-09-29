@@ -13,7 +13,7 @@
  */
 package com.agiletec.apsadmin.system.entity.attribute.manager;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -28,7 +28,7 @@ import com.agiletec.aps.system.services.i18n.II18nManager;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.apsadmin.system.BaseAction;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 
 /**
  * This abstract class is the base for the managers of all attributes.

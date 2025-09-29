@@ -13,14 +13,14 @@
  */
 package com.agiletec.apsadmin.tags;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.components.Component;
 import org.apache.struts2.views.jsp.ComponentTagSupport;
 
 import com.agiletec.apsadmin.tags.util.ApsActionParamComponent;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * Handle the submit in the administration interface.

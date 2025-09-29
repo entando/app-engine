@@ -22,11 +22,11 @@
 package org.entando.entando.plugins.jpseo.aps.tags;
 
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
 import org.entando.entando.plugins.jpseo.aps.system.JpseoSystemConstants;
 import org.entando.entando.plugins.jpseo.aps.system.services.metatag.IMetatagCatalog;

@@ -21,9 +21,9 @@
  */
 package com.agiletec.plugins.jpmail.aps.services.mail;
 
-import javax.mail.PasswordAuthentication;
+import jakarta.mail.PasswordAuthentication;
 
-public class SMTPAuthenticator extends javax.mail.Authenticator {
+public class SMTPAuthenticator extends jakarta.mail.Authenticator {
 	
 	public SMTPAuthenticator(MailConfig config) {
 		if (null != config) {

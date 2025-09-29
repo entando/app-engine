@@ -24,7 +24,7 @@ import com.agiletec.aps.system.services.i18n.II18nManager;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;

@@ -13,9 +13,9 @@
  */
 package org.entando.entando.plugins.jpmail.ent.system.services.model;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 
 public class EmailSenderDto {
 

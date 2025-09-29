@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>app-engine</artifactId>
-        <version>7.5.0</version>
+        <version>7.5.0-JAKARTA</version>
     </parent>
     <groupId>org.entando.entando</groupId>
     <artifactId>entando-portal-ui</artifactId>
@@ -190,13 +190,13 @@
         <!-- esapi - end of section -->
 		
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

@@ -1,7 +1,7 @@
 package org.entando.entando.apsadmin.system;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
-import com.opensymphony.xwork2.ActionInvocation;
+import org.apache.struts2.ActionInvocation;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

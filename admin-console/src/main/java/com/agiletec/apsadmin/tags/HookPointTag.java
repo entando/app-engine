@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
@@ -26,7 +26,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.agiletec.apsadmin.system.plugin.HookPointElementContainer;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * Defines a hookpoint, a point of inclusion of objects -that is, jsp fragments - in

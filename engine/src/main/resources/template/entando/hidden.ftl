@@ -32,7 +32,7 @@
 <#if parameters.cssStyle?has_content>
  style="${parameters.cssStyle}"<#rt/>
 </#if>
-<#if parameters.disabled!false>
+<#if (parameters.disabled?? && parameters.disabled?is_string && parameters.disabled == "true") || (parameters.disabled?? && parameters.disabled?is_boolean && parameters.disabled)>
  disabled="disabled"<#rt/>
 </#if>
 <#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />

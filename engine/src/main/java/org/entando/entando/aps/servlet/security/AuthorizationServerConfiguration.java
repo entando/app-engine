@@ -124,7 +124,7 @@ public class AuthorizationServerConfiguration {
     /**
      * Configure Authorization Server settings including endpoint paths
      */
-    @Bean
+//    @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         AuthorizationServerSettings.Builder builder = AuthorizationServerSettings.builder();
 
@@ -146,8 +146,8 @@ public class AuthorizationServerConfiguration {
     /**
      * Default resource server security filter chain for protecting APIs
      */
-    @Bean
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+//    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .anyRequest().permitAll()
@@ -166,7 +166,7 @@ public class AuthorizationServerConfiguration {
     /**
      * JWT Key Source for signing tokens
      */
-    @Bean
+//    @Bean
     public JWKSource<SecurityContext> jwkSource() {
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
@@ -194,7 +194,7 @@ public class AuthorizationServerConfiguration {
     /**
      * JWT Decoder for validating tokens
      */
-    @Bean
+//    @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
@@ -202,7 +202,7 @@ public class AuthorizationServerConfiguration {
     /**
      * OAuth2 Token Customizer to add custom claims
      */
-    @Bean
+//    @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
         return context -> {
             if (context.getTokenType().getValue().equals("access_token")) {

@@ -24,7 +24,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.CheckBoxAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.ThreeStateAttribute;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.Test;
 
 /**

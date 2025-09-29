@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.struts2.ServletActionContext;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -28,8 +28,8 @@ import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.interceptor.AbstractInterceptor;
 
 /**
  * Interceptor gestore della verifica delle autorizzazioni dell'utente corrente.

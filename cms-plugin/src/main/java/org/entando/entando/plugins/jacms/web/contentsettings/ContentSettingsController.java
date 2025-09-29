@@ -21,7 +21,7 @@ import io.swagger.annotations.ApiResponses;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.plugins.jacms.aps.system.services.contentsettings.ContentSettingsService;
 import org.entando.entando.plugins.jacms.web.contentsettings.model.ContentSettingsCropRatioRequest;
 import org.entando.entando.plugins.jacms.web.contentsettings.model.ContentSettingsDto;

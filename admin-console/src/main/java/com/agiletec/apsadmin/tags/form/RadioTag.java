@@ -13,16 +13,16 @@
  */
 package com.agiletec.apsadmin.tags.form;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
 
 import org.apache.struts2.components.Component;
 
 import com.agiletec.apsadmin.tags.util.AutoIndexingTagHelper;
 import com.agiletec.apsadmin.tags.util.IAutoIndexingTag;
 import com.agiletec.apsadmin.tags.util.RadioMap;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * This class implements the radio button tag which inherits some of the Struts2 radio functionalities. 

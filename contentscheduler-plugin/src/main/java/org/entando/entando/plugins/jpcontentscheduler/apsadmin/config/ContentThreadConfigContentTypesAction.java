@@ -44,7 +44,7 @@ import com.agiletec.apsadmin.system.AbstractTreeAction;
 import static com.agiletec.apsadmin.system.BaseAction.FAILURE;
 
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 
 /**
  * @author E.Santoboni

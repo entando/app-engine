@@ -15,14 +15,14 @@ package com.agiletec.apsadmin.tags.util;
 
 import com.agiletec.apsadmin.util.ApsRequestParamsUtil;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.components.Form;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.springframework.util.StringUtils;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * @author E.Santoboni
@@ -47,7 +47,7 @@ public class Submit extends org.apache.struts2.components.Submit {
 		}
 		this.addParameter("type", submitType);
 		if (!BUTTONTYPE_INPUT.equals(submitType) && (label == null)) {
-			this.addParameter("label", getParameters().get("nameValue"));
+			this.addParameter("label", getAttributes().get("nameValue"));
 		}
 		if (action != null || method != null) {
 			String name;

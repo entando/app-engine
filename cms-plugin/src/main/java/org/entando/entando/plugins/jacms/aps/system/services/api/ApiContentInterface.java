@@ -55,7 +55,7 @@ import com.agiletec.plugins.jacms.aps.system.services.dispenser.IContentDispense
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.entando.entando.plugins.jacms.aps.system.services.api.model.CmsApiResponse;
 import org.entando.entando.plugins.jacms.aps.system.services.api.model.JAXBCmsResult;
 import org.springframework.http.HttpStatus;

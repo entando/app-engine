@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter.TextSearchOption;

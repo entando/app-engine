@@ -15,7 +15,7 @@ package com.agiletec.apsadmin.system.dispatcher;
 
 import java.util.Enumeration;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author E.Santoboni

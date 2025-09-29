@@ -23,8 +23,8 @@ package com.agiletec.plugins.jpmail.aps.services.mail.util;
 
 import java.util.StringTokenizer;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 /**
  * Utility class containing methods to validate email addresses.

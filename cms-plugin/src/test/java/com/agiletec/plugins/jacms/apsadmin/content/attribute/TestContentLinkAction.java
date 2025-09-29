@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.apsadmin.system.BaseAction;
@@ -31,7 +31,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.Li
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.ContentLinkAction;
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.helper.ILinkAttributeActionHelper;
 import com.agiletec.plugins.jacms.apsadmin.content.util.AbstractBaseTestContentAction;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.Test;
 
 /**

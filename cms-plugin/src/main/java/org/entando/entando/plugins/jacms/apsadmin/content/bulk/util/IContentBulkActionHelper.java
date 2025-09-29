@@ -18,8 +18,8 @@ import java.util.List;
 
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.group.Group;
-import com.opensymphony.xwork2.TextProvider;
-import com.opensymphony.xwork2.interceptor.ValidationAware;
+import org.apache.struts2.text.TextProvider;
+import org.apache.struts2.interceptor.ValidationAware;
 
 public interface IContentBulkActionHelper {
 	

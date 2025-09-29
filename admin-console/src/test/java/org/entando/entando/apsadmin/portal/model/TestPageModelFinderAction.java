@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.agiletec.aps.system.services.pagemodel.PageModel;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;

@@ -14,19 +14,19 @@
 package org.entando.entando.aps.system.services.controller;
 
 import com.agiletec.aps.BaseTestCase;
-import freemarker.ext.jsp.TaglibFactory;
-import freemarker.ext.servlet.AllHttpScopesHashModel;
-import freemarker.ext.servlet.FreemarkerServlet;
-import freemarker.ext.servlet.HttpRequestHashModel;
-import freemarker.ext.servlet.ServletContextHashModel;
+import freemarker.ext.jakarta.jsp.TaglibFactory;
+import freemarker.ext.jakarta.servlet.AllHttpScopesHashModel;
+import freemarker.ext.jakarta.servlet.FreemarkerServlet;
+import freemarker.ext.jakarta.servlet.HttpRequestHashModel;
+import freemarker.ext.jakarta.servlet.ServletContextHashModel;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.ObjectWrapper;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.TemplateModel;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.entando.entando.aps.servlet.ControllerServlet;
 import org.entando.entando.aps.system.services.controller.executor.ExecutorBeanContainer;
 import org.junit.jupiter.api.BeforeAll;

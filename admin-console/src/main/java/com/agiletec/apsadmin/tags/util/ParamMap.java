@@ -21,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.struts2.components.Component;
 
 import com.agiletec.apsadmin.tags.ParamMapTag;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * Component class for tag {@link ParamMapTag} used to parameterize other tags with a map of parameters.
@@ -50,7 +50,7 @@ public class ParamMap extends Component {
 			log.warn("Error in JSP. Attribute map must evaluate to java.util.Map. Found type: " + object.getClass().getName());
 			return super.end(writer, body);
 		}
-		component.addAllParameters((Map) object);
+		component.getAttributes().putAll((Map) object);
 		return super.end(writer, body);
 	}
 	

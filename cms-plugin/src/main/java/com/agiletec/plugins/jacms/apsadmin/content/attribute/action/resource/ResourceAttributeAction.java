@@ -13,7 +13,7 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.content.attribute.action.resource;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

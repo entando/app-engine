@@ -20,7 +20,7 @@ import java.util.Map;
 import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.HostConfig;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * Extension of the InitOperations class used by Struts2 main filter.

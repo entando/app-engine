@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionSupport;
 import org.junit.jupiter.api.Test;
 
 /**

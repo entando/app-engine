@@ -38,7 +38,7 @@ import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 
 /**
  * @author E.Santoboni

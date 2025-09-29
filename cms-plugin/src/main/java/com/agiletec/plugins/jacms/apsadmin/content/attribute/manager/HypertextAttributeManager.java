@@ -15,7 +15,7 @@ package com.agiletec.plugins.jacms.apsadmin.content.attribute.manager;
 
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.util.ICmsAttributeErrorCodes;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 
 /**
  * Classe manager degli attributi tipo Hypertext.

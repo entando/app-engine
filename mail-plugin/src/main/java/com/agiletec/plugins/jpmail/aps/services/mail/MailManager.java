@@ -31,12 +31,12 @@ import org.entando.entando.ent.exception.EntRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.mail.*;
-import javax.mail.Message.RecipientType;
-import javax.mail.internet.*;
+import jakarta.activation.DataHandler;
+import jakarta.activation.DataSource;
+import jakarta.activation.FileDataSource;
+import jakarta.mail.*;
+import jakarta.mail.Message.RecipientType;
+import jakarta.mail.internet.*;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;

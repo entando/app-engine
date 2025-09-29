@@ -16,7 +16,7 @@ package org.entando.entando.aps.internalservlet.api;
 
 import com.agiletec.aps.system.services.url.IURLManager;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.action.ServletResponseAware;
 

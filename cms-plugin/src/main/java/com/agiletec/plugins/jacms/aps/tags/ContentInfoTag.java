@@ -13,9 +13,9 @@
  */
 package com.agiletec.plugins.jacms.aps.tags;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -31,7 +31,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.helper.IContentAuthorizationHelper;
 import com.agiletec.plugins.jacms.aps.system.services.content.helper.PublicContentAuthorizationInfo;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.IContentViewerHelper;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.jsp.tagext.TagSupport;
 
 /**
  * Return an information of a specified content.

@@ -31,7 +31,7 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 

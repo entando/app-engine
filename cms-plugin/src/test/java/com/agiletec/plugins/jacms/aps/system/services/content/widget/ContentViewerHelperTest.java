@@ -28,7 +28,7 @@ import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.ContentRenderizationInfo;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.IContentDispenser;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

@@ -27,7 +27,7 @@ import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.helper.
 
 import java.util.*;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import lombok.Getter;
 import lombok.Setter;
 

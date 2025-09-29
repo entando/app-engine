@@ -14,9 +14,9 @@
 package org.entando.entando.plugins.jacms.aps.system.services.api.model;
 
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "cms")
 @XmlType(propOrder = {"id", "status"})

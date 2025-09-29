@@ -16,9 +16,9 @@ package com.agiletec.plugins.jacms.aps.system.services.content.model.attribute;
 import com.agiletec.aps.system.common.entity.model.attribute.JAXBTextAttribute;
 import java.io.Serializable;
 import java.util.HashMap;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * @author E.Santoboni

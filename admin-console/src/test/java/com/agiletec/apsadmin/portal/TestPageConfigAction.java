@@ -28,7 +28,7 @@ import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

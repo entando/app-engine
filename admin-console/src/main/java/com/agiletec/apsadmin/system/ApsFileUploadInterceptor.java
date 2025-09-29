@@ -17,16 +17,16 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.baseconfig.FileUploadUtils;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.ActionInvocation;
+import org.apache.struts2.ActionInvocation;
 import org.apache.struts2.ServletActionContext;
-import org.apache.struts2.interceptor.FileUploadInterceptor;
+import org.apache.struts2.interceptor.ActionFileUploadInterceptor;
 
 /**
  * Extension of default FileUploadInterceptor.
  *
  * @author E.Santoboni
  */
-public class ApsFileUploadInterceptor extends FileUploadInterceptor {
+public class ApsFileUploadInterceptor extends ActionFileUploadInterceptor {
 
     private Long maximumSize;
 

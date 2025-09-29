@@ -13,8 +13,8 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.tags;
 
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -28,7 +28,7 @@ import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.helper.IContentAuthorizationHelper;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * Returns a content (or one of its property) through the code.

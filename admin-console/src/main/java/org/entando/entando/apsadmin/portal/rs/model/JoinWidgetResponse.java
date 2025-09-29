@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.agiletec.aps.system.services.page.IPage;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 
 public class JoinWidgetResponse extends AbstractPageResponse {
 

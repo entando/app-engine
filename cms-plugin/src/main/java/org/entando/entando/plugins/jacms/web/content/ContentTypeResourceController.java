@@ -26,7 +26,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.component.ComponentUsage;
 import org.entando.entando.aps.system.services.component.ComponentUsageEntity;

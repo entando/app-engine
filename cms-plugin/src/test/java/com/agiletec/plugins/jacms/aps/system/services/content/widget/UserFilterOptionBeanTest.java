@@ -24,7 +24,7 @@ import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.UserFilterOptionBean.AttributeFormFieldError;
 import java.math.BigDecimal;
 import java.util.Properties;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
 import org.junit.jupiter.api.Assertions;

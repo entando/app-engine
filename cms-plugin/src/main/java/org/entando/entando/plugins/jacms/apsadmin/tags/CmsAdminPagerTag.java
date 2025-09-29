@@ -13,15 +13,15 @@
  */
 package org.entando.entando.plugins.jacms.apsadmin.tags;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import com.agiletec.aps.tags.util.IPagerVO;
 import com.agiletec.apsadmin.tags.util.AdminPagerTagHelper;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 import java.util.Arrays;
 
 /**

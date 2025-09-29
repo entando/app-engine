@@ -23,7 +23,7 @@ import com.agiletec.apsadmin.portal.helper.IExternalPageValidator;
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

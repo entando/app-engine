@@ -3,7 +3,7 @@ package org.entando.entando.plugins.jpredis.aps.system.redis.session;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import java.util.List;
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.cache.RedisEnvironmentVariables;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
@@ -44,7 +44,7 @@ class RedisSessionActiveTest {
     }
 
     @Autowired
-    private Filter springSessionRepositoryFilter;
+    private jakarta.servlet.Filter springSessionRepositoryFilter;
 
     @Autowired
     private RedisClient redisClient;

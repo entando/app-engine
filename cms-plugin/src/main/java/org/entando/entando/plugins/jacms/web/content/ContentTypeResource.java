@@ -24,7 +24,7 @@ import io.swagger.annotations.ApiResponses;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.component.ComponentUsage;
 import org.entando.entando.aps.system.services.component.ComponentUsageEntity;
 import org.entando.entando.aps.system.services.entity.model.AttributeTypeDto;

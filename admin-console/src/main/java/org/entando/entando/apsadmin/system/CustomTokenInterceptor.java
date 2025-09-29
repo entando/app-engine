@@ -13,11 +13,11 @@
  */
 package org.entando.entando.apsadmin.system;
 
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.TextProvider;
-import com.opensymphony.xwork2.TextProviderFactory;
-import com.opensymphony.xwork2.inject.Inject;
-import com.opensymphony.xwork2.interceptor.ValidationAware;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.text.TextProvider;
+import org.apache.struts2.text.TextProviderFactory;
+import org.apache.struts2.inject.Inject;
+import org.apache.struts2.interceptor.ValidationAware;
 
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;

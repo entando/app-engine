@@ -2,7 +2,7 @@ package org.entando.entando.plugins.jpredis.aps.system.redis.session;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
 import org.junit.jupiter.api.Assertions;

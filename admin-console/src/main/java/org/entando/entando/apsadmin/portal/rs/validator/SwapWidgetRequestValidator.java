@@ -22,7 +22,7 @@ import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 import com.agiletec.apsadmin.portal.PageConfigAction;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Component

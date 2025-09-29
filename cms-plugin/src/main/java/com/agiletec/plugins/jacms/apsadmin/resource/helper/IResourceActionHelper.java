@@ -16,7 +16,7 @@ package com.agiletec.plugins.jacms.apsadmin.resource.helper;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;

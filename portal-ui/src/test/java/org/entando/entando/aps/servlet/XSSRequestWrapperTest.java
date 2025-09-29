@@ -1,7 +1,7 @@
 package org.entando.entando.aps.servlet;
 
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

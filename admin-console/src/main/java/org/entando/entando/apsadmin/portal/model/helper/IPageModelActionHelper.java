@@ -16,7 +16,7 @@ package org.entando.entando.apsadmin.portal.model.helper;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 import com.agiletec.aps.system.services.pagemodel.PageModel;

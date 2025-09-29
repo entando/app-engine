@@ -22,7 +22,7 @@ import java.util.List;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.Test;
 
 /**

@@ -1,6 +1,6 @@
 package org.entando.entando.plugins.jpredis.aps.system.redis.session;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import org.entando.entando.plugins.jpredis.aps.system.redis.conditions.RedisSessionActive;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

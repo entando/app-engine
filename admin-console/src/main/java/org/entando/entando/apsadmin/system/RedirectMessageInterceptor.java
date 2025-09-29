@@ -25,15 +25,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.struts2.ServletActionContext;
 
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.Result;
-import com.opensymphony.xwork2.interceptor.MethodFilterInterceptor;
-import com.opensymphony.xwork2.interceptor.ValidationAware;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.result.Result;
+import org.apache.struts2.interceptor.MethodFilterInterceptor;
+import org.apache.struts2.interceptor.ValidationAware;
 import org.apache.struts2.result.ServletActionRedirectResult;
 import org.apache.struts2.result.ServletRedirectResult;
 import org.entando.entando.aps.internalservlet.system.dispatcher.FrontServletActionRedirectResult;

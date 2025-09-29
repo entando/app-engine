@@ -14,7 +14,7 @@
 package org.entando.entando.plugins.jpsolr;
 
 import com.agiletec.aps.BaseTestCase;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;

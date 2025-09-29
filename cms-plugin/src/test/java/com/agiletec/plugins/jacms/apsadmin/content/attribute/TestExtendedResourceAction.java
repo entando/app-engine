@@ -17,14 +17,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.resource.ExtendedResourceAction;
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.resource.ResourceAttributeActionHelper;
 import com.agiletec.plugins.jacms.apsadmin.content.util.AbstractBaseTestContentAction;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.Test;
 
 /**

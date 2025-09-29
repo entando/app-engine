@@ -13,8 +13,8 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.resource;
 
-import static com.opensymphony.xwork2.Action.SUCCESS;
-import com.opensymphony.xwork2.ActionSupport;
+import static org.apache.struts2.action.Action.SUCCESS;
+import org.apache.struts2.ActionSupport;
 
 import java.io.*;
 import java.nio.charset.Charset;

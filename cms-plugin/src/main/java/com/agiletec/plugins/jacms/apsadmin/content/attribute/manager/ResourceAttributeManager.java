@@ -23,11 +23,11 @@ import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.AbstractResourceAttribute;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.util.ICmsAttributeErrorCodes;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 
 /**

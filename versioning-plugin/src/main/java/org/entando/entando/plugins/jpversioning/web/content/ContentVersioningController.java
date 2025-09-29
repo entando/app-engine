@@ -16,7 +16,7 @@ package org.entando.entando.plugins.jpversioning.web.content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentDto;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.plugins.jpversioning.services.content.ContentVersioningService;
 import org.entando.entando.plugins.jpversioning.web.content.model.ContentVersionDTO;

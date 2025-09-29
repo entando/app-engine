@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.Map;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.component.ComponentUsage;
 import org.entando.entando.aps.system.services.component.ComponentUsageEntity;
 import org.entando.entando.plugins.jacms.web.contentmodel.model.ContentModelReferenceDTO;

@@ -15,11 +15,11 @@ package com.agiletec.apsadmin.system;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.user.UserDetails;
-import com.opensymphony.xwork2.ActionInvocation;
+import org.apache.struts2.ActionInvocation;
 
 import java.util.Set;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.struts2.ServletActionContext;
 import org.entando.entando.ent.util.EntLogging.EntLogger;

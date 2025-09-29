@@ -13,7 +13,7 @@
  */
 package org.entando.entando.plugins.jacms.apsadmin.content.executor;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;

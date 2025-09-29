@@ -18,7 +18,7 @@ import com.agiletec.aps.system.common.notify.NotifyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

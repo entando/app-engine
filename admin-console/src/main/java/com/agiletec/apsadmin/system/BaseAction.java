@@ -24,7 +24,7 @@ import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.struts2.action.ServletRequestAware;
 import org.apache.struts2.action.ParametersAware;
@@ -37,7 +37,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**

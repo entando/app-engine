@@ -15,8 +15,8 @@ package com.agiletec.apsadmin.tags;
 
 import java.util.Collection;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.apache.struts2.util.SubsetIteratorFilter;
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
@@ -26,7 +26,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import com.agiletec.aps.tags.util.IPagerVO;
 import com.agiletec.apsadmin.tags.util.AdminPagerTagHelper;
 import com.agiletec.apsadmin.tags.util.ComponentPagerVO;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * This tag is intend for the administration interface only.

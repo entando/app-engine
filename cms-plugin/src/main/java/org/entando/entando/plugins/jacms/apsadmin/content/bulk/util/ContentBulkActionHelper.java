@@ -25,8 +25,8 @@ import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO;
-import com.opensymphony.xwork2.TextProvider;
-import com.opensymphony.xwork2.interceptor.ValidationAware;
+import org.apache.struts2.text.TextProvider;
+import org.apache.struts2.interceptor.ValidationAware;
 
 public class ContentBulkActionHelper implements IContentBulkActionHelper {
 

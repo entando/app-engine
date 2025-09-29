@@ -26,7 +26,7 @@ import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.apsadmin.content.util.AbstractBaseTestContentAction;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

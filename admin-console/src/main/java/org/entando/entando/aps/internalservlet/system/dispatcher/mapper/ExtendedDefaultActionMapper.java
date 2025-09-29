@@ -13,9 +13,9 @@
  */
 package org.entando.entando.aps.internalservlet.system.dispatcher.mapper;
 
-import com.opensymphony.xwork2.config.ConfigurationManager;
+import org.apache.struts2.config.ConfigurationManager;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.RequestUtils;

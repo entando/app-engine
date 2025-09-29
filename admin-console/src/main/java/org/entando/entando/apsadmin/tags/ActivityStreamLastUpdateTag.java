@@ -15,8 +15,8 @@ package org.entando.entando.apsadmin.tags;
 
 import java.util.Date;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
 import org.entando.entando.aps.system.services.actionlog.IActionLogManager;
@@ -26,7 +26,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * @author S.Loru

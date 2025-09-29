@@ -83,7 +83,7 @@
         <spring.version>6.2.1</spring.version>
         <springsecurity.version>6.3.1</springsecurity.version>
         <!-- Spring Security OAuth2 integrated into main Spring Security 6 -->
-        <struts2.version>6.7.4</struts2.version>
+        <struts2.version>7.0.3</struts2.version>
         <jackson.version>2.16.2</jackson.version>
         <jackson-databind.version>2.16.2</jackson-databind.version>
         <hibernate-validator-version>8.0.1.Final</hibernate-validator-version>
@@ -99,7 +99,7 @@
         <commons-codec.version>1.16.1</commons-codec.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
-        <freemarker.version>2.3.32</freemarker.version>
+        <freemarker.version>2.3.34</freemarker.version>
         <commons-validator.version>1.9.0</commons-validator.version>
         <taglibs-standard-impl.version>1.2.5</taglibs-standard-impl.version>
         <assertj-core.version>3.20.2</assertj-core.version>
@@ -117,7 +117,7 @@
         <httpclient5.version>5.5</httpclient5.version>
         <jaxb-impl.version>3.0.1</jaxb-impl.version>
         <jaxb-xjc.version>3.0.1</jaxb-xjc.version>
-        <derby.version>10.15.2.0</derby.version>
+        <derby.version>10.17.1.0</derby.version>
         <!-- Legacy javax versions removed in Jakarta EE 10 migration -->
         <tomcat-servlet-api.version>10.1.33</tomcat-servlet-api.version>
         <im4java.version>1.4.0</im4java.version>
@@ -157,7 +157,7 @@
         <maven-assembly-plugin.version>2.2.1</maven-assembly-plugin.version>
         <jna.version>5.8.0</jna.version>
         <asm.version>9.8</asm.version>
-        <sun-mail.version>1.6.7</sun-mail.version>
+        <sun-mail.version>2.0.1</sun-mail.version>
         <subethasmtp.version>3.1.7</subethasmtp.version>
         <pdfbox.version>2.0.24</pdfbox.version>
         <stax-ex.version>2.0.1</stax-ex.version>
@@ -167,7 +167,7 @@
         <jakarta-activation.version>2.1.0</jakarta-activation.version>
         <commons-compress.version>1.28.0</commons-compress.version>
         <spring-data-redis.version>2.5.12</spring-data-redis.version>
-        <spring-session-data-redis.version>2.7.4</spring-session-data-redis.version>
+        <spring-session-data-redis.version>3.3.1</spring-session-data-redis.version>
         <lettuce-core.version>6.1.5.RELEASE</lettuce-core.version>
         <swagger-annotations.version>1.5.20</swagger-annotations.version>
         <json-path.version>2.9.0</json-path.version>
@@ -1085,6 +1085,11 @@
                 <version>${jakarta.el-api.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.glassfish.web</groupId>
+                <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+                <version>3.0.1</version>
+            </dependency>
+            <dependency>
                 <groupId>org.im4java</groupId>
                 <artifactId>im4java</artifactId>
                 <version>${im4java.version}</version>
@@ -1354,19 +1359,13 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.sun.mail</groupId>
-                <artifactId>mailapi</artifactId>
+                <groupId>jakarta.mail</groupId>
+                <artifactId>jakarta.mail-api</artifactId>
                 <version>${sun-mail.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.sun.activation</groupId>
-                        <artifactId>jakarta.activation</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.sun.mail</groupId>
-                <artifactId>smtp</artifactId>
+                <artifactId>jakarta.mail</artifactId>
                 <version>${sun-mail.version}</version>
             </dependency>
             <dependency>

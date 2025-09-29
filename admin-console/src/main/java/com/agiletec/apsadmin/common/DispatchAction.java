@@ -21,7 +21,7 @@ import com.agiletec.apsadmin.system.BaseAction;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Action specifica per la gestione delle operazioni di login.

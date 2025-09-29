@@ -32,7 +32,7 @@ import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.agiletec.apsadmin.system.AbstractTreeAction;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.Date;
 import org.entando.entando.plugins.jacms.apsadmin.content.bulk.commands.BaseContentPropertyBulkCommand;
 import org.entando.entando.plugins.jacms.apsadmin.content.bulk.commands.ContentPropertyBulkCommandContext;

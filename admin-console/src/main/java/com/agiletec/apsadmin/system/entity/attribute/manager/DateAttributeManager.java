@@ -24,7 +24,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.util.DateAttributeValidationRules;
 import com.agiletec.aps.util.CheckFormatUtil;
 import com.agiletec.aps.util.DateConverter;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 
 /**
  * Manager class for the 'date' attribute.

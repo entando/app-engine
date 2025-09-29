@@ -16,9 +16,9 @@ package org.entando.entando.apsadmin.system;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.ActionSupport;
 import org.apache.struts2.dispatcher.HttpParameters;
 import org.apache.struts2.util.TokenHelper;
 import org.junit.jupiter.api.Test;

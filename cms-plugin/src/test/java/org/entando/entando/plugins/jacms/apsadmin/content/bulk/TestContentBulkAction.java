@@ -18,7 +18,7 @@ import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

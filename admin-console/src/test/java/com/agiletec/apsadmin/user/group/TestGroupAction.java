@@ -27,7 +27,7 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.group.IGroupManager;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.entando.entando.ent.exception.EntException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

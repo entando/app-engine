@@ -1,24 +1,29 @@
 package org.entando.entando.aps.servlet.security;
 
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.aps.system.services.userprofile.api.ApiMyUserProfileInterface;
+import org.entando.entando.ent.util.EntLogging;
 import org.entando.entando.keycloak.services.KeycloakConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Order(70)
 @Configuration
 @EnableWebSecurity
-public class KeycloakSecurityConfig extends OAuth2SecurityConfiguration {
+public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
+
+    private static final EntLogging.EntLogger _logger =  EntLogging.EntLogFactory.getSanitizedLogger(KeycloakSecurityConfig.class);
 
     public static final String API_PATH = "/api";
 
@@ -32,17 +37,32 @@ public class KeycloakSecurityConfig extends OAuth2SecurityConfiguration {
         this.configuration = configuration;
     }
 
-    @Override
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    @Order(70)
+    public SecurityFilterChain keycloakSecurityFilterChain(HttpSecurity http) throws Exception {
+        _logger.debug("KeycloakSecurityConfig.keycloakSecurityFilterChain() called, Keycloak enabled: " + configuration.isEnabled());
         if (configuration.isEnabled()) {
+            _logger.debug("Keycloak enabled, configuring security filter chain");
+
             if (StringUtils.isNotEmpty(configuration.getSecureUris())) {
                 final String[] urls = configuration.getSecureUris().split(",");
-                ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry requests = http.authorizeRequests();
-                for (String url : urls) {
-                    if (StringUtils.isNotEmpty(url)) {
-                        requests = requests.requestMatchers(url).authenticated();
+                _logger.debug("Securing configured URIs: " + String.join(", ", urls));
+                http.authorizeHttpRequests(authorize -> {
+                    var requests = authorize;
+                    for (String url : urls) {
+                        if (StringUtils.isNotEmpty(url)) {
+                            requests = requests.requestMatchers(new AntPathRequestMatcher(url)).authenticated();
+                        }
                     }
-                }
+                    requests.anyRequest().permitAll();
+                });
+            } else {
+                // Default: secure all API endpoints
+                _logger.debug("No secure URIs configured, securing all /api/** endpoints");
+                http.authorizeHttpRequests(authorize -> authorize
+                    .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
+                    .anyRequest().permitAll()
+                );
             }
 
             http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))

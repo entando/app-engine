@@ -24,8 +24,8 @@ package org.entando.entando.plugins.jpseo.aps.tags;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

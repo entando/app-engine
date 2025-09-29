@@ -42,7 +42,7 @@ import com.agiletec.plugins.jacms.apsadmin.content.AbstractContentAction;
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import com.agiletec.plugins.jpversioning.aps.system.services.versioning.ContentVersion;
 import com.agiletec.plugins.jpversioning.aps.system.services.versioning.IVersioningManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

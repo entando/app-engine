@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.MonoListAttribute;
@@ -31,7 +31,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.SymbolicLink
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.LinkAttribute;
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.helper.ILinkAttributeActionHelper;
 import com.agiletec.plugins.jacms.apsadmin.content.util.AbstractBaseTestContentAction;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.Test;
 
 /**

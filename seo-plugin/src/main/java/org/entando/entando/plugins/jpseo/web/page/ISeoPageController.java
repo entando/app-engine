@@ -19,7 +19,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.Map;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.page.IPageService;
 import org.entando.entando.aps.system.services.page.model.PageDto;
 import org.entando.entando.ent.exception.EntException;

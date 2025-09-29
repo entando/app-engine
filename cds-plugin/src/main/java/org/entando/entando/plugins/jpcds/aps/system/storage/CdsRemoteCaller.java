@@ -41,7 +41,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Base64Utils;
+import java.util.Base64;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
@@ -230,7 +230,7 @@ public class CdsRemoteCaller  {
         }
     }
 
-    private EntRuntimeException buildExceptionWithMessage(String method, HttpStatus statusCode, String url){
+    private EntRuntimeException buildExceptionWithMessage(String method, org.springframework.http.HttpStatusCode statusCode, String url){
         return new EntRuntimeException(String.format(REST_ERROR_MSG, method, statusCode, url));
     }
 
@@ -274,7 +274,7 @@ public class CdsRemoteCaller  {
     }
 
     private String extractToken(String kcUrl, String kcRealm, String clientId, String clientSecret) {
-        String encodedClientData = Base64Utils.encodeToString((clientId + ":" + clientSecret).getBytes());
+        String encodedClientData = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.add("Authorization", "Basic " + encodedClientData);

@@ -22,8 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.action.ServletResponseAware;
@@ -42,7 +42,7 @@ import com.agiletec.aps.system.services.pagemodel.FrameSketch;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 import com.agiletec.aps.system.services.pagemodel.PageModelDOM;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 
 /**
  * @author E.Santoboni

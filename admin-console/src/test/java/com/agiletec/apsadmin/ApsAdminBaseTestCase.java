@@ -23,9 +23,9 @@ import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.opensymphony.xwork2.*;
-import com.opensymphony.xwork2.inject.Container;
-import com.opensymphony.xwork2.inject.ContainerBuilder;
+import org.apache.struts2.*;
+import org.apache.struts2.inject.Container;
+import org.apache.struts2.inject.ContainerBuilder;
 import org.apache.struts2.dispatcher.Dispatcher;
 import org.apache.struts2.dispatcher.HttpParameters;
 import org.apache.struts2.dispatcher.Parameter;
@@ -40,8 +40,8 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.util.*;
 
 /**

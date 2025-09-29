@@ -13,8 +13,8 @@
  */
 package org.entando.entando.apsadmin.system.tiles;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
 import org.apache.struts2.tiles.StrutsTilesListener;
 import org.apache.tiles.core.startup.TilesInitializer;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

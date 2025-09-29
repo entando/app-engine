@@ -26,7 +26,7 @@ import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.util.FilterUtils;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.Test;
 
 /**

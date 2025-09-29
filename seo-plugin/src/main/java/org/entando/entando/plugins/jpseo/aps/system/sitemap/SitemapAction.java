@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.plugins.jpseo.aps.system.JpseoSystemConstants;
 import org.entando.entando.plugins.jpseo.aps.system.services.mapping.FriendlyCodeVO;

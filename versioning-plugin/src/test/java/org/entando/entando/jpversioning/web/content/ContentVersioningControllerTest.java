@@ -24,7 +24,7 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentDto;
 import java.util.ArrayList;
 import java.util.List;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.plugins.jpversioning.services.content.ContentVersioningService;
 import org.entando.entando.plugins.jpversioning.web.content.ContentVersioningController;
 import org.entando.entando.plugins.jpversioning.web.content.model.ContentVersionDTO;
