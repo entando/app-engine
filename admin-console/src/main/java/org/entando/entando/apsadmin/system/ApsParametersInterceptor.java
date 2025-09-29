@@ -40,12 +40,12 @@ public class ApsParametersInterceptor extends ParametersInterceptor {
 		HttpServletRequest request = ServletActionContext.getRequest();
 		String entandoActionName = ApsRequestParamsUtil.extractEntandoActionName(request);
 		if (null != entandoActionName) {
-			this.createApsActionParam(entandoActionName, request, parameters);
-		}
-		super.applyParameters(action, stack, parameters);
+            this.createApsActionParam(entandoActionName, request, parameters);
+        }
+        super.applyParameters(action, stack, parameters);
 	}
-	
-	private HttpParameters createApsActionParam(String entandoActionName, HttpServletRequest request, HttpParameters parameters) {
+
+	private void createApsActionParam(String entandoActionName, HttpServletRequest request, HttpParameters parameters) {
 		Map<String, Parameter> newParams = new TreeMap<String, Parameter>();
 		Properties properties = ApsRequestParamsUtil.extractApsActionParameters(entandoActionName);
 		Iterator<Object> iter = properties.keySet().iterator();
@@ -56,7 +56,7 @@ public class ApsParametersInterceptor extends ParametersInterceptor {
 			Parameter.Request requestParams = new Parameter.Request(key, value);
 			newParams.put(key, requestParams);
 		}
-		return parameters.appendAll(newParams);
+		parameters.appendAll(newParams);
 	}
 	
 }

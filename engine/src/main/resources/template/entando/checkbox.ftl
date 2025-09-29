@@ -23,27 +23,27 @@ NOTE:
  * under the License.
  */
 -->
-<input type="checkbox" name="${parameters.name}" value="${parameters.fieldValue}"<#rt/>
-<#if parameters.nameValue?? && parameters.nameValue>
+<input type="checkbox" name="${attributes.name}" value="${attributes.fieldValue}"<#rt/>
+<#if attributes.nameValue?? && attributes.nameValue>
  checked="checked"<#rt/>
 </#if>
-<#if parameters.disabled!false>
+<#if (attributes.disabled?? && attributes.disabled?is_string && attributes.disabled == "true") || (attributes.disabled?? && attributes.disabled?is_boolean && attributes.disabled)>
  disabled="disabled"<#rt/>
 </#if>
-<#if parameters.readonly!false>
+<#if (attributes.readonly?? && attributes.readonly?is_string && attributes.readonly == "true") || (attributes.readonly?? && attributes.readonly?is_boolean && attributes.readonly)>
  readonly="readonly"<#rt/>
 </#if>
-<#if parameters.tabindex?has_content>
- tabindex="${parameters.tabindex}"<#rt/>
+<#if attributes.tabindex?has_content>
+ tabindex="${attributes.tabindex}"<#rt/>
 </#if>
-<#if parameters.id?has_content>
- id="${parameters.id}"<#rt/>
+<#if attributes.id?has_content>
+ id="${attributes.id}"<#rt/>
 </#if>
-<#include "/${parameters.templateDir}/simple/css.ftl" />
-<#if parameters.title?has_content>
- title="${parameters.title}"<#rt/>
+<#include "/${attributes.templateDir}/simple/css.ftl" />
+<#if attributes.title?has_content>
+ title="${attributes.title}"<#rt/>
 </#if>
-<#include "/${parameters.templateDir}/simple/scripting-events.ftl" />
-<#include "/${parameters.templateDir}/simple/common-attributes.ftl" />
-<#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />
+<#include "/${attributes.templateDir}/simple/scripting-events.ftl" />
+<#include "/${attributes.templateDir}/simple/common-attributes.ftl" />
+<#include "/${attributes.templateDir}/simple/dynamic-attributes.ftl" />
 />

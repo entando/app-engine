@@ -29,53 +29,53 @@ removed iteration cycle (no list expected as it used to be in the original Strut
 <#-- added block for entando - end -->
 
 <input type="radio"<#rt/>
-<#if parameters.name?has_content>
- name="${parameters.name?no_esc}"<#rt/>
+<#if attributes.name?has_content>
+ name="${attributes.name?no_esc}"<#rt/>
 
 <#-- modified block for entando -->
-</#if> id="${parameters.id}"<#rt/>
+</#if> id="${attributes.id}"<#rt/>
 
 <#-- added block for entando - start -->
-<#if parameters.nameValue?exists>
- value="${parameters.nameValue}"<#rt/>
+<#if attributes.nameValue?exists>
+ value="${attributes.nameValue}"<#rt/>
 </#if>
 <#-- added block for entando - end -->
 
-<#if parameters.disabled!false>
+<#if (attributes.disabled?? && attributes.disabled?is_string && attributes.disabled == "true") || (attributes.disabled?? && attributes.disabled?is_boolean && attributes.disabled)>
  disabled="disabled"<#rt/>
 </#if>
-<#if parameters.tabindex?has_content>
- tabindex="${parameters.tabindex}"<#rt/>
+<#if attributes.tabindex?has_content>
+ tabindex="${attributes.tabindex}"<#rt/>
 </#if>
 <#if itemCssClass?has_content>
  class="${itemCssClass}"<#rt/>
 <#else>
-    <#if parameters.cssClass?has_content>
-        class="${parameters.cssClass}"<#rt/>
+    <#if attributes.cssClass?has_content>
+        class="${attributes.cssClass}"<#rt/>
     </#if>
 </#if>
 <#if itemCssStyle?has_content>
  style="${itemCssStyle}"<#rt/>
 <#else>
-    <#if parameters.cssStyle?has_content>
-        style="${parameters.cssStyle}"<#rt/>
+    <#if attributes.cssStyle?has_content>
+        style="${attributes.cssStyle}"<#rt/>
     </#if>
 </#if>
 <#if itemTitle?has_content>
  title="${itemTitle}"<#rt/>
 <#else>
-    <#if parameters.title?has_content>
- title="${parameters.title}"<#rt/>
+    <#if attributes.title?has_content>
+ title="${attributes.title}"<#rt/>
     </#if>
 </#if>
-<#include "/${parameters.templateDir}/simple/css.ftl" />
-<#include "/${parameters.templateDir}/simple/scripting-events.ftl" />
-<#include "/${parameters.templateDir}/simple/common-attributes.ftl" />
+<#include "/${attributes.templateDir}/simple/css.ftl" />
+<#include "/${attributes.templateDir}/simple/scripting-events.ftl" />
+<#include "/${attributes.templateDir}/simple/common-attributes.ftl" />
 <#global evaluate_dynamic_attributes = true/>
-<#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />
+<#include "/${attributes.templateDir}/simple/dynamic-attributes.ftl" />
 
 <#-- added block for entando - start -->
-<#if parameters.checked?? >
+<#if attributes.checked?? >
  checked="checked"<#rt/>
 </#if>
 <#-- added block for entando - end -->
@@ -83,4 +83,4 @@ removed iteration cycle (no list expected as it used to be in the original Strut
 /><#rt/>
 
 <#-- modified block for entando -->
-<label for="${parameters.id}"<#include "/${parameters.templateDir}/simple/css.ftl"/>><#rt/></label>
+<label for="${attributes.id}"<#include "/${attributes.templateDir}/simple/css.ftl"/>><#rt/></label>

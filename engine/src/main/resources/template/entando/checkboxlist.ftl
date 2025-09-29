@@ -24,96 +24,96 @@ NOTE:
  */
 -->
 <#assign itemCount = 0/>
-<#if parameters.list??>
+<#if attributes.list??>
 <ul
-<#if parameters.cssClass?exists>
- class="${parameters.cssClass}"<#rt/>
+<#if attributes.cssClass?exists>
+ class="${attributes.cssClass}"<#rt/>
 </#if>
 >
-    <@s.iterator value="parameters.list">
+    <@s.iterator value="attributes.list">
         <#assign itemCount = itemCount + 1/>
-        <#if parameters.listKey??>
-            <#assign itemKey = stack.findValue(parameters.listKey)/>
-            <#assign itemKeyStr = stack.findString(parameters.listKey)/>
+        <#if attributes.listKey??>
+            <#assign itemKey = stack.findValue(attributes.listKey)/>
+            <#assign itemKeyStr = stack.findString(attributes.listKey)/>
         <#else>
             <#assign itemKey = stack.findValue('top')/>
             <#assign itemKeyStr = stack.findString('top')>
         </#if>
-        <#if parameters.listLabelKey??>
+        <#if attributes.listLabelKey??>
           <#-- checks the valueStack for the 'valueKey.' The valueKey is then looked-up in the locale
              file for it's localized value.  This is then used as a label -->
-            <#assign itemValue = struts.getText(stack.findString(parameters.listLabelKey))/>
-        <#elseif parameters.listValue??>
-            <#assign itemValue = stack.findString(parameters.listValue)!""/>
+            <#assign itemValue = struts.getText(stack.findString(attributes.listLabelKey))/>
+        <#elseif attributes.listValue??>
+            <#assign itemValue = stack.findString(attributes.listValue)!""/>
         <#else>
             <#assign itemValue = stack.findString('top')/>
         </#if>
-        <#if parameters.listCssClass??>
-            <#if stack.findString(parameters.listCssClass)??>
-               <#assign itemCssClass= stack.findString(parameters.listCssClass)/>
+        <#if attributes.listCssClass??>
+            <#if stack.findString(attributes.listCssClass)??>
+               <#assign itemCssClass= stack.findString(attributes.listCssClass)/>
             <#else>
                <#assign itemCssClass = ''/>
             </#if>
         </#if>
-        <#if parameters.listCssStyle??>
-            <#if stack.findString(parameters.listCssStyle)??>
-              <#assign itemCssStyle= stack.findString(parameters.listCssStyle)/>
+        <#if attributes.listCssStyle??>
+            <#if stack.findString(attributes.listCssStyle)??>
+              <#assign itemCssStyle= stack.findString(attributes.listCssStyle)/>
             <#else>
               <#assign itemCssStyle = ''/>
             </#if>
         </#if>
-        <#if parameters.listTitle??>
-            <#if stack.findString(parameters.listTitle)??>
-              <#assign itemTitle= stack.findString(parameters.listTitle)/>
+        <#if attributes.listTitle??>
+            <#if stack.findString(attributes.listTitle)??>
+              <#assign itemTitle= stack.findString(attributes.listTitle)/>
             <#else>
               <#assign itemTitle = ''/>
             </#if>
         </#if>
         <li>
-        <input type="checkbox" name="${parameters.name}" value="${itemKeyStr}"<#rt/>
-                <#if parameters.id?has_content>
-                  id="${parameters.id}-${itemCount}"<#rt/>
+        <input type="checkbox" name="${attributes.name}" value="${itemKeyStr}"<#rt/>
+                <#if attributes.id?has_content>
+                  id="${attributes.id}-${itemCount}"<#rt/>
                 <#else>
-                  id="${parameters.name}-${itemCount}"<#rt/>
+                  id="${attributes.name}-${itemCount}"<#rt/>
                 </#if>
-                <#if tag.contains(parameters.nameValue, itemKey)>
+                <#if tag.contains(attributes.nameValue, itemKey)>
                   checked="checked"<#rt/>
                 </#if>
-                <#if parameters.disabled!false>
+                <#if (attributes.disabled?? && attributes.disabled?is_string && attributes.disabled == "true") || (attributes.disabled?? && attributes.disabled?is_boolean && attributes.disabled)>
                   disabled="disabled"<#rt/>
                 </#if>
                 <#if itemCssClass??>
                   class="${itemCssClass}"<#rt/>
                 <#else>
-                  <#if parameters.cssClass?has_content>
-                    class="${parameters.cssClass}"<#rt/>
+                  <#if attributes.cssClass?has_content>
+                    class="${attributes.cssClass}"<#rt/>
                   </#if>
                 </#if>
                 <#if itemCssStyle??>
                   style="${itemCssStyle}"<#rt/>
                 <#else>
-                  <#if parameters.cssStyle?has_content>
-                    style="${parameters.cssStyle}"<#rt/>
+                  <#if attributes.cssStyle?has_content>
+                    style="${attributes.cssStyle}"<#rt/>
                   </#if>
                 </#if>
                 <#if itemTitle??>
                   title="${itemTitle}"<#rt/>
                 <#else>
-                  <#if parameters.title?has_content>
-                    title="${parameters.title}"<#rt/>
+                  <#if attributes.title?has_content>
+                    title="${attributes.title}"<#rt/>
                   </#if>
                 </#if>
-                <#include "/${parameters.templateDir}/simple/css.ftl" />
-                <#include "/${parameters.templateDir}/simple/scripting-events.ftl" />
-                <#include "/${parameters.templateDir}/simple/common-attributes.ftl" />
+                <#include "/${attributes.templateDir}/simple/css.ftl" />
+                <#include "/${attributes.templateDir}/simple/scripting-events.ftl" />
+                <#include "/${attributes.templateDir}/simple/common-attributes.ftl" />
                 <#global evaluate_dynamic_attributes = true/>
-                <#include "/${parameters.templateDir}/simple/dynamic-attributes.ftl" />
+                <#include "/${attributes.templateDir}/simple/dynamic-attributes.ftl" />
         />
         <label<#rt/>
-                <#if parameters.id?has_content>
-                  for="${parameters.id}-${itemCount}"<#rt/>
+                <#if attributes.id?has_content>
+                  for="${attributes.id}-${itemCount}"<#rt/>
                 <#else>
-                  for="${parameters.name}-${itemCount}"<#rt/>
+                  for="${attributes.name}-${itemCount}"<#rt/>
                 </#if>
                 class="checkboxLabel">${itemValue}</label>
       </li>
