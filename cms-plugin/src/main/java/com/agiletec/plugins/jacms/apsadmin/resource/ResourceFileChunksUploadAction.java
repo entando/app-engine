@@ -24,12 +24,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
+import org.apache.struts2.action.UploadedFilesAware;
+import org.apache.struts2.dispatcher.multipart.UploadedFile;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-public class ResourceFileChunksUploadAction extends AbstractResourceAction {
+public class ResourceFileChunksUploadAction extends AbstractResourceAction implements UploadedFilesAware {
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ResourceFileChunksUploadAction.class);
 
     private String RESULT_SUCCESS = "SUCCESS";
@@ -57,6 +60,28 @@ public class ResourceFileChunksUploadAction extends AbstractResourceAction {
 
     public String newResource() {
         return SUCCESS;
+    }
+
+    @Override
+    public void withUploadedFiles(List<UploadedFile> uploadedFiles) {
+        logger.info("withUploadedFiles called with {} files", uploadedFiles != null ? uploadedFiles.size() : 0);
+
+        if (uploadedFiles != null && !uploadedFiles.isEmpty()) {
+            UploadedFile uploadedFile = uploadedFiles.get(0);
+            logger.debug("Processing uploaded file: name={}, contentType={}, size={}",
+                    uploadedFile.getName(), uploadedFile.getContentType(), uploadedFile.length());
+
+            // Convert UploadedFile to File for backward compatibility with existing code
+            this.fileUpload = (File) uploadedFile.getContent();
+            this.fileUploadContentType = uploadedFile.getContentType();
+            if (this.fileName == null || this.fileName.isEmpty()) {
+                this.fileName = uploadedFile.getName();
+            }
+            logger.debug("File upload initialized: fileUpload={}, contentType={}, fileName={}",
+                    fileUpload, fileUploadContentType, fileName);
+        } else {
+            logger.warn("No uploaded files received in withUploadedFiles callback");
+        }
     }
 
     @Override

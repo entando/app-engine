@@ -48,6 +48,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
                 final String[] urls = configuration.getSecureUris().split(",");
                 _logger.debug("Securing configured URIs: " + String.join(", ", urls));
                 http.authorizeHttpRequests(authorize -> {
+                    authorize.requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll();
                     var requests = authorize;
                     for (String url : urls) {
                         if (StringUtils.isNotEmpty(url)) {
@@ -57,9 +58,10 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
                     requests.anyRequest().permitAll();
                 });
             } else {
-                // Default: secure all API endpoints
-                _logger.debug("No secure URIs configured, securing all /api/** endpoints");
+                // Default: secure all API endpoints except health check
+                _logger.debug("No secure URIs configured, securing all /api/** endpoints except /api/health");
                 http.authorizeHttpRequests(authorize -> authorize
+                    .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
                     .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                     .anyRequest().permitAll()
                 );

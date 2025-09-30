@@ -43,7 +43,6 @@
         <postgres.driver.version>42.7.3</postgres.driver.version>
         <oracle.driver.version>21.4.0.0.1</oracle.driver.version>
         <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
-<!--        <jetty.version>11.0.24</jetty.version>-->
         <jetty.version>12.1.1</jetty.version>
         <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
         <tomcat.version>10.1.34</tomcat.version>
