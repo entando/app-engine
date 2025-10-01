@@ -125,7 +125,7 @@ public class ConfigTestUtils {
         bindOrRebind(builder, "java:comp/env/servDataSourceClassName", testConfig.getProperty("servDataSourceClassName"));
     }
 
-    private static void bindOrRebind(InitialContext context, String name, String value) throws NamingException {
+    private static void bindOrRebind(InitialContext context, String name, Object value) throws NamingException {
         try {
             context.bind(name, value);
         } catch (javax.naming.NameAlreadyBoundException e) {
@@ -164,17 +164,12 @@ public class ConfigTestUtils {
             ds.setMaxTotal(12);
             ds.setMaxIdle(4);
             ds.setDriverClassName(className);
-            try {
-                builder.bind("java:comp/env/jdbc/" + beanName, ds);
-            } catch (javax.naming.NameAlreadyBoundException e) {
-                builder.rebind("java:comp/env/jdbc/" + beanName, ds);
-            }
+            bindOrRebind(builder, "java:comp/env/jdbc/" + beanName, ds);
             logger.debug("created datasource " + beanName);
         } catch (Throwable t) {
             throw new RuntimeException("Error on creation datasource '" + beanName + "'", t);
         }
     }
-
 
     /**
      * Restituisce l'insieme dei file di configurazione dei bean definiti nel

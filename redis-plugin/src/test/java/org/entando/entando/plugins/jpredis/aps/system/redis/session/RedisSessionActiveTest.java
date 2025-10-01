@@ -15,6 +15,7 @@ import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.SessionRepository;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
+import org.springframework.session.data.redis.RedisSessionRepository;
 import org.springframework.session.web.http.SessionRepositoryFilter;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -44,7 +45,7 @@ class RedisSessionActiveTest {
     }
 
     @Autowired
-    private jakarta.servlet.Filter springSessionRepositoryFilter;
+    private Filter springSessionRepositoryFilter;
 
     @Autowired
     private RedisClient redisClient;
@@ -55,7 +56,7 @@ class RedisSessionActiveTest {
         SessionRepositoryFilter sessionRepositoryFilter = ((SessionRepositoryFilter) springSessionRepositoryFilter);
         SessionRepository sessionRepository = (SessionRepository) ReflectionTestUtils.getField(sessionRepositoryFilter,
                 "sessionRepository");
-        Assertions.assertTrue(sessionRepository instanceof RedisIndexedSessionRepository);
+        Assertions.assertTrue(sessionRepository instanceof RedisSessionRepository);
         sessionRepository.save(sessionRepository.createSession());
 
         try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {

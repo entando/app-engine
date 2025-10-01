@@ -18,6 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import java.util.Arrays;
+
 @Order(70)
 @Configuration
 @EnableWebSecurity
@@ -49,13 +51,10 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
                 _logger.debug("Securing configured URIs: " + String.join(", ", urls));
                 http.authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll();
-                    var requests = authorize;
-                    for (String url : urls) {
-                        if (StringUtils.isNotEmpty(url)) {
-                            requests = requests.requestMatchers(new AntPathRequestMatcher(url)).authenticated();
-                        }
-                    }
-                    requests.anyRequest().permitAll();
+                    Arrays.stream(urls)
+                            .filter(StringUtils::isNotBlank)
+                            .forEach(url -> authorize.requestMatchers(url).authenticated());
+                    authorize.anyRequest().permitAll();
                 });
             } else {
                 // Default: secure all API endpoints except health check
