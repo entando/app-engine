@@ -1194,7 +1194,7 @@ class ContentTypeResourceIntegrationTest extends AbstractControllerIntegrationTe
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(jsonMapper.writeValueAsString(contentTypeRequest))
                 .accept(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
         Assertions.assertNotNull(this.contentManager.getEntityPrototype(typeCode));
         return stringToContentTypeDto(mvcResult);

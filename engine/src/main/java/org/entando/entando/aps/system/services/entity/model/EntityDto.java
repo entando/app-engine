@@ -31,16 +31,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.web.entity.validator.EntityValidator;
-import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.BindingResult;
 
 public class EntityDto implements Serializable {
 
-    @NotBlank(message = "entity.id.notBlank")
+    //cause validation error in POST with null id
+//    @NotBlank(message = "entity.id.notBlank")
     private String id;
 
     @Size(min = 3, max = 3, message = "string.size.invalid")

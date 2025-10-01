@@ -13,7 +13,7 @@
  */
 package com.agiletec.aps.system.services.i18n.wrapper;
 
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,11 +23,11 @@ import java.util.Map;
  * A builder of parameterized label.
  */
 public class I18nLabelBuilder {
-	
+
 	public I18nLabelBuilder(String label) {
 		this.label = label;
 	}
-	
+
 	public I18nLabelBuilder addParam(String key, String value) {
 		if (this.params == null) {
 			this.params = new HashMap<>();
@@ -35,17 +35,17 @@ public class I18nLabelBuilder {
 		this.params.put(key, value);
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
 		if (this.label != null && this.params != null && !this.params.isEmpty()) {
-			StrSubstitutor strSub = new StrSubstitutor(this.params);
+			StringSubstitutor strSub = new StringSubstitutor(this.params);
 			this.label = strSub.replace(this.label);
 		}
 		return this.label;
 	}
-	
+
 	private String label;
 	private Map<String, String> params;
-	
+
 }

@@ -213,7 +213,7 @@ class ContentViewerHelperIntegrationTest extends BaseTestCase {
     }
     
     @BeforeEach
-    private void init() throws Exception {
+    public void init() throws Exception {
         try {
             this._requestContext = this.getRequestContext();
             Lang lang = new Lang();
