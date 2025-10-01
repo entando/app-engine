@@ -70,6 +70,7 @@ class ProfileTypeControllerTest extends AbstractControllerTest {
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
                 .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .setValidator(createValidator())
                 .build();
         controller.setProfileTypeValidator(this.profileTypeValidator);
     }

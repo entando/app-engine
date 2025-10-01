@@ -111,6 +111,7 @@ class UserControllerUnitTest extends AbstractControllerTest {
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
                 .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .setValidator(createValidator())
                 .build();
         userValidator.setPasswordEncoder(passwordEncoder);
         this.controller.setUserValidator(userValidator);

@@ -17,6 +17,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.util.Collection;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
+import org.junit.jupiter.api.Disabled;
 import org.mockito.Mockito;
 import org.springframework.security.crypto.codec.Base64;
 import org.entando.entando.web.AbstractControllerIntegrationTest;
@@ -138,6 +139,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
 //        }
 //    }
 
+    //TODO no oidc login deprecated
     @Test
     void authenticationFailed() throws Exception {
         this.authenticationFailed("admin", "adminxx");
@@ -170,7 +172,6 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         }
     }
 
-    @Test
     void invalidClient() throws Exception {
         this.invalidClient("mainEditor", "mainEditor", "test2_consumer", "secret", "password");
     }

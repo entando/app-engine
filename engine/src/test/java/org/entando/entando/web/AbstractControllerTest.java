@@ -148,6 +148,20 @@ public class AbstractControllerTest {
         return result;
     }
 
+    /**
+     * Creates a configured validator for use with MockMvc standalone setup.
+     * This enables Jakarta Bean Validation (@Valid, @NotBlank, etc.) in unit tests.
+     *
+     * @return configured LocalValidatorFactoryBean
+     */
+    protected org.springframework.validation.Validator createValidator() {
+        org.springframework.validation.beanvalidation.LocalValidatorFactoryBean validator =
+                new org.springframework.validation.beanvalidation.LocalValidatorFactoryBean();
+        validator.setMessageInterpolator(new org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator());
+        validator.afterPropertiesSet();
+        return validator;
+    }
+
     protected byte[] convertObjectToJsonBytes(Object object) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

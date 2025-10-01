@@ -15,7 +15,9 @@
     <context:annotation-config />
 
     <mvc:annotation-driven conversion-service="conversionService"
-                           message-codes-resolver="messageCodesResolver">
+                           message-codes-resolver="messageCodesResolver"
+                           validator="validator">
+        <mvc:path-matching trailing-slash="true"/>
         <mvc:message-converters>
             <bean id="jacksonMessageConverter" name="jacksonMessageConverter"
                   class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
@@ -86,6 +88,13 @@
         </property>
         <property name="suffix">
             <value>.jsp</value>
+        </property>
+    </bean>
+
+    <bean id="validator"
+          class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="messageInterpolator">
+            <bean class="org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator"/>
         </property>
     </bean>
 

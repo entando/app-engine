@@ -79,6 +79,7 @@ class PageModelControllerTest extends AbstractControllerTest {
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
                 .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .setValidator(createValidator())
                 .build();
 
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();

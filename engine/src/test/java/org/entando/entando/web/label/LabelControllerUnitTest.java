@@ -41,8 +41,9 @@ class LabelControllerUnitTest extends AbstractControllerTest {
     private LabelService labelService;
     @Mock
     private II18nManager i18nManager;
-    @Mock
-    private LabelValidator labelValidator = new LabelValidator();
+
+    @InjectMocks
+    private LabelValidator labelValidator;
 
     @InjectMocks
     private LabelController controller;
@@ -54,7 +55,9 @@ class LabelControllerUnitTest extends AbstractControllerTest {
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
                 .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .setValidator(createValidator())
                 .build();
+        controller.setLabelValidator(labelValidator);
     }
 
     @Test
