@@ -1280,6 +1280,7 @@
                 <groupId>org.owasp.esapi</groupId>
                 <artifactId>esapi</artifactId>
                 <version>${esapi.version}</version>
+                <classifier>jakarta</classifier>
                 <exclusions>
                     <exclusion>
                         <groupId>org.beanshell</groupId>
