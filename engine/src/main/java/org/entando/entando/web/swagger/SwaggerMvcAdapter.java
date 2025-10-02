@@ -1,5 +1,10 @@
 package org.entando.entando.web.swagger;
 
+// DEPRECATED: This is no longer needed with Springdoc OpenAPI
+// Springdoc auto-configures the necessary resource handlers
+// Kept for reference during migration
+
+/*
 import org.springframework.web.servlet.config.annotation.*;
 
 public class SwaggerMvcAdapter implements WebMvcConfigurer {
@@ -13,3 +18,4 @@ public class SwaggerMvcAdapter implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 }
+*/

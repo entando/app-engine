@@ -1,5 +1,10 @@
 package org.entando.entando.web.swagger;
 
+// DEPRECATED: Tests for old Springfox SwaggerConfig (incompatible with Jakarta EE 10)
+// Replaced by SpringdocConfigTest.java for Springdoc OpenAPI v2.7.0
+// Kept for reference during migration
+
+/*
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -75,3 +80,4 @@ class SwaggerConfigTest {
         assertTrue(security.getUseBasicAuthenticationWithAccessCodeGrant());
     }
 }
+*/

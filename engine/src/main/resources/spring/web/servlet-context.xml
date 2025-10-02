@@ -131,4 +131,13 @@
         <ref bean="activityStreamInterceptor" />
     </mvc:interceptors>
 
+
+
+    <!-- OpenAPI/Swagger configuration -->
+    <beans profile="swagger">
+        <!-- Swagger UI static resources -->
+        <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/" />
+        <context:component-scan base-package="org.entando.entando.web.swagger"/>
+    </beans>
+
 </beans>

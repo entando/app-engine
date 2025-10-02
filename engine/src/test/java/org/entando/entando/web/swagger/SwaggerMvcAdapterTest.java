@@ -1,5 +1,10 @@
 package org.entando.entando.web.swagger;
 
+// DEPRECATED: Tests for SwaggerMvcAdapter (no longer needed with Springdoc OpenAPI)
+// SwaggerMvcAdapter is no longer needed - Springdoc auto-configures resource handlers
+// Kept for reference during migration
+
+/*
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,3 +39,4 @@ class SwaggerMvcAdapterTest {
         verify(resourceHandlerRegistration, times(2)).addResourceLocations(anyString());
     }
 }
+*/

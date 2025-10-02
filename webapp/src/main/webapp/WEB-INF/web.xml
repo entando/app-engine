@@ -182,6 +182,18 @@
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>springDispatcher</servlet-name>
+        <url-pattern>/v3/api-docs/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>springDispatcher</servlet-name>
+        <url-pattern>/swagger-ui/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>springDispatcher</servlet-name>
+        <url-pattern>/webjars/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>ControllerServlet</servlet-name>
         <url-pattern>/page/*</url-pattern>
     </servlet-mapping>

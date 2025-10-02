@@ -47,7 +47,8 @@ public class SwaggerInitializer  implements ApplicationListener<ContextRefreshed
         swaggerConsumer.setSecret("swaggerswagger");
         swaggerConsumer.setName("Swagger");
         swaggerConsumer.setDescription("Swagger");
-        swaggerConsumer.setCallbackUrl(authUrl + "api/webjars/springfox-swagger-ui/oauth2-redirect.html");
+        // Updated for Springdoc OpenAPI (was: api/webjars/springfox-swagger-ui/oauth2-redirect.html)
+        swaggerConsumer.setCallbackUrl(authUrl + "swagger-ui/oauth2-redirect.html");
         swaggerConsumer.setScope("global");
         swaggerConsumer.setAuthorizedGrantTypes("password");
         swaggerConsumer.setIssuedDate(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));

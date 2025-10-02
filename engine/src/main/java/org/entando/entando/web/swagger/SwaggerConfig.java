@@ -1,5 +1,10 @@
 package org.entando.entando.web.swagger;
 
+// DEPRECATED: This is the old Springfox configuration (incompatible with Jakarta EE 10)
+// Replaced by SpringdocConfig.java for Springdoc OpenAPI v2.7.0
+// Kept for reference during migration
+
+/*
 import com.agiletec.aps.system.SystemConstants;
 import com.fasterxml.classmate.TypeResolver;
 import java.lang.reflect.WildcardType;
@@ -145,3 +150,4 @@ public class SwaggerConfig {
     }
 
 }
+*/

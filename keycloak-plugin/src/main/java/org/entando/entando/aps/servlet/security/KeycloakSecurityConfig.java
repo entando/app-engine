@@ -18,8 +18,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import java.util.Arrays;
-
 @Order(70)
 @Configuration
 @EnableWebSecurity
@@ -46,25 +44,32 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
         if (configuration.isEnabled()) {
             _logger.debug("Keycloak enabled, configuring security filter chain");
 
-            if (StringUtils.isNotEmpty(configuration.getSecureUris())) {
-                final String[] urls = configuration.getSecureUris().split(",");
-                _logger.debug("Securing configured URIs: " + String.join(", ", urls));
-                http.authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll();
-                    Arrays.stream(urls)
-                            .filter(StringUtils::isNotBlank)
-                            .forEach(url -> authorize.requestMatchers(url).authenticated());
-                    authorize.anyRequest().permitAll();
-                });
-            } else {
-                // Default: secure all API endpoints except health check
-                _logger.debug("No secure URIs configured, securing all /api/** endpoints except /api/health");
-                http.authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
-                    .anyRequest().permitAll()
-                );
-            }
+            http.authorizeHttpRequests(authorize -> {
+                authorize
+                        .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui.html")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/webjars/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/webjars/**")).permitAll();
+                if (StringUtils.isNotEmpty(configuration.getSecureUris())) {
+                    final String[] urls = configuration.getSecureUris().split(",");
+                    _logger.debug("Securing configured URIs: " + String.join(", ", urls));
+                    for (String url : urls) {
+                        if (StringUtils.isNotEmpty(url)) {
+                            authorize.requestMatchers(new AntPathRequestMatcher(url)).authenticated();
+                        }
+                    }
+                }
+
+                authorize.requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
+                        .anyRequest().permitAll();
+            });
 
             http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                     .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
