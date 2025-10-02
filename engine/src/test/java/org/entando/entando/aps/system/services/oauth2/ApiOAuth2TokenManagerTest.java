@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
-import io.swagger.models.auth.In;
 import org.entando.entando.aps.system.services.oauth2.model.OAuth2AccessTokenImpl;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

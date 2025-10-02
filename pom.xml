@@ -89,7 +89,7 @@
         <hibernate-validator-version>8.0.1.Final</hibernate-validator-version>
         <lucene-core.version>8.11.4</lucene-core.version>
         <json-path-assert.version>2.9.0</json-path-assert.version>
-        <springfox-swagger2.version>2.10.5</springfox-swagger2.version>
+        <swagger-core.version>2.2.26</swagger-core.version>
         <byte-buddy.version>1.11.6</byte-buddy.version>
         <guava.version>33.4.8-jre</guava.version>
         <spring-data-rest-webmvc.version>3.5.6</spring-data-rest-webmvc.version>
@@ -395,37 +395,27 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- SpringFox Swagger UI -->
+            <!-- Swagger Core v3 (OpenAPI 3.0, Jakarta EE compatible) -->
             <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger2</artifactId>
-                <version>${springfox-swagger2.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.google.guava</groupId>
-                        <artifactId>guava</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-core-jakarta</artifactId>
+                <version>${swagger-core.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger-ui</artifactId>
-                <version>${springfox-swagger2.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.google.guava</groupId>
-                        <artifactId>guava</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>net.bytebuddy</groupId>
-                        <artifactId>byte-buddy</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-core.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-spring-webmvc</artifactId>
-                <version>${springfox-swagger2.version}</version>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-models-jakarta</artifactId>
+                <version>${swagger-core.version}</version>
+            </dependency>
+            <!-- Swagger UI Webjar -->
+            <dependency>
+                <groupId>org.webjars</groupId>
+                <artifactId>swagger-ui</artifactId>
+                <version>5.18.2</version>
             </dependency>
             <dependency>
                 <groupId>net.java.dev.jna</groupId>
@@ -1507,21 +1497,6 @@
                 <version>${spring-data-commons.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-core</artifactId>
-                <version>${springfox-swagger2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger-common</artifactId>
-                <version>${springfox-swagger2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-spi</artifactId>
-                <version>${springfox-swagger2.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-crypto</artifactId>
                 <version>${springsecurity.version}</version>
@@ -1535,11 +1510,6 @@
                 <groupId>org.glassfish.jaxb</groupId>
                 <artifactId>jaxb-runtime</artifactId>
                 <version>${jaxb-runtime.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-spring-web</artifactId>
-                <version>${springfox-swagger2.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.protobuf</groupId>

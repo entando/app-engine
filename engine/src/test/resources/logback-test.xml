@@ -1,3 +1,19 @@
 <configuration>
     <include resource="base.xml"/>
+
+    <!-- Console appender for test output -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Debug logging for test classes and Spring Test MVC -->
+    <logger name="org.entando.entando.web.AbstractControllerIntegrationTest" level="DEBUG"/>
+    <logger name="org.springframework.test.web.servlet" level="DEBUG"/>
+    <logger name="org.springframework.web" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
 </configuration>

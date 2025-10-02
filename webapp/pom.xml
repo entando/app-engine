@@ -48,7 +48,7 @@
         <tomcat.version>10.1.34</tomcat.version>
 
         <!-- Keycloak Configuration -->
-        <keycloak.enabled>false</keycloak.enabled>
+        <keycloak.enabled>true</keycloak.enabled>
         <keycloak.auth.url>http://localhost:8081/auth</keycloak.auth.url>
         <keycloak.realm>entando</keycloak.realm>
         <keycloak.client.id>entando-app</keycloak.client.id>
@@ -378,12 +378,6 @@
                 <servdb.password>${docker.db.password}</servdb.password>
                 <servdb.jndi>java:/jdbc/servDataSource</servdb.jndi>
                 <servdb.driverClassName>oracle.jdbc.OracleDriver</servdb.driverClassName>
-            </properties>
-        </profile>
-        <profile>
-            <id>keycloak</id>
-            <properties>
-                <keycloak.enabled>true</keycloak.enabled>
             </properties>
         </profile>
         <profile>
