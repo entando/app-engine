@@ -63,11 +63,8 @@ public abstract class AbstractDAO implements Serializable {
 	protected Connection getConnection() throws EntException {
 		Connection conn = null;
 		try {
-			DataSource ds = ApsTenantApplicationUtils.getTenant()
-					.map(tenantCode -> getTenantManager().getDatasource(tenantCode))
-					.orElse(getDataSource());
+            DataSource ds = this.getDataSource();
 			conn = ds.getConnection();
-
 		} catch (SQLException e) {
 			_logger.error("Error getting connection to the datasource", e);
 			throw new EntException("Error getting connection to the datasource", e);
@@ -173,7 +170,9 @@ public abstract class AbstractDAO implements Serializable {
 	}
 	
 	protected DataSource getDataSource() {
-		return this.dataSource;
+        return ApsTenantApplicationUtils.getTenant()
+                .map(tenantCode -> getTenantManager().getDatasource(tenantCode))
+                .orElse(this.dataSource);
 	}
 
 	public void setDataSource(DataSource dataSource) {
