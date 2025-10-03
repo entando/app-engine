@@ -39,7 +39,7 @@ import org.springframework.util.Assert;
  * This copy is necessary to create a custom redis manager {@link LettuceCacheManager} that allows to create 
  * a custom Cache (LettuceCache) with Client-side caching support (provided by CacheFrontend instance).
  * Works upon a given {@link RedisConnectionFactory} to obtain the actual {@link RedisConnection}. <br />
- * {@link DefaultRedisCacheWriter} can be used in
+ * {@link RedisCacheWriter} can be used in
  * {@link RedisCacheWriter#lockingRedisCacheWriter(RedisConnectionFactory) locking} or
  * {@link RedisCacheWriter#nonLockingRedisCacheWriter(RedisConnectionFactory) non-locking} mode. While
  * {@literal non-locking} aims for maximum performance it may result in overlapping, non atomic, command execution for

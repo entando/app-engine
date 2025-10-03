@@ -211,8 +211,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 		 */
 		public static RedisCacheManagerBuilder fromConnectionFactory(RedisConnectionFactory connectionFactory) {
 			Assert.notNull(connectionFactory, "ConnectionFactory must not be null!");
-//            return builder(new DefaultLettuceCacheWriter(connectionFactory));
-            return builder(RedisCacheWriter.lockingRedisCacheWriter(connectionFactory));
+            return builder(new DefaultLettuceCacheWriter(connectionFactory));
 		}
 
 		/**
