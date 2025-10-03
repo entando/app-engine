@@ -59,6 +59,18 @@ public class OpenApiSchemaBuilder {
                 }
             }
 
+            // Handle Set<T>
+            if (java.util.Set.class.isAssignableFrom(rawType)) {
+                Type[] typeArgs = paramType.getActualTypeArguments();
+                if (typeArgs.length > 0) {
+                    Schema<?> schema = new Schema<>();
+                    schema.setType("array");
+                    // Recursively handle the item type (might be Class or ParameterizedType)
+                    schema.setItems(createSchemaFromType(typeArgs[0], visited, depth + 1));
+                    return schema;
+                }
+            }
+
             // Handle Map<K, V>
             if (java.util.Map.class.isAssignableFrom(rawType)) {
                 Type[] typeArgs = paramType.getActualTypeArguments();
@@ -302,6 +314,12 @@ public class OpenApiSchemaBuilder {
             // List without generic type info - this is a fallback for raw List.class
             // When possible, use createSchemaFromType() or pass generic Type info to preserve actual item types
         } else if (java.util.List.class.isAssignableFrom(clazz)) {
+            schema.setType("array");
+            schema.setItems(new Schema<>().type("object"));
+            schema.setDescription("Array of objects (generic type information not available)");
+            // Set without generic type info - this is a fallback for raw Set.class
+            // When possible, use createSchemaFromType() or pass generic Type info to preserve actual item types
+        } else if (java.util.Set.class.isAssignableFrom(clazz)) {
             schema.setType("array");
             schema.setItems(new Schema<>().type("object"));
             schema.setDescription("Array of objects (generic type information not available)");
