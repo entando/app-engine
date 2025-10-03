@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
 @ExtendWith(MockitoExtension.class)
-class SpringdocConfigTest {
+class OpenApiConfigTest {
 
     private final String authUrl = "http://localhost:9999/auth";
     private final String realm = "entandoRealm";
@@ -44,7 +42,7 @@ class SpringdocConfigTest {
 
     @Test
     void createSpringdocConfig() {
-        SpringdocConfig config = new SpringdocConfig();
+        OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
 
@@ -54,7 +52,7 @@ class SpringdocConfigTest {
 
     @Test
     void customOpenAPITest() {
-        SpringdocConfig config = new SpringdocConfig();
+        OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
 
@@ -97,7 +95,7 @@ class SpringdocConfigTest {
         when(environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_AUTH_URL)).thenReturn(null);
         when(servletContext.getContextPath()).thenReturn("/entando-de-app");
 
-        SpringdocConfig config = new SpringdocConfig();
+        OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
 
@@ -116,7 +114,7 @@ class SpringdocConfigTest {
     void customOpenAPIWithEmptyContextPath() {
         when(servletContext.getContextPath()).thenReturn("");
 
-        SpringdocConfig config = new SpringdocConfig();
+        OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
 

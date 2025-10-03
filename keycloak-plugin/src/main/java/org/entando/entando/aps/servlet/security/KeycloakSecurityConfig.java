@@ -47,15 +47,10 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
             http.authorizeHttpRequests(authorize -> {
                 authorize
                         .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui.html")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/webjars/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/webjars/**")).permitAll();
                 if (StringUtils.isNotEmpty(configuration.getSecureUris())) {
                     final String[] urls = configuration.getSecureUris().split(",");

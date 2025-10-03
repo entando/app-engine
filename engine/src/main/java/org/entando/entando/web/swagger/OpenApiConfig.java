@@ -13,12 +13,10 @@ import jakarta.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration
-public class SpringdocConfig {
+public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "entando";
 
@@ -55,13 +53,19 @@ public class SpringdocConfig {
         // Add OAuth2 security scheme if auth server is configured
         String authServer = getAuthServer();
         if (authServer != null && !authServer.isEmpty()) {
+            OAuthFlow authorizationCodeFlow = new OAuthFlow()
+                    .authorizationUrl(authServer + "/auth")
+                    .tokenUrl(authServer + "/token")
+                    .refreshUrl(authServer + "/token");
+
+            // Add logout URL as extension (for documentation)
+            authorizationCodeFlow.addExtension("x-logout-url", authServer + "/logout");
+
             openAPI.components(new Components()
                     .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
                             .type(SecurityScheme.Type.OAUTH2)
                             .flows(new OAuthFlows()
-                                    .authorizationCode(new OAuthFlow()
-                                            .authorizationUrl(authServer + "/auth")
-                                            .tokenUrl(authServer + "/token")))));
+                                    .authorizationCode(authorizationCodeFlow))));
 
             // Apply security globally
             openAPI.addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
