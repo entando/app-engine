@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.models.media.Schema;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashSet;
@@ -47,40 +48,14 @@ public class OpenApiSchemaBuilder {
             ParameterizedType paramType = (ParameterizedType) type;
             Class<?> rawType = (Class<?>) paramType.getRawType();
 
-            // Handle List<T>
-            if (java.util.List.class.isAssignableFrom(rawType)) {
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 0) {
-                    Schema<?> schema = new Schema<>();
-                    schema.setType("array");
-                    // Recursively handle the item type (might be Class or ParameterizedType)
-                    schema.setItems(createSchemaFromType(typeArgs[0], visited, depth + 1));
-                    return schema;
-                }
-            }
-
-            // Handle Set<T>
-            if (java.util.Set.class.isAssignableFrom(rawType)) {
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 0) {
-                    Schema<?> schema = new Schema<>();
-                    schema.setType("array");
-                    // Recursively handle the item type (might be Class or ParameterizedType)
-                    schema.setItems(createSchemaFromType(typeArgs[0], visited, depth + 1));
-                    return schema;
-                }
+            // Handle List<T> and Set<T> - they both become arrays in OpenAPI
+            if (isCollectionType(rawType)) {
+                return createArraySchema(paramType, visited, depth);
             }
 
             // Handle Map<K, V>
             if (java.util.Map.class.isAssignableFrom(rawType)) {
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 1) {
-                    Schema<?> schema = new Schema<>();
-                    schema.setType("object");
-                    // Recursively handle the value type (might be Class or ParameterizedType)
-                    schema.additionalProperties(createSchemaFromType(typeArgs[1], visited, depth + 1));
-                    return schema;
-                }
+                return createMapSchema(paramType, visited, depth);
             }
 
             // For other parameterized types, introspect with generic type information
@@ -88,9 +63,45 @@ public class OpenApiSchemaBuilder {
         }
 
         // Fallback for unknown types
-        Schema<?> schema = new Schema<>();
-        schema.setType("object");
-        return schema;
+        return new Schema<>().type("object");
+    }
+
+    /**
+     * Check if a class is a collection type (List or Set)
+     */
+    private static boolean isCollectionType(Class<?> clazz) {
+        return java.util.List.class.isAssignableFrom(clazz) ||
+               java.util.Set.class.isAssignableFrom(clazz);
+    }
+
+    /**
+     * Create array schema for List<T> or Set<T>
+     */
+    private static Schema<?> createArraySchema(ParameterizedType paramType, Set<Class<?>> visited, int depth) {
+        Type[] typeArgs = paramType.getActualTypeArguments();
+        if (typeArgs.length > 0) {
+            Schema<?> schema = new Schema<>();
+            schema.setType("array");
+            schema.setItems(createSchemaFromType(typeArgs[0], visited, depth + 1));
+            return schema;
+        }
+        // Fallback if no type arguments
+        return new Schema<>().type("array").items(new Schema<>().type("object"));
+    }
+
+    /**
+     * Create object schema for Map<K, V>
+     */
+    private static Schema<?> createMapSchema(ParameterizedType paramType, Set<Class<?>> visited, int depth) {
+        Type[] typeArgs = paramType.getActualTypeArguments();
+        if (typeArgs.length > 1) {
+            Schema<?> schema = new Schema<>();
+            schema.setType("object");
+            schema.additionalProperties(createSchemaFromType(typeArgs[1], visited, depth + 1));
+            return schema;
+        }
+        // Fallback if insufficient type arguments
+        return new Schema<>().type("object").additionalProperties(new Schema<>().type("string"));
     }
 
     /**
@@ -134,14 +145,7 @@ public class OpenApiSchemaBuilder {
         Class<?> currentClass = clazz;
         while (currentClass != null && !currentClass.equals(Object.class)) {
             for (Field field : currentClass.getDeclaredFields()) {
-                Class<?> fieldType = field.getType();
-                String fieldTypeName = fieldType.getName();
-
-                // Skip static, synthetic, @JsonIgnore annotated fields, and logger fields
-                if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) ||
-                    field.isSynthetic() ||
-                    field.isAnnotationPresent(JsonIgnore.class) ||
-                    fieldTypeName.contains("Logger")) {
+                if (shouldSkipField(field)) {
                     continue;
                 }
 
@@ -171,6 +175,16 @@ public class OpenApiSchemaBuilder {
         if (!exampleObject.isEmpty()) {
             schema.example(exampleObject);
         }
+    }
+
+    /**
+     * Check if a field should be skipped during introspection
+     */
+    private static boolean shouldSkipField(Field field) {
+        return Modifier.isStatic(field.getModifiers()) ||
+               field.isSynthetic() ||
+               field.isAnnotationPresent(JsonIgnore.class) ||
+               field.getType().getName().contains("Logger");
     }
 
     /**
@@ -279,72 +293,46 @@ public class OpenApiSchemaBuilder {
     private static Schema<?> createSchemaFromClass(Class<?> clazz, Set<Class<?>> visited, int depth) {
         Schema<?> schema = new Schema<>();
 
-        // Handle common primitive and wrapper types
+        // Handle primitive and wrapper types
         if (clazz.equals(String.class)) {
-            schema.setType("string");
-            schema.example("string");
+            return schema.type("string").example("string");
         } else if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
-            schema.setType("integer");
-            schema.setFormat("int32");
-            schema.example(0);
+            return schema.type("integer").format("int32").example(0);
         } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
-            schema.setType("integer");
-            schema.setFormat("int64");
-            schema.example(0);
+            return schema.type("integer").format("int64").example(0);
         } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
-            schema.setType("boolean");
-            schema.example(true);
+            return schema.type("boolean").example(true);
         } else if (clazz.equals(Double.class) || clazz.equals(double.class) ||
                    clazz.equals(Float.class) || clazz.equals(float.class)) {
-            schema.setType("number");
-            schema.example(0.0);
+            return schema.type("number").example(0.0);
         } else if (clazz.equals(java.util.Date.class) ||
                    clazz.equals(java.time.LocalDate.class) ||
                    clazz.equals(java.time.LocalDateTime.class) ||
                    clazz.equals(java.time.ZonedDateTime.class) ||
                    clazz.equals(java.time.Instant.class)) {
-            schema.setType("string");
-            schema.setFormat("date-time");
-            schema.example("2025-10-02T13:37:23.346Z");
-            // Handle Java arrays
+            return schema.type("string").format("date-time").example("2025-10-02T13:37:23.346Z");
         } else if (clazz.isArray()) {
-            schema.setType("array");
+            // Handle Java arrays
             Class<?> componentType = clazz.getComponentType();
-            schema.setItems(createSchemaFromClass(componentType, visited, depth + 1));
-            // List without generic type info - this is a fallback for raw List.class
-            // When possible, use createSchemaFromType() or pass generic Type info to preserve actual item types
-        } else if (java.util.List.class.isAssignableFrom(clazz)) {
-            schema.setType("array");
-            schema.setItems(new Schema<>().type("object"));
-            schema.setDescription("Array of objects (generic type information not available)");
-            // Set without generic type info - this is a fallback for raw Set.class
-            // When possible, use createSchemaFromType() or pass generic Type info to preserve actual item types
-        } else if (java.util.Set.class.isAssignableFrom(clazz)) {
-            schema.setType("array");
-            schema.setItems(new Schema<>().type("object"));
-            schema.setDescription("Array of objects (generic type information not available)");
-            // Map without generic type info - this is a fallback for raw Map.class
-            // When possible, use createSchemaFromType() or pass generic Type info to preserve actual value types
+            return schema.type("array").items(createSchemaFromClass(componentType, visited, depth + 1));
+        } else if (isCollectionType(clazz)) {
+            // Collection without generic type info - fallback
+            return schema.type("array")
+                .items(new Schema<>().type("object"))
+                .description("Array of objects (generic type information not available)");
         } else if (java.util.Map.class.isAssignableFrom(clazz)) {
-            schema.setType("object");
-            schema.additionalProperties(new Schema<>().type("string"));
-            schema.setDescription("Map with string values (generic type information not available)");
-            // Custom object types
+            // Map without generic type info - fallback
+            return schema.type("object")
+                .additionalProperties(new Schema<>().type("string"))
+                .description("Map with string values (generic type information not available)");
         } else if (!clazz.getName().startsWith("java.") && !clazz.isPrimitive()) {
-            // Check for circular references
+            // Custom object types
             if (visited.contains(clazz)) {
-                // Return simple object schema to break circular reference
-                schema.setType("object");
-                schema.setDescription(clazz.getSimpleName() + " (circular reference)");
-                return schema;
+                return schema.type("object").description(clazz.getSimpleName() + " (circular reference)");
             }
 
-            // Check depth limit
             if (depth >= MAX_DEPTH) {
-                // Return simple object schema when max depth reached
-                schema.setType("object");
-                schema.setDescription(clazz.getSimpleName() + " (max depth reached)");
-                return schema;
+                return schema.type("object").description(clazz.getSimpleName() + " (max depth reached)");
             }
 
             // For custom objects, introspect fields to create detailed schema
@@ -352,13 +340,12 @@ public class OpenApiSchemaBuilder {
             schema.setTitle(clazz.getSimpleName());
             visited.add(clazz);
             introspectObjectFields(clazz, schema, visited, depth);
-            visited.remove(clazz); // Remove after processing to allow same class at different branches
+            visited.remove(clazz);
+            return schema;
         } else {
             // Fallback for unknown types
-            schema.setType("object");
+            return schema.type("object");
         }
-
-        return schema;
     }
 
     /**
@@ -372,26 +359,19 @@ public class OpenApiSchemaBuilder {
         Class<?> currentClass = clazz;
         while (currentClass != null && !currentClass.equals(Object.class)) {
             for (Field field : currentClass.getDeclaredFields()) {
-                Class<?> fieldType = field.getType();
-                String fieldTypeName = fieldType.getName();
-
-                // Skip static, synthetic, @JsonIgnore annotated fields, and logger fields
-                if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) ||
-                    field.isSynthetic() ||
-                    field.isAnnotationPresent(JsonIgnore.class) ||
-                    fieldTypeName.contains("Logger")) {
+                if (shouldSkipField(field)) {
                     continue;
                 }
 
                 String fieldName = field.getName();
                 Type genericType = field.getGenericType();
 
-                // Create property schema based on field type
-                Schema<?> propertySchema = createPropertySchema(fieldType, genericType, visited, depth);
+                // Use createSchemaFromType for consistent schema creation
+                Schema<?> propertySchema = createSchemaFromType(genericType, visited, depth + 1);
                 properties.put(fieldName, propertySchema);
 
                 // Add example value
-                exampleObject.put(fieldName, getExampleValue(fieldType, genericType));
+                exampleObject.put(fieldName, getExampleValueFromType(genericType, visited, depth + 1));
             }
             currentClass = currentClass.getSuperclass();
         }
@@ -400,88 +380,6 @@ public class OpenApiSchemaBuilder {
         if (!exampleObject.isEmpty()) {
             schema.example(exampleObject);
         }
-    }
-
-    /**
-     * Create schema for a field/property with circular reference protection and depth limiting
-     */
-    private static Schema<?> createPropertySchema(Class<?> fieldType, Type genericType, Set<Class<?>> visited, int depth) {
-        Schema<?> propertySchema = new Schema<>();
-
-        if (fieldType.equals(String.class)) {
-            propertySchema.setType("string");
-        } else if (fieldType.equals(Integer.class) || fieldType.equals(int.class)) {
-            propertySchema.setType("integer");
-            propertySchema.setFormat("int32");
-        } else if (fieldType.equals(Long.class) || fieldType.equals(long.class)) {
-            propertySchema.setType("integer");
-            propertySchema.setFormat("int64");
-        } else if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
-            propertySchema.setType("boolean");
-        } else if (fieldType.equals(Double.class) || fieldType.equals(double.class) ||
-                   fieldType.equals(Float.class) || fieldType.equals(float.class)) {
-            propertySchema.setType("number");
-        } else if (java.util.Date.class.isAssignableFrom(fieldType) ||
-                   java.time.LocalDate.class.isAssignableFrom(fieldType) ||
-                   java.time.LocalDateTime.class.isAssignableFrom(fieldType)) {
-            propertySchema.setType("string");
-            propertySchema.setFormat("date-time");
-        } else if (java.util.List.class.isAssignableFrom(fieldType)) {
-            propertySchema.setType("array");
-            // Try to get generic type of List
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType paramType = (ParameterizedType) genericType;
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
-                    Class<?> itemType = (Class<?>) typeArgs[0];
-                    propertySchema.setItems(createSchemaFromClass(itemType, visited, depth + 1));
-                } else {
-                    propertySchema.setItems(new Schema<>().type("object"));
-                }
-            } else {
-                propertySchema.setItems(new Schema<>().type("object"));
-            }
-        } else if (java.util.Map.class.isAssignableFrom(fieldType)) {
-            propertySchema.setType("object");
-            // Try to get generic type of Map value
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType paramType = (ParameterizedType) genericType;
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 1 && typeArgs[1] instanceof Class) {
-                    Class<?> valueType = (Class<?>) typeArgs[1];
-                    propertySchema.additionalProperties(createSchemaFromClass(valueType, visited, depth + 1));
-                } else {
-                    propertySchema.additionalProperties(new Schema<>().type("string"));
-                }
-            } else {
-                propertySchema.additionalProperties(new Schema<>().type("string"));
-            }
-        } else if (java.util.Set.class.isAssignableFrom(fieldType)) {
-            // Handle Set similar to List
-            propertySchema.setType("array");
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType paramType = (ParameterizedType) genericType;
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
-                    Class<?> itemType = (Class<?>) typeArgs[0];
-                    propertySchema.setItems(createSchemaFromClass(itemType, visited, depth + 1));
-                } else {
-                    propertySchema.setItems(new Schema<>().type("string").example("string"));
-                }
-            } else {
-                propertySchema.setItems(new Schema<>().type("string").example("string"));
-            }
-            propertySchema.setDescription("Set");
-        } else if (!fieldType.getName().startsWith("java.") && !fieldType.isPrimitive()) {
-            // Nested custom object - recurse with incremented depth
-            propertySchema = createSchemaFromClass(fieldType, visited, depth + 1);
-        } else {
-            // Other types - mark as object
-            propertySchema.setType("object");
-            propertySchema.setDescription(fieldType.getSimpleName());
-        }
-
-        return propertySchema;
     }
 
     /**
@@ -511,105 +409,102 @@ public class OpenApiSchemaBuilder {
                    java.time.LocalDate.class.isAssignableFrom(fieldType) ||
                    java.time.LocalDateTime.class.isAssignableFrom(fieldType)) {
             return "2025-10-02T13:37:23.346Z";
-        } else if (java.util.List.class.isAssignableFrom(fieldType)) {
-            // Create example list with one item
-            java.util.List<Object> list = new java.util.ArrayList<>();
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType paramType = (ParameterizedType) genericType;
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 0) {
-                    Type itemType = typeArgs[0];
-                    if (itemType instanceof Class) {
-                        list.add(getExampleValue((Class<?>) itemType, itemType, visited, depth + 1));
-                    } else if (itemType instanceof ParameterizedType) {
-                        Class<?> rawItemType = (Class<?>) ((ParameterizedType) itemType).getRawType();
-                        list.add(getExampleValue(rawItemType, itemType, visited, depth + 1));
-                    } else {
-                        list.add(null);
-                    }
-                } else {
-                    list.add(null);
-                }
-            } else {
-                list.add("string");
-            }
-            return list;
-        } else if (java.util.Set.class.isAssignableFrom(fieldType)) {
-            // Create example set with one item
-            java.util.List<Object> list = new java.util.ArrayList<>();
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType paramType = (ParameterizedType) genericType;
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
-                    Class<?> itemType = (Class<?>) typeArgs[0];
-                    list.add(getExampleValue(itemType, itemType, visited, depth + 1));
+        } else if (isCollectionType(fieldType)) {
+            // Handle both List and Set
+            return createCollectionExample(genericType, visited, depth);
+        } else if (java.util.Map.class.isAssignableFrom(fieldType)) {
+            return createMapExample(genericType, visited, depth);
+        } else if (!fieldType.getName().startsWith("java.") && !fieldType.isPrimitive()
+                   && !fieldType.equals(Object.class)) {
+            return createCustomObjectExample(fieldType, visited, depth);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Create example for collection types (List/Set)
+     */
+    private static java.util.List<Object> createCollectionExample(Type genericType, Set<Class<?>> visited, int depth) {
+        java.util.List<Object> list = new java.util.ArrayList<>();
+        if (genericType instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) genericType;
+            Type[] typeArgs = paramType.getActualTypeArguments();
+            if (typeArgs.length > 0) {
+                Type itemType = typeArgs[0];
+                if (itemType instanceof Class) {
+                    list.add(getExampleValue((Class<?>) itemType, itemType, visited, depth + 1));
+                } else if (itemType instanceof ParameterizedType) {
+                    Class<?> rawItemType = (Class<?>) ((ParameterizedType) itemType).getRawType();
+                    list.add(getExampleValue(rawItemType, itemType, visited, depth + 1));
                 } else {
                     list.add("string");
                 }
             } else {
                 list.add("string");
             }
-            return list;
-        } else if (java.util.Map.class.isAssignableFrom(fieldType)) {
-            // Create example map with three entries
-            Map<String, Object> map = new LinkedHashMap<>();
-            Object exampleValue = "string";
-
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType paramType = (ParameterizedType) genericType;
-                Type[] typeArgs = paramType.getActualTypeArguments();
-                if (typeArgs.length > 1 && typeArgs[1] instanceof Class) {
-                    Class<?> valueType = (Class<?>) typeArgs[1];
-                    exampleValue = getExampleValue(valueType, valueType, visited, depth + 1);
-                }
-            }
-
-            map.put("additionalProp1", exampleValue);
-            map.put("additionalProp2", exampleValue);
-            map.put("additionalProp3", exampleValue);
-            return map;
-        } else if (!fieldType.getName().startsWith("java.") && !fieldType.isPrimitive()
-                   && !fieldType.equals(Object.class)) {
-            // Handle custom objects - create example from their fields
-            // Check for circular references
-            if (visited.contains(fieldType)) {
-                return null; // Avoid circular reference in examples
-            }
-
-            // Check depth limit
-            if (depth >= MAX_DEPTH) {
-                return null; // Avoid too deep nesting
-            }
-
-            // Build example object from fields
-            Map<String, Object> exampleObject = new LinkedHashMap<>();
-            visited.add(fieldType);
-
-            Class<?> currentClass = fieldType;
-            while (currentClass != null && !currentClass.equals(Object.class)) {
-                for (Field field : currentClass.getDeclaredFields()) {
-                    Class<?> fieldClass = field.getType();
-                    String fieldClassName = fieldClass.getName();
-
-                    // Skip static, synthetic, @JsonIgnore annotated fields, and logger fields
-                    if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) ||
-                        field.isSynthetic() ||
-                        field.isAnnotationPresent(JsonIgnore.class) ||
-                        fieldClassName.contains("Logger")) {
-                        continue;
-                    }
-
-                    String fieldName = field.getName();
-                    Type fieldGenericType = field.getGenericType();
-                    exampleObject.put(fieldName, getExampleValue(fieldClass, fieldGenericType, visited, depth + 1));
-                }
-                currentClass = currentClass.getSuperclass();
-            }
-
-            visited.remove(fieldType);
-            return exampleObject;
         } else {
-            return null;
+            list.add("string");
         }
+        return list;
+    }
+
+    /**
+     * Create example for Map types
+     */
+    private static Map<String, Object> createMapExample(Type genericType, Set<Class<?>> visited, int depth) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        Object exampleValue = "string";
+
+        if (genericType instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) genericType;
+            Type[] typeArgs = paramType.getActualTypeArguments();
+            if (typeArgs.length > 1 && typeArgs[1] instanceof Class) {
+                Class<?> valueType = (Class<?>) typeArgs[1];
+                exampleValue = getExampleValue(valueType, valueType, visited, depth + 1);
+            }
+        }
+
+        map.put("additionalProp1", exampleValue);
+        map.put("additionalProp2", exampleValue);
+        map.put("additionalProp3", exampleValue);
+        return map;
+    }
+
+    /**
+     * Create example for custom object types
+     */
+    private static Map<String, Object> createCustomObjectExample(Class<?> fieldType, Set<Class<?>> visited, int depth) {
+        // Check for circular references
+        if (visited.contains(fieldType)) {
+            return null; // Avoid circular reference in examples
+        }
+
+        // Check depth limit
+        if (depth >= MAX_DEPTH) {
+            return null; // Avoid too deep nesting
+        }
+
+        // Build example object from fields
+        Map<String, Object> exampleObject = new LinkedHashMap<>();
+        visited.add(fieldType);
+
+        Class<?> currentClass = fieldType;
+        while (currentClass != null && !currentClass.equals(Object.class)) {
+            for (Field field : currentClass.getDeclaredFields()) {
+                if (shouldSkipField(field)) {
+                    continue;
+                }
+
+                String fieldName = field.getName();
+                Class<?> fieldClass = field.getType();
+                Type fieldGenericType = field.getGenericType();
+                exampleObject.put(fieldName, getExampleValue(fieldClass, fieldGenericType, visited, depth + 1));
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+
+        visited.remove(fieldType);
+        return exampleObject;
     }
 }
