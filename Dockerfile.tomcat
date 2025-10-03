@@ -14,8 +14,6 @@ LABEL name="Entando App" \
 #COPY target/generated-resources/licenses.xml /
 
 COPY --chown=185:0 webapp/target/*.war /usr/local/tomcat/webapps/
-# Copy CookieProcessor JAR if it exists
-COPY --chown=185:0  webapp/target/*-jsessionid-cookie-processor.jar /usr/local/tomcat/lib/
 
 RUN $ENTANDO_COMMON_PATH/init-derby-from-war.sh
 
