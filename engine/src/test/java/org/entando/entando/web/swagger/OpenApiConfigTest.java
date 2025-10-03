@@ -41,7 +41,7 @@ class OpenApiConfigTest {
     }
 
     @Test
-    void createSpringdocConfig() {
+    void createOpenApiConfig() {
         OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
