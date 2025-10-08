@@ -92,21 +92,27 @@ public class SwaggerUiController {
                 "                .then(function(data) {\n" +
                 "                    console.log('[Token Refresh] Success! New token expires in', data.expires_in, 'seconds');\n" +
                 "                    \n" +
-                "                    // Get current auth schema\n" +
+                "                    // Get current auth to preserve all fields\n" +
                 "                    var currentAuth = system.authSelectors.authorized().get('entando');\n" +
                 "                    var schema = currentAuth ? currentAuth.get('schema') : null;\n" +
+                "                    var currentClientId = currentAuth ? currentAuth.get('clientId') : null;\n" +
+                "                    var currentClientSecret = currentAuth ? currentAuth.get('clientSecret') : null;\n" +
                 "                    \n" +
-                "                    // Update token in Swagger UI\n" +
+                "                    // Update token in Swagger UI while preserving client credentials\n" +
                 "                    var newAuth = {\n" +
                 "                        entando: {\n" +
+                "                            name: 'entando',\n" +
+                "                            schema: schema,\n" +
+                "                            value: data.access_token,\n" +
+                "                            clientId: currentClientId,\n" +
+                "                            clientSecret: currentClientSecret,\n" +
                 "                            token: {\n" +
                 "                                access_token: data.access_token,\n" +
                 "                                refresh_token: data.refresh_token || refreshToken,\n" +
                 "                                expires_in: data.expires_in,\n" +
                 "                                token_type: data.token_type || 'Bearer',\n" +
                 "                                id_token: data.id_token\n" +
-                "                            },\n" +
-                "                            schema: schema\n" +
+                "                            }\n" +
                 "                        }\n" +
                 "                    };\n" +
                 "                    \n" +
@@ -241,7 +247,30 @@ public class SwaggerUiController {
                 "                oauth2RedirectUrl: '" + oauth2RedirectUrl + "',\n" +
                 "                tagsSorter: 'alpha',\n" +
                 "                operationsSorter: 'alpha',\n" +
-                "                docExpansion: 'none'\n" +
+                "                docExpansion: 'none',\n" +
+                "                requestInterceptor: function(request) {\n" +
+                "                    // Get current access token from auth state using 'this' context\n" +
+                "                    try {\n" +
+                "                        if (this.authSelectors && this.authSelectors.authorized) {\n" +
+                "                            var auth = this.authSelectors.authorized();\n" +
+                "                            if (auth && auth.get) {\n" +
+                "                                var entandoAuth = auth.get('entando');\n" +
+                "                                if (entandoAuth && entandoAuth.get) {\n" +
+                "                                    var tokenData = entandoAuth.get('token');\n" +
+                "                                    if (tokenData && tokenData.get) {\n" +
+                "                                        var accessToken = tokenData.get('access_token');\n" +
+                "                                        if (accessToken) {\n" +
+                "                                            request.headers['Authorization'] = 'Bearer ' + accessToken;\n" +
+                "                                        }\n" +
+                "                                    }\n" +
+                "                                }\n" +
+                "                            }\n" +
+                "                        }\n" +
+                "                    } catch(e) {\n" +
+                "                        console.warn('[Request Interceptor] Could not apply token:', e);\n" +
+                "                    }\n" +
+                "                    return request;\n" +
+                "                }\n" +
                 "            });\n" +
                 "            \n" +
                 "            window.ui.initOAuth({\n" +

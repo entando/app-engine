@@ -116,7 +116,7 @@ public class SpringMvcOpenApiScanner {
         // Set operation ID and summary
         // TODO infer information from the method's semantics
         operation.setOperationId(methodName);
-        operation.setSummary(className + "." + methodName);
+        operation.setSummary(methodName);
         operation.setDescription("Endpoint: " + className + "#" + methodName);
 
         // Add tag for grouping by controller
@@ -265,14 +265,15 @@ public class SpringMvcOpenApiScanner {
             PathVariable pathVar = AnnotationUtils.findAnnotation(param, PathVariable.class);
             if (pathVar != null) {
                 String name = pathVar.value().isEmpty() ? pathVar.name() : pathVar.value();
-                createAndAddParameter(operation, param.getType(), param.getName(), name, "path", pathVar.required(), null);
+                createAndAddParameter(operation, param.getType(), param.getName(), name, "path", pathVar.required(), null, null);
                 continue;
             }
 
             RequestParam requestParam = AnnotationUtils.findAnnotation(param, RequestParam.class);
             if (requestParam != null) {
                 String name = requestParam.value().isEmpty() ? requestParam.name() : requestParam.value();
-                createAndAddParameter(operation, param.getType(), param.getName(), name, "query", requestParam.required(), null);
+                String defaultValue = requestParam.defaultValue().equals(ValueConstants.DEFAULT_NONE) ? null : requestParam.defaultValue();
+                createAndAddParameter(operation, param.getType(), param.getName(), name, "query", requestParam.required(), null, defaultValue);
                 continue;
             }
 
@@ -339,7 +340,7 @@ public class SpringMvcOpenApiScanner {
                 io.swagger.annotations.ApiParam apiParam = field.getAnnotation(io.swagger.annotations.ApiParam.class);
 
                 createAndAddParameter(operation, field.getGenericType(), field.getName(), null, "query",
-                        false, apiParam);
+                        false, apiParam, null);
 
             }
             currentClass = currentClass.getSuperclass();
@@ -351,14 +352,14 @@ public class SpringMvcOpenApiScanner {
      */
     private void createAndAddParameter(Operation operation, Type type, String paramName,
                                        String name, String in, boolean isRequired,
-                                       io.swagger.annotations.ApiParam apiParam) {
+                                       io.swagger.annotations.ApiParam apiParam, String requestParamDefaultValue) {
         // If the annotation name is empty, fall back to the method's parameter name
         if (name== null || name.isEmpty()) {
             name = paramName;
         }
 
         String description = null;
-        String defaultValue = null;
+        String defaultValue = requestParamDefaultValue;
         String allowableValues = null;
 
         if (apiParam != null) {
@@ -380,10 +381,10 @@ public class SpringMvcOpenApiScanner {
         //INIT creation schema for swagger
         Schema schema = OpenApiSchemaBuilder.createSchemaFromType(type);
 
-        // Set schema based on field type using OpenApiSchemaBuilder with generic type info
-        if (defaultValue != null) {
-            schema.setDefault(defaultValue);
-        }
+        // Set example to default value if present (this pre-fills the input in Swagger UI)
+        schema.setExample(defaultValue);
+
+        // Set allowable values for input fields
         if (allowableValues != null) {
             String[] values = allowableValues.split(",");
             java.util.List enumList = new java.util.ArrayList();
