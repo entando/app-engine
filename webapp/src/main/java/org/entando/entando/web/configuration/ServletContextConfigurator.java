@@ -82,7 +82,7 @@ public class ServletContextConfigurator implements ServletContextListener {
         registerFilter("mdcUserFilter", MDCUSER_FILTER, List.of("/*"));
         registerFilter("springSessionRepositoryFilter", SPRING_FILTER_DELEGATOR, "/*", DISPATCHER_TYPES);
         registerFilter("struts2", ENTANDO_STRUTS_FILTER, withAlsoVirtualContexts("/do/*", "/struts/*"));
-        registerFilter("XSSFilter", ENTANDO_XSSFILTER, List.of("*.wp", "*.page", "/pages/*"));
+        registerFilter("XSSFilter", ENTANDO_XSSFILTER, List.of("*.wp", "*.page", "/pages/*", "/page/*", "/preview/*"));
 
         FilterRegistration.Dynamic filter = servletContext.addFilter("CharacterEncodingFilter", "org.springframework.web.filter.CharacterEncodingFilter");
         if (filter == null)
