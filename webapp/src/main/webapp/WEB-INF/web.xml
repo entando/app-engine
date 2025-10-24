@@ -109,6 +109,14 @@
 <!--        <filter-name>XSSFilter</filter-name>-->
 <!--        <url-pattern>/pages/*</url-pattern>-->
 <!--    </filter-mapping>-->
+<!--    <filter-mapping>-->
+<!--        <filter-name>XSSFilter</filter-name>-->
+<!--        <url-pattern>/page/*</url-pattern>-->
+<!--    </filter-mapping>-->
+<!--    <filter-mapping>-->
+<!--        <filter-name>XSSFilter</filter-name>-->
+<!--        <url-pattern>/preview/*</url-pattern>-->
+<!--    </filter-mapping>-->
 <!--    <listener>-->
 <!--        <listener-class>org.entando.entando.web.configuration.ServletContextConfigurator</listener-class>-->
 <!--    </listener>-->
