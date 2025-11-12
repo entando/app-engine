@@ -6,7 +6,7 @@ env:
   GH_PR_TITLE: ${{ github.event.pull_request.title }}
   GH_PR_NUMBER: ${{ github.event.pull_request.number }}
   GH_PR_RUN_NUMBER: ${{ github.run_number }}
-  IMAGES_TO_BUILD: "Dockerfile.eap:entando-de-app-eap,Dockerfile.wildfly:entando-de-app-wildfly,Dockerfile.tomcat:entando-de-app-tomcat"
+  IMAGES_TO_BUILD: "Dockerfile.tomcat:entando-de-app-tomcat"
   ENTANDO_CRANE_VERSION: ${{ vars.ENTANDO_CRANE_VERSION || 'v0.10.0' }}
   GITHUB_REF: ${{ github.ref }}
 
