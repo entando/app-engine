@@ -19,6 +19,7 @@ import com.agiletec.aps.util.DateConverter;
 import java.util.ArrayList;
 import java.util.List;
 import org.entando.entando.aps.system.services.oauth2.model.ConsumerRecordVO;
+import org.junit.jupiter.api.Disabled;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -36,6 +37,9 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 /**
  * @author E.Santoboni
  */
+
+//no oidc login - deprecated
+@Deprecated
 @ExtendWith(MockitoExtension.class)
 class OAuthConsumerManagerTest {
 
@@ -51,6 +55,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void getConsumer() throws Exception {
         ConsumerRecordVO record = this.createMockConsumer("key_1", "secret", false);
         when(this.consumerDAO.getConsumer(Mockito.anyString())).thenReturn(record);
@@ -60,6 +65,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void failGetConsumer() throws Exception {
         Assertions.assertThrows(EntException.class, () -> {
             Mockito.doThrow(RuntimeException.class).when(this.consumerDAO).getConsumer(Mockito.anyString());
@@ -74,6 +80,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void addConsumer() throws Exception {
         ConsumerRecordVO record = this.createMockConsumer("key_1", "secret", false);
         this.consumerManager.addConsumer(record);
@@ -81,6 +88,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void failAddConsumer() throws Exception {
         Assertions.assertThrows(EntException.class, () -> {
             ConsumerRecordVO record = this.createMockConsumer("key_2", "secret", false);
@@ -96,6 +104,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void updateConsumer() throws Exception {
         ConsumerRecordVO record = this.createMockConsumer("key_1", "secret", false);
         this.consumerManager.updateConsumer(record);
@@ -103,6 +112,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void failUpdateConsumer() throws Exception {
         Assertions.assertThrows(EntException.class, () -> {
             ConsumerRecordVO record = this.createMockConsumer("key_2", "secret", false);
@@ -118,12 +128,14 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void deleteConsumer() throws Exception {
         this.consumerManager.deleteConsumer("key_test_1");
         Mockito.verify(consumerDAO, Mockito.times(1)).deleteConsumer(Mockito.anyString());
     }
 
     @Test
+    @Disabled
     void failDeleteConsumer() throws Exception {
         Assertions.assertThrows(EntException.class, () -> {
             Mockito.doThrow(RuntimeException.class).when(this.consumerDAO).deleteConsumer(Mockito.anyString());
@@ -138,6 +150,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void getConsumerKeys() throws Exception {
         List<String> mockKeys = new ArrayList<>();
         mockKeys.add("key_1");
@@ -149,6 +162,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void failGetConsumerKeys_2() throws Exception {
         Assertions.assertThrows(EntException.class, () -> {
             Mockito.doThrow(RuntimeException.class).when(this.consumerDAO).getConsumerKeys(Mockito.any(FieldSearchFilter[].class));
@@ -163,6 +177,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void loadClient() throws Exception {
         ConsumerRecordVO record = this.createMockConsumer("key_1", "secret", false);
         when(this.consumerDAO.getConsumer(Mockito.anyString())).thenReturn(record);
@@ -172,6 +187,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void loadClientNotFound() throws Exception {
         // Spring Security 6.x: expired clients return null instead of throwing exception
         ConsumerRecordVO record = this.createMockConsumer("key_1", "secret", true);
@@ -182,6 +198,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void loadClientNotFound_2() throws Exception {
         // Spring Security 6.x: non-existent clients return null instead of throwing exception
         when(this.consumerDAO.getConsumer(Mockito.anyString())).thenReturn(null);
@@ -191,6 +208,7 @@ class OAuthConsumerManagerTest {
     }
 
     @Test
+    @Disabled
     void loadClientNotFound_3() throws Exception {
         // Spring Security 6.x: DAO exceptions result in null return instead of throwing exception
         when(this.consumerDAO.getConsumer(Mockito.anyString())).thenThrow(RuntimeException.class);

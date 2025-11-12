@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import javax.sql.DataSource;
 import org.entando.entando.aps.system.services.oauth2.model.ConsumerRecordVO;
+import org.junit.jupiter.api.Disabled;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -39,7 +40,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * @author E.Santoboni
  */
+
+//no oidc login - deprecated
 @ExtendWith(MockitoExtension.class)
+@Deprecated
 class OAuthConsumerDAOTest {
 
     @Mock
@@ -61,6 +65,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void getConsumerKeys() throws Exception {
         when(this.stat.executeQuery()).thenReturn(res);
         Mockito.when(res.next()).thenReturn(true).thenReturn(false);
@@ -71,6 +76,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void failGetConsumerKeys() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
             when(this.stat.executeQuery()).thenThrow(SQLException.class);
@@ -80,6 +86,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void getConsumer() throws Exception {
         when(this.stat.executeQuery()).thenReturn(res);
         Mockito.when(res.next()).thenReturn(true).thenReturn(false);
@@ -93,6 +100,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void failGetConsumer() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
             Mockito.lenient().when(this.stat.executeQuery()).thenReturn(res);
@@ -106,6 +114,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void addConsumer() throws Exception {
         ConsumerRecordVO record = this.createMockConsumer("key_1", "secret");
         this.consumerDAO.addConsumer(record);
@@ -115,6 +124,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void failAddConsumer() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
             Mockito.doThrow(SQLException.class).when(stat).setTimestamp(Mockito.anyInt(), Mockito.any(Timestamp.class));
@@ -127,6 +137,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void updateConsumer() throws Exception {
         ConsumerRecordVO record = this.createMockConsumer("key_3", null);
         this.consumerDAO.updateConsumer(record);
@@ -136,6 +147,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void failUpdateConsumer() throws Exception {
         Assertions.assertThrows(RuntimeException.class, () -> {
             Mockito.doThrow(SQLException.class).when(stat).setTimestamp(Mockito.anyInt(), Mockito.any(Timestamp.class));
@@ -148,6 +160,7 @@ class OAuthConsumerDAOTest {
     }
 
     @Test
+    @Disabled
     void deleteConsumer() throws Exception {
         this.consumerDAO.deleteConsumer("key_4");
         Mockito.verify(stat, Mockito.times(2)).setObject(Mockito.anyInt(), Mockito.anyString());

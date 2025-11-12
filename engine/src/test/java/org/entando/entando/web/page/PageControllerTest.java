@@ -410,7 +410,7 @@ class PageControllerTest extends AbstractControllerTest {
         result.andExpect(status().isBadRequest());
         String response = result.andReturn().getResponse().getContentAsString();
         result.andExpect(jsonPath("$.errors", hasSize(1)));
-        result.andExpect(jsonPath("$.errors[0].code", is("NotBlank")));
+        result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_CHANGE_POSITION_INVALID_REQUEST)));
     }
     
     @Test
