@@ -22,6 +22,16 @@ else
   SONAR_ORG=""
 fi
 
+# Check if parent has PR version and purge if needed
+PARENT_VERSION=$(mvn help:evaluate -Dexpression=project.parent.version -q -DforceStdout)
+if [[ "$PARENT_VERSION" == *"-PR"* ]]; then
+  echo "~> Parent PR version detected ($PARENT_VERSION), purging parent dependency cache"
+  mvn dependency:purge-local-repository \
+    -DmanualInclude=org.entando:entando-maven-root \
+    -DreResolve=false \
+    -DactTransitively=false
+fi
+
 # ~ version set
 mvn versions:set -DnewVersion="$ARTIFACT_VERSION"
 
