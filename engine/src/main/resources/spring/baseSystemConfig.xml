@@ -146,11 +146,9 @@
 
     <bean id="multipartResolver"
           class="org.springframework.web.multipart.support.StandardServletMultipartResolver">
-<!--         Note: StandardServletMultipartResolver doesn't support setMaxUploadSize-->
-<!--         File upload limits are configured via servlet container (web.xml) instead-->
-<!--        <property name="maxUploadSize">-->
-<!--            <value>${file.upload.maxSize}</value>-->
-<!--        </property>-->
+        <!-- Note: Spring 6 removed CommonsMultipartResolver support -->
+        <!-- StandardServletMultipartResolver delegates to servlet container (web.xml) -->
+        <!-- File upload limits are configured via <multipart-config> in web.xml -->
     </bean>
 
 </beans>
