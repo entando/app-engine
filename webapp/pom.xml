@@ -67,8 +67,6 @@
         <!-- Cookie SameSite policies / Secure-->
         <jsessionid.samesite.policy>Strict</jsessionid.samesite.policy>
         <default.samesite.policy/>
-        <jsessionid.secure>false</jsessionid.secure>
-
 
         <!-- frontend-maven-plugin Configuration -->
         <npm.version>6.14.17</npm.version>
