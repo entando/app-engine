@@ -17,7 +17,7 @@ import com.agiletec.aps.system.services.role.Permission;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.services.tenants.ITenantService;
 import org.entando.entando.web.common.annotation.RestAccessControl;

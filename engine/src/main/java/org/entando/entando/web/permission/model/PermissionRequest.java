@@ -13,7 +13,7 @@
  */
 package org.entando.entando.web.permission.model;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import org.entando.entando.aps.system.services.role.model.PermissionDto;
 import org.hibernate.validator.constraints.NotBlank;

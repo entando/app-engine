@@ -1,11 +1,9 @@
 package org.entando.entando.keycloak.interceptor;
 
-import static org.entando.entando.aps.servlet.security.KeycloakSecurityConfig.API_PATH;
-
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.entando.entando.aps.servlet.security.UserAuthentication;
 import org.entando.entando.web.common.annotation.RestAccessControl;
 import org.entando.entando.web.common.exceptions.EntandoAuthorizationException;
@@ -15,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 
-public class KeycloakOauth2Interceptor extends HandlerInterceptorAdapter {
+import static org.entando.entando.aps.servlet.security.KeycloakSecurityConfig.API_PATH;
+
+public class KeycloakOauth2Interceptor implements AsyncHandlerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakOauth2Interceptor.class);
 

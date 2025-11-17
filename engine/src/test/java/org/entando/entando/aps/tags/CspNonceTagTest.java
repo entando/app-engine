@@ -13,16 +13,16 @@
  */
 package org.entando.entando.aps.tags;
 
-import static javax.servlet.jsp.tagext.Tag.SKIP_BODY;
+import static jakarta.servlet.jsp.tagext.Tag.SKIP_BODY;
 import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import java.io.IOException;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

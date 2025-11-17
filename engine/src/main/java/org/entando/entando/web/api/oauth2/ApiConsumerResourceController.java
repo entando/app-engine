@@ -14,7 +14,7 @@
 package org.entando.entando.web.api.oauth2;
 
 import org.entando.entando.ent.exception.EntException;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.oauth2.ApiConsumerService;
 import org.entando.entando.aps.system.services.oauth2.model.ApiConsumer;
 import org.entando.entando.web.api.oauth2.validator.ApiConsumerValidator;

@@ -5,7 +5,7 @@
 <%@ taglib prefix="wp" uri="/aps-core" %>
 <%@ taglib prefix="wpsa" uri="/apsadmin-core" %>
 <%@ taglib prefix="wpsf" uri="/apsadmin-form" %>
-<%@ taglib prefix="e" uri="https://www.owasp.org/index.php/OWASP_Java_Encoder_Project" %>
+<%@ taglib prefix="e" uri="owasp.encoder.jakarta" %>
 <!DOCTYPE html>
 <html lang="<s:property value="currentLang.code" />">
 	<head>

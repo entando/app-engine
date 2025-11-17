@@ -3,7 +3,7 @@ package org.entando.entando.plugins.jpredis.aps.system.redis.session;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import java.util.List;
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.cache.RedisEnvironmentVariables;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
@@ -15,6 +15,7 @@ import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.SessionRepository;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
+import org.springframework.session.data.redis.RedisSessionRepository;
 import org.springframework.session.web.http.SessionRepositoryFilter;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -55,7 +56,7 @@ class RedisSessionActiveTest {
         SessionRepositoryFilter sessionRepositoryFilter = ((SessionRepositoryFilter) springSessionRepositoryFilter);
         SessionRepository sessionRepository = (SessionRepository) ReflectionTestUtils.getField(sessionRepositoryFilter,
                 "sessionRepository");
-        Assertions.assertTrue(sessionRepository instanceof RedisIndexedSessionRepository);
+        Assertions.assertTrue(sessionRepository instanceof RedisSessionRepository);
         sessionRepository.save(sessionRepository.createSession());
 
         try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {

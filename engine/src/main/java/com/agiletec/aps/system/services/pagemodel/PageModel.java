@@ -17,11 +17,15 @@ import com.agiletec.aps.system.services.page.Widget;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -32,6 +36,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * The "frames" are page sections that can contains a "widget".
  */
 @XmlRootElement(name = "pageModel")
+@JsonRootName( value = "pageModel")
 @XmlType(propOrder = {"code", "description", "pluginCode", "template", "configuration"})
 public class PageModel implements Serializable {
 
@@ -47,6 +52,7 @@ public class PageModel implements Serializable {
 	 * @return The code of page template.
 	 */
 	@XmlElement(name = "code", required = true)
+    @JsonProperty("code")
 	public String getCode() {
 		return code;
 	}
@@ -64,6 +70,7 @@ public class PageModel implements Serializable {
 	 * @return The description of page template.
 	 */
 	@XmlElement(name = "description", required = true)
+    @JsonProperty("description")
 	public String getDescription() {
 		return description;
 	}
@@ -82,6 +89,7 @@ public class PageModel implements Serializable {
 	 * @deprecated use getDescription()
 	 */
 	@XmlTransient
+    @JsonIgnore
 	public String getDescr() {
 		return this.getDescription();
 	}
@@ -100,6 +108,7 @@ public class PageModel implements Serializable {
 	 * @return L'insieme delle descrizioni dei "frames"
 	 */
 	@XmlTransient
+    @JsonIgnore
 	public String[] getFrames() {
 		if (null == configuration) {
 			return new String[0];
@@ -118,6 +127,7 @@ public class PageModel implements Serializable {
 	 * @return Position of the main frame, if it exists, -1 otherwise
 	 */
 	@XmlTransient
+    @JsonIgnore
 	public int getMainFrame() {
 		return mainFrame;
 	}
@@ -150,6 +160,7 @@ public class PageModel implements Serializable {
 	 * @return the {@link Frame} array or null
 	 */
 	@XmlTransient
+    @JsonIgnore
 	public Frame[] getFramesConfig() {
 		return configuration;
 	}
@@ -159,6 +170,7 @@ public class PageModel implements Serializable {
 	 * @return I widget di default.
 	 */
 	@XmlTransient
+    @JsonIgnore
 	public Widget[] getDefaultWidget() {
 		Widget[] defaultWidgets = new Widget[configuration.length];
 		for (int i = 0; i < configuration.length; i++) {
@@ -193,6 +205,7 @@ public class PageModel implements Serializable {
 	}
 
 	@XmlTransient
+    @JsonIgnore
 	public String getPageModelJspPath() {
 		return PageModel.getPageModelJspPath(code, pluginCode);
 	}
@@ -209,6 +222,7 @@ public class PageModel implements Serializable {
 
 	@XmlElement(name = "frame", required = false)
 	@XmlElementWrapper(name = "configuration")
+    @JsonProperty("configuration")
 	public Frame[] getConfiguration() {
 		return configuration;
 	}
@@ -223,6 +237,7 @@ public class PageModel implements Serializable {
 	 * @return The plugin code.
 	 */
 	@XmlElement(name = "pluginCode", required = false)
+    @JsonProperty("pluginCode")
 	public String getPluginCode() {
 		return pluginCode;
 	}
@@ -236,6 +251,7 @@ public class PageModel implements Serializable {
 	}
 
 	@XmlElement(name = "template", required = false)
+    @JsonProperty("template")
 	public String getTemplate() {
 		return template;
 	}

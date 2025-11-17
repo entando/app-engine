@@ -13,13 +13,13 @@
  */
 package com.agiletec.apsadmin.tags.util;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.components.Form;
 import org.apache.struts2.components.UIBean;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * This class implements the radio tag which inherits the basic functionality of the s:radio of Struts. But it does

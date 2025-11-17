@@ -45,7 +45,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+// Replaced org.springframework.security.oauth2.common.OAuth2AccessToken with direct constant
+// In Spring Security 6.x / Jakarta EE 10, this is just a string constant
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -274,7 +275,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","entando")));
 
         InputStream is = new ByteArrayInputStream("testo a casos".getBytes(StandardCharsets.UTF_8));
         boolean ret = cdsRemoteCaller.executeDeleteCall(url,
@@ -312,7 +313,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"xxxxxx")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","xxxxxx")));
 
 
         Exception ex = assertThrows(EntRuntimeException.class,
@@ -335,7 +336,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"xxxxxx")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","xxxxxx")));
 
         ex = assertThrows(EntRuntimeException.class,
                 () -> cdsRemoteCaller.executeDeleteCall(urlUnAuth,
@@ -391,7 +392,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","entando")));
 
         ret = cdsRemoteCaller.getFile(url,
                 Optional.empty(),
@@ -466,7 +467,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","entando")));
 
         ex = assertThrows(EntRuntimeException.class,
                 () -> cdsRemoteCaller.getFile(privateUrlBadGateway,
@@ -485,7 +486,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","entando")));
 
         ex = assertThrows(EntRuntimeException.class,
                 () -> cdsRemoteCaller.getFile(privateUrlUnAuth,
@@ -531,7 +532,7 @@ class CdsRemoteCallerTest {
                 eq(HttpMethod.POST),
                 any(),
                 eq(new ParameterizedTypeReference<Map<String,Object>>(){}))).thenReturn(
-                ResponseEntity.status(HttpStatus.OK).body(Map.of(OAuth2AccessToken.ACCESS_TOKEN,"entando")));
+                ResponseEntity.status(HttpStatus.OK).body(Map.of("access_token","entando")));
 
         Optional<CdsFileAttributeViewDto[]> ret = cdsRemoteCaller.getFileAttributeView(url,
                 Optional.empty());

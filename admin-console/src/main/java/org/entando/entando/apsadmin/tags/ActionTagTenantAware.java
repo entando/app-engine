@@ -14,7 +14,7 @@
 package org.entando.entando.apsadmin.tags;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

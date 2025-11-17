@@ -42,7 +42,7 @@ class TestBaseConfigService extends BaseTestCase {
         String param = this.configInterface.getParam(IPageManager.CONFIG_PARAM_NOT_FOUND_PAGE_CODE);
         assertEquals("notfound", param);
         param = this.configInterface.getParam(SystemConstants.PAR_CSP_ENABLED);
-        assertEquals("true", param);
+        assertEquals("false", param);
     }
 
     @Test

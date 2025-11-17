@@ -13,7 +13,8 @@
  */
 package org.entando.entando.aps.system.services.guifragment.api;
 
-import javax.xml.bind.annotation.XmlElement;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.entando.entando.aps.system.services.api.model.AbstractApiResponseResult;
 
@@ -24,6 +25,7 @@ public class GuiFragmentResponseResult extends AbstractApiResponseResult {
     
     @Override
     @XmlElement(name = "guiFragment", required = false)
+    @JsonProperty("guiFragment")
     public JAXBGuiFragment getResult() {
         return (JAXBGuiFragment) this.getMainResult();
     }

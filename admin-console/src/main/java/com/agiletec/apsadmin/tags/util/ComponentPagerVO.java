@@ -16,7 +16,7 @@ package com.agiletec.apsadmin.tags.util;
 import org.apache.struts2.components.Component;
 
 import com.agiletec.aps.tags.util.IPagerVO;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * Componente specifico per il paginatore dell'interfaccia di amministrazione.

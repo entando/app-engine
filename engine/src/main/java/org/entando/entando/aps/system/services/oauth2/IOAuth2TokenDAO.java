@@ -14,13 +14,13 @@
 package org.entando.entando.aps.system.services.oauth2;
 
 import java.util.List;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 
 public interface IOAuth2TokenDAO {
 
-    public void storeAccessToken(OAuth2AccessToken accessToken, OAuth2Authentication authentication);
+    public void storeAccessToken(OAuth2AccessToken accessToken, OAuth2Authorization authentication);
 
     public List<OAuth2AccessToken> findTokensByClientIdAndUserName(String clientId, String username);
 
@@ -36,8 +36,17 @@ public interface IOAuth2TokenDAO {
 
     public OAuth2RefreshToken readRefreshToken(String tokenValue);
     
-    public OAuth2Authentication readAuthenticationForRefreshToken(OAuth2RefreshToken refreshToken);
-    
+    public OAuth2Authorization readAuthenticationForRefreshToken(OAuth2RefreshToken refreshToken);
+
     public void removeAccessTokenUsingRefreshToken(final String refreshToken);
+
+    // New methods for Spring Authorization Server support
+    public void storeAuthorization(OAuth2Authorization authorization);
+
+    public OAuth2Authorization findAuthorizationById(String id);
+
+    public OAuth2Authorization findAuthorizationByToken(String token, String tokenType);
+
+    public void removeAuthorization(String id);
 
 }

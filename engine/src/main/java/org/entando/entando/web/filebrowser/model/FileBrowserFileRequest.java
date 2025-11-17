@@ -13,7 +13,7 @@
  */
 package org.entando.entando.web.filebrowser.model;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 
 /**

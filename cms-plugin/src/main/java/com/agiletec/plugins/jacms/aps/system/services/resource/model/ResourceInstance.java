@@ -15,7 +15,7 @@ package com.agiletec.plugins.jacms.aps.system.services.resource.model;
 
 import java.io.Serializable;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * Rappresenta uno dei file costituenti una risorsa.

@@ -14,7 +14,7 @@
 package org.entando.entando.plugins.jpversioning.web.resource;
 
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.aps.util.HttpSessionHelper;
 import org.entando.entando.plugins.jpversioning.services.resource.ResourcesVersioningService;
 import org.entando.entando.plugins.jpversioning.web.resource.model.ResourceDTO;

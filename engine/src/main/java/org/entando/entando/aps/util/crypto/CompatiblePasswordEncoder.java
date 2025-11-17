@@ -15,18 +15,28 @@ package org.entando.entando.aps.util.crypto;
 
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@Primary
 public class CompatiblePasswordEncoder implements PasswordEncoder {
 
     private static final String BCRYPT_PREFIX = "{bcrypt}";
 
     private final BCryptPasswordEncoder bcryptEncoder;
 
+    // Modifica per problem di bean passwordEncoder duplicato
     @Autowired
+    public CompatiblePasswordEncoder(@Qualifier("bcryptEncoder") CryptoBeansConfig.BCryptEncoderWrapper bcryptEncoderWrapper) {
+        this.bcryptEncoder = bcryptEncoderWrapper.getEncoder();
+    }
+
+    // Constructor for tests and manual instantiation
+    // TODO check se veramente necessario
     public CompatiblePasswordEncoder(BCryptPasswordEncoder bcryptEncoder) {
         this.bcryptEncoder = bcryptEncoder;
     }

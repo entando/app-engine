@@ -13,9 +13,9 @@
  */
 package com.agiletec.apsadmin.system;
 
-import com.opensymphony.xwork2.Unchainable;
-import com.opensymphony.xwork2.util.TextParseUtil;
-import com.opensymphony.xwork2.util.reflection.ReflectionProvider;
+import org.apache.struts2.Unchainable;
+import org.apache.struts2.util.TextParseUtil;
+import org.apache.struts2.util.reflection.ReflectionProvider;
 
 import java.util.Set;
 
@@ -97,9 +97,9 @@ import java.util.Set;
  * @author mrdon
  * @author tm_jee ( tm_jee(at)yahoo.co.uk )
  * @author E.Santoboni
- * @see com.opensymphony.xwork2.ActionChainResult
+ * @see org.apache.struts2.ActionChainResult
  */
-public class ChainingInterceptor extends com.opensymphony.xwork2.interceptor.ChainingInterceptor {
+public class ChainingInterceptor extends org.apache.struts2.interceptor.ChainingInterceptor {
 	
     public void setExcludeParameters(String parametersToExclude) {
 		Set<String> parameters = TextParseUtil.commaDelimitedStringToSet(parametersToExclude);

@@ -1,6 +1,7 @@
 package org.entando.entando.aps.system.services.jsonpatch.validator;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;

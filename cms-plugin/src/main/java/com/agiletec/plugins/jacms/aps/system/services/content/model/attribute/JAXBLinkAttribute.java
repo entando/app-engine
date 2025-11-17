@@ -19,9 +19,10 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.SymbolicLink
 import java.io.Serializable;
 import java.util.HashMap;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * @author E.Santoboni
@@ -31,6 +32,7 @@ import javax.xml.bind.annotation.XmlType;
 public class JAXBLinkAttribute extends JAXBTextAttribute implements Serializable {
 
     @XmlElement(name = "link", required = false)
+    @JsonProperty("link")
     public JAXBLinkValue getLinkValue() {
         return linkValue;
     }

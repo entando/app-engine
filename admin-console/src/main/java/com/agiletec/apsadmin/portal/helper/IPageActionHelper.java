@@ -16,7 +16,7 @@ package com.agiletec.apsadmin.portal.helper;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.entando.entando.aps.system.services.actionlog.model.ActivityStreamInfo;
 

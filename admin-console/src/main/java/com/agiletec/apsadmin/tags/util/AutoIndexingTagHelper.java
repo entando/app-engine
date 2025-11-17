@@ -13,7 +13,7 @@
  */
 package com.agiletec.apsadmin.tags.util;
 
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 
 /**
  * This helper class supports all the tags which implement a self-incrementing Tabindex property. 

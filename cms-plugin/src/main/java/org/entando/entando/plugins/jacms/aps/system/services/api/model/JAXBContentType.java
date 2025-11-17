@@ -14,14 +14,16 @@
 package org.entando.entando.plugins.jacms.aps.system.services.api.model;
 
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.entando.entando.aps.system.common.entity.api.JAXBEntityType;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author E.Santoboni
  */
 @XmlRootElement(name = "contentType")
+@JsonRootName(value = "contentType")
 public class JAXBContentType extends JAXBEntityType {
 
     public JAXBContentType() {}

@@ -15,7 +15,7 @@ package com.agiletec.aps.system.common.entity.model.attribute.util;
 
 import java.util.List;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 

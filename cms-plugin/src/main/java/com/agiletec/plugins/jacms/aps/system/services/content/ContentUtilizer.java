@@ -20,8 +20,9 @@ import org.entando.entando.ent.exception.EntException;
 /**
  * Basic interface for the services whose handled elements may have references to contents. 
  * @author E.Santoboni
+ * @param <T>
  */
-public interface ContentUtilizer {
+public interface ContentUtilizer<T> {
 	
 	/**
 	 * Return the ID of the utilizer service.
@@ -35,6 +36,6 @@ public interface ContentUtilizer {
 	 * @return the list of the objects which reference the content. 
 	 * @throws EntException in case of error.
 	 */
-	public List getContentUtilizers(String contentId) throws EntException;
+	public List<T> getContentUtilizers(String contentId) throws EntException;
 	
 }

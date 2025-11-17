@@ -13,17 +13,53 @@
  */
 package org.entando.entando.web.common.interceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
 
 /**
  * @author E.Santoboni
+ *
+ * Entando Bearer Token Extractor for Spring Security 6.x
+ * Migrated from deprecated BearerTokenExtractor to use BearerTokenResolver
  */
-public class EntandoBearerTokenExtractor extends BearerTokenExtractor {
+public class EntandoBearerTokenExtractor {
 
-    @Override
+    private final BearerTokenResolver bearerTokenResolver;
+
+    public EntandoBearerTokenExtractor() {
+        this.bearerTokenResolver = new DefaultBearerTokenResolver();
+    }
+
+    public EntandoBearerTokenExtractor(BearerTokenResolver bearerTokenResolver) {
+        this.bearerTokenResolver = bearerTokenResolver;
+    }
+
+    /**
+     * Extract bearer token from HTTP request
+     *
+     * @param request the HTTP servlet request
+     * @return the bearer token string, or null if not found
+     */
     public String extractToken(HttpServletRequest request) {
-        return super.extractToken(request);
+        return this.bearerTokenResolver.resolve(request);
+    }
+
+    /**
+     * Extract Authentication from HTTP request (compatibility method)
+     * Creates a BearerTokenAuthenticationToken from the extracted token
+     *
+     * @param request the HTTP servlet request
+     * @return Authentication object, or null if no token found
+     */
+    public Authentication extract(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (token != null) {
+            return new BearerTokenAuthenticationToken(token);
+        }
+        return null;
     }
 
 }

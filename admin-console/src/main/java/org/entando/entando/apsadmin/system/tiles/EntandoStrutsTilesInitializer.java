@@ -13,7 +13,7 @@
  */
 package org.entando.entando.apsadmin.system.tiles;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.apache.struts2.tiles.StrutsTilesInitializer;
 import org.apache.tiles.core.factory.AbstractTilesContainerFactory;
 import org.apache.tiles.request.ApplicationContext;

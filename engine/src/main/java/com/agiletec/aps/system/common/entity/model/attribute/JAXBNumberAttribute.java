@@ -15,8 +15,10 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * @author E.Santoboni
@@ -25,6 +27,7 @@ import javax.xml.bind.annotation.XmlType;
 public class JAXBNumberAttribute extends AbstractJAXBAttribute implements Serializable {
 
     @XmlElement(name = "value", required = false)
+    @JsonProperty("value")
     public BigDecimal getNumber() {
         return number;
     }

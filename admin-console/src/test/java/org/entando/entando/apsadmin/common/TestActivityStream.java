@@ -27,7 +27,7 @@ import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 import org.entando.entando.aps.system.services.actionlog.model.ActivityStreamInfo;
 
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 
 import java.util.HashMap;
 import java.util.List;

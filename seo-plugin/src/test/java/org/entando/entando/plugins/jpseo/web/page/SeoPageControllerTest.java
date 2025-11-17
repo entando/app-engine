@@ -24,7 +24,7 @@ import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.aps.system.services.page.PageAuthorizationService;
 import org.entando.entando.plugins.jpseo.aps.system.services.page.SeoPageDto;
 import org.entando.entando.plugins.jpseo.aps.system.services.page.SeoPageService;

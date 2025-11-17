@@ -17,7 +17,7 @@ import com.agiletec.aps.util.ApsProperties;
 import java.io.Serializable;
 import java.util.List;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
 import com.agiletec.aps.system.common.entity.model.AttributeSearchInfo;

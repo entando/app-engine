@@ -17,7 +17,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.AbstractJAXBAttribu
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * @author E.Santoboni

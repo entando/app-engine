@@ -29,7 +29,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.entando.entando.aps.system.services.oauth2.model.OAuth2AccessTokenImpl;
 
 /**
  * Implementazione concreta dell'oggetto Authentication Provider di default del
@@ -93,8 +95,14 @@ public class AuthenticationProviderManager extends AbstractService
             this.addUserAuthorizations(user);
             if (addToken) {
                 OAuth2AccessToken token = this.getTokenManager().createAccessTokenForLocalUser(username);
-                user.setAccessToken(token.getValue());
-                user.setRefreshToken(token.getRefreshToken().getValue());
+                user.setAccessToken(token.getTokenValue());
+                // For Spring Security 6.x, we need to get refresh token differently
+                if (token instanceof OAuth2AccessTokenImpl) {
+                    OAuth2RefreshToken refreshToken = ((OAuth2AccessTokenImpl) token).getRefreshToken();
+                    if (refreshToken != null) {
+                        user.setRefreshToken(refreshToken.getTokenValue());
+                    }
+                }
             }
         } catch (Exception e) {
             logger.error("Error detected during the authentication of the user '{}'", username, e);

@@ -14,13 +14,44 @@
 package org.entando.entando.aps.system.services.oauth2;
 
 import java.util.Collection;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 
-public interface IApiOAuth2TokenManager extends TokenStore {
+/**
+ * Entando-specific OAuth2 Token Manager interface.
+ *
+ * Extends OAuth2AuthorizationService to provide Spring Security 6.x compatibility
+ * while maintaining Entando's custom token management requirements.
+ *
+ * Migration Note: This replaces the previous TokenStore-based approach
+ * with Spring Security 6.x OAuth2AuthorizationService pattern.
+ */
+public interface IApiOAuth2TokenManager extends OAuth2AuthorizationService {
 
-    public Collection<OAuth2AccessToken> findTokensByUserName(String username);
+    // Entando-specific token management methods
+    Collection<OAuth2AccessToken> findTokensByUserName(String username);
 
-    public OAuth2AccessToken createAccessTokenForLocalUser(String username);
+    OAuth2AccessToken createAccessTokenForLocalUser(String username);
+
+    // Additional methods to bridge TokenStore functionality
+    OAuth2AccessToken readAccessToken(String tokenValue);
+
+    void storeAccessToken(OAuth2AccessToken token, OAuth2Authorization authorization);
+
+    void removeAccessToken(OAuth2AccessToken token);
+
+    void removeAccessToken(String tokenValue);
+
+    OAuth2RefreshToken readRefreshToken(String tokenValue);
+
+    void storeRefreshToken(OAuth2RefreshToken refreshToken, OAuth2Authorization authorization);
+
+    void removeRefreshToken(OAuth2RefreshToken token);
+
+    Collection<OAuth2AccessToken> findTokensByClientIdAndUserName(String clientId, String userName);
+
+    Collection<OAuth2AccessToken> findTokensByClientId(String clientId);
 
 }

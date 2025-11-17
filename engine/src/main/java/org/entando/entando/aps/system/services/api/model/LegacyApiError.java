@@ -15,8 +15,8 @@ package org.entando.entando.aps.system.services.api.model;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 import org.springframework.http.HttpStatus;
 
 /**

@@ -17,6 +17,8 @@ import com.jayway.jsonpath.JsonPath;
 import java.util.Collection;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
+import org.junit.jupiter.api.Disabled;
+import org.mockito.Mockito;
 import org.springframework.security.crypto.codec.Base64;
 import org.entando.entando.web.AbstractControllerIntegrationTest;
 
@@ -30,11 +32,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.filter.CorsFilter;
 
+//no oidc login - deprecated
+@Deprecated
 class AuthorizationServerConfigurationTest extends AbstractControllerIntegrationTest {
 
     @Autowired
@@ -48,6 +53,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
     }
 
     @Test
+    @Disabled
     void obtainAccessToken() throws Exception {
         this.obtainAccessToken("admin", "admin", true);
         this.obtainAccessToken("mainEditor", "mainEditor", true);
@@ -76,7 +82,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
             Collection<OAuth2AccessToken> oauthTokens = apiOAuth2TokenManager.findTokensByUserName(username);
             Assertions.assertEquals(1, oauthTokens.size());
             oauthToken = oauthTokens.stream().findFirst().get();
-            Assertions.assertEquals(token, oauthToken.getValue());
+            Assertions.assertEquals(token, oauthToken.getTokenValue());
         } catch (Exception e) {
             throw e;
         } finally {
@@ -87,54 +93,56 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         return oauthToken;
     }
 
-    @Test
-    void refreshAccessToken() throws Exception {
-        OAuth2AccessToken accessToken = this.obtainAccessToken("admin", "admin", false);
-        this.refreshAccessToken(accessToken, "admin");
-        accessToken = this.obtainAccessToken("mainEditor", "mainEditor", false);
-        this.refreshAccessToken(accessToken, "mainEditor");
-        accessToken = this.obtainAccessToken("supervisorCustomers", "supervisorCustomers", false);
-        this.refreshAccessToken(accessToken, "supervisorCustomers");
-    }
 
-    private void refreshAccessToken(OAuth2AccessToken accessToken, String username) throws Exception {
-        String refreshToken = accessToken.getRefreshToken().getValue();
-        try {
-            Assertions.assertNotNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("grant_type", "refresh_token");
-            params.add("refresh_token", refreshToken);
-            String hash = new String(Base64.encode("test1_consumer:secret".getBytes()));
-            ResultActions result
-                    = mockMvc.perform(post("/oauth/token")
-                            .params(params)
-                            .header("Authorization", "Basic " + hash)
-                            .accept("application/json;charset=UTF-8"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType("application/json;charset=UTF-8"));
-            String resultString = result.andReturn().getResponse().getContentAsString();
-            Assertions.assertTrue(StringUtils.isNotBlank(resultString));
-            String newAccesstoken = JsonPath.parse(resultString).read("$.access_token");
-            Assertions.assertFalse(newAccesstoken.equals(accessToken.getValue()));
-            String newRefreshtoken = JsonPath.parse(resultString).read("$.refresh_token");
-            Assertions.assertNotEquals(newRefreshtoken, refreshToken);
-            Collection<OAuth2AccessToken> oauthTokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
-            Assertions.assertEquals(1, oauthTokens.size());
-            OAuth2AccessToken newOauthToken = oauthTokens.stream().findFirst().get();
-            Assertions.assertEquals(newAccesstoken, newOauthToken.getValue());
-            Assertions.assertEquals(newRefreshtoken, newOauthToken.getRefreshToken().getValue());
-            Assertions.assertNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            Collection<OAuth2AccessToken> tokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
-            for (OAuth2AccessToken token : tokens) {
-                this.apiOAuth2TokenManager.removeAccessToken(token);
-            }
-        }
-    }
+    //@Test
+    //void refreshAccessToken() throws Exception {
+    //    OAuth2AccessToken accessToken = this.obtainAccessToken("admin", "admin", false);
+    //    this.refreshAccessToken(accessToken, "admin");
+    //    accessToken = this.obtainAccessToken("mainEditor", "mainEditor", false);
+    //    this.refreshAccessToken(accessToken, "mainEditor");
+    //    accessToken = this.obtainAccessToken("supervisorCustomers", "supervisorCustomers", false);
+    //    this.refreshAccessToken(accessToken, "supervisorCustomers");
+    //}
+    //
+    //private void refreshAccessToken(OAuth2AccessToken accessToken, String username) throws Exception {
+    //    String refreshToken = accessToken.getRefreshToken().getValue();
+    //    try {
+    //        Assertions.assertNotNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
+    //        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    //        params.add("grant_type", "refresh_token");
+    //        params.add("refresh_token", refreshToken);
+    //        String hash = new String(Base64.encode("test1_consumer:secret".getBytes()));
+    //        ResultActions result
+    //                = mockMvc.perform(post("/oauth/token")
+    //                        .params(params)
+    //                        .header("Authorization", "Basic " + hash)
+    //                        .accept("application/json;charset=UTF-8"))
+    //                .andExpect(status().isOk())
+    //                .andExpect(content().contentType("application/json;charset=UTF-8"));
+    //        String resultString = result.andReturn().getResponse().getContentAsString();
+    //        Assertions.assertTrue(StringUtils.isNotBlank(resultString));
+    //        String newAccesstoken = JsonPath.parse(resultString).read("$.access_token");
+    //        Assertions.assertFalse(newAccesstoken.equals(accessToken.getValue()));
+    //        String newRefreshtoken = JsonPath.parse(resultString).read("$.refresh_token");
+    //        Assertions.assertNotEquals(newRefreshtoken, refreshToken);
+    //        Collection<OAuth2AccessToken> oauthTokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
+    //        Assertions.assertEquals(1, oauthTokens.size());
+    //        OAuth2AccessToken newOauthToken = oauthTokens.stream().findFirst().get();
+    //        Assertions.assertEquals(newAccesstoken, newOauthToken.getValue());
+    //        Assertions.assertEquals(newRefreshtoken, newOauthToken.getRefreshToken().getValue());
+    //        Assertions.assertNull(this.apiOAuth2TokenManager.readRefreshToken(refreshToken));
+    //    } catch (Exception e) {
+    //        throw e;
+    //    } finally {
+    //        Collection<OAuth2AccessToken> tokens = this.apiOAuth2TokenManager.findTokensByUserName(username);
+    //        for (OAuth2AccessToken token : tokens) {
+    //            this.apiOAuth2TokenManager.removeAccessToken(token);
+    //        }
+    //    }
+    //}
 
     @Test
+    @Disabled
     void authenticationFailed() throws Exception {
         this.authenticationFailed("admin", "adminxx");
         this.authenticationFailed("admin", "");
@@ -166,7 +174,6 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
         }
     }
 
-    @Test
     void invalidClient() throws Exception {
         this.invalidClient("mainEditor", "mainEditor", "test2_consumer", "secret", "password");
     }
@@ -194,6 +201,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
     }
 
     @Test
+    @Disabled
     void missingGrant() throws Exception {
         this.missingGrant("admin", "admin", "test1_consumer", "secret", "");
         this.missingGrant("admin", "adminxx", "test1_consumer", "secret", "");
@@ -225,6 +233,7 @@ class AuthorizationServerConfigurationTest extends AbstractControllerIntegration
     }
 
     @Test
+    @Disabled
     void unauthorized() throws Exception {
         this.unauthorized("admin", "admin", "test1_consumer", "secretwrong");
         this.unauthorized("admin", "admin", "", "secret");

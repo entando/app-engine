@@ -18,7 +18,7 @@ import java.util.Date;
 
 import com.agiletec.aps.util.DateConverter;
 import org.entando.entando.aps.system.init.model.SystemInstallationReport.Status;
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * @author E.Santoboni

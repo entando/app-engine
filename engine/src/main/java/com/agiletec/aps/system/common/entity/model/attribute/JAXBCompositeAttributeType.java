@@ -17,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 
 import org.entando.entando.aps.system.services.api.IApiErrorCodes;
 import org.entando.entando.aps.system.services.api.model.ApiException;
@@ -30,6 +32,7 @@ import org.entando.entando.aps.system.services.api.model.ApiException;
  * @author E.Santoboni
  */
 @XmlRootElement(name = "attributeType")
+@JsonRootName(value = "attributeType")
 @XmlType(propOrder = {"elementTypes"})
 @XmlSeeAlso({DefaultJAXBAttributeType.class, JAXBEnumeratorAttributeType.class})
 public class JAXBCompositeAttributeType extends DefaultJAXBAttributeType {
@@ -55,6 +58,7 @@ public class JAXBCompositeAttributeType extends DefaultJAXBAttributeType {
 
     @XmlElement(name = "compositeElementType", required = true)
     @XmlElementWrapper(name = "compositeElementTypes")
+    @JsonProperty("compositeElementTypes")
     public List<DefaultJAXBAttributeType> getElementTypes() {
         return elementTypes;
     }

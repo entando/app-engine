@@ -23,8 +23,8 @@ import com.agiletec.aps.system.SystemConstants;
 
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import com.opensymphony.xwork2.Action;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.action.Action;
+import org.apache.struts2.ActionSupport;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;

@@ -13,8 +13,8 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.helper;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.ILinkAttributeAction;
 import com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link.ILinkAttributeTypeAction;

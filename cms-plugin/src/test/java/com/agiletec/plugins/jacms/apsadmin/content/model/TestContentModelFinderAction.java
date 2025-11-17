@@ -19,7 +19,7 @@ import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;

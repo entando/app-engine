@@ -16,18 +16,23 @@ package com.agiletec.plugins.jacms.aps.system.services.content.model.attribute;
 import com.agiletec.aps.system.common.entity.model.attribute.JAXBTextAttribute;
 import java.io.Serializable;
 import java.util.HashMap;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * @author E.Santoboni
  */
 @XmlType(propOrder = {"resource"})
+@JsonRootName("resource")
 @XmlSeeAlso({JAXBResourceValue.class, HashMap.class})
 public class JAXBResourceAttribute extends JAXBTextAttribute implements Serializable {
 
     @XmlElement(name = "resource", required = false)
+    @JsonProperty("resource")
     public JAXBResourceValue getResource() {
         return resource;
     }

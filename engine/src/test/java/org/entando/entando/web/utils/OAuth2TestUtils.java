@@ -26,6 +26,8 @@ import com.agiletec.aps.system.services.role.Role;
 import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
+
+import java.time.Instant;
 import java.util.Calendar;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
@@ -33,19 +35,25 @@ import org.entando.entando.aps.system.services.oauth2.model.OAuth2AccessTokenImp
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 import org.entando.entando.ent.exception.EntException;
 import org.mockito.Mockito;
-import org.springframework.security.oauth2.common.DefaultOAuth2RefreshToken;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 public class OAuth2TestUtils {
 
     public static OAuth2AccessToken getOAuth2Token(String username, String accessToken) {
-        OAuth2AccessTokenImpl oAuth2Token = new OAuth2AccessTokenImpl(accessToken);
-        oAuth2Token.setRefreshToken(new DefaultOAuth2RefreshToken("refresh_token"));
-        oAuth2Token.setLocalUser(username);
-        Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
-        calendar.add(Calendar.SECOND, 3600);
-        oAuth2Token.setExpiration(calendar.getTime());
-        oAuth2Token.setGrantType("password");
+        // Create a proper expiration time (1 hour from now)
+        Instant expiresAt = Instant.now().plusSeconds(3600);
+
+        // Create token with proper constructor that sets expiration
+        OAuth2AccessTokenImpl oAuth2Token = new OAuth2AccessTokenImpl(
+            accessToken,
+            expiresAt,
+            "test_client",
+            "password",
+            username,
+            new OAuth2RefreshToken("refresh_token", Instant.now(), expiresAt)
+        );
+
         return oAuth2Token;
     }
 

@@ -16,8 +16,8 @@ package org.entando.entando.web.common.interceptor;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
 import org.entando.entando.aps.system.services.oauth2.model.OAuth2AccessTokenImpl;
@@ -29,15 +29,16 @@ import org.entando.entando.web.common.exceptions.EntandoAuthorizationException;
 import org.entando.entando.web.common.exceptions.EntandoTokenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * @author P.Addeo - E.Santoboni
  */
-public class EntandoOauth2Interceptor extends HandlerInterceptorAdapter {
+public class EntandoOauth2Interceptor implements AsyncHandlerInterceptor {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 
@@ -123,9 +124,9 @@ public class EntandoOauth2Interceptor extends HandlerInterceptorAdapter {
     protected void validateToken(HttpServletRequest request, String accessToken, final OAuth2AccessToken token) {
         if (null == token) {
             throw new EntandoTokenException("no token found", request, "guest");
-        } else if (!token.getValue().equals(accessToken)) {
+        } else if (!token.getTokenValue().equals(accessToken)) {
             throw new EntandoTokenException("invalid token", request, "guest");
-        } else if (token.isExpired()) {
+        } else if (token.getExpiresAt() != null && token.getExpiresAt().isBefore(java.time.Instant.now())) {
             throw new EntandoTokenException("expired token", request, "guest");
         }
     }

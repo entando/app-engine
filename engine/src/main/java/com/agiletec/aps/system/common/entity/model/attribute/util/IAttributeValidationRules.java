@@ -17,12 +17,13 @@ import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
 import com.agiletec.aps.system.common.entity.model.AttributeTracer;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.Serializable;
 import java.util.List;
-import javax.xml.bind.annotation.XmlTransient;
-import org.jdom.Element;
+import jakarta.xml.bind.annotation.XmlTransient;
+import org.jdom2.Element;
 
 /**
  * @author E.Santoboni
@@ -41,9 +42,11 @@ public interface IAttributeValidationRules extends Serializable {
 	public boolean isEmpty();
 
     @XmlTransient
+    @JsonIgnore
     public void setConfig(Element attributeElement);
 
     @XmlTransient
+    @JsonIgnore
     public Element getJDOMConfigElement();
     
     /**

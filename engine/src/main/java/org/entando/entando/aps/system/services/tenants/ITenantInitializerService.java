@@ -1,7 +1,7 @@
 package org.entando.entando.aps.system.services.tenants;
 
 import java.util.concurrent.CompletableFuture;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 public interface ITenantInitializerService {
 

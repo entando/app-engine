@@ -2,7 +2,7 @@
 <%@ taglib prefix="s" uri="/struts-tags" %>
 <%@ taglib prefix="wpsa" uri="/apsadmin-core" %>
 <%@ taglib prefix="wpsf" uri="/apsadmin-form" %>
-<%@ taglib prefix="e" uri="https://www.owasp.org/index.php/OWASP_Java_Encoder_Project" %>
+<%@ taglib prefix="e" uri="owasp.encoder.jakarta" %>
 <%-- remove button --%>
 <s:set var="resourceTypeCode"><e:forHtml value="${param.resourceTypeCode}" /></s:set>
 <wpsa:actionParam action="removeResource" var="removeResourceActionName" >

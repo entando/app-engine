@@ -13,7 +13,7 @@
  */
 package org.entando.entando.plugins.jpversioning.web.configuration;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.plugins.jpversioning.services.configuration.VersioningConfigurationService;
 import org.entando.entando.plugins.jpversioning.web.configuration.model.VersioningConfigurationDTO;
 import org.entando.entando.ent.util.EntLogging.EntLogger;

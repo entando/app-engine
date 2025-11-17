@@ -13,8 +13,8 @@
  */
 package com.agiletec.apsadmin.system.dispatcher;
 
-import com.opensymphony.xwork2.ActionInvocation;
-import com.opensymphony.xwork2.util.reflection.ReflectionExceptionHandler;
+import org.apache.struts2.ActionInvocation;
+import org.apache.struts2.util.reflection.ReflectionExceptionHandler;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.result.ServletRedirectResult;
@@ -119,8 +119,12 @@ public class ServletActionRedirectResultWithAnchor extends ServletRedirectResult
         	this.method = this.conditionalParse(this.method, invocation);
         }
         StringBuilder tmpLocation = new StringBuilder(this.actionMapper.getUriFromActionMapping(new ActionMapping(actionName, namespace, method, null)));
-        if (null != this.getAnchorDest()) {
-        	this.setAnchor(this.getAnchorDest());
+        if (null != this.getAnchorDest() && !this.getAnchorDest().trim().isEmpty()) {
+        	String anchorDest = this.getAnchorDest().trim();
+        	// Ensure the anchor doesn't contain invalid characters for Jetty 12
+        	if (anchorDest.matches("^[a-zA-Z0-9_-]+$")) {
+        		this.setAnchor(anchorDest);
+        	}
         }
         setLocation(tmpLocation.toString());
         super.execute(invocation);

@@ -13,8 +13,8 @@
  */
 package com.agiletec.aps.tags;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.aps.tags.ExtendedTagSupport;

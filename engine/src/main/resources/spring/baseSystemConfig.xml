@@ -145,10 +145,10 @@
     <bean class="org.entando.entando.aps.system.init.SystemPostProcessor" />
 
     <bean id="multipartResolver"
-          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
-        <property name="maxUploadSize">
-            <value>${file.upload.maxSize}</value>
-        </property>
+          class="org.springframework.web.multipart.support.StandardServletMultipartResolver">
+        <!-- Note: Spring 6 removed CommonsMultipartResolver support -->
+        <!-- StandardServletMultipartResolver delegates to servlet container (web.xml) -->
+        <!-- File upload limits are configured via <multipart-config> in web.xml -->
     </bean>
 
 </beans>

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         metadata-complete="false" version="3.0">
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
     <display-name>Entando Minimal App - powered by Entando</display-name>
     <description>Entando Minimal App - powered by Entando</description>
     <distributable/>
@@ -14,8 +16,8 @@
             classpath*:spring/apsadmin/**/**.xml
             classpath*:spring/plugins/**/aps/**/**.xml
             classpath*:spring/plugins/**/apsadmin/**/**.xml
-            classpath*:spring/aps/managers/keycloak.xml
-            classpath*:spring/aps/managers/cors.xml
+            classpath*:spring/plugins/keycloak/aps/keycloak.xml
+            classpath*:spring/aps/cors.xml
         </param-value>
     </context-param>
     <context-param>
@@ -152,6 +154,8 @@
             <param-value>classpath:spring/web/servlet-context-keycloak.xml</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
+        <!-- Note: Multipart config is set programmatically by ConfigWebApplicationInitializer -->
+        <!-- This reads file.upload.maxSize from properties -->
     </servlet>
     <servlet-mapping>
         <servlet-name>ControllerServlet</servlet-name>
@@ -193,7 +197,10 @@
     <session-config>
         <session-timeout>30</session-timeout>
         <cookie-config>
-            <http-only>true</http-only>
+            <!-- Note: http-only and secure flags are set programmatically by ConfigWebApplicationInitializer -->
+            <!-- This reads jsessionid.secure from properties (defaults to false) -->
+            <!-- for jetty -->
+            <comment>__SAME_SITE_STRICT__</comment>
         </cookie-config>
     </session-config>
     <welcome-file-list>

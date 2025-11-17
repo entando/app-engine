@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>app-engine</artifactId>
-        <version>7.5.0</version>
+        <version>7.5.0-SNAPSHOT</version>
     </parent>
     <groupId>org.entando.entando</groupId>
     <artifactId>webapp</artifactId>
@@ -40,15 +40,15 @@
         <autoCreateNetwork>true</autoCreateNetwork>
 
         <entando.version>${project.version}</entando.version>
-        <postgres.driver.version>42.2.25</postgres.driver.version>
-        <oracle.driver.version>21.4.0.0.1</oracle.driver.version>
-        <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
-        <derby.version>10.9.1.0</derby.version>
-        <jetty.version>10.0.7</jetty.version>
-        <commons-dbcp2.version>2.5.0</commons-dbcp2.version>
+        <postgres.driver.version>42.7.8</postgres.driver.version>
+        <oracle.driver.version>23.9.0.25.07</oracle.driver.version>
+        <mysql-connector-java.version>9.4.0</mysql-connector-java.version>
+        <jetty.version>12.1.1</jetty.version>
+        <commons-dbcp2.version>2.9.0</commons-dbcp2.version>
+        <tomcat.version>10.1.46</tomcat.version>
 
         <!-- Keycloak Configuration -->
-        <keycloak.enabled>false</keycloak.enabled>
+        <keycloak.enabled>true</keycloak.enabled>
         <keycloak.auth.url>http://localhost:8081/auth</keycloak.auth.url>
         <keycloak.realm>entando</keycloak.realm>
         <keycloak.client.id>entando-app</keycloak.client.id>
@@ -62,7 +62,13 @@
         <cors.access.control.allow.methods>GET, POST, PUT, DELETE, OPTIONS, PATCH</cors.access.control.allow.methods>
         <cors.access.control.allow.credentials>true</cors.access.control.allow.credentials>
         <cors.access.control.maxAge>3600</cors.access.control.maxAge>
-        <log4j.version>2.17.0</log4j.version>
+        <log4j.version>2.20.0</log4j.version>
+
+        <!-- Cookie SameSite policies / Secure-->
+        <jsessionid.samesite.policy>Strict</jsessionid.samesite.policy>
+        <default.samesite.policy/>
+        <jsessionid.secure>false</jsessionid.secure>
+
 
         <!-- frontend-maven-plugin Configuration -->
         <npm.version>6.14.17</npm.version>
@@ -130,19 +136,29 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-dbcp2</artifactId>
             <version>${commons-dbcp2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+            <version>${tomcat.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
         </dependency>
         <!--test dependencies -->
         <dependency>
@@ -180,6 +196,11 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -223,40 +244,6 @@
 
                 <cors.access.control.allow.origin>http://localhost:3000</cors.access.control.allow.origin>
                 <cors.access.control.allow.credentials>true</cors.access.control.allow.credentials>
-            </properties>
-        </profile>
-        <profile>
-            <id>eap</id>
-            <properties>
-                <!--Image configuration -->
-                <skipDocker>false</skipDocker>
-
-                <jee.server>eap</jee.server>
-                <entando.engine.address>${docker.host.address}</entando.engine.address>
-                <app.builder.depends.on>${project.artifactId}-engine</app.builder.depends.on>
-
-                <skipServerImage>false</skipServerImage>
-                <jboss.home.in.image>/opt/eap</jboss.home.in.image>
-                <server.base.image>entando/entando-eap73-clustered-base:7.2.0</server.base.image>
-
-                <derby.base.folder>/entando-data/databases</derby.base.folder>
-            </properties>
-        </profile>
-        <profile>
-            <id>wildfly</id>
-            <properties>
-                <!--Image configuration -->
-                <skipDocker>false</skipDocker>
-                <jee.server>wildfly</jee.server>
-
-                <entando.engine.address>${docker.host.address}</entando.engine.address>
-                <app.builder.depends.on>${project.artifactId}-engine</app.builder.depends.on>
-
-                <skipServerImage>false</skipServerImage>
-                <jboss.home.in.image>/wildfly</jboss.home.in.image>
-                <server.base.image>entando/entando-wildfly17-base:7.2.0</server.base.image>
-
-                <derby.base.folder>/entando-data/databases</derby.base.folder>
             </properties>
         </profile>
         <profile>
@@ -357,12 +344,6 @@
                 <servdb.password>${docker.db.password}</servdb.password>
                 <servdb.jndi>java:/jdbc/servDataSource</servdb.jndi>
                 <servdb.driverClassName>oracle.jdbc.OracleDriver</servdb.driverClassName>
-            </properties>
-        </profile>
-        <profile>
-            <id>keycloak</id>
-            <properties>
-                <keycloak.enabled>true</keycloak.enabled>
             </properties>
         </profile>
         <profile>
@@ -977,8 +958,10 @@
             </plugin>
             <!-- mvn jetty:run (with hot-redeploy) -->
             <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
+<!--                <groupId>org.eclipse.jetty</groupId>-->
+<!--                <artifactId>jetty-maven-plugin</artifactId>-->
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <configuration>
                     <scanIntervalSeconds>5</scanIntervalSeconds>
@@ -1037,8 +1020,8 @@
                         <version>${postgres.driver.version}</version>
                     </dependency>
                     <dependency>
-                        <groupId>mysql</groupId>
-                        <artifactId>mysql-connector-java</artifactId>
+                        <groupId>com.mysql</groupId>
+                        <artifactId>mysql-connector-j</artifactId>
                         <version>${mysql-connector-java.version}</version>
                     </dependency>
                     <dependency>
@@ -1057,9 +1040,47 @@
                         <version>${derby.version}</version>
                     </dependency>
                     <dependency>
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derbytools</artifactId>
+                        <version>${derby.version}</version>
+                    </dependency>
+                    <dependency>
                         <groupId>org.apache.commons</groupId>
                         <artifactId>commons-dbcp2</artifactId>
                         <version>${commons-dbcp2.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.eclipse.jetty.ee10</groupId>
+                        <artifactId>jetty-ee10-servlet</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.jetty.ee10</groupId>
+                        <artifactId>jetty-ee10-plus</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.jetty.ee10</groupId>
+                        <artifactId>jetty-ee10-annotations</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.jetty.ee10</groupId>
+                        <artifactId>jetty-ee10-jndi</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.eclipse.jetty.ee10</groupId>
+                        <artifactId>jetty-ee10-webapp</artifactId>
+                        <version>${jetty.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.eclipse.jetty.ee10</groupId>
+                        <artifactId>jetty-ee10-apache-jsp</artifactId>
+                        <version>${jetty.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -1108,6 +1129,27 @@
                     <outputDirectory>${project.build.directory}/entando-de-app/resources/static/js</outputDirectory>
                     <outputFileName>entando-mfecommunication.umd.cjs</outputFileName>
                 </configuration>
+            </plugin>
+            <!--Create separate JAR for CookieProcessor-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>cookie-processor-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>jsessionid-cookie-processor</classifier>
+                            <includes>
+                                <include>org/entando/entando/aps/servlet/security/JSessionIdSameSiteCookieProcessor.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <pluginManagement>

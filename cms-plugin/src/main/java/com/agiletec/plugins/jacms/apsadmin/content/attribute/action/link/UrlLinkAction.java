@@ -13,7 +13,7 @@
  */
 package com.agiletec.plugins.jacms.apsadmin.content.attribute.action.link;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;

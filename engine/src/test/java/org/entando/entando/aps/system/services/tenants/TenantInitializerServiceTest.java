@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.entando.entando.aps.system.init.InitializerManager;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService.InitializationTenantFilter;
 import org.junit.jupiter.api.Assertions;

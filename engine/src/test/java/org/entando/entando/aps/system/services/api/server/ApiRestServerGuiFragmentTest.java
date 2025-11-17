@@ -14,6 +14,7 @@ import java.util.List;
 import org.entando.entando.aps.system.services.api.model.ApiMethod;
 import org.entando.entando.aps.system.services.api.model.LinkedListApiResponse;
 import org.entando.entando.aps.system.services.api.model.LinkedListItem;
+import org.entando.entando.aps.system.services.api.model.StringApiResponse;
 import org.entando.entando.aps.system.services.guifragment.api.ApiGuiFragmentInterface;
 import org.entando.entando.aps.system.services.guifragment.api.GuiFragmentResponse;
 import org.entando.entando.aps.system.services.guifragment.api.JAXBGuiFragment;
@@ -69,7 +70,7 @@ class ApiRestServerGuiFragmentTest extends BaseLegacyApiTest {
                         .accept(MediaType.APPLICATION_XML)
                         .header("Authorization", "Bearer " + accessToken));
         result
-                .andExpect(xpath("/response/result/items/size").number(1d))
+                .andExpect(xpath("/response/result/items/size").string("1"))
                 .andExpect(xpath("/response/result/items/item[1]/code").string("breadcrumb"))
                 .andExpect(xpath("/response/result/items/item[1]/url")
                         .string("http://localhost:8080/entando-de-app/api/legacy/en/core/guiFragment?code=breadcrumb"))

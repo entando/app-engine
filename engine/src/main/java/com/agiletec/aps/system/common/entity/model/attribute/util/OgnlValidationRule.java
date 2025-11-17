@@ -18,14 +18,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 
-import org.jdom.CDATA;
-import org.jdom.Element;
+import org.jdom2.CDATA;
+import org.jdom2.Element;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -77,6 +78,7 @@ public class OgnlValidationRule implements Serializable {
     }
 
     @XmlTransient
+    @JsonIgnore
     public Element getConfigElement() {
         if (null == this.getExpression() || this.getExpression().trim().length() == 0) {
             return null;

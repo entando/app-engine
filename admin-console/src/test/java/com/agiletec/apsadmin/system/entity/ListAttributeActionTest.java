@@ -34,7 +34,7 @@ import com.agiletec.apsadmin.system.entity.attribute.action.list.ListAttributeAc
 import com.agiletec.apsadmin.system.entity.type.EntityAttributeConfigAction;
 import com.agiletec.apsadmin.system.entity.type.IEntityTypeConfigAction;
 import com.agiletec.apsadmin.system.entity.type.IEntityTypesAction;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

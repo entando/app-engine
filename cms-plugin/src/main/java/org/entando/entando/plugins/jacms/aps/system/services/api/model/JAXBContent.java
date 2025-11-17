@@ -31,6 +31,9 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.JA
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.JAXBResourceAttribute;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.JAXBResourceValue;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -40,11 +43,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 
 import org.entando.entando.aps.system.common.entity.model.attribute.JAXBEnumeratorMapAttribute;
 
@@ -52,6 +55,7 @@ import org.entando.entando.aps.system.common.entity.model.attribute.JAXBEnumerat
  * @author E.Santoboni
  */
 @XmlRootElement(name = "content")
+@JsonRootName(value = "content")
 @XmlType(propOrder = {"categories", "created", "lastModified", "version", "lastEditor"})
 @XmlSeeAlso({ArrayList.class, HashMap.class, JAXBBooleanAttribute.class, JAXBEnumeratorMapAttribute.class, JAXBCompositeAttribute.class, JAXBDateAttribute.class, JAXBHypertextAttribute.class, JAXBListAttribute.class, JAXBNumberAttribute.class, JAXBTextAttribute.class, JAXBResourceAttribute.class, JAXBLinkAttribute.class, JAXBResourceValue.class, JAXBLinkValue.class, SymbolicLink.class})
 public class JAXBContent extends JAXBEntity implements Serializable {
@@ -80,6 +84,7 @@ public class JAXBContent extends JAXBEntity implements Serializable {
     }
     
     @XmlElement(name = "created", required = true)
+    @JsonProperty("created")
     public Date getCreated() {
         return created;
     }
@@ -88,6 +93,7 @@ public class JAXBContent extends JAXBEntity implements Serializable {
     }
 
     @XmlElement(name = "lastModified", required = true)
+    @JsonProperty("lastModified")
     public Date getLastModified() {
         return lastModified;
     }
@@ -96,6 +102,7 @@ public class JAXBContent extends JAXBEntity implements Serializable {
     }
 
     @XmlElement(name = "version", required = true)
+    @JsonProperty("version")
     public String getVersion() {
         return version;
     }
@@ -104,6 +111,7 @@ public class JAXBContent extends JAXBEntity implements Serializable {
     }
 
     @XmlElement(name = "lastEditor", required = true)
+    @JsonProperty("lastEditor")
     public String getLastEditor() {
         return lastEditor;
     }
@@ -118,6 +126,7 @@ public class JAXBContent extends JAXBEntity implements Serializable {
      */
     @XmlElement(name = "category", required = true)
     @XmlElementWrapper(name = "categories")
+    @JsonAlias({"categories","category"})
     public Set<String> getCategories() {
         return categories;
     }

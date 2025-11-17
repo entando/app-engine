@@ -1193,7 +1193,9 @@ class ContentTypeResourceIntegrationTest extends AbstractControllerIntegrationTe
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(jsonMapper.writeValueAsString(contentTypeRequest))
-                .accept(MediaType.APPLICATION_JSON_UTF8)).andReturn();
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isCreated())
+                .andReturn();
         Assertions.assertNotNull(this.contentManager.getEntityPrototype(typeCode));
         return stringToContentTypeDto(mvcResult);
     }

@@ -17,13 +17,13 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Properties;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.struts2.StrutsException;
 import org.apache.struts2.components.Component;
 
 import com.agiletec.apsadmin.util.ApsRequestParamsUtil;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 /**
  * Classe component del tag ApsActionParamTag.

@@ -22,7 +22,7 @@ public class CssURLTag extends ResourceURLTag {
 	private static final String CSS_FOLDER = "static/css/";
 
 	@Override
-	public int doStartTag() throws javax.servlet.jsp.JspException {
+	public int doStartTag() throws jakarta.servlet.jsp.JspException {
 		this.setFolder(CSS_FOLDER);
 		return EVAL_BODY_INCLUDE;
 	}

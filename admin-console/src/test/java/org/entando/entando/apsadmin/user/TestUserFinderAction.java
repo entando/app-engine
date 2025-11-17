@@ -24,7 +24,7 @@ import com.agiletec.aps.system.services.user.IUserManager;
 import java.util.List;
 
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.entando.entando.aps.system.services.userprofile.IUserProfileManager;
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 import org.junit.jupiter.api.BeforeEach;

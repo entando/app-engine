@@ -17,9 +17,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.annotation.XmlTransient;
-import org.jdom.CDATA;
-import org.jdom.Element;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.xml.bind.annotation.XmlTransient;
+import org.jdom2.CDATA;
+import org.jdom2.Element;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -35,6 +37,7 @@ import com.agiletec.aps.system.services.lang.Lang;
 /**
  * @author E.Santoboni
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TextAttributeValidationRules extends AbstractAttributeValidationRules {
 
 	private static final EntLogger _logger =  EntLogFactory.getSanitizedLogger(TextAttributeValidationRules.class);
@@ -176,6 +179,7 @@ public class TextAttributeValidationRules extends AbstractAttributeValidationRul
     
 	@Override
     @XmlTransient
+    @JsonIgnore
     public boolean isEmpty() {
         return (super.isEmpty()
                 && (null == this.getMaxLength() || this.getMaxLength() < 0)

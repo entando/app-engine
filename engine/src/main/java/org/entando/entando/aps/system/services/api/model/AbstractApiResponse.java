@@ -17,8 +17,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
 
 /**
  * @author E.Santoboni
@@ -36,6 +37,7 @@ public abstract class AbstractApiResponse implements Serializable {
 
     @XmlElement(name = "error", required = true)
     @XmlElementWrapper(name = "errors")
+    @JsonProperty("errors")
     public List<LegacyApiError> getErrors() {
         return this.errors;
     }
@@ -53,9 +55,7 @@ public abstract class AbstractApiResponse implements Serializable {
         this.getErrors().addAll(errors);
     }
 
-    public Object getResult() {
-        return result;
-    }
+    public Object getResult(){ return result; }
 
     protected void setResult(Object result) {
         this.result = result;

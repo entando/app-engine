@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.entando.entando.aps.system.init.IComponentManager;
 import org.entando.entando.aps.system.services.assertionhelper.WidgetAssertionHelper;
 import org.entando.entando.aps.system.services.guifragment.GuiFragment;

@@ -15,7 +15,7 @@ package org.entando.entando.web.widget.model;
 
 import com.agiletec.aps.system.services.page.widget.NavigatorExpression;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.web.common.annotation.ValidateString;
 

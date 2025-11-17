@@ -42,9 +42,9 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.xml.sax.InputSource;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParser;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -59,8 +59,8 @@ import org.xml.sax.SAXException;
  *
  * @author W.Ambu - E.Santoboni
  */
-public class ResourceManager extends AbstractService implements IResourceManager, GroupUtilizer, CategoryUtilizer,
-        RefreshableBeanTenantAware {
+public class ResourceManager extends AbstractService 
+        implements IResourceManager, GroupUtilizer<String>, CategoryUtilizer<String, String>, RefreshableBeanTenantAware {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 
@@ -603,7 +603,7 @@ public class ResourceManager extends AbstractService implements IResourceManager
     }
 
     @Override
-    public List getCategoryUtilizers(String categoryCode) throws EntException {
+    public List<String> getCategoryUtilizers(String categoryCode) throws EntException {
         List<String> resourcesId = null;
         try {
             resourcesId = this.getResourceDAO().searchResourcesId(null, null, null, categoryCode, null);
@@ -643,7 +643,7 @@ public class ResourceManager extends AbstractService implements IResourceManager
     }
 
     @Override
-    public List getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException {
+    public List<String> getCategoryUtilizersForReloadReferences(String categoryCode) throws EntException {
         List<String> resourcesId = null;
         try {
             resourcesId = this.getCategoryUtilizers(categoryCode);

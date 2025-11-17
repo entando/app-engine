@@ -4,7 +4,7 @@ import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

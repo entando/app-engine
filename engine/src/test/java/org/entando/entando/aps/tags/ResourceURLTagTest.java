@@ -13,16 +13,16 @@
  */
 package org.entando.entando.aps.tags;
 
-import static javax.servlet.jsp.tagext.Tag.EVAL_PAGE;
+import static jakarta.servlet.jsp.tagext.Tag.EVAL_PAGE;
 
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
 import org.entando.entando.aps.system.services.guifragment.IGuiFragmentManager;
 import org.entando.entando.aps.system.services.storage.CdsEnvironmentVariables;
 import org.entando.entando.aps.system.services.storage.IStorageManager;

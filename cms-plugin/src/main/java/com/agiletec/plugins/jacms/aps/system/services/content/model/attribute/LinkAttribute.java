@@ -38,7 +38,7 @@ import java.util.Optional;
 import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;

@@ -13,9 +13,11 @@
  */
 package org.entando.entando.aps.system.services.userprofile.api.model;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 import org.entando.entando.aps.system.services.userprofile.model.IUserProfile;
 
@@ -29,6 +31,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
  */
 @XmlRootElement(name = "userProfile")
 @XmlType(propOrder = {"fullname", "mail"})
+@JsonRootName(value = "userProfile")
 public class JAXBUserProfile extends JAXBEntity {
 
     public JAXBUserProfile() {
@@ -63,6 +66,7 @@ public class JAXBUserProfile extends JAXBEntity {
     }
 
     @XmlElement(name = "fullname", required = false)
+    @JsonProperty("fullname")
     public String getFullname() {
         return _fullname;
     }
@@ -72,6 +76,7 @@ public class JAXBUserProfile extends JAXBEntity {
     }
 
     @XmlElement(name = "mail", required = false)
+    @JsonProperty("mail")
     public String getMail() {
         return _mail;
     }

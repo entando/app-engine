@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.entando.plugins.jpredis.aps.system.redis.conditions.RedisActive;
 import org.entando.entando.plugins.jpredis.aps.system.redis.conditions.RedisSentinel;

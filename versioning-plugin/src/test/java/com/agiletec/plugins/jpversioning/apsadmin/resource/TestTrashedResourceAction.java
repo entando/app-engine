@@ -41,7 +41,7 @@ import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import com.agiletec.plugins.jpversioning.aps.system.services.resource.ITrashedResourceDAO;
 import com.agiletec.plugins.jpversioning.aps.system.services.resource.ITrashedResourceManager;
 import com.agiletec.plugins.jpversioning.aps.system.services.resource.TrashedResourceDAO;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

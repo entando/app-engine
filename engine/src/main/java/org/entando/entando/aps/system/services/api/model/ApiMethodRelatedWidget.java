@@ -19,7 +19,7 @@ import java.util.List;
 
 import com.agiletec.aps.util.ApsProperties;
 import org.entando.entando.aps.system.services.api.ApiResourcesDefDOM;
-import org.jdom.Element;
+import org.jdom2.Element;
 
 /**
  * @author E.Santoboni

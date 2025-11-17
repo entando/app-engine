@@ -16,7 +16,7 @@ package com.agiletec.plugins.jacms.aps.system.services.resource;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import com.agiletec.aps.system.common.IManager;
 import org.entando.entando.ent.exception.EntException;

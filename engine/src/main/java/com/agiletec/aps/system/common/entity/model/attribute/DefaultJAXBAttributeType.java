@@ -20,18 +20,18 @@ import com.agiletec.aps.system.common.entity.model.attribute.util.NumberAttribut
 import com.agiletec.aps.system.common.entity.model.attribute.util.OgnlValidationRule;
 import com.agiletec.aps.system.common.entity.model.attribute.util.TextAttributeValidationRules;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlType;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.entando.aps.system.services.api.IApiErrorCodes;
 import org.entando.entando.aps.system.services.api.model.ApiException;
@@ -41,6 +41,7 @@ import org.entando.entando.aps.system.services.api.model.ApiException;
  */
 @Slf4j
 @XmlRootElement(name = "attributeType")
+@JsonRootName(value = "attributeType")
 @XmlType(propOrder = {"name", "names", "description", "type", "roles", "searchable", "indexable", "validationRules"})
 @XmlSeeAlso({ArrayList.class, BaseAttributeValidationRules.class, DateAttributeValidationRules.class,
         NumberAttributeValidationRules.class, TextAttributeValidationRules.class, OgnlValidationRule.class})
@@ -53,6 +54,7 @@ import org.entando.entando.aps.system.services.api.model.ApiException;
 public class DefaultJAXBAttributeType {
 
     @XmlElement(name = "name", required = true)
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
@@ -62,6 +64,7 @@ public class DefaultJAXBAttributeType {
     }
 
     @XmlElement(name = "names", required = false)
+    @JsonProperty("names")
     public Map<String, String> getNames() {
         return names;
     }
@@ -71,6 +74,7 @@ public class DefaultJAXBAttributeType {
     }
 
     @XmlElement(name = "description", required = false)
+    @JsonProperty("description")
     public String getDescription() {
         return description;
     }
@@ -80,6 +84,7 @@ public class DefaultJAXBAttributeType {
     }
 
     @XmlElement(name = "type", required = true)
+    @JsonProperty("type")
     public String getType() {
         return type;
     }
@@ -90,6 +95,7 @@ public class DefaultJAXBAttributeType {
 
     @XmlElement(name = "role", required = false)
     @XmlElementWrapper(name = "roles")
+    @JsonProperty("roles")
     public List<String> getRoles() {
         return roles;
     }

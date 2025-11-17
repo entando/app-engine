@@ -13,9 +13,9 @@
  */
 package org.entando.entando.aps.internalservlet.system.dispatcher.mapper;
 
-import com.opensymphony.xwork2.config.ConfigurationManager;
+import org.apache.struts2.config.ConfigurationManager;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.RequestUtils;
@@ -50,10 +50,9 @@ public class ExtendedDefaultActionMapper extends DefaultActionMapper {
      */
     protected String getUri(HttpServletRequest request) {
         // handle http dispatcher includes.
-        //String uri = (String) request.getAttribute("javax.servlet.include.servlet_path");
-		String uri = (String) request.getAttribute("javax.servlet.include.request_uri");
+		String uri = (String) request.getAttribute("jakarta.servlet.include.request_uri");
         if (uri == null || "".equals(uri)) {
-        	uri = (String) request.getAttribute("javax.servlet.include.servlet_path");
+        	uri = (String) request.getAttribute("jakarta.servlet.include.servlet_path");
         } else {
         	return uri.substring((request.getContextPath()+"/ExtStr2").length());
         }

@@ -15,10 +15,10 @@ import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.keycloak.services.KeycloakAuthorizationManager;
@@ -139,13 +139,15 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
     }
 
     private void setUserOnContext(HttpServletRequest request, UserDetails user, Authentication authentication) {
+        // IMPORTANT: Also set the SecurityContextHolder for Spring Security to recognize the authentication
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         if (API_PATH.equals(request.getServletPath())) {
             request.setAttribute("user", user);
         } else {
-            SecurityContextHolder.getContext().setAuthentication(authentication);
             request.getSession().setAttribute("user", user);
             request.getSession().setAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER, user);
         }
+
     }
 
     @Override

@@ -31,7 +31,7 @@ import com.agiletec.plugins.jacms.aps.system.services.contentmodel.model.Content
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.entando.entando.aps.system.services.userprofile.MockUser;
 import org.entando.entando.plugins.jacms.aps.system.services.assertionhelper.ContentTypeAssertionHelper;
 import org.entando.entando.plugins.jacms.aps.system.services.mockhelper.ContentMockHelper;

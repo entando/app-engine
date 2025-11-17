@@ -13,7 +13,7 @@
  */
 package org.entando.entando.apsadmin.system.resource;
 
-import com.opensymphony.xwork2.util.StrutsLocalizedTextProvider;
+import org.apache.struts2.text.StrutsLocalizedTextProvider;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;

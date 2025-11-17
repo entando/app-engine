@@ -22,7 +22,7 @@ import com.agiletec.aps.system.common.RefreshableBean;
 import com.agiletec.aps.system.services.baseconfig.BaseConfigManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.entando.entando.aps.system.init.InitializerManager;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService.InitializationTenantFilter;

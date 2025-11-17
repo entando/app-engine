@@ -15,7 +15,7 @@ package org.entando.entando.web.activitystream;
 
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.actionlog.model.ActionLogRecordDto;
 import org.entando.entando.aps.system.services.activitystream.IActivityStreamService;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

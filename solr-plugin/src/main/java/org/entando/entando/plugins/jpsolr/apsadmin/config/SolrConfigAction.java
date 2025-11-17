@@ -15,7 +15,7 @@ package org.entando.entando.plugins.jpsolr.apsadmin.config;
 
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;

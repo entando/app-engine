@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.xml.bind.annotation.XmlElement;
 
 /**
  * @author E.Santoboni
@@ -26,6 +27,7 @@ public class LinkedListApiResponseResult extends AbstractApiResponseResult {
     
 	@Override
     @XmlElement(name = "items", required = false)
+    @JsonProperty("items")
     public ListResponse<LinkedListItem> getResult() {
         if (null != this.getMainResult()) {
             List<LinkedListItem> items = new ArrayList<LinkedListItem>();

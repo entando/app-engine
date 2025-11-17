@@ -22,8 +22,8 @@ import com.agiletec.plugins.jacms.aps.tags.ContentListTag;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.plugins.jacms.aps.system.services.content.widget.RowContentListHelper;

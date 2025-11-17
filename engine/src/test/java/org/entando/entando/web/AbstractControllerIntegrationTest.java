@@ -13,6 +13,7 @@
  */
 package org.entando.entando.web;
 
+
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.UserDetails;
@@ -21,6 +22,8 @@ import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.oauth2.IApiOAuth2TokenManager;
 import org.entando.entando.web.common.interceptor.EntandoOauth2Interceptor;
 import org.entando.entando.web.utils.OAuth2TestUtils;
+import org.junit.jupiter.api.AfterEach;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +41,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.annotation.Resource;
-import javax.servlet.Filter;
+import jakarta.annotation.Resource;
+import jakarta.servlet.Filter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -51,18 +54,38 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
+
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = {
-    "classpath*:spring/testpropertyPlaceholder.xml",
-    "classpath*:spring/baseSystemConfig.xml",
-    "classpath*:spring/aps/**/**.xml",
-    "classpath*:spring/apsadmin/**/**.xml",
-    "classpath*:spring/plugins/**/aps/**/**.xml",
-    "classpath*:spring/plugins/**/apsadmin/**/**.xml",
-    "classpath*:spring/web/**.xml"
+        "classpath*:spring/testpropertyPlaceholder.xml",
+        "classpath*:spring/baseSystemConfig.xml",
+        "classpath*:spring/aps/**/**.xml",
+        "classpath*:spring/apsadmin/**/**.xml",
+        "classpath*:spring/plugins/**/aps/**/**.xml",
+        "classpath*:spring/plugins/**/apsadmin/**/**.xml",
+        "classpath*:spring/web/**.xml",
+        "classpath:spring/aps/cors.xml"
 })
 @WebAppConfiguration(value = "")
 public class AbstractControllerIntegrationTest {
+
+    //TODO da rifinire per gestire autenticazione mockata
+    @Bean
+    @Order(1)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for tests
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .anonymous(anonymous -> anonymous.principal("anonymousUser"));
+        return http.build();
+    }
+
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractControllerIntegrationTest.class);
 
@@ -79,7 +102,7 @@ public class AbstractControllerIntegrationTest {
     protected IAuthenticationProviderManager authenticationProviderManager;
 
     protected IAuthorizationManager authorizationManager;
-    
+
     @Autowired
     protected EntandoOauth2Interceptor entandoOauth2Interceptor;
 
@@ -96,20 +119,31 @@ public class AbstractControllerIntegrationTest {
         this.apiOAuth2TokenManager = Mockito.mock(IApiOAuth2TokenManager.class);
         this.authenticationProviderManager = Mockito.mock(IAuthenticationProviderManager.class);
         this.authorizationManager = Mockito.mock(IAuthorizationManager.class);
+
+        // Register mocked services with test context helper so our security filter can access them
+//        TestContextHelper.setTokenManager(this.apiOAuth2TokenManager);
+//        TestContextHelper.setAuthenticationManager(this.authenticationProviderManager);
+
         this.entandoOauth2Interceptor.setAuthenticationProviderManager(this.authenticationProviderManager);
         this.entandoOauth2Interceptor.setAuthorizationManager(this.authorizationManager);
         this.entandoOauth2Interceptor.setoAuth2TokenManager(this.apiOAuth2TokenManager);
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .dispatchOptions(true)
-                .addFilters(springSecurityFilterChain, corsFilter)
+                .addFilters(corsFilter)
                 .build();
         accessToken = null;
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        // Clear test context to avoid leaking between tests
+//        TestContextHelper.clear();
     }
 
     protected String mockOAuthInterceptor(UserDetails user) {
         return OAuth2TestUtils.mockOAuthInterceptor(apiOAuth2TokenManager, authenticationProviderManager, authorizationManager, user);
     }
-    
+
     protected AuthRequestBuilder createAuthRequest(MockHttpServletRequestBuilder requestBuilder) {
         return new AuthRequestBuilder(mockMvc, getAccessToken(), requestBuilder);
     }

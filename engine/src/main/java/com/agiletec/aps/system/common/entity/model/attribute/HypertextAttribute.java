@@ -17,8 +17,8 @@ import com.agiletec.aps.util.HtmlHandler;
 
 import java.util.Iterator;
 
-import org.jdom.CDATA;
-import org.jdom.Element;
+import org.jdom2.CDATA;
+import org.jdom2.Element;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 

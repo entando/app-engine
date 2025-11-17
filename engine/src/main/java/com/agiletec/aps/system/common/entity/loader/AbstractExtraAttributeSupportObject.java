@@ -16,7 +16,7 @@ package com.agiletec.aps.system.common.entity.loader;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

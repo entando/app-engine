@@ -15,7 +15,7 @@ package com.agiletec.apsadmin.tags.util;
 
 import java.util.Collection;
 
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;

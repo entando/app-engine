@@ -14,9 +14,12 @@
 package com.agiletec.plugins.jacms.aps.system.services.contentmodel;
 
 import java.io.Serializable;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -26,6 +29,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
  * @author M.Diana - E.Santoboni
  */
 @XmlRootElement(name = "contentModel")
+@JsonRootName("contentModel")
 @XmlType(propOrder = {"id", "contentType", "description", "contentShape", "stylesheet"})
 public class ContentModel implements Comparable, Serializable {
 
@@ -39,6 +43,7 @@ public class ContentModel implements Comparable, Serializable {
 	 * @return L'identificativo del modello.
 	 */
 	@XmlElement(name = "id", required = true)
+    @JsonProperty("id")
 	public long getId() {
 		return _id;
 	}
@@ -56,6 +61,7 @@ public class ContentModel implements Comparable, Serializable {
 	 * @return Il tipo di contenuto a cui si applica il modello.
 	 */
 	@XmlElement(name = "contentType", required = true)
+    @JsonProperty("contentType")
 	public String getContentType() {
 		return _contentType;
 	}
@@ -73,6 +79,7 @@ public class ContentModel implements Comparable, Serializable {
 	 * @return La descrizione del modello.
 	 */
 	@XmlElement(name = "description", required = true)
+    @JsonProperty("description")
 	public String getDescription() {
 		return _description;
 	}
@@ -89,6 +96,7 @@ public class ContentModel implements Comparable, Serializable {
 	 * @return Returns the contentShape.
 	 */
 	@XmlElement(name = "shape", required = true)
+    @JsonProperty("shape")
 	public String getContentShape() {
 		return _contentShape;
 	}
@@ -105,6 +113,7 @@ public class ContentModel implements Comparable, Serializable {
 	 * @return Il nome del foglio di stile. Può essere null.
 	 */
 	@XmlElement(name = "stylesheet", required = false)
+    @JsonProperty("stylesheet")
 	public String getStylesheet() {
 		return _stylesheet;
 	}

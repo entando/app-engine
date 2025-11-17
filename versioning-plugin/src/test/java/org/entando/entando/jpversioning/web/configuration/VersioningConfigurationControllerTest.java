@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import org.entando.entando.plugins.jpversioning.services.configuration.VersioningConfigurationService;
 import org.entando.entando.plugins.jpversioning.web.configuration.VersioningConfigurationController;
 import org.entando.entando.plugins.jpversioning.web.configuration.model.VersioningConfigurationDTO;

@@ -18,9 +18,9 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.tags.util.HeadInfoContainer;
 import freemarker.core.Environment;
 import freemarker.ext.beans.StringModel;
-import javax.servlet.ServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.TagSupport;
 
 /**
  * Tag for the declaration of the informations to insert in the header of the HTML page

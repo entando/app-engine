@@ -16,7 +16,7 @@ package org.entando.entando.web.label;
 import com.agiletec.aps.system.services.role.Permission;
 import java.util.HashMap;
 import java.util.Map;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.entando.entando.aps.system.services.label.ILabelService;
 import org.entando.entando.aps.system.services.label.model.LabelDto;
 import org.entando.entando.web.common.annotation.RestAccessControl;

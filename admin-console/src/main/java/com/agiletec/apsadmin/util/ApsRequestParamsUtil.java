@@ -17,7 +17,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 
 /**
  * @author E.Santoboni

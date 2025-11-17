@@ -32,7 +32,7 @@ import com.agiletec.aps.system.services.pagemodel.PageModel;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ITreeAction;
 import com.agiletec.apsadmin.system.TreeNodeWrapper;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.jupiter.api.BeforeEach;

@@ -5,7 +5,7 @@ import static org.mockito.Mockito.never;
 
 import com.agiletec.apsadmin.system.BaseAction;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import java.util.ArrayList;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;

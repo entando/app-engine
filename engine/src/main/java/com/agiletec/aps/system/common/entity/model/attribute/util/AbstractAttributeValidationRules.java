@@ -13,8 +13,8 @@
  */
 package com.agiletec.aps.system.common.entity.model.attribute.util;
 
-import javax.xml.bind.annotation.XmlTransient;
-import org.jdom.Element;
+import jakarta.xml.bind.annotation.XmlTransient;
+import org.jdom2.Element;
 
 /**
  * @author E.Santoboni

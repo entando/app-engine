@@ -82,6 +82,7 @@ class ContentModelControllerUnitTest extends AbstractControllerTest {
                 .addInterceptors(entandoOauth2Interceptor)
                 .setMessageConverters(getMessageConverters())
                 .setHandlerExceptionResolvers(createHandlerExceptionResolver())
+                .setValidator(createValidator())
                 .build();
 
         initMockedContentModels();

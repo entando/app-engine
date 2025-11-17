@@ -25,8 +25,11 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.action.UploadedFilesAware;
+import org.apache.struts2.dispatcher.multipart.UploadedFile;
 import org.entando.entando.aps.system.services.storage.BasicFileAttributeView;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
 import org.entando.entando.aps.system.services.storage.RootFolderAttributeView;
@@ -37,7 +40,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 /**
  * @author S.Loru - E.Santoboni
  */
-public class FileBrowserAction extends BaseAction {
+public class FileBrowserAction extends BaseAction implements UploadedFilesAware {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(FileBrowserAction.class);
 
@@ -66,6 +69,17 @@ public class FileBrowserAction extends BaseAction {
     private String downloadContentType;
 
     private IStorageManager storageManager;
+
+    @Override
+    public void withUploadedFiles(List<UploadedFile> uploadedFiles) {
+        logger.debug("withUploadedFiles called with {} files", uploadedFiles != null ? uploadedFiles.size() : 0);
+        if (uploadedFiles != null && !uploadedFiles.isEmpty()) {
+            this.file = uploadedFiles.stream().map(UploadedFile::getContent).map(file -> (File) file).collect(Collectors.toList());
+            this.uploadFileName = uploadedFiles.stream().map(UploadedFile::getName).collect(Collectors.toList());
+        } else {
+            logger.warn("No uploaded files received in withUploadedFiles callback");
+        }
+    }
 
     public String list() {
         return SUCCESS;

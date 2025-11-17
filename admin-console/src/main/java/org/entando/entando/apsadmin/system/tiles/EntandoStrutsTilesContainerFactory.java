@@ -20,9 +20,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import org.apache.struts2.tiles.StrutsTilesContainerFactory;
-import org.apache.tiles.definition.DefinitionsFactory;
+import org.apache.tiles.core.definition.DefinitionsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +35,8 @@ public class EntandoStrutsTilesContainerFactory extends StrutsTilesContainerFact
 	private Logger logger = LoggerFactory.getLogger(EntandoStrutsTilesContainerFactory.class);
 
 	private ServletContext _servletContext;
+
+    public static final String TILES_DEFAULT_PATTERN = String.join(",", TILES_DEFAULT_PATTERNS);
 	
 	protected EntandoStrutsTilesContainerFactory(ServletContext servletContext) {
 		this.setServletContext(servletContext);

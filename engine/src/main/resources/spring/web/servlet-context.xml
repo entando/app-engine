@@ -15,7 +15,9 @@
     <context:annotation-config />
 
     <mvc:annotation-driven conversion-service="conversionService"
-                           message-codes-resolver="messageCodesResolver">
+                           message-codes-resolver="messageCodesResolver"
+                           validator="validator">
+        <mvc:path-matching trailing-slash="true"/>
         <mvc:message-converters>
             <bean id="jacksonMessageConverter" name="jacksonMessageConverter"
                   class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
@@ -89,6 +91,13 @@
         </property>
     </bean>
 
+    <bean id="validator"
+          class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="messageInterpolator">
+            <bean class="org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator"/>
+        </property>
+    </bean>
+
     <bean id="conversionService"
           class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
         <property name="registerDefaultFormatters" value="false" />
@@ -99,10 +108,9 @@
         </property>
         <property name="formatterRegistrars">
             <set>
-                <bean class="org.springframework.format.datetime.joda.JodaTimeFormatterRegistrar">
-                    <!-- consider also timeFormatter and dateTimeFormatter -->
+                <bean class="org.springframework.format.datetime.standard.DateTimeFormatterRegistrar">
                     <property name="dateFormatter">
-                        <bean class="org.springframework.format.datetime.joda.DateTimeFormatterFactoryBean">
+                        <bean class="org.springframework.format.datetime.standard.DateTimeFormatterFactoryBean">
                             <property name="pattern" value="dd/MM/yyyy" />
                         </bean>
                     </property>
@@ -122,5 +130,14 @@
         <ref bean="entandoInterceptor" />
         <ref bean="activityStreamInterceptor" />
     </mvc:interceptors>
+
+
+
+    <!-- OpenAPI/Swagger configuration -->
+    <beans profile="swagger">
+        <!-- Swagger UI static resources -->
+        <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/" />
+        <context:component-scan base-package="org.entando.entando.web.swagger"/>
+    </beans>
 
 </beans>

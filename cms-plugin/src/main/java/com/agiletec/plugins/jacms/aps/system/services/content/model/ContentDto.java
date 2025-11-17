@@ -294,6 +294,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         if (AbstractResourceAttribute.class.isAssignableFrom(attribute.getClass())) {
             AbstractResourceAttribute resourceAttribute = (AbstractResourceAttribute) attribute;
             for (Entry<String, Object> resourceEntry : attributeDto.getValues().entrySet()) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> resourceMap = (Map<String, Object>) resourceEntry.getValue();
                 this.setResourceAttribute(resourceAttribute, resourceMap, resourceEntry.getKey());
             }
@@ -312,6 +313,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         resourceInterface.setId(resourceId);
         resourceInterface.setCorrelationCode(correlationCode);
         resourceAttribute.setResource(resourceInterface, langCode);
+        @SuppressWarnings("unchecked")
         Map<String, Object> values = (Map<String, Object>) resource.get("metadata");
         if (values != null) {
             Map<String, String> metadata = values.entrySet().stream()

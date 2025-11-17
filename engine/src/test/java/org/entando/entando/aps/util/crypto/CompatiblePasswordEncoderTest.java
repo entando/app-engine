@@ -13,48 +13,32 @@
  */
 package org.entando.entando.aps.util.crypto;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.entando.entando.TestEntandoJndiUtils;
+import com.agiletec.aps.BaseTestCase;
 
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(locations = {
-    "classpath*:spring/testpropertyPlaceholder.xml",
-    "classpath*:spring/baseSystemConfig.xml",
-    "classpath*:spring/aps/**/**.xml",
-    "classpath*:spring/plugins/**/aps/**/**.xml",
-    "classpath*:spring/web/**.xml"
-})
-@WebAppConfiguration(value = "")
-class CompatiblePasswordEncoderTest {
-
-    @BeforeAll
-    public static void setup() throws Exception {
-        TestEntandoJndiUtils.setupJndi();
-    }
+class CompatiblePasswordEncoderTest extends BaseTestCase {
 
     private static final String SECRET = "my secret";
 
-    @Autowired
-    private BCryptPasswordEncoder bcryptEncoder;
-
-    @Autowired
+    private CryptoBeansConfig.BCryptEncoderWrapper bcryptEncoder;
     private CompatiblePasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    public void init() throws Exception {
+        // The bcryptEncoder bean is wrapped, so we get it as Object and cast
+        this.bcryptEncoder = (CryptoBeansConfig.BCryptEncoderWrapper) this.getApplicationContext().getBean("bcryptEncoder");
+        this.passwordEncoder = this.getApplicationContext().getBean("compatiblePasswordEncoder", CompatiblePasswordEncoder.class);
+    }
 
     @Test
     void testBCrypt() {
-        testMatches("{bcrypt}" + bcryptEncoder.encode(SECRET), SECRET);
+        testMatches("{bcrypt}" + bcryptEncoder.getEncoder().encode(SECRET), SECRET);
     }
 
     @Test
@@ -65,7 +49,8 @@ class CompatiblePasswordEncoderTest {
         testMatches("{bcrypt}$2a$10$0Idom7PIOI4YuKzyhqDJpe3Z/0N0M0FQEvKtrSOjgF71Hkx5mKhlq", "approverapprover");
     }
     
-    public void testBCryptBuildInTestPwd() {
+    @Test
+    void testBCryptBuildInTestPwd() {
         testMatches("{bcrypt}$2a$10$zy1zkH5mP09rGv.iSYQiPunsc7F9Rd/TpZXm03YtSfZVeHK9Nddw2", "supervisorCoach");
         testMatches("{bcrypt}$2a$10$WUtgtTwdhJdD0hTBu0aIlOgjdgv5wZ7W1BD9Nh.woEzmEfq3m1CT.", "mainEditor");
         testMatches("{bcrypt}$2a$10$NIhSwtsre0H9tVDVpcs86eN/vR816tJxEPJwbtU4XeJOoFfvOYX6m", "pageManagerCoach");

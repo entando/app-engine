@@ -20,6 +20,8 @@ import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
 import com.agiletec.aps.util.DateConverter;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -42,8 +44,8 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.DefaultOAuth2RefreshToken;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 /**
  * @author E.Santoboni
@@ -356,7 +358,7 @@ class AuthenticationProviderManagerTest {
 
     private OAuth2AccessToken createMockToken() {
         OAuth2AccessTokenImpl token = new OAuth2AccessTokenImpl("access_token_x");
-        token.setRefreshToken(new DefaultOAuth2RefreshToken("refresh_token_x"));
+        token.setRefreshToken(new OAuth2RefreshToken("refresh_token_x", Instant.now()));
         return token;
     }
 

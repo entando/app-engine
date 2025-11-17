@@ -45,6 +45,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.annotation.ExceptionHandlerMethodResolver;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -109,11 +110,14 @@ public class AbstractControllerTest {
         ExceptionHandlerExceptionResolver exceptionResolver = new ExceptionHandlerExceptionResolver() {
 
             @Override
-            protected ServletInvocableHandlerMethod getExceptionHandlerMethod(HandlerMethod handlerMethod, Exception exception) {
+            protected ServletInvocableHandlerMethod getExceptionHandlerMethod(HandlerMethod handlerMethod, Exception exception, ServletWebRequest webRequest) {
                 Method method = new ExceptionHandlerMethodResolver(RestExceptionHandler.class).resolveMethod(exception);
-                RestExceptionHandler validationHandler = new RestExceptionHandler();
-                validationHandler.setMessageSource(messageSource);
-                return new ServletInvocableHandlerMethod(validationHandler, method);
+                if (method != null) {
+                    RestExceptionHandler validationHandler = new RestExceptionHandler();
+                    validationHandler.setMessageSource(messageSource);
+                    return new ServletInvocableHandlerMethod(validationHandler, method);
+                }
+                return super.getExceptionHandlerMethod(handlerMethod, exception, webRequest);
             }
         };
 
@@ -142,6 +146,20 @@ public class AbstractControllerTest {
         ObjectMapper mapper = new ObjectMapper();
         Object result = mapper.readValue(json, classType);
         return result;
+    }
+
+    /**
+     * Creates a configured validator for use with MockMvc standalone setup.
+     * This enables Jakarta Bean Validation (@Valid, @NotBlank, etc.) in unit tests.
+     *
+     * @return configured LocalValidatorFactoryBean
+     */
+    protected org.springframework.validation.Validator createValidator() {
+        org.springframework.validation.beanvalidation.LocalValidatorFactoryBean validator =
+                new org.springframework.validation.beanvalidation.LocalValidatorFactoryBean();
+        validator.setMessageInterpolator(new org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator());
+        validator.afterPropertiesSet();
+        return validator;
     }
 
     protected byte[] convertObjectToJsonBytes(Object object) throws IOException {

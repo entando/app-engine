@@ -13,7 +13,7 @@
  */
 package org.entando.entando.web.user.model;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  *

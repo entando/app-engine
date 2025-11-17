@@ -16,7 +16,7 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 import java.util.List;
 import java.util.Map;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import org.entando.entando.ent.exception.EntException;

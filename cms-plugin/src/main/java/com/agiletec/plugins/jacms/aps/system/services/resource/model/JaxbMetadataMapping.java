@@ -16,15 +16,19 @@ package com.agiletec.plugins.jacms.aps.system.services.resource.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlValue;
 
 /**
  * @author E.Santoboni
  */
 @XmlRootElement(name = "mapping")
+@JsonRootName("mapping")
 public class JaxbMetadataMapping {
 
     private List<MetadataFieldMapping> fields = new ArrayList<>();
@@ -51,6 +55,7 @@ public class JaxbMetadataMapping {
     }
 
     @XmlElement(name = "field", required = false)
+    @JsonProperty("field")
     public List<MetadataFieldMapping> getFields() {
         return fields;
     }
@@ -60,12 +65,14 @@ public class JaxbMetadataMapping {
     }
 
     @XmlRootElement(name = "field")
+    @JsonRootName("field")
     public static class MetadataFieldMapping {
 
         private String key;
         private String value;
 
         @XmlAttribute(name = "key")
+        @JsonProperty("key")
         public String getKey() {
             return key;
         }

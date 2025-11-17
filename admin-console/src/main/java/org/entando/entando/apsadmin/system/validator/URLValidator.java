@@ -13,8 +13,8 @@
  */
 package org.entando.entando.apsadmin.system.validator;
 
-import com.opensymphony.xwork2.validator.ValidationException;
-import com.opensymphony.xwork2.validator.validators.FieldValidatorSupport;
+import org.apache.struts2.validator.ValidationException;
+import org.apache.struts2.validator.validators.FieldValidatorSupport;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

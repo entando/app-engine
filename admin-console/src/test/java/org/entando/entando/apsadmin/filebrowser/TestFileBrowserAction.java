@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
-import com.opensymphony.xwork2.Action;
+import org.apache.struts2.action.Action;
 import org.entando.entando.aps.system.services.storage.*;
 
 import java.io.*;

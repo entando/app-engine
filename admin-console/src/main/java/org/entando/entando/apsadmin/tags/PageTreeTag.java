@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 import org.apache.struts2.views.jsp.StrutsBodyTagSupport;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -27,7 +27,7 @@ import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.agiletec.apsadmin.portal.helper.IPageActionHelper;
 import com.agiletec.apsadmin.system.ITreeNodeBaseActionHelper;
-import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.ValueStack;
 
 public class PageTreeTag extends StrutsBodyTagSupport {
 	

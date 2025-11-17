@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -42,7 +42,7 @@ import com.agiletec.aps.util.DateConverter;
 import com.agiletec.apsadmin.system.BaseActionHelper;
 import com.agiletec.apsadmin.system.entity.attribute.manager.AbstractAttributeManager;
 import com.agiletec.apsadmin.system.entity.attribute.manager.AttributeManagerInterface;
-import com.opensymphony.xwork2.ActionSupport;
+import org.apache.struts2.ActionSupport;
 
 /**
  * This abstract class supports all the helper classes that, in turn, support those

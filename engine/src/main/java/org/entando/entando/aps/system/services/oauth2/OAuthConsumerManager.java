@@ -27,9 +27,9 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.provider.ClientDetails;
-import org.springframework.security.oauth2.provider.ClientRegistrationException;
-import org.springframework.security.oauth2.provider.client.BaseClientDetails;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 public class OAuthConsumerManager extends AbstractOAuthManager implements IOAuthConsumerManager {
 
@@ -43,41 +43,150 @@ public class OAuthConsumerManager extends AbstractOAuthManager implements IOAuth
     }
 
     @Override
-    public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
-        BaseClientDetails details = new BaseClientDetails();
+    public RegisteredClient findByClientId(String clientId) {
         try {
             ConsumerRecordVO consumer = this.getConsumerDAO().getConsumer(clientId);
             if (null == consumer) {
-                throw new ClientRegistrationException("Client with id '" + clientId + "' does not exists");
+                logger.warn("Client with id '{}' does not exist", clientId);
+                return null;
             }
             if (null != consumer.getExpirationDate() && consumer.getExpirationDate().before(new Date())) {
-                throw new ClientRegistrationException("Client '" + clientId + "' is expired");
+                logger.warn("Client '{}' is expired", clientId);
+                return null;
             }
-            details.setClientId(clientId);
+
+            // Build RegisteredClient using the new Spring Security 6.x pattern
+            RegisteredClient.Builder builder = RegisteredClient.withId(consumer.getKey())
+                    .clientId(clientId)
+                    .clientSecret(consumer.getSecret())
+                    .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
+
+            // Add authorized grant types
             if (!StringUtils.isBlank(consumer.getAuthorizedGrantTypes())) {
-                details.setAuthorizedGrantTypes(Arrays.asList(consumer.getAuthorizedGrantTypes().split(",")));
+                String[] grantTypes = consumer.getAuthorizedGrantTypes().split(",");
+                for (String grantType : grantTypes) {
+                    switch (grantType.trim()) {
+                        case "authorization_code":
+                            builder.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE);
+                            break;
+                        case "client_credentials":
+                            builder.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS);
+                            break;
+                        case "refresh_token":
+                            builder.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN);
+                            break;
+                        case "implicit":
+                            // Implicit grant is deprecated in OAuth 2.1 but still supported
+                            builder.authorizationGrantType(new AuthorizationGrantType("implicit"));
+                            break;
+                        case "password":
+                            // Resource Owner Password Credentials is deprecated but still supported
+                            builder.authorizationGrantType(new AuthorizationGrantType("password"));
+                            break;
+                        default:
+                            logger.warn("Unknown grant type: {}", grantType);
+                    }
+                }
             }
+
+            // Add scopes
             if (!StringUtils.isBlank(consumer.getScope())) {
-                details.setScope(Arrays.asList(consumer.getScope().split(",")));
+                String[] scopes = consumer.getScope().split(",");
+                for (String scope : scopes) {
+                    builder.scope(scope.trim());
+                }
             }
-            details.setClientSecret(consumer.getSecret());
-            Set<GrantedAuthority> authorities = new HashSet<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_CLIENT"));
-            details.setAuthorities(authorities);
+
+            // Add redirect URI
             if (null != consumer.getCallbackUrl()) {
-                Set<String> uris = new HashSet<>();
-                uris.add(consumer.getCallbackUrl());
-                details.setRegisteredRedirectUri(uris);
+                builder.redirectUri(consumer.getCallbackUrl());
             }
-            details.setAccessTokenValiditySeconds(this.getAccessTokenValiditySeconds());
-            details.setRefreshTokenValiditySeconds(this.getRefreshTokenValiditySeconds());
-        } catch (ClientRegistrationException t) {
-            throw t;
+
+            // Token validity settings (Note: Spring Authorization Server handles this differently)
+            // These settings may need to be configured at the authorization server level
+
+            return builder.build();
+
         } catch (Exception t) {
             logger.error("Error extracting consumer record by key {}", clientId, t);
-            throw new ClientRegistrationException("Error extracting consumer record by key " + clientId, t);
+            return null;
         }
-        return details;
+    }
+
+    @Override
+    public RegisteredClient findById(String id) {
+        // In Entando, the ID is typically the same as the client ID or consumer key
+        // We can delegate to findByClientId or look up by the consumer key
+        try {
+            ConsumerRecordVO consumer = this.getConsumerDAO().getConsumer(id);
+            if (consumer != null) {
+                return findByClientId(consumer.getKey());
+            }
+        } catch (Exception e) {
+            logger.error("Error finding client by ID: {}", id, e);
+        }
+        return null;
+    }
+
+    @Override
+    public void save(RegisteredClient registeredClient) {
+        try {
+            // Convert RegisteredClient to ConsumerRecordVO
+            ConsumerRecordVO consumer = new ConsumerRecordVO();
+            consumer.setKey(registeredClient.getClientId());
+            consumer.setSecret(registeredClient.getClientSecret());
+            consumer.setName(registeredClient.getClientName());
+            consumer.setDescription(registeredClient.getClientName() != null ? registeredClient.getClientName() : "Auto-registered client");
+
+            // Set callback URL (use first redirect URI if available)
+            if (!registeredClient.getRedirectUris().isEmpty()) {
+                consumer.setCallbackUrl(registeredClient.getRedirectUris().iterator().next());
+            }
+
+            // Set scopes
+            if (!registeredClient.getScopes().isEmpty()) {
+                consumer.setScope(String.join(",", registeredClient.getScopes()));
+            }
+
+            // Set grant types
+            Set<String> grantTypes = new HashSet<>();
+            for (AuthorizationGrantType grantType : registeredClient.getAuthorizationGrantTypes()) {
+                grantTypes.add(grantType.getValue());
+            }
+            consumer.setAuthorizedGrantTypes(String.join(",", grantTypes));
+
+            // Set dates
+            consumer.setIssuedDate(new Date());
+
+            // Check if consumer already exists and update or add accordingly
+            ConsumerRecordVO existingConsumer = this.getConsumerDAO().getConsumer(registeredClient.getClientId());
+            if (existingConsumer != null) {
+                this.updateConsumer(consumer);
+            } else {
+                this.addConsumer(consumer);
+            }
+
+            logger.debug("Successfully saved RegisteredClient: {}", registeredClient.getClientId());
+
+        } catch (Exception e) {
+            logger.error("Error saving RegisteredClient: {}", registeredClient.getClientId(), e);
+            throw new RuntimeException("Failed to save RegisteredClient", e);
+        }
+    }
+
+    /**
+     * Utility method to remove a RegisteredClient using Entando's consumer management
+     * Note: This is not part of RegisteredClientRepository interface in Spring Authorization Server 1.x
+     * //TODO
+     */
+    public void removeRegisteredClient(RegisteredClient registeredClient) {
+        try {
+            this.deleteConsumer(registeredClient.getClientId());
+            logger.debug("Successfully removed RegisteredClient: {}", registeredClient.getClientId());
+        } catch (Exception e) {
+            logger.error("Error removing client: {}", registeredClient.getClientId(), e);
+            throw new RuntimeException("Failed to remove RegisteredClient: " + registeredClient.getClientId(), e);
+        }
     }
 
     @Override

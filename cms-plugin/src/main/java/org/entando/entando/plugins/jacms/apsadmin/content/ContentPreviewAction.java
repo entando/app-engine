@@ -18,7 +18,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.struts2.action.ServletResponseAware;
 import org.entando.entando.ent.util.EntLogging.EntLogger;

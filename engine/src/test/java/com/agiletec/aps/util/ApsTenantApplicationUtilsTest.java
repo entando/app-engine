@@ -14,7 +14,7 @@
 package com.agiletec.aps.util;
 
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.assertj.core.api.Assertions;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;

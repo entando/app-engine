@@ -13,17 +13,21 @@
  */
 package org.entando.entando.aps.system.services.api.model;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author E.Santoboni
  */
 @XmlRootElement(name = "response")
+@JsonRootName("response")
 public class StringListApiResponse extends AbstractApiResponse {
     
 	@Override
     @XmlElement(name = "result", required = true)
+    @JsonProperty("result")
     public StringListApiResponseResult getResult() {
         return (StringListApiResponseResult) super.getResult();
     }
