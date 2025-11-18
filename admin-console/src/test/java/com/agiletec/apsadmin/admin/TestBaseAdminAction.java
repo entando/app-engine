@@ -13,7 +13,7 @@
  */
 package com.agiletec.apsadmin.admin;
 
-import static com.agiletec.apsadmin.admin.reload.ReloadConfigThread.RELOAD_THREAD;
+import static com.agiletec.aps.system.services.reload.ReloadConfigThread.RELOAD_THREAD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

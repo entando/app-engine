@@ -13,7 +13,7 @@
  */
 package com.agiletec.apsadmin.admin;
 
-import static com.agiletec.apsadmin.admin.reload.ReloadConfigThread.RELOAD_THREAD;
+import static com.agiletec.aps.system.services.reload.ReloadConfigThread.RELOAD_THREAD;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.event.ReloadingEntitiesReferencesEvent;
@@ -22,8 +22,8 @@ import com.agiletec.aps.system.services.baseconfig.SystemParamsUtils;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageManager;
+import com.agiletec.aps.system.services.reload.ReloadConfigThread;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
-import com.agiletec.apsadmin.admin.reload.ReloadConfigThread;
 import com.agiletec.apsadmin.system.BaseAction;
 import java.util.ArrayList;
 import java.util.Enumeration;
