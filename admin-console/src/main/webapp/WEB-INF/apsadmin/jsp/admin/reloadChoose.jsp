@@ -1,5 +1,7 @@
 <%@ taglib prefix="s" uri="/struts-tags" %>
 <%@ taglib prefix="wp" uri="/aps-core" %>
+<%@ taglib prefix="wpsf" uri="/apsadmin-form"%>
+
 <ol class="breadcrumb page-tabs-header breadcrumb-position">
     <li><s:text name="menu.configure"/></li>
     <li class="page-title-container">
@@ -30,10 +32,15 @@
         <p>
             <s:text name="label.reload.confirm"/>
         </p>
-        <div class="btn btn-danger button-fixed-width">
-            <a href="<s:url namespace="/do/BaseAdmin" action="reloadConfig" />" class="btn-danger button-fixed-width">
-                <s:text name="label.reload" />
-            </a>
+        <div>
+            <s:form action="reloadConfig" method="post"
+                    namespace="/do/BaseAdmin" >
+                <wpsf:submit type="button"
+                             cssClass="btn-danger button-fixed-width">
+                    <s:text name="label.reload" />
+                </wpsf:submit>
+            </s:form>
         </div>
+
     </wp:ifauthorized>
 </div>
