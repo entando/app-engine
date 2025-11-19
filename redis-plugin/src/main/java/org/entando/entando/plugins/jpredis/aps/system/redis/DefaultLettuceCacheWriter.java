@@ -58,7 +58,7 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter, IFCacheWithPipeline
 	private final RedisConnectionFactory connectionFactory;
 	private final Duration sleepTime;
     private RedisConnection pipelineConnection;
-    private final RedisCacheWriter delegate;
+    //private final RedisCacheWriter delegate;
 
 	/**
 	 * @param connectionFactory must not be {@literal null}.
@@ -77,7 +77,7 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter, IFCacheWithPipeline
 		Assert.notNull(sleepTime, "SleepTime must not be null!");
 		this.connectionFactory = connectionFactory;
 		this.sleepTime = sleepTime;
-        this.delegate = RedisCacheWriter.lockingRedisCacheWriter(connectionFactory);
+        //this.delegate = RedisCacheWriter.lockingRedisCacheWriter(connectionFactory);
 	}
 
 	/*

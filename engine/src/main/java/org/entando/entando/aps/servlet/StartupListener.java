@@ -89,6 +89,7 @@ public class StartupListener extends org.springframework.web.context.ContextLoad
         tenantAsynchInitService.startTenantsInitialization(svCtx, InitializationTenantFilter.NOT_REQUIRED_INIT_AT_START);
 
         this.setSessionCookieConfig(svCtx);
+        this.configureMultipart(svCtx);
 
         long endMs = System.currentTimeMillis();
         String executionTimeMsg = String.format("%s: contextInitialized takes ms:'%s' of execution",
@@ -130,7 +131,7 @@ public class StartupListener extends org.springframework.web.context.ContextLoad
 
         ServletRegistration servletRegistration = svCtx.getServletRegistration(SPRING_DISPATCHER_SERVLET_NAME);
 
-        if (servletRegistration != null && servletRegistration instanceof ServletRegistration.Dynamic) {
+        if (servletRegistration instanceof ServletRegistration.Dynamic) {
             MultipartConfigElement multipartConfig = new MultipartConfigElement(
                     null,                       // location (temp directory)
                     maxFileSize,                // maxFileSize

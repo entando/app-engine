@@ -199,9 +199,9 @@ public class ApsSystemUtils {
             );
         }
 
-        public static void printFeatureFlare(String flareName) {
-            printFeatureFlare(null, flareName, false);
-        }
+        //public static void printFeatureFlare(String flareName) {
+        //    printFeatureFlare(null, flareName, false);
+        //}
     }
 
     public static String getEnv(String name, String def) {
