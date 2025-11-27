@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 mvn -B clean
 
 (mvn org.codehaus.mojo:license-maven-plugin:2.5.0:aggregate-download-licenses &> ./license-maven-plugin.log) &
