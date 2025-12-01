@@ -39,6 +39,8 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.*;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -83,7 +85,7 @@ public class MailManager extends AbstractService implements IMailManager, Refres
 	@Override
 	public MailConfig getMailConfig() throws EntException {
 		try {
-			return (MailConfig) this._config.clone();
+			return (MailConfig) this.getConfig().clone();
 		} catch (Throwable t) {
 			throw new EntException("Error loading mail service configuration", t);
 		}
@@ -367,7 +369,7 @@ public class MailManager extends AbstractService implements IMailManager, Refres
 	 * @return The mail service configuration.
 	 */
 	protected MailConfig getConfig() {
-		return _config;
+		return this.tenantConfigs.get(this.getTenantCode());
 	}
 
 	/**
@@ -375,7 +377,8 @@ public class MailManager extends AbstractService implements IMailManager, Refres
 	 * @param config The mail service configuration.
 	 */
 	protected void setConfig(MailConfig config) {
-		this._config = config;
+		String tenantCode = this.getTenantCode();
+		this.tenantConfigs.put(tenantCode, config);
 	}
 
 	protected Boolean isActive() {
@@ -406,7 +409,7 @@ public class MailManager extends AbstractService implements IMailManager, Refres
 	}
 	
 	private Boolean _active;
-	private MailConfig _config;
+	private Map<String, MailConfig> tenantConfigs = new HashMap<>();
 	private ConfigInterface _configManager;
 	
 	/*

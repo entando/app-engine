@@ -14,6 +14,8 @@
 package com.agiletec.aps.system.common;
 
 import javax.annotation.PreDestroy;
+
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -81,6 +83,11 @@ public abstract class AbstractService
 	@Override
 	public String getName() {
 		return _name;
+	}
+
+	protected String getTenantCode() {
+		return ApsTenantApplicationUtils.getTenant()
+				.orElse("");
 	}
 	
 	protected INotifyManager getNotifyManager() {
