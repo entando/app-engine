@@ -5,7 +5,14 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="20230407000000_disable_content_menu" author="entando">
+    <changeSet id="20230407000000_disable_content_menu_v2" author="entando">
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '20230407000000_disable_content_menu'</sqlCheck>
+            <not>
+                <columnExists tableName="userpreferences" columnName="disablecontentmenu" />
+            </not>
+        </preConditions>
 
         <addColumn tableName="userpreferences">
             <column name="disablecontentmenu"

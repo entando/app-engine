@@ -5,7 +5,16 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="20221004100000_errorpage_config" author="entando" context="production">
+    <changeSet id="20221004100000_errorpage_config_v2" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '20221004100000_errorpage_config'</sqlCheck>
+            <sqlCheck expectedResult="1">SELECT COUNT(*) FROM pages WHERE code = 'errorpage'</sqlCheck>
+            <sqlCheck expectedResult="1">SELECT COUNT(*) FROM widgetcatalog WHERE code = 'messages_system'</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM widgetconfig_draft WHERE widgetcode = 'messages_system' AND pagecode = 'errorpage' AND framepos = 0</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM widgetconfig WHERE widgetcode = 'messages_system' AND pagecode = 'errorpage' AND framepos = 0</sqlCheck>
+        </preConditions>
 
         <insert tableName="widgetconfig_draft">
             <column name="pagecode" value="errorpage" />
