@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="00000000000002_schemaServ" author="entando">
+    <changeSet id="00000000000002_schemaServ" author="entando" failOnError="false">
         <addNotNullConstraint tableName="authuserprofileattrroles" columnName="attrname" columnDataType="varchar(30)"></addNotNullConstraint>
         <addNotNullConstraint tableName="authuserprofileattrroles" columnName="rolename" columnDataType="varchar(50)"></addNotNullConstraint>
         <addNotNullConstraint tableName="authuserprofilesearch" columnName="attrname" columnDataType="varchar(30)"></addNotNullConstraint>

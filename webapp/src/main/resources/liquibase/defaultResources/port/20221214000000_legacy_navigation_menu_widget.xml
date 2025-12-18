@@ -5,7 +5,13 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="20221214100000_navigation_bar_widget" author="entando" context="production">
+    <changeSet id="20221214100000_navigation_bar_widget_v2" author="entando" context="production">
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '20221214100000_navigation_bar_widget'</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM widgetcatalog WHERE code = 'legacy-navigation-menu'</sqlCheck>
+        </preConditions>
+
         <insert tableName="widgetcatalog">
             <column name="code" value="legacy-navigation-menu" />
             <column name="titles" valueClobFile="clob/production/widgetcatalog_12.xml" />

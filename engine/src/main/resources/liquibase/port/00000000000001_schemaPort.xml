@@ -5,7 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="00000000000001_schemaPort" author="entando" >
+    <changeSet id="00000000000001_schemaPort_v2" author="entando" >
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '00000000000001_schemaPort'</sqlCheck>
+            <not>
+                <tableExists tableName="sysconfig"/>
+            </not>
+        </preConditions>
 
         <createTable tableName="sysconfig" >
             <column name="version" type="varchar(10)">

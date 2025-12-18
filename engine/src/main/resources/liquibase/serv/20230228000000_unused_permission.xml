@@ -5,7 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="20230228000000_unused_permission" author="entando">
+    <changeSet id="20230228000000_unused_permission_v2" author="entando">
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '20230228000000_unused_permission'</sqlCheck>
+            <tableExists tableName="authrolepermissions"/>
+        </preConditions>
         
         <delete tableName="authrolepermissions">
             <where>rolename='reviewer'</where>

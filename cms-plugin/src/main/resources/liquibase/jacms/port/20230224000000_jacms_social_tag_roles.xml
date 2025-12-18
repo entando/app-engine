@@ -5,7 +5,13 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
     
-    <changeSet id="20230224000000_jacms_social_tag_roles" author="entando" context="production">
+    <changeSet id="20230224000000_jacms_social_tag_roles_v2" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '20230224000000_jacms_social_tag_roles'</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sysconfig WHERE item = 'contentTypesRoles'</sqlCheck>
+        </preConditions>
         
         <insert tableName="sysconfig">
             <column name="version" value="production" />

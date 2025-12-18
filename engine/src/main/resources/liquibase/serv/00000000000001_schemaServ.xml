@@ -5,7 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
     
-    <changeSet id="00000000000001_schemaServ" author="entando">
+    <changeSet id="00000000000001_schemaServ_v2" author="entando">
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '00000000000001_schemaServ'</sqlCheck>
+            <not>
+                <tableExists tableName="authgroups"/>
+            </not>
+        </preConditions>
 
         <createTable tableName="authgroups" >
             <column name="groupname" type="varchar(20)">
@@ -327,7 +334,14 @@
         <sql>CREATE TABLE api_oauth_consumers (consumerkey VARCHAR(100) NOT NULL, consumersecret VARCHAR(100) NOT NULL, name VARCHAR(255), description CLOB NOT NULL, callbackurl CLOB, scope VARCHAR(255), authorizedgranttypes VARCHAR(255), expirationdate TIMESTAMP, issueddate TIMESTAMP, CONSTRAINT PK_API_OAUTH_CONSUMERS PRIMARY KEY (consumerkey))</sql>
     </changeSet>
     
-    <changeSet id="00000000000001_schemaServ_consumers" author="entando" dbms="!derby">
+    <changeSet id="00000000000001_schemaServ_consumers_v2" author="entando" dbms="!derby">
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '00000000000001_schemaServ_consumers'</sqlCheck>
+            <not>
+                <tableExists tableName="api_oauth_consumers"/>
+            </not>
+        </preConditions>
         <createTable tableName="api_oauth_consumers" >
             <column name="consumerkey" type="varchar(100)">
                 <constraints primaryKey="true" nullable="false"/>
