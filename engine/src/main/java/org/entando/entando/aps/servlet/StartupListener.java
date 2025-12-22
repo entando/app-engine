@@ -40,9 +40,7 @@ public class StartupListener extends org.springframework.web.context.ContextLoad
     private static final String ENTANDO_SECURE_SECRET_COOKIES = "ENTANDO_SECURE_SECRET_COOKIES";
     // Default values (50MB file, 100MB request)
     private static final long DEFAULT_MAX_FILE_SIZE = 52428800L; // 50MB
-    private static final long DEFAULT_MAX_REQUEST_SIZE = 104857600L; // 100MB
     private static final int DEFAULT_FILE_SIZE_THRESHOLD = 0; // Write all to disk
-    private static final boolean DEFAULT_SESSION_COOKIE_SECURE = false; // Default to false for development
 
     private static final EntLogger LOGGER = EntLogFactory.getSanitizedLogger(StartupListener.class);
 
