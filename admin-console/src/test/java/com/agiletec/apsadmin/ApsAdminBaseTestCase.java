@@ -59,7 +59,7 @@ public class ApsAdminBaseTestCase {
     private static MockHttpServletResponse response;
     private ActionSupport action;
 
-    private Map<String, Parameter> parameters = new HashMap<String, Parameter>();
+    private final Map<String, Parameter> parameters = new HashMap<String, Parameter>();
 
     @BeforeAll
     protected static void setUp() throws Exception {
@@ -130,8 +130,7 @@ public class ApsAdminBaseTestCase {
     protected static void waitThreads(String threadNamePrefix) throws InterruptedException {
         Thread[] threads = new Thread[20];
         Thread.enumerate(threads);
-        for (int i = 0; i < threads.length; i++) {
-            Thread currentThread = threads[i];
+        for (Thread currentThread : threads) {
             if (currentThread != null
                     && currentThread.getName().startsWith(threadNamePrefix)) {
                 currentThread.join();
@@ -154,7 +153,7 @@ public class ApsAdminBaseTestCase {
         // create a proxy class which is just a wrapper around the action call.
         // The proxy is created by checking the namespace and name against the
         // struts.xml configuration
-        ActionProxyFactory proxyFactory = (ActionProxyFactory) this.dispatcher.getContainer().getInstance(ActionProxyFactory.class);
+        ActionProxyFactory proxyFactory = (ActionProxyFactory) dispatcher.getContainer().getInstance(ActionProxyFactory.class);
         this.proxy = proxyFactory.createActionProxy(namespace, name, null, null, true, false);
 
         // set to true if you want to process Freemarker or JSP results
@@ -163,29 +162,28 @@ public class ApsAdminBaseTestCase {
 
         // set the actions context to the one which the proxy is using
         if (refreshResponse) {
-            this.response = new MockHttpServletResponse();
-            RequestContext reqCtx = (RequestContext) this.request.getAttribute(RequestContext.REQCTX);
-            reqCtx.setResponse(this.response);
+            response = new MockHttpServletResponse();
+            RequestContext reqCtx = (RequestContext) request.getAttribute(RequestContext.REQCTX);
+            reqCtx.setResponse(response);
         }
         ActionContext actionContext = this.proxy.getInvocation().getInvocationContext()
                 .withSession(new HashMap<>())
-                .withServletRequest(this.request)
-                .withServletContext(this.servletContext)
-                .withServletResponse(this.response)
+                .withServletRequest(request)
+                .withServletContext(servletContext)
+                .withServletResponse(response)
                 .withLocale(Locale.ENGLISH);
         ActionContext.bind(actionContext);
         this.action = (ActionSupport) this.proxy.getAction();
 
         //reset previsious params
-        List<String> paramNames = new ArrayList<String>(this.request.getParameterMap().keySet());
-        for (int i = 0; i < paramNames.size(); i++) {
-            String paramName = (String) paramNames.get(i);
-            this.removeParameter(paramName);
+        List<String> paramNames = new ArrayList<String>(request.getParameterMap().keySet());
+        for (String s : paramNames) {
+            this.removeParameter((String) s);
         }
     }
 
     /**
-     * Metodo da estendere in caso che si voglia impiantare un'altro
+     * Metodo da estendere in caso che si voglia impiantare un altro
      * struts-config.
      *
      * @param params The parameters
@@ -206,7 +204,7 @@ public class ApsAdminBaseTestCase {
     protected UserDetails getUser(String username, String password) throws Exception {
         IAuthenticationProviderManager provider = (IAuthenticationProviderManager) this.getService(SystemConstants.AUTHENTICATION_PROVIDER_MANAGER);
         IUserManager userManager = (IUserManager) this.getService(SystemConstants.USER_MANAGER);
-        UserDetails user = null;
+        UserDetails user;
         if (username.equals(SystemConstants.GUEST_USER_NAME)) {
             user = userManager.getGuestUser();
         } else {
@@ -233,19 +231,20 @@ public class ApsAdminBaseTestCase {
             return;
         }
         UserDetails currentUser = this.getUser(username, username);//nel database di test, username e password sono uguali
-        HttpSession session = this.request.getSession();
+        HttpSession session = request.getSession();
+        assert session != null;
         session.setAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER, currentUser);
     }
 
     protected void removeUserOnSession() throws Exception {
-        HttpSession session = this.request.getSession();
+        HttpSession session = request.getSession();
+        assert session != null;
         session.removeAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
     }
 
     protected void addParameters(Map params) {
-        Iterator iter = params.keySet().iterator();
-        while (iter.hasNext()) {
-            String key = (String) iter.next();
+        for (Object o : params.keySet()) {
+            String key = (String) o;
             this.addParameter(key, params.get(key).toString());
         }
     }
@@ -257,7 +256,7 @@ public class ApsAdminBaseTestCase {
     }
 
     protected void addParameter(String name, Collection<String> value) {
-        this.request.removeParameter(name);
+        request.removeParameter(name);
         if (null == value) {
             return;
         }
@@ -266,7 +265,7 @@ public class ApsAdminBaseTestCase {
         int i = 0;
         while (iter.hasNext()) {
             String stringValue = iter.next();
-            this.request.addParameter(name, stringValue);
+            request.addParameter(name, stringValue);
             array[i++] = stringValue;
         }
         Parameter.Request parameter = new Parameter.Request(name, array);
@@ -274,17 +273,17 @@ public class ApsAdminBaseTestCase {
     }
 
     protected void addParameter(String name, Object value) {
-        this.request.removeParameter(name);
+        request.removeParameter(name);
         if (null == value) {
             return;
         }
-        this.request.addParameter(name, value.toString());
+        request.addParameter(name, value.toString());
         Parameter.Request parameter = new Parameter.Request(name, value.toString());
         this.parameters.put(name, parameter);
     }
 
     protected void addAttribute(String name, Object value) {
-        this.request.removeAttribute(name);
+        request.removeAttribute(name);
         if (null == value) {
             return;
         }
@@ -292,17 +291,16 @@ public class ApsAdminBaseTestCase {
     }
 
     private void removeParameter(String name) {
-        this.request.removeParameter(name);
-        this.request.removeAttribute(name);
+        request.removeParameter(name);
+        request.removeAttribute(name);
         this.parameters.remove(name);
     }
 
     protected String executeAction() throws Throwable {
         ActionContext ac = this.getActionContext();
-        ac.withParameters(HttpParameters.create(this.request.getParameterMap()).build());
+        ac.withParameters(HttpParameters.create(request.getParameterMap()).build());
         ac.getParameters().appendAll(this.parameters);
-        String result = this.proxy.execute();
-        return result;
+        return this.proxy.execute();
     }
 
     protected ActionInvocation getActionInvocation() {
@@ -330,7 +328,7 @@ public class ApsAdminBaseTestCase {
     }
 
     protected HttpServletRequest getRequest() {
-        return this.request;
+        return request;
     }
 
 }

@@ -154,7 +154,7 @@
             <param-value>classpath:spring/web/servlet-context-keycloak.xml</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
-        <!-- Note: Multipart config is set programmatically by ConfigWebApplicationInitializer -->
+        <!-- Note: Multipart config is set programmatically by StartupListener -->
         <!-- This reads file.upload.maxSize from properties -->
     </servlet>
     <servlet-mapping>
@@ -197,8 +197,9 @@
     <session-config>
         <session-timeout>30</session-timeout>
         <cookie-config>
-            <!-- Note: http-only and secure flags are set programmatically by ConfigWebApplicationInitializer -->
-            <!-- This reads jsessionid.secure from properties (defaults to false) -->
+            <http-only>true</http-only>
+            <!-- Note:  secure flag is set programmatically by StartupListener -->
+            <!-- This reads ENTANDO_SECURE_SECRET_COOKIES from env (defaults to false) -->
             <!-- for jetty -->
             <comment>__SAME_SITE_STRICT__</comment>
         </cookie-config>

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.entando.entando.aps.system.services.cache.IFCacheWithPipeline;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -69,16 +71,18 @@ public class ConfigManagerCacheWrapper extends AbstractCacheWrapper implements I
     
     protected void insertAndCleanCache(Cache cache,
             Map<String, String> objects, String codesCacheName, String codeCachePrefix) {
-        List<String> oldCodes = this.get(cache, codesCacheName, List.class);
-        List<String> codes = new ArrayList<>();
-        for (Map.Entry<String, String> entry : objects.entrySet()) {
-            cache.put(codeCachePrefix + entry.getKey(), entry.getValue());
-            codes.add(entry.getKey());
-        }
-        cache.put(codesCacheName, codes);
-        List<String> keysToRelease = oldCodes == null ? null :
-                oldCodes.stream().filter(c -> !objects.containsKey(c)).collect(Collectors.toList());
-        this.releaseObjects(cache, keysToRelease, codeCachePrefix);
+        IFCacheWithPipeline.pipelined(cache.getNativeCache(), cp -> {
+            List<String> oldCodes = this.get(cache, codesCacheName, List.class);
+            List<String> codes = new ArrayList<>();
+            for (Map.Entry<String, String> entry : objects.entrySet()) {
+                cache.put(codeCachePrefix + entry.getKey(), entry.getValue());
+                codes.add(entry.getKey());
+            }
+            cache.put(codesCacheName, codes);
+            List<String> keysToRelease = oldCodes == null ? null :
+                    oldCodes.stream().filter(c -> !objects.containsKey(c)).collect(Collectors.toList());
+            this.releaseObjects(cache, keysToRelease, codeCachePrefix);
+        });
     }
 
     private void releaseObjects(Cache cache, List<String> keysToRelease, String prefix) {

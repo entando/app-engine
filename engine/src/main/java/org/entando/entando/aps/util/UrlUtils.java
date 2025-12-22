@@ -84,11 +84,21 @@ public final class UrlUtils {
     }
 
     private static Optional<String> getProtoFromEnv(){
-        if( BooleanUtils.toBoolean(System.getenv(ENTANDO_APP_USE_TLS)) ) {
+        if( determineForceHttps() ) {
             return Optional.ofNullable(HTTPS_SCHEME);
         } else {
             return Optional.ofNullable(HTTP_SCHEME);
         }
+    }
+
+    /**
+     * Return true if the proper configuration var is set to true:
+     * <ul>
+     *     <li>ENTANDO_APP_USE_TLS must be used</li>
+     * </ul>
+     */
+    public static boolean determineForceHttps() {
+        return Boolean.parseBoolean(System.getenv(ENTANDO_APP_USE_TLS));
     }
 
     private static Optional<String> getProtoFromXHeader(HttpServletRequest request){

@@ -64,6 +64,7 @@ jobs:
         path: |
           target/generated-resources/licenses
           webapp/target/*.war
+          webapp/target/*-jsessionid-cookie-processor.jar
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   test-and-scan:

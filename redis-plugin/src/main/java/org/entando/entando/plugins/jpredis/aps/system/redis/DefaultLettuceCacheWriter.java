@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.entando.entando.aps.system.services.cache.IFCacheWithPipeline;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.redis.cache.CacheStatistics;
 import org.springframework.data.redis.cache.CacheStatisticsCollector;
@@ -52,11 +53,12 @@ import org.springframework.util.Assert;
  * @author André Prata
  * @since 2.0
  */
-class DefaultLettuceCacheWriter implements RedisCacheWriter {
+class DefaultLettuceCacheWriter implements RedisCacheWriter, IFCacheWithPipeline {
 
 	private final RedisConnectionFactory connectionFactory;
 	private final Duration sleepTime;
-	private final RedisCacheWriter delegate;
+    private RedisConnection pipelineConnection;
+    //private final RedisCacheWriter delegate;
 
 	/**
 	 * @param connectionFactory must not be {@literal null}.
@@ -75,7 +77,7 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 		Assert.notNull(sleepTime, "SleepTime must not be null!");
 		this.connectionFactory = connectionFactory;
 		this.sleepTime = sleepTime;
-		this.delegate = RedisCacheWriter.lockingRedisCacheWriter(connectionFactory);
+        //this.delegate = RedisCacheWriter.lockingRedisCacheWriter(connectionFactory);
 	}
 
 	/*
@@ -87,15 +89,14 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 		Assert.notNull(name, "Name must not be null!");
 		Assert.notNull(key, "Key must not be null!");
 		Assert.notNull(value, "Value must not be null!");
-		delegate.put(name, key, value, ttl);
-//		execute(name, connection -> {
-//			if (shouldExpireWithin(ttl)) {
-//				connection.set(key, value, Expiration.from(ttl.toMillis(), TimeUnit.MILLISECONDS), SetOption.upsert());
-//			} else {
-//				connection.set(key, value);
-//			}
-//			return "OK";
-//		});
+		execute(name, connection -> {
+			if (shouldExpireWithin(ttl)) {
+				connection.set(key, value, Expiration.from(ttl.toMillis(), TimeUnit.MILLISECONDS), SetOption.upsert());
+			} else {
+				connection.set(key, value);
+			}
+			return "OK";
+		});
 	}
 
 	/*
@@ -106,39 +107,7 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 	public byte[] get(String name, byte[] key) {
 		Assert.notNull(name, "Name must not be null!");
 		Assert.notNull(key, "Key must not be null!");
-//		return execute(name, connection -> connection.get(key));
-		return delegate.get(name, key);
-	}
-
-	// --- Asynchronous methods: Implementing store and retrieve ---
-
-	@Override
-	public CompletableFuture<Void> store(String name, byte[] key, byte[] value, @Nullable Duration ttl) {
-		Assert.notNull(name, "Name must not be null!");
-		Assert.notNull(key, "Key must not be null!");
-		Assert.notNull(value, "Value must not be null!");
-
-		// Delegate the asynchronous storage operation
-		return delegate.store(name, key, value, ttl);
-	}
-
-	@Override
-	public CompletableFuture<byte[]> retrieve(String name, byte[] key) {
-		Assert.notNull(name, "Name must not be null!");
-		Assert.notNull(key, "Key must not be null!");
-
-		// Delegate the asynchronous retrieval operation
-		return delegate.retrieve(name, key);
-	}
-
-    // --- Important: You should override the TTL-enabled retrieve as well ---
-	@Override
-	public CompletableFuture<byte[]> retrieve(String name, byte[] key, @Nullable Duration ttl) {
-		Assert.notNull(name, "Name must not be null!");
-		Assert.notNull(key, "Key must not be null!");
-
-        // Delegate the asynchronous retrieval operation with TTL
-		return delegate.retrieve(name, key, ttl);
+		return execute(name, connection -> connection.get(key));
 	}
 
 	/*
@@ -150,25 +119,24 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 		Assert.notNull(name, "Name must not be null!");
 		Assert.notNull(key, "Key must not be null!");
 		Assert.notNull(value, "Value must not be null!");
-//		return execute(name, connection -> {
-//			if (isLockingCacheWriter()) {
-//				doLock(name, connection);
-//			}
-//			try {
-//				if (connection.setNX(key, value)) {
-//					if (shouldExpireWithin(ttl)) {
-//						connection.pExpire(key, ttl.toMillis());
-//					}
-//					return null;
-//				}
-//				return connection.get(key);
-//			} finally {
-//				if (isLockingCacheWriter()) {
-//					doUnlock(name, connection);
-//				}
-//			}
-//		});
-		return delegate.putIfAbsent(name, key, value, ttl);
+		return execute(name, connection -> {
+			if (isLockingCacheWriter()) {
+				doLock(name, connection);
+			}
+			try {
+				if (connection.setNX(key, value)) {
+					if (shouldExpireWithin(ttl)) {
+						connection.pExpire(key, ttl.toMillis());
+					}
+					return null;
+				}
+				return connection.get(key);
+			} finally {
+				if (isLockingCacheWriter()) {
+					doUnlock(name, connection);
+				}
+			}
+		});
 	}
 
 	/*
@@ -179,8 +147,7 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 	public void remove(String name, byte[] key) {
 		Assert.notNull(name, "Name must not be null!");
 		Assert.notNull(key, "Key must not be null!");
-//		execute(name, connection -> connection.del(key));
-		delegate.remove(name, key);
+		execute(name, connection -> connection.del(key));
 	}
 
 	/*
@@ -191,141 +158,217 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter {
 	public void clean(String name, byte[] pattern) {
 		Assert.notNull(name, "Name must not be null!");
 		Assert.notNull(pattern, "Pattern must not be null!");
-//		execute(name, connection -> {
-//			boolean wasLocked = false;
-//			try {
-//				if (isLockingCacheWriter()) {
-//					doLock(name, connection);
-//					wasLocked = true;
-//				}
-//				byte[][] keys = Optional.ofNullable(connection.keys(pattern)).orElse(Collections.emptySet())
-//						.toArray(new byte[0][]);
-//				if (keys.length > 0) {
-//					connection.del(keys);
-//				}
-//			} finally {
-//				if (wasLocked && isLockingCacheWriter()) {
-//					doUnlock(name, connection);
-//				}
-//			}
-//			return "OK";
-//		});
-		delegate.clean(name, pattern);
-	}
-//
-//	/**
-//	 * Explicitly set a write lock on a cache.
-//	 *
-//	 * @param name the name of the cache to lock.
-//	 */
-//	void lock(String name) {
-//		execute(name, connection -> doLock(name, connection));
-//	}
-//
-//	/**
-//	 * Explicitly remove a write lock from a cache.
-//	 *
-//	 * @param name the name of the cache to unlock.
-//	 */
-//	void unlock(String name) {
-//		executeLockFree(connection -> doUnlock(name, connection));
-//	}
-//
-//	private Boolean doLock(String name, RedisConnection connection) {
-//		return connection.setNX(createCacheLockKey(name), new byte[0]);
-//	}
-//
-//	private Long doUnlock(String name, RedisConnection connection) {
-//		return connection.del(createCacheLockKey(name));
-//	}
-//
-//	boolean doCheckLock(String name, RedisConnection connection) {
-//		return connection.exists(createCacheLockKey(name));
-//	}
-//
-//	/**
-//	 * @return {@literal true} if {@link RedisCacheWriter} uses locks.
-//	 */
-//	private boolean isLockingCacheWriter() {
-//		return !sleepTime.isZero() && !sleepTime.isNegative();
-//	}
-//
-//	private <T> T execute(String name, Function<RedisConnection, T> callback) {
-//		RedisConnection connection = connectionFactory.getConnection();
-//		try {
-//			checkAndPotentiallyWaitUntilUnlocked(name, connection);
-//			return callback.apply(connection);
-//		} finally {
-//			connection.close();
-//		}
-//	}
-//
-//	private void executeLockFree(Consumer<RedisConnection> callback) {
-//		RedisConnection connection = connectionFactory.getConnection();
-//		try {
-//			callback.accept(connection);
-//		} finally {
-//			connection.close();
-//		}
-//	}
-//
-//	private void checkAndPotentiallyWaitUntilUnlocked(String name, RedisConnection connection) {
-//		if (!isLockingCacheWriter()) {
-//			return;
-//		}
-//		try {
-//			while (doCheckLock(name, connection)) {
-//				Thread.sleep(sleepTime.toMillis());
-//			}
-//		} catch (InterruptedException ex) {
-//			// Re-interrupt current thread, to allow other participants to react.
-//			Thread.currentThread().interrupt();
-//			throw new PessimisticLockingFailureException(String.format("Interrupted while waiting to unlock cache %s", name), ex);
-//		}
-//	}
-//
-//	private static boolean shouldExpireWithin(@Nullable Duration ttl) {
-//		return ttl != null && !ttl.isZero() && !ttl.isNegative();
-//	}
-//
-//	private static byte[] createCacheLockKey(String name) {
-//		return (name + "~lock").getBytes(StandardCharsets.UTF_8);
-//	}
-
-	// ESB-678: Added withStatisticsCollector method for Spring Data Redis compatibility
-	// Spring Data Redis 2.5.12+ requires RedisCacheWriter implementations to support
-	// cache statistics collection. This method returns 'this' to maintain the current
-	// instance while indicating statistics collection capability is available.
-	// References:
-	// - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheWriter.html
-	// - Spring Data Redis 2.5.12 API documentation
-	@Override
-	public RedisCacheWriter withStatisticsCollector(CacheStatisticsCollector cacheStatisticsCollector) {
-		return this;
+		execute(name, connection -> {
+			boolean wasLocked = false;
+			try {
+				if (isLockingCacheWriter()) {
+					doLock(name, connection);
+					wasLocked = true;
+				}
+				byte[][] keys = Optional.ofNullable(connection.keys(pattern)).orElse(Collections.emptySet())
+						.toArray(new byte[0][]);
+				if (keys.length > 0) {
+					connection.del(keys);
+				}
+			} finally {
+				if (wasLocked && isLockingCacheWriter()) {
+					doUnlock(name, connection);
+				}
+			}
+			return "OK";
+		});
 	}
 
-	// ESB-678: Added clearStatistics method for Spring Data Redis cache statistics support
-	// This method provides a no-op implementation for clearing cache statistics as required
-	// by the RedisCacheWriter interface in Spring Data Redis 2.5.12+. Custom implementations
-	// can override this to provide actual statistics clearing functionality if needed.
-	// References:
-	// - org.springframework.data.redis.cache.RedisCacheWriter interface
-	// - Spring Data Redis cache statistics documentation
-	@Override
-	public void clearStatistics(String name) {
-		// No-op implementation for statistics clearing
+	/**
+	 * Explicitly set a write lock on a cache.
+	 *
+	 * @param name the name of the cache to lock.
+	 */
+	void lock(String name) {
+		execute(name, connection -> doLock(name, connection));
 	}
 
-	// ESB-678: Added getCacheStatistics method for Spring Data Redis statistics interface
-	// Required by CacheStatisticsProvider interface in Spring Data Redis 2.5.12+.
-	// Returns null to indicate no statistics are currently collected by this implementation.
-	// Can be enhanced to return actual CacheStatistics if monitoring is needed.
-	// References:
-	// - org.springframework.data.redis.cache.CacheStatisticsProvider interface  
-	// - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/CacheStatistics.html
-	@Override
-	public CacheStatistics getCacheStatistics(String cacheName) {
-		return null;
+	/**
+	 * Explicitly remove a write lock from a cache.
+	 *
+	 * @param name the name of the cache to unlock.
+	 */
+	void unlock(String name) {
+		executeLockFree(connection -> doUnlock(name, connection));
 	}
+
+	private Boolean doLock(String name, RedisConnection connection) {
+		return connection.setNX(createCacheLockKey(name), new byte[0]);
+	}
+
+	private Long doUnlock(String name, RedisConnection connection) {
+		return connection.del(createCacheLockKey(name));
+	}
+
+	boolean doCheckLock(String name, RedisConnection connection) {
+		return connection.exists(createCacheLockKey(name));
+	}
+
+	/**
+	 * @return {@literal true} if {@link RedisCacheWriter} uses locks.
+	 */
+	private boolean isLockingCacheWriter() {
+		return !sleepTime.isZero() && !sleepTime.isNegative();
+	}
+
+	private <T> T execute(String name, Function<RedisConnection, T> callback) {
+		RedisConnection connection = determineConnection();
+		try {
+			checkAndPotentiallyWaitUntilUnlocked(name, connection);
+			return callback.apply(connection);
+		} finally {
+            if (!connection.isPipelined()) {
+                connection.close();
+            }
+		}
+	}
+
+	private void executeLockFree(Consumer<RedisConnection> callback) {
+		RedisConnection connection = determineConnection();
+		try {
+			callback.accept(connection);
+		} finally {
+            if (!connection.isPipelined()) {
+                connection.close();
+            }
+		}
+	}
+
+	private void checkAndPotentiallyWaitUntilUnlocked(String name, RedisConnection connection) {
+		if (!isLockingCacheWriter()) {
+			return;
+		}
+		try {
+			while (doCheckLock(name, connection)) {
+				Thread.sleep(sleepTime.toMillis());
+			}
+		} catch (InterruptedException ex) {
+			// Re-interrupt current thread, to allow other participants to react.
+			Thread.currentThread().interrupt();
+			throw new PessimisticLockingFailureException(String.format("Interrupted while waiting to unlock cache %s", name), ex);
+		}
+	}
+
+	private static boolean shouldExpireWithin(@Nullable Duration ttl) {
+		return ttl != null && !ttl.isZero() && !ttl.isNegative();
+	}
+
+	private static byte[] createCacheLockKey(String name) {
+		return (name + "~lock").getBytes(StandardCharsets.UTF_8);
+	}
+
+    @Override
+    public void openPipeline() {
+        this.pipelineConnection = determineConnection();
+        this.pipelineConnection.openPipeline();
+    }
+
+    @Override
+    public void closePipeline() {
+        RedisConnection closingPipelineConnection = this.pipelineConnection;
+        this.pipelineConnection = null;
+        closingPipelineConnection.closePipeline();
+        closingPipelineConnection.close();
+    }
+
+    private RedisConnection determineConnection() {
+        return (pipelineConnection != null) ? pipelineConnection : connectionFactory.getConnection();
+    }
+
+    // ESB-678: Added withStatisticsCollector method for Spring Data Redis compatibility
+    // Spring Data Redis 2.5.12+ requires RedisCacheWriter implementations to support
+    // cache statistics collection. This method returns 'this' to maintain the current
+    // instance while indicating statistics collection capability is available.
+    // References:
+    // - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheWriter.html
+    // - Spring Data Redis 2.5.12 API documentation
+    @Override
+    public RedisCacheWriter withStatisticsCollector(CacheStatisticsCollector cacheStatisticsCollector) {
+        return this;
+    }
+
+    // ESB-678: Added clearStatistics method for Spring Data Redis cache statistics support
+    // This method provides a no-op implementation for clearing cache statistics as required
+    // by the RedisCacheWriter interface in Spring Data Redis 2.5.12+. Custom implementations
+    // can override this to provide actual statistics clearing functionality if needed.
+    // References:
+    // - org.springframework.data.redis.cache.RedisCacheWriter interface
+    // - Spring Data Redis cache statistics documentation
+    @Override
+    public void clearStatistics(String name) {
+        // No-op implementation for statistics clearing
+    }
+
+    // ESB-678: Added getCacheStatistics method for Spring Data Redis statistics interface
+    // Required by CacheStatisticsProvider interface in Spring Data Redis 2.5.12+.
+    // Returns null to indicate no statistics are currently collected by this implementation.
+    // Can be enhanced to return actual CacheStatistics if monitoring is needed.
+    // References:
+    // - org.springframework.data.redis.cache.CacheStatisticsProvider interface
+    // - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/CacheStatistics.html
+    @Override
+    public CacheStatistics getCacheStatistics(String cacheName) {
+        return null;
+    }
+
+
+    // --- Asynchronous methods: Implementing store and retrieve ---
+
+    // ESB-771: Added retrieve method for Spring Data Redis AsyncCacheWriter interface
+    // Required by AsyncCacheWriter interface in Spring Data Redis 3.2+.
+    // Returns null to indicate reactive pattern is not supported by this implementation.
+    // References:
+    // - org.springframework.data.redis.cache.DefaultRedisCacheWriter.AsyncCacheWriter interface
+    // - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheWriter.html#store(java.lang.String,byte%5B%5D,byte%5B%5D,java.time.Duration)
+    @Override
+    public CompletableFuture<Void> store(String name, byte[] key, byte[] value, @Nullable Duration ttl) {
+    //  Assert.notNull(name, "Name must not be null!");
+    //  Assert.notNull(key, "Key must not be null!");
+    //  Assert.notNull(value, "Value must not be null!");
+    //
+    //  // Delegate the asynchronous storage operation
+    //  return  delegate.store(name, key, value, ttl);
+        return null;
+    }
+
+
+    // ESB-771: Added retrieve method for Spring Data Redis AsyncCacheWriter interface
+    // Required by AsyncCacheWriter interface in Spring Data Redis 3.2+.
+    // Returns null to indicate reactive pattern is not supported by this implementation.
+    // References:
+    // - org.springframework.data.redis.cache.DefaultRedisCacheWriter.AsyncCacheWriter interface
+    // - https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheWriter.html#retrieve(java.lang.String,byte%5B%5D,java.time.Duration)
+    @Override
+    public CompletableFuture<byte[]> retrieve(String name, byte[] key, @Nullable Duration ttl) {
+        //  Assert.notNull(name, "Name must not be null!");
+        //  Assert.notNull(key, "Key must not be null!");
+        //
+        //  // Delegate the asynchronous retrieval operation with TTL
+        //  return  delegate.retrieve(name, key, ttl);
+        return null;
+    }
+    /**
+    * This method extends  {@link #retrieve(String, byte[], Duration)}
+    * https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/cache/RedisCacheWriter.html#retrieve(java.lang.String,byte%5B%5D)
+    */
+    @Override
+    public CompletableFuture<byte[]> retrieve(String name, byte[] key) {
+        //  Assert.notNull(name, "Name must not be null!");
+        //  Assert.notNull(key, "Key must not be null!");
+        //
+        //  // Delegate the asynchronous retrieval operation
+        //  return  delegate.retrieve(name, key);
+        return null;
+    }
+
+    @Override
+    public boolean supportsAsyncRetrieve() {
+        return false;
+    }
     
 }

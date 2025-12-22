@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.entando.entando.aps.system.exception.CacheItemNotFoundException;
+import org.entando.entando.aps.system.services.cache.IFCacheWithPipeline;
 import org.springframework.cache.Cache;
 
 /**
@@ -62,16 +63,18 @@ public abstract class AbstractGenericCacheWrapper<O> extends AbstractCacheWrappe
     }
 
     protected void insertAndCleanCache(Cache cache, Map<String, O> objects, String codesCacheKey, String cacheKeyPrefix) {
-        List<String> oldCodes = this.get(cache, codesCacheKey, List.class);
-        List<String> codes = new ArrayList<>();
-        for (Map.Entry<String, O> entry: objects.entrySet()) {
-            cache.put(cacheKeyPrefix + entry.getKey(), entry.getValue());
-            codes.add(entry.getKey());
-        }
-        cache.put(codesCacheKey, codes);
-        List<String> keysToRelease = oldCodes == null ? null :
-                oldCodes.stream().filter(c -> !objects.containsKey(c)).collect(Collectors.toList());
-        this.releaseObjects(cache, keysToRelease, cacheKeyPrefix);
+        IFCacheWithPipeline.pipelined(cache.getNativeCache(), cp -> {
+            List<String> oldCodes = this.get(cache, codesCacheKey, List.class);
+            List<String> codes = new ArrayList<>();
+            for (Map.Entry<String, O> entry: objects.entrySet()) {
+                cache.put(cacheKeyPrefix + entry.getKey(), entry.getValue());
+                codes.add(entry.getKey());
+            }
+            cache.put(codesCacheKey, codes);
+            List<String> keysToRelease = oldCodes == null ? null :
+                    oldCodes.stream().filter(c -> !objects.containsKey(c)).collect(Collectors.toList());
+            this.releaseObjects(cache, keysToRelease, cacheKeyPrefix);
+        });
     }
 
     private void releaseObjects(Cache cache, List<String> keysToRelease, String cacheKeyPrefix) {

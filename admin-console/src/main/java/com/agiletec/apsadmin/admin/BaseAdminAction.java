@@ -13,15 +13,7 @@
  */
 package com.agiletec.apsadmin.admin;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.springframework.web.context.WebApplicationContext;
+import static com.agiletec.aps.system.services.reload.ReloadConfigThread.RELOAD_THREAD;
 
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.event.ReloadingEntitiesReferencesEvent;
@@ -30,8 +22,19 @@ import com.agiletec.aps.system.services.baseconfig.SystemParamsUtils;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageManager;
+import com.agiletec.aps.system.services.reload.ReloadConfigThread;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import com.agiletec.apsadmin.system.BaseAction;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * This base action implements the default actions available for the system
@@ -43,6 +46,10 @@ public class BaseAdminAction extends BaseAction {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(BaseAdminAction.class);
 
+    public static final String RELOAD_ERROR = "reloadError";
+    public static final String IN_PROGRESS = "inProgress";
+    public static final String NEW_PARAM_MARKER = "_newParamMarker";
+
     /**
      * Reload the system configuration.
      *
@@ -50,14 +57,48 @@ public class BaseAdminAction extends BaseAction {
      */
     public String reloadConfig() {
         try {
-            ApsWebApplicationUtils.executeSystemRefresh(this.getRequest());
-            logger.info("Reload config started");
-            this.setReloadingResult(SUCCESS_RELOADING_RESULT_CODE);
-        } catch (Throwable t) {
-            logger.error("error in reloadConfig", t);
+            if (!ApsWebApplicationUtils.isReloadInProgress()) {
+                ReloadConfigThread rct = new ReloadConfigThread(this.getRequest());
+                logger.info("Starting reload configuration thread");
+                rct.start();
+            } else {
+                logger.info("Reload operation already in progress!");
+            }
+            this.setReloadingResult(PROGRESS_RELOADING_RESULT_CODE);
+        } catch (Exception e) {
+            logger.error("unexpected error while launching system reload", e);
             this.setReloadingResult(FAILURE_RELOADING_RESULT_CODE);
+            return RELOAD_ERROR;
         }
         return SUCCESS;
+    }
+
+    public String reloadStatus() {
+        if (ApsWebApplicationUtils.isReloadInProgress()) {
+            this.setReloadingResult(PROGRESS_RELOADING_RESULT_CODE);
+            return IN_PROGRESS;
+        }
+        updateReloadStatusResult();
+        return SUCCESS;
+    }
+
+    public String reloadStatusJson() {
+        return SUCCESS;
+    }
+
+    public boolean isReloadingErrorDetect() {
+        return ApsWebApplicationUtils.getReloadInfo()
+                .values()
+                .stream()
+                .anyMatch(StringUtils::isNotBlank);
+    }
+
+    public int getReloadProgress() {
+        return ApsWebApplicationUtils.getReloadProgress();
+    }
+
+    public Map<String, String> getReloadInfo() {
+        return new HashMap<>(ApsWebApplicationUtils.getReloadInfo());
     }
 
     /**
@@ -87,7 +128,7 @@ public class BaseAdminAction extends BaseAction {
     }
 
     /**
-     * Get the system parameters in order to edit them.
+     * Get the system parameters to edit them.
      *
      * @return the result code.
      */
@@ -144,7 +185,7 @@ public class BaseAdminAction extends BaseAction {
      * Refresh the map of parameters with values fetched from the request
      *
      * @param keepOldParam when true, when a system parameter is not found in
-     * request, the previous system parameter will be stored
+     *  the request, the previous system parameter will be stored
      */
     protected void updateLocalParams(boolean keepOldParam) {
         Iterator<String> paramNames = this.getSystemParams().keySet().iterator();
@@ -205,6 +246,16 @@ public class BaseAdminAction extends BaseAction {
         }
     }
 
+    protected void updateReloadStatusResult() {
+        if (ApsWebApplicationUtils.getReloadInfo().containsKey(RELOAD_THREAD)) {
+            this.setReloadingResult(FAILURE_RELOADING_RESULT_CODE);
+        } else if (isReloadingErrorDetect()) {
+            this.setReloadingResult(WARNING_RELOADING_RESULT_CODE);
+        } else {
+            this.setReloadingResult(SUCCESS_RELOADING_RESULT_CODE);
+        }
+    }
+
     protected ConfigInterface getConfigManager() {
         return _configManager;
     }
@@ -230,7 +281,7 @@ public class BaseAdminAction extends BaseAction {
     }
 
     public String getExternalParamMarker() {
-        return "_newParamMarker";
+        return NEW_PARAM_MARKER;
     }
 
     private ConfigInterface _configManager;
@@ -242,5 +293,7 @@ public class BaseAdminAction extends BaseAction {
 
     public static final int FAILURE_RELOADING_RESULT_CODE = 0;
     public static final int SUCCESS_RELOADING_RESULT_CODE = 1;
+    public static final int PROGRESS_RELOADING_RESULT_CODE = 2;
+    public static final int WARNING_RELOADING_RESULT_CODE = 3;
 
 }

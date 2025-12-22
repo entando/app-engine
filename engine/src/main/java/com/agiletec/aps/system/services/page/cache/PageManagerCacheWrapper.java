@@ -14,6 +14,7 @@
 package com.agiletec.aps.system.services.page.cache;
 
 import com.agiletec.aps.system.common.AbstractCacheWrapper;
+import org.entando.entando.aps.system.services.cache.IFCacheWithPipeline;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageDAO;
@@ -110,17 +111,19 @@ public class PageManagerCacheWrapper extends AbstractCacheWrapper implements IPa
     
     protected void insertObjectsOnCache(Cache cache, PagesStatus status,
             IPage newDraftRoot, IPage newOnLineRoot, List<IPage> pageListD, List<IPage> pageListO) {
-        cache.put(DRAFT_ROOT_CACHE_NAME, newDraftRoot);
-        cache.put(ONLINE_ROOT_CACHE_NAME, newOnLineRoot);
-        cache.put(PAGE_STATUS_CACHE_NAME, status);
-        for (int i = 0; i < pageListD.size(); i++) {
-            IPage draftPage = pageListD.get(i);
-            cache.put(DRAFT_PAGE_CACHE_NAME_PREFIX + draftPage.getCode(), draftPage);
-        }
-        for (int i = 0; i < pageListO.size(); i++) {
-            IPage onLinePage = pageListO.get(i);
-            cache.put(ONLINE_PAGE_CACHE_NAME_PREFIX + onLinePage.getCode(), onLinePage);
-        }
+        IFCacheWithPipeline.pipelined(cache.getNativeCache(), cp -> {
+            cache.put(DRAFT_ROOT_CACHE_NAME, newDraftRoot);
+            cache.put(ONLINE_ROOT_CACHE_NAME, newOnLineRoot);
+            cache.put(PAGE_STATUS_CACHE_NAME, status);
+            for (int i = 0; i < pageListD.size(); i++) {
+                IPage draftPage = pageListD.get(i);
+                cache.put(DRAFT_PAGE_CACHE_NAME_PREFIX + draftPage.getCode(), draftPage);
+            }
+            for (int i = 0; i < pageListO.size(); i++) {
+                IPage onLinePage = pageListO.get(i);
+                cache.put(ONLINE_PAGE_CACHE_NAME_PREFIX + onLinePage.getCode(), onLinePage);
+            }
+        });
     }
 
     @Override
@@ -579,7 +582,7 @@ public class PageManagerCacheWrapper extends AbstractCacheWrapper implements IPa
     }
 
     private void getWidgetUtilizers(IPage page, Map<String, List> utilizersMap, boolean draft) {
-        Widget[] widgets = page.getWidgets();
+        Widget[] widgets = (page != null) ? page.getWidgets() : null;
         if (widgets != null) {
             for (Widget widget : widgets) {
                 if (null != widget && null != widget.getTypeCode()) {
@@ -593,7 +596,7 @@ public class PageManagerCacheWrapper extends AbstractCacheWrapper implements IPa
                 }
             }
         }
-        String[] childrenCodes = page.getChildrenCodes();
+        String[] childrenCodes = (page != null) ? page.getChildrenCodes() : null;
         if (childrenCodes != null) {
             for (String childrenCode : childrenCodes) {
                 IPage child = (draft) ? this.getDraftPage(childrenCode) : this.getOnlinePage(childrenCode);
