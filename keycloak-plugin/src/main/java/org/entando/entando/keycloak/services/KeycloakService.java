@@ -53,21 +53,7 @@ public class KeycloakService {
         return listUsers(null);
     }
 
-//    public List<UserRepresentation> listUsers(final String text) {
-//        final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
-//        final Map<String, String> params = StringUtils.isEmpty(text)
-//                ? Collections.emptyMap()
-//                : Collections.singletonMap("username", text);
-//        String token = this.extractToken();
-//        final ResponseEntity<UserRepresentation[]> response = this.executeRequest(token, url,
-//                HttpMethod.GET, createEntity(token), UserRepresentation[].class, params);
-//        return Optional.ofNullable(response.getBody())
-//                .map(Arrays::asList)
-//                .orElse(Collections.emptyList());
-//    }
-
-
-    // TODO http://localhost:8081/auth/admin/realms/entando-development/users?briefRepresentation=true&first=0&max=20&search=testutentemariorossi%2B4375@gmail.com
+    // Handle invocations such as http://localhost:8081/auth/admin/realms/entando-development/users?briefRepresentation=true&first=0&max=20&search=testutentemariorossi%2B4375@gmail.com
     public List<UserRepresentation> listUsers(String text) {
         final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
         final String searchString = StringUtils.isNotBlank(text) ? encodeForKeycloakSearchAPI(text) : text;
