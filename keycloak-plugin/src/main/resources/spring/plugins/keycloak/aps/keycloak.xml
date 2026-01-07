@@ -7,6 +7,17 @@
 
     <context:component-scan base-package="org.entando.entando.keycloak.services"/>
 
+
+    <bean id="keycloakAuthorizationManager" class="org.entando.entando.keycloak.services.KeycloakAuthorizationManager"
+            parent="abstractService" >
+        <constructor-arg index="0" ref="keycloakConfiguration"/>
+        <constructor-arg index="1" ref="AuthorizationManager"/>
+        <constructor-arg index="2" ref="GroupManager"/>
+        <constructor-arg index="3" ref="RoleManager"/>
+        <constructor-arg index="4" ref="BaseConfigManager"/>
+    </bean>
+
+
     <bean id="keycloakConfiguration"
           class="org.entando.entando.keycloak.services.KeycloakConfiguration">
         <property name="enabled" value="${keycloak.enabled:false}" />

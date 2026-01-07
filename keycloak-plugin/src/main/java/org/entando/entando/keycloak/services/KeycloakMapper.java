@@ -1,23 +1,25 @@
 package org.entando.entando.keycloak.services;
 
-import com.agiletec.aps.system.services.user.User;
-import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
-
 import static java.util.Optional.ofNullable;
+
+import com.agiletec.aps.system.services.user.User;
+import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
+import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 
 class KeycloakMapper {
 
     static User convertUserDetails(final UserRepresentation userRepresentation) {
         final boolean credentialsExpired = ofNullable(userRepresentation.getRequiredActions())
                 .filter(actions -> actions.contains("UPDATE_PASSWORD")).isPresent();
-        final User user = credentialsExpired ? newUserCredentialsExpired() : new User();
+        final KeycloakUser user = credentialsExpired ? newUserCredentialsExpired() : new KeycloakUser();
         user.setDisabled(!userRepresentation.isEnabled());
         user.setUsername(userRepresentation.getUsername());
+        user.setUserRepresentation(userRepresentation);
         return user;
     }
 
-    private static User newUserCredentialsExpired() {
-        return new User() {
+    private static KeycloakUser newUserCredentialsExpired() {
+        return new KeycloakUser() {
             {
                 setMaxMonthsSinceLastAccess(-1);
                 setMaxMonthsSinceLastPasswordChange(-1);
