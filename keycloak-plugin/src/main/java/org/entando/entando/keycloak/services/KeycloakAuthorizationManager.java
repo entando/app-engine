@@ -389,7 +389,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                                 && a.getGroup().getName().equals(auth.getGroup().getName()))
                 )
         ) {
-            log.error("dynamically persisting authorization for user '{}' : group {}, role {}", user.getUsername(),
+            log.info("dynamically persisting authorization for user '{}' : group {}, role {}", user.getUsername(),
                     auth.getGroup() != null ? auth.getGroup().getName() : "N/A",
                     auth.getRole() != null ? auth.getRole().getName() : "N/A");
             authorizationManager.addUserAuthorization(user.getUsername(), auth);
