@@ -54,17 +54,14 @@ public class KeycloakService {
     }
 
     // Handle invocations such as http://localhost:8081/auth/admin/realms/entando-development/users?briefRepresentation=true&first=0&max=20&search=testutentemariorossi%2B4375@gmail.com
-    public List<UserRepresentation> listUsers(String text) {
+    public List<UserRepresentation> listUsers(final String text) {
         final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
         final String searchString = StringUtils.isNotBlank(text) ? encodeForKeycloakSearchAPI(text) : text;
         final boolean isExact = StringUtils.isBlank(text) || (StringUtils.isNotBlank(text) && searchString.equals(text));
-        final Map<String, String> params = StringUtils.isBlank(text)
-                ? Collections.emptyMap()
-                : new HashMap<>() {{
-                    put("username", searchString);
-                }};
+        final Map<String, String> params = StringUtils.isBlank(text) ? Collections.emptyMap()
+                : Map.of("username", searchString);
         List<UserRepresentation> retval = null;
-        String token = this.extractToken();
+        final String token = this.extractToken();
 
         if (!isExact && !params.isEmpty()) {
             params.put("briefRepresentation", "true");
@@ -205,8 +202,6 @@ public class KeycloakService {
                     queryBuilder.append(key).append("=").append(value);
                 });
                 String escapedUrl = builder.build().toUri() + "?" + queryBuilder;
-
-//                restTemplate.setInterceptors(Collections.singletonList(new LoggingInterceptor()));
                 ResponseEntity<Y> retval = restTemplate.exchange(
                         URI.create(escapedUrl), method, createEntity(token, entity.getBody()),
                         result);

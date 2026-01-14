@@ -1,5 +1,15 @@
 package org.entando.entando.keycloak.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.agiletec.aps.system.services.authorization.Authorization;
 import com.agiletec.aps.system.services.authorization.AuthorizationManager;
 import com.agiletec.aps.system.services.baseconfig.BaseConfigManager;
@@ -7,31 +17,19 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.group.GroupManager;
 import com.agiletec.aps.system.services.role.Role;
 import com.agiletec.aps.system.services.role.RoleManager;
-import com.agiletec.aps.system.services.user.UserDetails;
-import java.util.List;
-import java.util.Map;
-import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
-import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-
+import com.fasterxml.jackson.core.JsonParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import java.util.List;
+import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
+import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -175,6 +173,22 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testDynamicConfigurationRoleOnLoginWithWrongJwt() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_CLIENT_ROLE);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT_NO_ROLE, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), authCaptor.capture());
+    }
+
+    @Test
     void testDynamicConfigurationGroupOnLogin() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_CONF);
@@ -256,6 +270,50 @@ class KeycloakAuthorizationManagerTest {
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
     }
 
+    @Test
+    void testDynamicConfigurationNoMapping() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_NO_MAPPING);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+    }
+
+    @Test
+    void testDynamicConfigurationMalformedMapping() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_MALFORMED_MAPPING);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
+
+        assertThrows(JsonParseException.class, () -> manager.init());
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+    }
+
+    @Test
+    void testDynamicConfigurationWrongMapping() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_WRONG_CONF);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+    }
 
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
@@ -283,7 +341,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>GROUPROLE</kind>"
             + "  <separator>_r_</separator>"
-            + "  <persist>true</persist>        "
+            + "  <persist>true</persist>"
             + " </mapping>"
             + "</mappings>";
 
@@ -305,7 +363,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>GROUPROLE</kind>"
             + "  <separator>_r_</separator>"
-            + "  <persist>true</persist>        "
+            + "  <persist>true</persist>"
             + " </mapping>"
             + "</mappings>";
 
@@ -339,8 +397,52 @@ class KeycloakAuthorizationManagerTest {
             + "  <persist>true</persist>"
             + " </mapping>"
             + "</mappings>";
+
+    private static final String XML_NO_MAPPING = "<mappings>"
+            + "</mappings>";
+
+    private static final String XML_MALFORMED_MAPPING = "<mappings>"
+            + "</mappings";
+
+    private static final String XML_WRONG_CONF = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_ROLE</attribute>"
+//            + "  <kind>ROLE</kind>"  // kind null
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <attribute>AD_GROUP</attribute>"
+            + "  <kind>GROUP</kind>" // unknown
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+//            + "  <attribute>AD_GROUPROLE</attribute>" // attribute null
+            + "  <kind>GROUPROLE</kind>"
+            + "  <separator>_r_</separator>"
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_ROLE</attribute>"
+            + "  <kind>CLIENTROLE</kind>"  // no client
+            + "  <persist>true</persist>"
+            + " </mapping>"
+
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_GROUPROLE</attribute>"
+            + "  <kind>GROUPROLE</kind>"
+//            + "  <separator>_r_</separator>"  // separator null
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            
+            + "</mappings>";
     
-    private static final String _JWT = "{\n"
+    private static final String JWT_NO_ROLE = "{\n"
             + "  \"header\" : {\n"
             + "    \"alg\" : \"RS256\",\n"
             + "    \"typ\" : \"JWT\",\n"
@@ -364,7 +466,7 @@ class KeycloakAuthorizationManagerTest {
             + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
             + "    },\n"
             + "    \"resource_access\" : {\n"
-            + "      \"sim730\" : {\n"
+            + "      \"aclient\" : {\n"
             + "        \"roles\" : [ \"generico\" ]\n"
             + "      },\n"
             + "      \"account\" : {\n"

@@ -40,7 +40,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 /**
  * Servizio di autorizzazione. Il servizio espone tutti i metodi necessari per
- * la verifica verifica delle autorizzazioni utente, qualsiasi sia la sua
+ * la verifica delle autorizzazioni utente, qualsiasi sia la sua
  * provenienza e definizione.
  * @author E.Santoboni
  */

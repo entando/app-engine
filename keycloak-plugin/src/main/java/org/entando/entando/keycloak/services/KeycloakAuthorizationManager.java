@@ -55,6 +55,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private static final int ROLE_POSITION = 1;
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final XmlMapper xmlMapper = new XmlMapper();
 
     private final ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
     private final Lock readLock = configUpdateLock.readLock();
@@ -86,8 +87,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         try {
             String xml = configManager.getConfigItem("dynamicAuthMapping");
             if (StringUtils.isNotBlank(xml)) {
-                XmlMapper mapper = new XmlMapper();
-                DynamicMapping dynConf = mapper.readValue(xml, DynamicMapping.class);
+                DynamicMapping dynConf = xmlMapper.readValue(xml, DynamicMapping.class);
                 if (dynConf != null && dynConf.mapping != null) {
 
                     activeMappings = dynConf.mapping
@@ -99,9 +99,12 @@ public class KeycloakAuthorizationManager extends AbstractService {
                             dynConf.mapping.size(), activeMappings.size());
                 }
             }
-            log.info("Dynamic configuration processed: {} active elements found", activeMappings.size());
+            if (activeMappings != null) {
+                log.info("Dynamic configuration processed: {} active elements found", activeMappings.size());
+            }
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);
+            throw e;
         } finally {
             writeLock.unlock();
         }
@@ -195,7 +198,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    @Deprecated
     public void processNewUser(final UserDetails user) {
         if (StringUtils.isNotEmpty(configuration.getDefaultAuthorizations())) {
             // process group and role coming from the configuration
@@ -313,7 +315,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
                     persistAuthIfMissing(user, authorization);
                 } else {
-
                     if (StringUtils.isNotBlank(groupName)) {
                         group = new Group();
                         group.setName(groupName);
@@ -473,7 +474,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                                 && a.getGroup().getName().equals(auth.getGroup().getName()))
                 )
         ) {
-            log.error("dynamically persisting authorization for user '{}' : group {}, role {}", user.getUsername(),
+            log.debug("dynamically persisting authorization for user '{}' : group {}, role {}", user.getUsername(),
                     auth.getGroup() != null ? auth.getGroup().getName() : "N/A",
                     auth.getRole() != null ? auth.getRole().getName() : "N/A");
             authorizationManager.addUserAuthorization(user.getUsername(), auth);
