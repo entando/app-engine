@@ -66,29 +66,26 @@ public class KeycloakService {
         List<UserRepresentation> retval = null;
         String token = this.extractToken();
 
-        try {
-            if (!isExact && !params.isEmpty()) {
-                params.put("briefRepresentation", "true");
-                params.put("search", searchString);
-//                params.put("first", "0");
-//                params.put("max", "20");
-                params.remove("username");
-            }
-            final ResponseEntity<UserRepresentation[]> response = this.executeEscapedRequest(token, url,
-                    HttpMethod.GET, createEntity(token, null), UserRepresentation[].class, params, 0);
-            retval = Optional.ofNullable(response.getBody())
-                    .map(Arrays::asList)
-                    .orElse(Collections.emptyList());
-            if (retval.size() > 1) {
-                // must match the exact element by USERNAME
-                Optional<UserRepresentation> userOpt = retval.stream()
-                        .filter(e ->  (e.getUsername() != null && e.getUsername().equals(text))
-                                || (e.getEmail() != null && e.getEmail().equals(text)))
-                        .findFirst();
-                return userOpt.stream().collect(Collectors.toList());
-            }
-        } catch (Exception e) {
-            log.error("Error listing users from Keycloak: {}", e.getMessage(), e);
+        if (!isExact && !params.isEmpty()) {
+            params.put("briefRepresentation", "true");
+            params.put("search", searchString);
+            // reference for paged request:
+            // params.put("first", "0");
+            // params.put("max", "20");
+            params.remove("username");
+        }
+        final ResponseEntity<UserRepresentation[]> response = this.executeEscapedRequest(token, url,
+                HttpMethod.GET, createEntity(token, null), UserRepresentation[].class, params, 0);
+        retval = Optional.ofNullable(response.getBody())
+                .map(Arrays::asList)
+                .orElse(Collections.emptyList());
+        if (retval.size() > 1) {
+            // must match the exact element by USERNAME
+            Optional<UserRepresentation> userOpt = retval.stream()
+                    .filter(e ->  (e.getUsername() != null && e.getUsername().equals(text))
+                            || (e.getEmail() != null && e.getEmail().equals(text)))
+                    .findFirst();
+            return userOpt.stream().collect(Collectors.toList());
         }
         return retval;
     }
@@ -158,12 +155,12 @@ public class KeycloakService {
     }
 
     private <T, Y> ResponseEntity<Y> executeRequest(String token, final String url, final HttpMethod method, final HttpEntity<T> entity,
-                                                    final Class<Y> result, final Map<String, String> params) {
+            final Class<Y> result, final Map<String, String> params) {
         return executeRequest(token, url, method, entity, result, params, 0);
     }
 
     private <T, Y> ResponseEntity<Y> executeRequest(String token, final String url, final HttpMethod method, final HttpEntity<T> entity,
-                                                    final Class<Y> result, final Map<String, String> params, int retryCount) {
+            final Class<Y> result, final Map<String, String> params, int retryCount) {
         try {
             final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
             params.forEach(builder::queryParam);
