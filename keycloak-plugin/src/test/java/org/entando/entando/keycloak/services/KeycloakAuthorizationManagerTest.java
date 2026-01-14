@@ -1,6 +1,7 @@
 package org.entando.entando.keycloak.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -212,6 +213,29 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testDynamicConfigurationGroupOnLoginNoPersist() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_CONF_NO_PERSIST);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUP", List.of("group")));
+
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
+        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
+
+        assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("group");
+        assertThat(authCaptor.getValue().getRole()).isNull();
+    }
+
+    @Test
     void testDynamicConfigurationGroupRoleOnLogin() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
@@ -232,6 +256,30 @@ class KeycloakAuthorizationManagerTest {
 
         assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("agroup");
         assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("arole");
+    }
+
+    @Test
+    void testDynamicConfigurationGroupRoleOnLoginNoPersist() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF_NO_PERSIST);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
+        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
+
+        assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("agroup");
+        // role doesn't exist, so it's not associated
+        assertNull(authCaptor.getValue().getRole());
     }
 
     @Test
@@ -275,9 +323,6 @@ class KeycloakAuthorizationManagerTest {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_NO_MAPPING);
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
-
         manager.init();
 
         manager.processNewUser(userDetails, JWT, false);
@@ -289,9 +334,6 @@ class KeycloakAuthorizationManagerTest {
     void testDynamicConfigurationMalformedMapping() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_MALFORMED_MAPPING);
-
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
 
         assertThrows(JsonParseException.class, () -> manager.init());
 
@@ -305,11 +347,7 @@ class KeycloakAuthorizationManagerTest {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_WRONG_CONF);
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
-
         manager.init();
-
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
@@ -367,6 +405,28 @@ class KeycloakAuthorizationManagerTest {
             + " </mapping>"
             + "</mappings>";
 
+    private static final String XML_GROUP_CONF_NO_PERSIST = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_ROLE</attribute>"
+            + "  <kind>ROLE</kind>"
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <attribute>AD_GROUP</attribute>"
+            + "  <kind>GROUP</kind>"
+            + "  <persist>false</persist>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_GROUPROLE</attribute>"
+            + "  <kind>GROUPROLE</kind>"
+            + "  <separator>_r_</separator>"
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + "</mappings>";
+
     private static final String XML_GROUP_ROLE_CONF = "<mappings>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
@@ -386,6 +446,28 @@ class KeycloakAuthorizationManagerTest {
             + "  <kind>GROUPROLE</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>true</persist>"
+            + " </mapping>"
+            + "</mappings>";
+
+    private static final String XML_GROUP_ROLE_CONF_NO_PERSIST = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_ROLE</attribute>"
+            + "  <kind>ROLE</kind>"
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>false</enabled>"
+            + "  <attribute>AD_GROUP</attribute>"
+            + "  <kind>GROUP</kind>"
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <attribute>AD_GROUPROLE</attribute>"
+            + "  <kind>GROUPROLE</kind>"
+            + "  <separator>_r_</separator>"
+            + "  <persist>false</persist>"
             + " </mapping>"
             + "</mappings>";
 

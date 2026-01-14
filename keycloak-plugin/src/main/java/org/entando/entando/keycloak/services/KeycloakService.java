@@ -58,9 +58,13 @@ public class KeycloakService {
         final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
         final String searchString = StringUtils.isNotBlank(text) ? encodeForKeycloakSearchAPI(text) : text;
         final boolean isExact = StringUtils.isBlank(text) || (StringUtils.isNotBlank(text) && searchString.equals(text));
-        final Map<String, String> params = StringUtils.isBlank(text) ? Collections.emptyMap()
-                : Map.of("username", searchString);
-        List<UserRepresentation> retval = null;
+        final Map<String, String> params = new HashMap<>();
+
+        if (StringUtils.isNotBlank(text)) {
+            params.put("username", searchString);
+        }
+
+        List<UserRepresentation> retval;
         final String token = this.extractToken();
 
         if (!isExact && !params.isEmpty()) {

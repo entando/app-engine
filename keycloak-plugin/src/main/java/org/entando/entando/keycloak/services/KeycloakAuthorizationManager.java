@@ -131,10 +131,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
             log.error("invalid dynamic mapping element, 'kind' is blank");
             return false;
         }
-        if (elem.kind != ROLE && elem.kind != GROUP && elem.kind != GROUPROLE && elem.kind != CLIENTROLE) {
-            log.error("invalid dynamic mapping element, kind '{}' is unknown", elem.kind);
-            return false;
-        }
         if (StringUtils.isBlank(elem.attribute) && elem.kind != CLIENTROLE) {
             log.error("invalid dynamic mapping element, 'attribute' is blank");
             return false;
