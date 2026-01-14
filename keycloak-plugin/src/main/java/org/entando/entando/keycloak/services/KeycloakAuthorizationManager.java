@@ -57,9 +57,9 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private final ObjectMapper mapper = new ObjectMapper();
     private final XmlMapper xmlMapper = new XmlMapper();
 
-    private final ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
-    private final Lock readLock = configUpdateLock.readLock();
-    private final Lock writeLock = configUpdateLock.writeLock();
+    private final transient ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
+    private final transient Lock readLock = configUpdateLock.readLock();
+    private final transient Lock writeLock = configUpdateLock.writeLock();
 
     @Autowired
     public KeycloakAuthorizationManager(final KeycloakConfiguration configuration,
@@ -79,7 +79,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * either by reloading the global configuration or after a certain amount of time (by default,
      * one minute)
      */
-    private List<DynamicMappingElement> activeMappings;
+    private transient List<DynamicMappingElement> activeMappings;
 
     @Override
     public void init() throws Exception {
@@ -287,46 +287,55 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 return;
             }
             for (String groupRoleToken : authorizations) {
-                final String[] tokens = groupRoleToken.split(separator);
-                if (tokens.length != 2 || StringUtils.isBlank(tokens[0]) || StringUtils.isBlank(tokens[1])) {
-                    log.error("invalid dynamic config configuration detected");
-                    return;
-                }
-                final String groupName = tokens[0];
-                final String roleName = tokens[1];
-
-                Authorization authorization;
-                Group group = null;
-                Role role = null;
-
-                if (elem.persist) {
-                    if (StringUtils.isNotBlank(groupName)) {
-                        group = findOrCreateGroup(groupName);
-                    }
-
-                    if (StringUtils.isNotBlank(roleName)) {
-                        role = findOrCreateRole(roleName);
-                    }
-                    authorization = new Authorization(group, role);
-
-                    persistAuthIfMissing(user, authorization);
-                } else {
-                    if (StringUtils.isNotBlank(groupName)) {
-                        group = new Group();
-                        group.setName(groupName);
-                        group.setDescription("sys:" + groupName);
-                    }
-                    if (StringUtils.isNotBlank(roleName)) {
-                        // make sure all the permissions are assigned to the current role
-                        role = roleManager.getRole(roleName);
-                    }
-                    authorization = new Authorization(group, role);
-                }
-                user.addAuthorization(authorization);
+                parseAuthForGroupRole(user, elem, groupRoleToken, separator);
             }
         } catch (Exception e) {
             log.error("error processing dynamic GRUOPROLE association", e);
         }
+    }
+
+    private void parseAuthForGroupRole(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator)
+            throws EntException {
+        final String[] tokens = groupRoleToken.split(separator);
+
+        if (tokens.length != 2
+                || StringUtils.isBlank(tokens[0])
+                || StringUtils.isBlank(tokens[1])) {
+            log.error("invalid dynamic config configuration detected");
+            return;
+        }
+
+        final String groupName = tokens[0];
+        final String roleName = tokens[1];
+
+        Authorization authorization;
+        Group group = null;
+        Role role = null;
+
+        if (elem.persist) {
+            if (StringUtils.isNotBlank(groupName)) {
+                group = findOrCreateGroup(groupName);
+            }
+
+            if (StringUtils.isNotBlank(roleName)) {
+                role = findOrCreateRole(roleName);
+            }
+            authorization = new Authorization(group, role);
+
+            persistAuthIfMissing(user, authorization);
+        } else {
+            if (StringUtils.isNotBlank(groupName)) {
+                group = new Group();
+                group.setName(groupName);
+                group.setDescription("sys:" + groupName);
+            }
+            if (StringUtils.isNotBlank(roleName)) {
+                // make sure all the permissions are assigned to the current role
+                role = roleManager.getRole(roleName);
+            }
+            authorization = new Authorization(group, role);
+        }
+        user.addAuthorization(authorization);
     }
 
     /**

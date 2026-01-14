@@ -283,6 +283,36 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testDynamicConfigurationGroupRoleOnLoginAlreadyPresent() throws Exception {
+        Group group = new Group();
+        Role role = new Role();
+        Authorization auth = new Authorization(group, role);
+
+        group.setName("agroup");
+        group.setDescription("agroup");
+        role.setName("arole");
+        role.setDescription("arole");
+
+        when(authorizationManager.getUserAuthorizations(anyString())).thenReturn(List.of(auth));
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), authCaptor.capture());
+    }
+
+    @Test
     void testDynamicConfigurationNoGroupOnlyRoleOnLogin() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);

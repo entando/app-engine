@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings>
+    <mapping>
+        <enabled>false</enabled>
+        <client>sim730</client>
+        <kind>CLIENTROLE</kind>
+        <persist>false</persist>
+    </mapping>
+    <mapping>
+        <enabled>false</enabled>
+        <attribute>AD_ROLE</attribute>
+        <kind>ROLE</kind>
+        <persist>false</persist>
+    </mapping>
+    <mapping>
+        <enabled>false</enabled>
+        <attribute>AD_GROUP</attribute>
+        <kind>GROUP</kind>
+        <persist>false</persist>
+    </mapping>
+    <mapping>
+        <enabled>false</enabled>
+        <attribute>AD_GROUPROLE</attribute>
+        <kind>GROUPROLE</kind>
+        <separator>_r_</separator>
+        <persist>false</persist>
+    </mapping>
+</mappings>
