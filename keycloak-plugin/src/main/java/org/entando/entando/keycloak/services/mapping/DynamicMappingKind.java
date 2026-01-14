@@ -8,7 +8,8 @@ public enum DynamicMappingKind {
 
     GROUP("group"),
     ROLE("role"),
-    GROUPROLE("grouprole");
+    GROUPROLE("grouprole"),
+    CLIENTROLE("clientrole");
 
     public String kind;
     DynamicMappingKind(String kind) {
