@@ -206,10 +206,9 @@ public class KeycloakService {
                     queryBuilder.append(key).append("=").append(value);
                 });
                 String escapedUrl = builder.build().toUri() + "?" + queryBuilder;
-                ResponseEntity<Y> retval = restTemplate.exchange(
+                return  restTemplate.exchange(
                         URI.create(escapedUrl), method, createEntity(token, entity.getBody()),
                         result);
-                return retval;
             }
         } catch (HttpClientErrorException e) {
             if (HttpStatus.FORBIDDEN.equals(e.getStatusCode()) || (HttpStatus.UNAUTHORIZED.equals(e.getStatusCode()) && retryCount > 10)) {

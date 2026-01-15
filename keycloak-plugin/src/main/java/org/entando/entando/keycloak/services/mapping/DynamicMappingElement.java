@@ -3,11 +3,11 @@ package org.entando.entando.keycloak.services.mapping;
 
 public class DynamicMappingElement {
 
-    public Boolean enabled;
+    public boolean enabled;
     public String attribute;
     public DynamicMappingKind kind;
     public String injectTo;
-    public Boolean persist;
+    public boolean persist;
     public String separator; // FOR GROUPROLE ONLY
     public String client;   // FOR CLIENTROLE ONLY
 

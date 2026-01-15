@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -38,11 +37,9 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
-import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.springframework.beans.factory.annotation.Autowired;
 
-//@Service
 public class KeycloakAuthorizationManager extends AbstractService {
 
     private static final EntLogger log = EntLogFactory.getSanitizedLogger(KeycloakAuthorizationManager.class);
@@ -96,7 +93,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     activeMappings = dynConf.mapping
                             .stream()
                             .filter(this::isValid)
-                            .filter(d -> (d.enabled != null && d.enabled))
+                            .filter(d -> (d.enabled))
                             .collect(Collectors.toUnmodifiableList());
                     log.debug("{} dynamic auth mapping found, {} activeMappings",
                             dynConf.mapping.size(), activeMappings.size());
@@ -462,7 +459,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 || user.getUserRepresentation().getAttributes() == null
                 || !user.getUserRepresentation().getAttributes().containsKey(elem.attribute)) {
             log.info("skipping dynamic processing for user {}", user.getUsername());
-            return null;
+            return Collections.emptyList();
         }
         final Object kcProfileAttr = user.getUserRepresentation()
                 .getAttributes()

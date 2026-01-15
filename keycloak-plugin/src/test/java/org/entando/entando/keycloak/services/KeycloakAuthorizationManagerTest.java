@@ -47,7 +47,7 @@ class KeycloakAuthorizationManagerTest {
     private KeycloakAuthorizationManager manager;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager);
     }
 
@@ -159,8 +159,6 @@ class KeycloakAuthorizationManagerTest {
         when(userDetails.getUsername()).thenReturn("testuser");
         when(configManager.getConfigItem(anyString())).thenReturn(XML_CLIENT_ROLE);
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-
         manager.init();
 
         final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
@@ -177,8 +175,6 @@ class KeycloakAuthorizationManagerTest {
     void testDynamicConfigurationRoleOnLoginWithWrongJwt() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_CLIENT_ROLE);
-
-        UserRepresentation userRepresentation = new UserRepresentation();
 
         manager.init();
 
@@ -323,8 +319,6 @@ class KeycloakAuthorizationManagerTest {
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
         manager.init();
-
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
 
         manager.processNewUser(userDetails, JWT, false);
 
