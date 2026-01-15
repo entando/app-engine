@@ -100,7 +100,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 }
             }
             if (activeMappings != null) {
-                log.info("Dynamic configuration processed: {} active elements found", activeMappings.size());
+                activeMappings.forEach(m -> log.debug("mapping active: {}", m.toString()));
             }
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);

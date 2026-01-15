@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+    <code>entando-keycloak-auth</code>
+    <description>Entando CMS</description>
+    <artifact>
+        <artifactId>${project.artifactId}</artifactId>
+        <groupId>${project.groupId}</groupId>
+        <version>${project.version}</version>
+    </artifact>
+    <installation>
+        <tableMapping>
+            <datasource name="portDataSource">
+                <table>sysconfig</table>
+            </datasource>
+        </tableMapping>
+        <liquibase>
+            <changeSet datasource="portDataSource" changeLogFile="classpath:liquibase/entando-keycloak-auth/changeSetPort.xml" />
+        </liquibase>
+    </installation>
+</component>
