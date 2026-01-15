@@ -57,7 +57,7 @@ class KeycloakAuthorizationManagerTest {
         when(groupManager.getGroup(anyString())).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
 
-        manager.processNewUser(userDetails);
+        manager.processNewUser(userDetails, null, false);
 
         final ArgumentCaptor<Group> groupCaptor = ArgumentCaptor.forClass(Group.class);
         final ArgumentCaptor<String> auth_man_usernameCaptor = ArgumentCaptor.forClass(String.class);
@@ -86,7 +86,7 @@ class KeycloakAuthorizationManagerTest {
         when(roleManager.getRole(anyString())).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
 
-        manager.processNewUser(userDetails);
+        manager.processNewUser(userDetails, null, false);
 
         final ArgumentCaptor<Group> groupCaptor = ArgumentCaptor.forClass(Group.class);
         final ArgumentCaptor<Role> roleCaptor = ArgumentCaptor.forClass(Role.class);
@@ -119,7 +119,7 @@ class KeycloakAuthorizationManagerTest {
         when(configuration.getDefaultAuthorizations()).thenReturn("readers:read-all,writers:write-all");
         when(userDetails.getAuthorizations()).thenReturn(Arrays.asList(readers, writers));
 
-        manager.processNewUser(userDetails);
+        manager.processNewUser(userDetails, null, false);
 
         verify(roleManager, times(0)).getRole(anyString());
         verify(groupManager, times(0)).getGroup(anyString());

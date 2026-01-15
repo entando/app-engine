@@ -160,7 +160,7 @@ class KeycloakFilterTest {
 
         verify(oidcService, times(1)).requestToken(eq(authorizationCode), eq(loginEndpoint));
         verify(oidcService, times(1)).validateToken(eq("access-token-over-here"));
-        verify(keycloakGroupManager, times(1)).processNewUser(same(userDetails));
+        verify(keycloakGroupManager, times(1)).processNewUser(same(userDetails), null, false);
 
         verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
         verify(session, times(1)).setAttribute(eq(SystemConstants.SESSIONPARAM_CURRENT_USER), same(userDetails));

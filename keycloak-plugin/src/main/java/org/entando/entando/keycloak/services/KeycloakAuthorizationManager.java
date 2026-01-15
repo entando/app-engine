@@ -23,7 +23,9 @@ import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -36,6 +38,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
+import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -146,41 +149,19 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return true;
     }
 
-    public void processNewUser(final UserDetails user, final String token, boolean decode) {
+    public void processNewUser(final UserDetails user, final String token, final boolean decode) {
         processNewUser(user);
         readLock.lock();
         try {
-            final DynamicMappingElement tokenMapper = ofNullable(activeMappings)
+            final List<DynamicMappingElement> tokenMapper = ofNullable(activeMappings)
                     .orElse(emptyList())
                     .stream()
                     .filter(m -> m.kind == CLIENTROLE)
-                    .findFirst().orElse(null);
-            // process client claim...
-            if (StringUtils.isNotBlank(token) && tokenMapper != null) {
-                final String payload = decode ? token.split("\\.")[1] : token;
-                final String json = decode ? new String(Base64.getUrlDecoder().decode(payload)) : payload;
-
-                try {
-                    final JsonNode root = mapper.readTree(json);
-
-                    JsonNode roleNode = root
-                            .path("resource_access")
-                            .path(tokenMapper.client)
-                            .path("roles");
-
-                    if (roleNode == null) {
-                        return;
-                    }
-
-                    List<String> roles = StreamSupport.stream(roleNode.spliterator(), false)
-                            .map(JsonNode::asText)
-                            .collect(Collectors.toList());
-                    if (user instanceof KeycloakUser) {
-                        finalizeRoleAssociation((KeycloakUser) user, tokenMapper, roles);
-                    }
-
-                } catch (Exception e) {
-                    log.error("error importing client role into Entando roles", e);
+                    .collect(Collectors.toList());
+            // process client claims...
+            if (StringUtils.isNotBlank(token) && !tokenMapper.isEmpty()) {
+                for (DynamicMappingElement cur: tokenMapper) {
+                    processClaimAttributes(user, token, decode, cur);
                 }
             }
             // ...then process attributes coming from the user profile
@@ -194,7 +175,42 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    public void processNewUser(final UserDetails user) {
+    /**
+     * Analyze the JWT looking for known mappings to translate into Entando roles
+     * @param user logged in user
+     * @param token access token
+     * @param decode is true the access token is decoded from the base64 form
+     * @param tokenMapper the mapping configuration
+     */
+    private void processClaimAttributes(UserDetails user, String token, boolean decode, DynamicMappingElement tokenMapper) {
+        final String payload = decode ? token.split("\\.")[1] : token;
+        final String json = decode ? new String(Base64.getUrlDecoder().decode(payload)) : payload;
+
+        try {
+            final JsonNode root = mapper.readTree(json);
+
+            JsonNode roleNode = root
+                    .path("resource_access")
+                    .path(tokenMapper.client)
+                    .path("roles");
+
+            if (roleNode == null) {
+                return ;
+            }
+
+            List<String> roles = StreamSupport.stream(roleNode.spliterator(), false)
+                    .map(JsonNode::asText)
+                    .collect(Collectors.toList());
+            if (user instanceof KeycloakUser) {
+                finalizeRoleAssociation((KeycloakUser) user, tokenMapper, roles);
+            }
+
+        } catch (Exception e) {
+            log.error("error importing client role into Entando roles", e);
+        }
+    }
+
+    private void processNewUser(final UserDetails user) {
         if (StringUtils.isNotEmpty(configuration.getDefaultAuthorizations())) {
             // process group and role coming from the configuration
             final Set<String> defaultAuthorizations = Sets.newHashSet(configuration.getDefaultAuthorizations().split(","));
