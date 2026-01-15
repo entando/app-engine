@@ -3,17 +3,22 @@ package org.entando.entando.keycloak.services.mapping;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import lombok.Getter;
 
 public enum DynamicMappingKind {
 
-    GROUP("group"),
-    ROLE("role"),
-    GROUPROLE("grouprole"),
-    CLIENTROLE("clientrole");
+    GROUP("group", false),
+    ROLE("role", false),
+    GROUPROLE("grouprole", false),
+    CLIENTROLE("clientrole", true);
 
     private final String kind;
-    DynamicMappingKind(String kind) {
+    @Getter
+    private final boolean jwtMapping;
+
+    DynamicMappingKind(String kind, boolean jwtmapping) {
         this.kind = kind;
+        this.jwtMapping = jwtmapping;
     }
 
     @JsonValue
@@ -29,5 +34,4 @@ public enum DynamicMappingKind {
                 .orElseThrow(() ->
                         new IllegalArgumentException("Unknown DynamicMappingKind: " + value));
     }
-
 }

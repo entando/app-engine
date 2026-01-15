@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -79,28 +80,34 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * either by reloading the global configuration or after a certain amount of time (by default,
      * one minute)
      */
-    private transient List<DynamicMappingElement> activeMappings;
+    private transient List<DynamicMappingElement> profileMappings;
+    private transient List<DynamicMappingElement> jwtMappings;
 
     @Override
     public void init() throws Exception {
         writeLock.lock();
+        profileMappings = new ArrayList<>();
+        jwtMappings = new ArrayList<>();
         try {
             String xml = configManager.getConfigItem("dynamicAuthMapping");
             if (StringUtils.isNotBlank(xml)) {
                 DynamicMapping dynConf = xmlMapper.readValue(xml, DynamicMapping.class);
                 if (dynConf != null && dynConf.mapping != null) {
 
-                    activeMappings = dynConf.mapping
-                            .stream()
-                            .filter(this::isValid)
-                            .filter(d -> (d.enabled))
-                            .collect(Collectors.toUnmodifiableList());
-                    log.debug("{} dynamic auth mapping found, {} activeMappings",
-                            dynConf.mapping.size(), activeMappings.size());
+                    Map<Boolean, List<DynamicMappingElement>> partitioned =
+                            dynConf.mapping.stream()
+                                    .filter(this::isValid)
+                                    .collect(Collectors.partitioningBy(
+                                            item -> item.kind.isJwtMapping()
+                                    ));
+                    profileMappings = List.copyOf(partitioned.get(false));
+                    jwtMappings = List.copyOf(partitioned.get(true));
+                    log.debug("{} dynamic auth mapping found, {} profileMappings",
+                            dynConf.mapping.size(), profileMappings.size());
                 }
             }
-            if (activeMappings != null) {
-                activeMappings.forEach(m -> log.debug("mapping active: {}", m.toString()));
+            if (profileMappings != null) {
+                profileMappings.forEach(m -> log.debug("mapping active: {}", m.toString()));
             }
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);
@@ -150,21 +157,22 @@ public class KeycloakAuthorizationManager extends AbstractService {
         processNewUser(user);
         readLock.lock();
         try {
-            final List<DynamicMappingElement> tokenMapper = ofNullable(activeMappings)
+            // TODO for the future: handle also groups ~ "claim to group import" type
+            final List<DynamicMappingElement> jwtRoleMapper = ofNullable(jwtMappings)
                     .orElse(emptyList())
                     .stream()
                     .filter(m -> m.kind == CLIENTROLE)
                     .collect(Collectors.toList());
-            // process client claims...
-            if (StringUtils.isNotBlank(token) && !tokenMapper.isEmpty()) {
-                for (DynamicMappingElement cur: tokenMapper) {
-                    processClaimAttributes(user, token, decode, cur);
+            // process client role claims, if any...
+            if (StringUtils.isNotBlank(token) && !jwtRoleMapper.isEmpty()) {
+                for (DynamicMappingElement cur: jwtRoleMapper) {
+                    processRoleClaimAttributes(user, token, decode, cur);
                 }
             }
-            // ...then process attributes coming from the user profile
+            // ...then process attributes coming from the user profile, if needed
             if (user instanceof KeycloakUser
-                    && activeMappings != null
-                    && !activeMappings.isEmpty()) {
+                    && profileMappings != null
+                    && !profileMappings.isEmpty()) {
                 processProfileAttributes((KeycloakUser) user);
             }
         }  finally {
@@ -179,7 +187,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param decode is true the access token is decoded from the base64 form
      * @param tokenMapper the mapping configuration
      */
-    private void processClaimAttributes(UserDetails user, String token, boolean decode, DynamicMappingElement tokenMapper) {
+    private void processRoleClaimAttributes(UserDetails user, String token, boolean decode, DynamicMappingElement tokenMapper) {
         final String payload = decode ? token.split("\\.")[1] : token;
         final String json = decode ? new String(Base64.getUrlDecoder().decode(payload)) : payload;
 
@@ -276,7 +284,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param user the currently logged user
      */
     private synchronized void processProfileAttributes(final KeycloakUser user) {
-        activeMappings.forEach(m -> {
+        profileMappings.forEach(m -> {
             if (m.kind == ROLE) {
                 doProcessRole(user, m);
             }
