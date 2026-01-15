@@ -42,7 +42,6 @@ class KeycloakAuthorizationManagerTest {
     @Mock private GroupManager groupManager;
     @Mock private RoleManager roleManager;
     @Mock private BaseConfigManager configManager;
-    @Mock private KeycloakUserManager userManager;
 
     private KeycloakAuthorizationManager manager;
 

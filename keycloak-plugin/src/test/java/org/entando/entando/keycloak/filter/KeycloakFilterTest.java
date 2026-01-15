@@ -28,7 +28,6 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.AbstractBooleanAssert;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
@@ -169,7 +168,7 @@ class KeycloakFilterTest {
     }
 
     @Test
-    void testAuthenticationFlowWithError() throws IOException, ServletException {
+    void testAuthenticationFlowWithError() {
         final String loginEndpoint = "https://dev.entando.org/entando-app/do/login";
         final String state = "0ca97afd-f0b0-4860-820a-b7cd1414f69c";
         final String authorizationCode = "the-authorization-code-from-keycloak";

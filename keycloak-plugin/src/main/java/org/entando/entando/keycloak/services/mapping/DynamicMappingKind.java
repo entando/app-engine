@@ -11,7 +11,7 @@ public enum DynamicMappingKind {
     GROUPROLE("grouprole"),
     CLIENTROLE("clientrole");
 
-    private String kind;
+    private final String kind;
     DynamicMappingKind(String kind) {
         this.kind = kind;
     }
