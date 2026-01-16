@@ -38,7 +38,6 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.scheduling.quartz.QuartzJobBean;
@@ -70,11 +69,9 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 	private ICategoryManager _categoryManager;
 	private IPageManager _pageManager;
 	private IContentModelManager _contentModelManager;
+	private ILangManager _langManager;
 
 	private ApplicationContext _ctx;
-
-	@Autowired
-	private ILangManager langManager;
 
 	@Override
 	public void setApplicationContext(ApplicationContext ac) throws BeansException {
@@ -97,6 +94,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 		this.setContentModelManager((IContentModelManager) appCtx.getBean("jacmsContentModelManager"));
 		this.setCategoryManager((ICategoryManager) appCtx.getBean("CategoryManager"));
 		this.setPageManager((IPageManager) appCtx.getBean("PageManager"));
+		this.setLangManager((ILangManager) appCtx.getBean("LangManager"));
 	}
 
 	@Override
@@ -217,7 +215,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 			for (int i = 0; i < attributes.size(); i++) {
 				AttributeInterface entityAttribute = attributes.get(i);
 				if (entityAttribute.isActive()) {
-					List<AttributeFieldError> errors = entityAttribute.validate(new AttributeTracer(), langManager);
+					List<AttributeFieldError> errors = entityAttribute.validate(new AttributeTracer(), this.getLangManager());
 					if (null != errors && errors.size() > 0) {
 						return false;
 					}
@@ -767,4 +765,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 		this._contentModelManager = contentModelManager;
 	}
 
+	public ILangManager getLangManager() { return _langManager; }
+
+	public void setLangManager(ILangManager langManager) { this._langManager = langManager; }
 }
