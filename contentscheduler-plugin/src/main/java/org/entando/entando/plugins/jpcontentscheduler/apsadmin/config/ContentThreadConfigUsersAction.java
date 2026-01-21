@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.agiletec.aps.system.common.entity.model.SmallEntityType;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.apsadmin.system.BaseAction;
@@ -218,7 +217,7 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 		return true;
 	}
 
-	private boolean validateRemoveContentType() throws ApsSystemException {
+	private boolean validateRemoveContentType() throws EntException {
 		if (StringUtils.isBlank(this.getUsername())) {
 			this.addFieldError("username", this.getText("requiredstringByArg", this.getText("username")));
 			return false;
@@ -231,7 +230,7 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 		return true;
 	}
 
-	private boolean validateRemoveUser() throws ApsSystemException {
+	private boolean validateRemoveUser() throws EntException {
 		if (StringUtils.isBlank(this.getUsername())) {
 			this.addFieldError("username", this.getText("requiredstringByArg", this.getText("username")));
 			return false;

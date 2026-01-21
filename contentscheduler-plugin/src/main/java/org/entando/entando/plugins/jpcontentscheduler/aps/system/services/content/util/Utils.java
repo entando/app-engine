@@ -29,13 +29,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.ContentThreadConstants;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentState;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentThreadConfig;
 import org.springframework.context.ApplicationContext;
 
 import com.agiletec.aps.system.ApsSystemUtils;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.plugins.jacms.aps.system.services.content.ContentUtilizer;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 
@@ -59,7 +59,7 @@ public class Utils {
 
 	@SuppressWarnings("unchecked")
 	public static Map<String, List> getReferencingObjects(Content content, ApplicationContext appCtx)
-			throws ApsSystemException {
+			throws EntException {
 		Map<String, List> references = new HashMap<String, List>();
 		try {
 			// String[] defNames =
@@ -82,7 +82,7 @@ public class Utils {
 				}
 			}
 		} catch (Throwable t) {
-			throw new ApsSystemException("Errore in hasReferencingObject", t);
+			throw new EntException("Errore in hasReferencingObject", t);
 		}
 		return references;
 	}
