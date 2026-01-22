@@ -26,7 +26,6 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.aps.system.services.authorization.IApsAuthority;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
@@ -213,7 +212,7 @@ public class ContentSchedulerManager extends AbstractService implements IContent
      */
     @Override
     public void sendMailWithResults(List<ContentState> publishedContents, List<ContentState> suspendedContents, List<ContentState> movedContents, Date startJobDate,
-            Date endJobDate) throws EntException, ApsSystemException {
+            Date endJobDate) throws EntException {
         // TODO send to groups
         // sendToGroups(publishedContents, suspendedContents);
         sendToUsers(publishedContents, suspendedContents, movedContents, startJobDate, endJobDate);
@@ -229,11 +228,10 @@ public class ContentSchedulerManager extends AbstractService implements IContent
      * @throws EntException
      */
     private void sendToUsers(List<ContentState> publishedContents, List<ContentState> suspendedContents, List<ContentState> moveContents, Date startJobDate, Date endJobDate)
-            throws EntException, ApsSystemException {
+            throws EntException {
         Map<String, List<String>> mapUsers = this.getConfig().getUsersContentType();
         Set<String> keys = mapUsers.keySet();
-        for (Iterator<String> i = keys.iterator(); i.hasNext();) {
-            String key = i.next();
+        for (String key : keys) {
             List<String> typesList = mapUsers.get(key);
             List<ContentState> contentPList = contentOfTypes(publishedContents, typesList);
             List<ContentState> contentSList = contentOfTypes(suspendedContents, typesList);
@@ -241,7 +239,7 @@ public class ContentSchedulerManager extends AbstractService implements IContent
             if ((contentPList != null && contentPList.size() > 0) || (contentSList != null && contentSList.size() > 0) || (contentMList != null && contentMList.size() > 0)) {
                 UserDetails user = this.getUserManager().getUser(key);
                 if (user == null) {
-                    ApsSystemUtils.getLogger().error(ContentThreadConstants.USER_IS_NULL + key);
+                    _logger.error(ContentThreadConstants.USER_IS_NULL + "{}", key);
                     continue;
                 } else {
                     UserProfile profile = (UserProfile) user.getProfile();
@@ -251,28 +249,24 @@ public class ContentSchedulerManager extends AbstractService implements IContent
                         if (null != mailAttribute && mailAttribute.getText().trim().length() > 0) {
                             email[0] = mailAttribute.getText();
                             String simpleText = Utils.prepareMailText(contentPList, contentSList, contentMList, this.getConfig(), startJobDate, endJobDate);
+                            boolean issent = false;
                             if (this.getConfig().isAlsoHtml()) {
                                 String applBaseUrl = this.getConfigManager().getParam(SystemConstants.PAR_APPL_BASE_URL);
                                 String htmlText = Utils.prepareMailHtml(contentPList, contentSList, contentMList, this.getConfig(), startJobDate, endJobDate, applBaseUrl);
-                                boolean issent = this.getMailManager().sendMixedMail(simpleText, htmlText, config.getSubject(), null, email, null, null, config.getSenderCode());
+                                issent = this.getMailManager().sendMixedMail(simpleText, htmlText, config.getSubject(), null, email, null, null, config.getSenderCode());
                                 // System.out.println("***MAIL html");
-                                if (issent) {
-                                    ApsSystemUtils.getLogger().info(ContentThreadConstants.MAIL_SENT + key);
-                                } else {
-                                    ApsSystemUtils.getLogger().error(ContentThreadConstants.SEND_ERROR + key);
-                                }
                             } else {
                                 // System.out.println("***MAIL simple");
-                                boolean issent = this.getMailManager().sendMail(simpleText, config.getSubject(), email, null, null, config.getSenderCode());
-                                if (issent) {
-                                    ApsSystemUtils.getLogger().info(ContentThreadConstants.MAIL_SENT + key);
-                                } else {
-                                    ApsSystemUtils.getLogger().error(ContentThreadConstants.SEND_ERROR + key);
-                                }
+                                issent = this.getMailManager().sendMail(simpleText, config.getSubject(), email, null, null, config.getSenderCode());
+                            }
+                            if (issent) {
+                                _logger.info(ContentThreadConstants.MAIL_SENT + "{}", key);
+                            } else {
+                                _logger.error(ContentThreadConstants.SEND_ERROR + "{}", key);
                             }
                         }
                     } else {
-                        ApsSystemUtils.getLogger().error(ContentThreadConstants.PROFILE_IS_NULL + key);
+                        _logger.error(ContentThreadConstants.PROFILE_IS_NULL + "{}", key);
                     }
                 }
             }
