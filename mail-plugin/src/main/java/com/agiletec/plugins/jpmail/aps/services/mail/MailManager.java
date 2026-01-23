@@ -252,7 +252,7 @@ public class MailManager extends AbstractService implements IMailManager, Refres
 			switch (config.getSmtpProtocol()) {
 				case JpmailSystemConstants.PROTO_SSL:
 					props.put("mail.smtp.socketFactory.port", port);
-					props.put("mail.smtp.socketFactory.class", "jakarta.net.ssl.SSLSocketFactory");
+					props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 					props.put("mail.smtp.ssl.checkserveridentity", String.valueOf(config.isCheckServerIdentity()));
 					props.put("mail.transport.protocol", "smtps");
 					break;

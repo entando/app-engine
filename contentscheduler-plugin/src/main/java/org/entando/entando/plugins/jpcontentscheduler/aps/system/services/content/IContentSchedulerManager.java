@@ -21,7 +21,6 @@
  */
 package org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content;
 
-import com.agiletec.aps.system.exception.ApsSystemException;
 import java.util.Date;
 import java.util.List;
 
@@ -65,7 +64,7 @@ public interface IContentSchedulerManager {
 	public void updateConfig(ContentThreadConfig config) throws EntException;
 
 	public void sendMailWithResults(List<ContentState> publishedContents, List<ContentState> suspendedContents, List<ContentState> moveContents, Date startJobDate, Date endJobDate)
-			throws EntException, ApsSystemException;
+			throws EntException;
 
 	/**
 	 * Return the desired system parameter

@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author G.Cocco
@@ -58,6 +59,22 @@ public class TestVersioningManager extends BaseTestCase {
     private IVersioningManager versioningManager;
     private JpversioningTestHelper helper;
 
+    @BeforeEach
+    public void init() throws Exception {
+        this.versioningManager = (IVersioningManager) this.getService(JpversioningSystemConstants.VERSIONING_MANAGER);
+        this.configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
+        this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
+        DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
+        this.helper = new JpversioningTestHelper(dataSource, this.getApplicationContext());
+        this.helper.initContentVersions();
+    }
+
+    @AfterEach
+    public void dispose() throws Exception {
+        this.helper.cleanContentVersions();
+    }
+
+    @Test
     void testGetVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getVersions("CNG12");
         assertNull(versions);
@@ -66,6 +83,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{1, 2, 3}, versions);
     }
 
+    @Test
     void testGetLastVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getLastVersions("CNG", null);
         assertTrue(versions.isEmpty());
@@ -74,6 +92,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{3}, versions);
     }
 
+    @Test
     void testGetVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getVersion(10000);
         assertNull(contentVersion);
@@ -92,6 +111,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("admin", contentVersion.getUsername());
     }
 
+    @Test
     void testGetLastVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getLastVersion("CNG12");
         assertNull(contentVersion);
@@ -109,6 +129,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("mainEditor", contentVersion.getUsername());
     }
 
+    @Test
     void testSaveGetDeleteVersion() throws Throwable {
         ((VersioningManager) this.versioningManager).saveContentVersion("ART102");
         ContentVersion contentVersion = this.versioningManager.getLastVersion("ART102");
@@ -128,12 +149,20 @@ public class TestVersioningManager extends BaseTestCase {
         assertNull(this.versioningManager.getLastVersion("ART102"));
     }
 
+    @Test
     public void deleteWorkVersions() throws Throwable {
-        List<Long> versions = this.versioningManager.getVersions("ART1");
-        this.checkVersionIds(new long[]{1, 2, 3}, versions);
-        this.versioningManager.deleteWorkVersions("ART1", 0);
-        versions = this.versioningManager.getVersions("ART1");
-        this.checkVersionIds(new long[]{1, 3}, versions);
+        try {
+            this.updateConfigItem(JpversioningSystemConstants.CONFIG_PARAM_DELETE_MID_VERSIONS, "true");
+            ((VersioningManager) this.versioningManager).initTenantAware();
+            List<Long> versions = this.versioningManager.getVersions("ART1");
+            this.checkVersionIds(new long[]{1, 2, 3}, versions);
+            this.versioningManager.deleteWorkVersions("ART1", 0);
+            versions = this.versioningManager.getVersions("ART1");
+            this.checkVersionIds(new long[]{1, 3}, versions);
+        } finally {
+            this.updateConfigItem(JpversioningSystemConstants.CONFIG_PARAM_DELETE_MID_VERSIONS, "");
+            ((VersioningManager) this.versioningManager).initTenantAware();
+        }
     }
 
     private void checkVersionIds(long[] expected, List<Long> received) {
@@ -145,11 +174,13 @@ public class TestVersioningManager extends BaseTestCase {
         }
     }
 
+    @Test
     void testContentVersionToIgnore_1() throws Exception {
         this.testContentVersionToIgnore(false, true);
         this.testContentVersionToIgnore(true, true);
     }
 
+    @Test
     void testContentVersionToIgnore_2() throws Exception {
         this.testContentVersionToIgnore(false, false);
         this.testContentVersionToIgnore(true, false);
@@ -214,19 +245,5 @@ public class TestVersioningManager extends BaseTestCase {
         this.configManager.updateConfigItem(SystemConstants.CONFIG_ITEM_PARAMS, newXmlParams);
     }
 
-    @BeforeEach
-	private void init() throws Exception {
-        this.versioningManager = (IVersioningManager) this.getService(JpversioningSystemConstants.VERSIONING_MANAGER);
-        this.configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
-        this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
-        DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
-        this.helper = new JpversioningTestHelper(dataSource, this.getApplicationContext());
-        this.helper.initContentVersions();
-    }
-    
-    @AfterEach
-    private void dispose() throws Exception {
-        this.helper.cleanContentVersions();
-    }
     
 }

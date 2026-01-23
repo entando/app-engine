@@ -21,35 +21,14 @@
  */
 package org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import com.agiletec.aps.system.services.lang.ILangManager;
-import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.ContentThreadConstants;
-import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentState;
-import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentSuspendMove;
-import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.util.Utils;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.agiletec.aps.system.ApsSystemUtils;
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
 import com.agiletec.aps.system.common.entity.model.AttributeTracer;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
+import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageManager;
 import com.agiletec.aps.system.services.page.Widget;
@@ -58,10 +37,31 @@ import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.ContentThreadConstants;
+import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentState;
+import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentSuspendMove;
+import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.util.Utils;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.scheduling.quartz.QuartzJobBean;
+
+
 
 public class ContentJobs extends QuartzJobBean implements ApplicationContextAware {
 
-	private static final Logger _logger = LoggerFactory.getLogger(ContentJobs.class);
+	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(ContentJobs.class);
 
 	private static final String APPLICATION_CONTEXT_KEY = "applicationContext";
 
@@ -70,11 +70,9 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 	private ICategoryManager _categoryManager;
 	private IPageManager _pageManager;
 	private IContentModelManager _contentModelManager;
+	private ILangManager _langManager;
 
 	private ApplicationContext _ctx;
-
-	@Autowired
-	private ILangManager langManager;
 
 	@Override
 	public void setApplicationContext(ApplicationContext ac) throws BeansException {
@@ -97,6 +95,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 		this.setContentModelManager((IContentModelManager) appCtx.getBean("jacmsContentModelManager"));
 		this.setCategoryManager((ICategoryManager) appCtx.getBean("CategoryManager"));
 		this.setPageManager((IPageManager) appCtx.getBean("PageManager"));
+		this.setLangManager((ILangManager) appCtx.getBean("LangManager"));
 	}
 
 	@Override
@@ -116,7 +115,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 			if (this.getContentSchedulerManager().getConfig()
 					.isActive()/* && isCurrentSiteAllowed() */) {
 				Date startJobDate = new Date();
-				_logger.info(ContentThreadConstants.START_TIME_LOG + Utils.printTimeStamp(startJobDate));
+                _logger.info(ContentThreadConstants.START_TIME_LOG + "{}", Utils.printTimeStamp(startJobDate));
 				List<ContentState> removedContents = new ArrayList<ContentState>();
 				List<ContentState> publishedContents = new ArrayList<ContentState>();
 				List<ContentState> moveContents = new ArrayList<ContentState>();
@@ -130,11 +129,11 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 						Collections.sort(removedContents);
 						Collections.sort(moveContents);
 						Date endJobDate = new Date();
-						_logger.info(ContentThreadConstants.END_TIME_LOG + Utils.printTimeStamp(endJobDate));
+                        _logger.info(ContentThreadConstants.END_TIME_LOG + "{}", Utils.printTimeStamp(endJobDate));
 						this.getContentSchedulerManager().sendMailWithResults(publishedContents, removedContents,
 								moveContents, startJobDate, endJobDate);
 					} catch (Throwable t) {
-						throw new ApsSystemException(ContentThreadConstants.ERROR_ON_MAIL, t);
+						throw new EntException(ContentThreadConstants.ERROR_ON_MAIL, t);
 					}
 				} catch (Throwable t) {
 					ApsSystemUtils.logThrowable(t, this, t.getMessage());
@@ -147,7 +146,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 		}
 	}
 
-	private void publishContentsJob(List<ContentState> publishedContents) throws ApsSystemException {
+	private void publishContentsJob(List<ContentState> publishedContents) throws EntException {
 		try {
 			// Restituisce gli id dei contenuti che hanno un attributo con nome
 			// key Data_inizio e valore la data corrente
@@ -164,24 +163,21 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 					if (null == contentToPublish) {
 						publishedContents.add(new ContentState(contentId, "null", "null",
 								ContentThreadConstants.PUBLISH_ACTION, ContentThreadConstants.NULL_CONTENT));
-						_logger.info("Pubblicazione automatica non riuscita: " + contentId + " - "
-								+ ContentThreadConstants.NULL_CONTENT);
+                        _logger.info("Pubblicazione automatica non riuscita: {} - " + ContentThreadConstants.NULL_CONTENT, contentId);
 						continue;
 					}
 					if (contentToPublish.isOnLine()) {
 						publishedContents.add(new ContentState(contentToPublish.getId(), contentToPublish.getTypeCode(),
 								contentToPublish.getDescription(), ContentThreadConstants.PUBLISH_ACTION,
 								ContentThreadConstants.ISALREADYONLINE));
-						_logger.info("Pubblicazione automatica non riuscita: " + contentToPublish.getId() + " - "
-								+ ContentThreadConstants.ISALREADYONLINE);
+                        _logger.info("Pubblicazione automatica non riuscita: {} - " + ContentThreadConstants.ISALREADYONLINE, contentToPublish.getId());
 						continue;
 					}
 					if (!Content.STATUS_READY.equals(contentToPublish.getStatus())) {
 						publishedContents.add(new ContentState(contentToPublish.getId(), contentToPublish.getTypeCode(),
 								contentToPublish.getDescription(), ContentThreadConstants.PUBLISH_ACTION,
 								ContentThreadConstants.NOTREADYSTATUS));
-						_logger.info("Pubblicazione automatica non riuscita: " + contentToPublish.getId() + " - "
-								+ ContentThreadConstants.NOTREADYSTATUS);
+                        _logger.info("Pubblicazione automatica non riuscita: {} - " + ContentThreadConstants.NOTREADYSTATUS, contentToPublish.getId());
 						continue;
 					}
 					boolean validation = this.scanEntity(contentToPublish);
@@ -189,14 +185,13 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 						publishedContents.add(new ContentState(contentToPublish.getId(), contentToPublish.getTypeCode(),
 								contentToPublish.getDescription(), ContentThreadConstants.PUBLISH_ACTION,
 								ContentThreadConstants.CONTENTWITHERRORS));
-						_logger.info("Pubblicazione automatica non riuscita: " + contentToPublish.getId() + " - "
-								+ ContentThreadConstants.CONTENTWITHERRORS);
+                        _logger.info("Pubblicazione automatica non riuscita: {} - " + ContentThreadConstants.CONTENTWITHERRORS, contentToPublish.getId());
 						continue;
 					}
 					// pubblicazione on line del contenuto e modifica data di
 					// ultima modifica
 					this.getContentManager().insertOnLineContent(contentToPublish);
-					_logger.info("Pubblicato automaticamente contenuto " + contentToPublish.getId());
+                    _logger.info("Pubblicato automaticamente contenuto {}", contentToPublish.getId());
 					publishedContents.add(new ContentState(contentToPublish.getId(), contentToPublish.getTypeCode(),
 							contentToPublish.getDescription(), ContentThreadConstants.PUBLISH_ACTION,
 							ContentThreadConstants.ACTION_SUCCESS));
@@ -207,7 +202,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 				}
 			}
 		} catch (Throwable t) {
-			throw new ApsSystemException(ContentThreadConstants.ERROR_ON_PUBLISH, t);
+			throw new EntException(ContentThreadConstants.ERROR_ON_PUBLISH, t);
 		}
 	}
 
@@ -217,7 +212,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 			for (int i = 0; i < attributes.size(); i++) {
 				AttributeInterface entityAttribute = attributes.get(i);
 				if (entityAttribute.isActive()) {
-					List<AttributeFieldError> errors = entityAttribute.validate(new AttributeTracer(), langManager);
+					List<AttributeFieldError> errors = entityAttribute.validate(new AttributeTracer(), this.getLangManager());
 					if (null != errors && errors.size() > 0) {
 						return false;
 					}
@@ -232,7 +227,7 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 
 	@SuppressWarnings("unchecked")
 	private void suspendOrMoveContentsJob(List<ContentState> removedContents, List<ContentState> moveContents,
-			ApplicationContext appCtx) throws ApsSystemException {
+			ApplicationContext appCtx) throws EntException {
 		try {
 			// Restituisce gli id dei contenuti che hanno un attributo con nome
 			// key Data_fine e valore la data corrente
@@ -766,5 +761,10 @@ public class ContentJobs extends QuartzJobBean implements ApplicationContextAwar
 	public void setContentModelManager(IContentModelManager contentModelManager) {
 		this._contentModelManager = contentModelManager;
 	}
+
+	public ILangManager getLangManager() { return _langManager; }
+
+	public void setLangManager(ILangManager langManager) { this._langManager = langManager; }
+
 
 }

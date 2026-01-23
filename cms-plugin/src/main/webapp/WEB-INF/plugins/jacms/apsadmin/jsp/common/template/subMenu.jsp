@@ -46,6 +46,17 @@
             </a>
         </li>
     </c:if>
+    <s:set var="appBuilderIntegrationEnabledVar" ><wp:info key="systemParam" paramName="appBuilderIntegrationEnabled" /></s:set>
+    <c:if test="${isSuperUser}">
+        <s:if test="#appBuilderIntegrationEnabled == 'true'">
+            <wpsa:pluginsSubMenu objectName="pluginsSubMenusVar" />
+            <s:iterator value="#pluginsSubMenusVar" var="pluginSubMenuVar">
+                <s:if test="#pluginSubMenuVar.pluginCode == 'jpcontentscheduler'">
+                    <s:include value="%{#pluginSubMenuVar.subMenuFilePath}" />
+                </s:if>
+            </s:iterator>
+        </s:if>
+    </c:if>
     <c:if test="${isSuperUser}">
         <li class="list-group-item">
             <a href="<s:url action="initViewEntityTypes" namespace="/do/Entity"><s:param name="entityManagerName">jacmsContentManager</s:param></s:url>">

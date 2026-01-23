@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.agiletec.aps.system.common.entity.model.SmallEntityType;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.apsadmin.system.BaseAction;
@@ -59,8 +58,10 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 	 */
 	public String viewUsers() {
 		try {
-			this.setConfigItemOnSession();
-
+			// Only initialize session if not already set, to preserve any pending changes
+			if (this.getRequest().getSession().getAttribute(THREAD_CONFIG_SESSION_PARAM_USERS_CONTENT_TYPE) == null) {
+				this.setConfigItemOnSession();
+			}
 		} catch (Throwable t) {
 			_logger.error("Error in viewUsers", t);
 			return FAILURE;
@@ -216,7 +217,7 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 		return true;
 	}
 
-	private boolean validateRemoveContentType() throws ApsSystemException {
+	private boolean validateRemoveContentType() throws EntException {
 		if (StringUtils.isBlank(this.getUsername())) {
 			this.addFieldError("username", this.getText("requiredstringByArg", this.getText("username")));
 			return false;
@@ -229,7 +230,7 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 		return true;
 	}
 
-	private boolean validateRemoveUser() throws ApsSystemException {
+	private boolean validateRemoveUser() throws EntException {
 		if (StringUtils.isBlank(this.getUsername())) {
 			this.addFieldError("username", this.getText("requiredstringByArg", this.getText("username")));
 			return false;
@@ -255,8 +256,13 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 
 	private Map<String, List<String>> setConfigItemOnSession() {
 		Map<String, List<String>> usersContentType = this.getContentSchedulerManager().getConfig().getUsersContentType();
-		this.getRequest().getSession().setAttribute(THREAD_CONFIG_SESSION_PARAM_USERS_CONTENT_TYPE, usersContentType);
-		return usersContentType;
+		// Create mutable copies to allow add/remove operations
+		Map<String, List<String>> mutableCopy = new java.util.HashMap<>();
+		if (usersContentType != null) {
+			usersContentType.forEach((key, value) -> mutableCopy.put(key, new ArrayList<>(value)));
+		}
+		this.getRequest().getSession().setAttribute(THREAD_CONFIG_SESSION_PARAM_USERS_CONTENT_TYPE, mutableCopy);
+		return mutableCopy;
 	}
 
 	private void setConfigItemOnSession(Map<String, List<String>> config) {
@@ -264,8 +270,11 @@ public class ContentThreadConfigUsersAction extends BaseAction {
 	}
 
 	public Map<String, List<String>> getUsersContentType() {
-		return (Map<String, List<String>>) this.getRequest().getSession().getAttribute(THREAD_CONFIG_SESSION_PARAM_USERS_CONTENT_TYPE);
-	}
+		Map<String, List<String>> config = (Map<String, List<String>>) this.getRequest().getSession().getAttribute(THREAD_CONFIG_SESSION_PARAM_USERS_CONTENT_TYPE);
+		if (config == null) {
+			config = this.setConfigItemOnSession();
+		}
+		return config;	}
 
 	public List<SmallEntityType> getContentTypes() {
 		List<SmallEntityType> smallContentTypes = this.getContentManager().getSmallEntityTypes();

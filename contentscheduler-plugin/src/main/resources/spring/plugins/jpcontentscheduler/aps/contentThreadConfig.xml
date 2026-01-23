@@ -29,6 +29,7 @@
                 <entry key="categoryManager" value-ref="CategoryManager" />
                 <entry key="pageManager" value-ref="PageManager" />
                 <entry key="contentModelManager" value-ref="jacmsContentModelManager" />
+                <entry key="langManager" value-ref="LangManager" />
             </map>
         </property>
         <property name="durability" value="true" />

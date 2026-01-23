@@ -190,16 +190,52 @@ public class VersioningManager extends AbstractService implements IVersioningMan
                         this.deleteWorkVersions(versionRecord.getContentId(), onlineVersionsToDelete);
                     }
                     if (null == this.getVersioningDAO().getVersion(contentId, versionRecord.getVersion())) {
-                        this.getVersioningDAO().addContentVersion(versionRecord);
+                        try {
+                            this.getVersioningDAO().addContentVersion(versionRecord);
+                        } catch (RuntimeException e) {
+                            if (isDuplicateKeyException(e)) {
+                                _logger.warn("ContentId '{}' - version '{}' already exists (concurrent insert)", contentId, versionRecord.getVersion());
+                            } else {
+                                throw e;
+                            }
+                        }
                     } else {
-                        logger.warn("ContentId '{}' -  version '{}' already exists", contentId, versionRecord.getVersion());
+                        _logger.warn("ContentId '{}' -  version '{}' already exists", contentId, versionRecord.getVersion());
                     }
                 }
             }
+        } catch (EntException e) {
+            throw e;
         } catch (Exception e) {
             _logger.error("error in Error saving version for content {}", contentId, e);
             throw new EntException("Error saving version for content" + contentId);
         }
+    }
+
+    private boolean isDuplicateKeyException(Throwable e) {
+        while (e != null) {
+            if (e instanceof java.sql.SQLException) {
+                java.sql.SQLException sqlEx = (java.sql.SQLException) e;
+                String sqlState = sqlEx.getSQLState();
+                if (sqlState != null) {
+                    // 23505: unique_violation (PostgreSQL, Derby)
+                    // 23000: integrity constraint violation (MySQL, Oracle - need to check error code)
+                    if ("23505".equals(sqlState)) {
+                        return true;
+                    }
+                    if ("23000".equals(sqlState)) {
+                        int errorCode = sqlEx.getErrorCode();
+                        // MySQL: 1062 (ER_DUP_ENTRY), 1586 (ER_DUP_ENTRY_WITH_KEY_NAME)
+                        // Oracle: 1 (ORA-00001: unique constraint violated)
+                        if (errorCode == 1062 || errorCode == 1586 || errorCode == 1) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            e = e.getCause();
+        }
+        return false;
     }
 
     @Override

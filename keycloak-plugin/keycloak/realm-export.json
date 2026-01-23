@@ -415,6 +415,39 @@
     }
   },
   "groups": [],
+  "users": [
+    {
+      "id": "admin-user-id",
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@entando.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["offline_access", "uma_authorization"],
+      "clientRoles": {
+        "entando-core": ["superuser"],
+        "account": ["manage-account", "view-profile"]
+      }
+    },
+    {
+      "id": "service-account-entando-core-id",
+      "username": "service-account-entando-core",
+      "enabled": true,
+      "serviceAccountClientId": "entando-core",
+      "realmRoles": ["offline_access", "uma_authorization"],
+      "clientRoles": {
+        "realm-management": ["realm-admin"]
+      }
+    }
+  ],
   "defaultRoles": [
     "uma_authorization",
     "offline_access"
@@ -627,7 +660,7 @@
       "redirectUris": [
         "http://localhost:8080/*"
       ],
-      "webOrigins": [],
+      "webOrigins": ["http://localhost:8080"],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
