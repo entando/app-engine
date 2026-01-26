@@ -16,6 +16,7 @@ This plugin doesn't come with Role and Group management, because Entando Core ro
 
 ## Properties
 >- `keycloak.enabled`: Enables this plugin. (The default is `false`)
+>  > ⚠️ **WARNING:** When `keycloak.enabled=false`, Basic Authentication is used instead. This is **UNSAFE FOR PRODUCTION** and should only be used for local development.
 >- `keycloak.auth.url`: It's the Keycloak auth url. Example: `https://is.yourdomain.com/auth`. (The default is `http://localhost:8081/auth`)
 >- `keycloak.realm`: The keycloak realm. See https://www.keycloak.org/docs/3.2/server_admin/topics/overview/concepts.html . (The default is `entando`)
 >- `keycloak.client.id`: The keycloak confidential client id. (The default is `entando-app`)

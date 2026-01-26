@@ -12,6 +12,8 @@ Here the command to use
 mvn clean package jetty:run-war -Pjetty-local -Pderby
 ```
 
+> ⚠️ **WARNING:** Running without `-Pkeycloak` disables Keycloak and enables Basic Authentication instead. This is **UNSAFE FOR PRODUCTION** and should only be used for local development.
+
 If you want to use keycloak as external authorization service, add the keycloak profile and update the proper
 variables (you can find them in the `properties` tag in the pom)
 

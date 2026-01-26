@@ -66,4 +66,6 @@ The general log level is controlled by the variable `ROOT_LOG_LEVEL`, that in te
 || ENTANDO_BUNDLE_CLI_ETC | ${ENTANDO_BUNDLE_CLI_ETC}/hub/credentials | Credentials/parameters saved within JSON files under this path for ent bundle add hub command			
 || ENTANDO_APP_ENGINE_HEALTH_CHECK_TYPE | db.migration.strategy | [auto], skip, disabled, generate_sql | Liquibase strategy 			
 || LOG_CONFIG_FILE_PATH | | to use the logback composable feature | 			
-|| ENTANDO_DOCKER_REGISTRY_OVERRIDE |  | Deprecated-for v1 bundles, to propagate to CM for plugins | 
+|| ENTANDO_DOCKER_REGISTRY_OVERRIDE |  | Deprecated-for v1 bundles, to propagate to CM for plugins |
+| Feature Flags | ENTANDO_FEATURE_FLAGS | comma-separated list of tags | Enable experimental features. Example: `CACHE_PIPELINE` |
+|| ENTANDO_FF_DEEP_DEBUG | comma-separated list of tags | Enable deep debug logging for specific components. Example: `service-reload` | 

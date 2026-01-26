@@ -81,7 +81,9 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
             return http.build();
         } else {
             // Keycloak disabled - use BasicAuthFilter for DB authentication
-            _logger.warn("Keycloak disabled, configuring Basic Auth security filter chain");
+            _logger.warn("▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒");
+            _logger.warn("▒▒▒ [SECURITY] Keycloak disabled; using Basic Auth. UNSAFE FOR PRODUCTION. ▒▒▒");
+            _logger.warn("▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒");
 
             BasicAuthFilter basicAuthFilter = new BasicAuthFilter(userManager, authenticationProviderManager);
 
