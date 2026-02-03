@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.system.SystemConstants;
@@ -35,26 +34,39 @@ class OpenApiConfigTest {
 
     @BeforeEach
     public void setup() {
-        when(environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_AUTH_URL)).thenReturn(authUrl);
-        when(environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_REALM)).thenReturn(realm);
+        Mockito.lenient().when(environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_AUTH_URL)).thenReturn(authUrl);
+        Mockito.lenient().when(environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_REALM)).thenReturn(realm);
         Mockito.lenient().when(servletContext.getContextPath()).thenReturn("/entando-de-app");
     }
 
     @Test
-    void createOpenApiConfig() {
+    void createOpenApiConfig_keycloakEnabled() {
         OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
+        config.keycloakEnabled = true;
 
         OpenAPI openAPI = config.customOpenAPI();
         assertNotNull(openAPI);
     }
 
     @Test
-    void customOpenAPITest() {
+    void createOpenApiConfig_keycloakDisabled() {
         OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
+        config.keycloakEnabled = false;
+
+        OpenAPI openAPI = config.customOpenAPI();
+        assertNotNull(openAPI);
+    }
+
+    @Test
+    void customOpenAPI_keycloakEnabled_shouldConfigureOAuth2() {
+        OpenApiConfig config = new OpenApiConfig();
+        config.environment = environment;
+        config.servletContext = servletContext;
+        config.keycloakEnabled = true;
 
         OpenAPI openAPI = config.customOpenAPI();
 
@@ -70,11 +82,11 @@ class OpenApiConfigTest {
         assertEquals(1, openAPI.getServers().size());
         assertEquals("/entando-de-app", openAPI.getServers().get(0).getUrl());
 
-        // Check security configuration with Keycloak enabled
+        // Check OAuth2 security configuration when Keycloak is enabled
         assertNotNull(openAPI.getComponents());
         assertNotNull(openAPI.getComponents().getSecuritySchemes());
-        SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get("entando");
-        assertNotNull(securityScheme);
+        SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get("oauth2");
+        assertNotNull(securityScheme, "OAuth2 security scheme should be configured when Keycloak is enabled");
         assertEquals(SecurityScheme.Type.OAUTH2, securityScheme.getType());
         assertNotNull(securityScheme.getFlows());
         assertNotNull(securityScheme.getFlows().getAuthorizationCode());
@@ -87,23 +99,59 @@ class OpenApiConfigTest {
         assertNotNull(openAPI.getSecurity());
         assertEquals(1, openAPI.getSecurity().size());
         SecurityRequirement securityRequirement = openAPI.getSecurity().get(0);
-        assertTrue(securityRequirement.containsKey("entando"));
+        assertTrue(securityRequirement.containsKey("oauth2"));
     }
 
     @Test
-    void customOpenAPIWithoutAuthServer() {
+    void customOpenAPI_keycloakDisabled_shouldConfigureBasicAuth() {
+        OpenApiConfig config = new OpenApiConfig();
+        config.environment = environment;
+        config.servletContext = servletContext;
+        config.keycloakEnabled = false;
+
+        OpenAPI openAPI = config.customOpenAPI();
+
+        assertNotNull(openAPI);
+        Info info = openAPI.getInfo();
+        assertNotNull(info);
+        assertEquals("Entando API", info.getTitle());
+
+        // Check server configuration
+        assertNotNull(openAPI.getServers());
+        assertEquals(1, openAPI.getServers().size());
+        assertEquals("/entando-de-app", openAPI.getServers().get(0).getUrl());
+
+        // Check Basic Auth security configuration when Keycloak is disabled
+        assertNotNull(openAPI.getComponents());
+        assertNotNull(openAPI.getComponents().getSecuritySchemes());
+        SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get("basicAuth");
+        assertNotNull(securityScheme, "Basic Auth security scheme should be configured when Keycloak is disabled");
+        assertEquals(SecurityScheme.Type.HTTP, securityScheme.getType());
+        assertEquals("basic", securityScheme.getScheme());
+        assertNotNull(securityScheme.getDescription());
+
+        // Check security requirement
+        assertNotNull(openAPI.getSecurity());
+        assertEquals(1, openAPI.getSecurity().size());
+        SecurityRequirement securityRequirement = openAPI.getSecurity().get(0);
+        assertTrue(securityRequirement.containsKey("basicAuth"));
+    }
+
+    @Test
+    void customOpenAPI_keycloakEnabled_withoutAuthServer_shouldNotConfigureSecurity() {
         when(environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_AUTH_URL)).thenReturn(null);
         when(servletContext.getContextPath()).thenReturn("/entando-de-app");
 
         OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
+        config.keycloakEnabled = true;
 
         OpenAPI openAPI = config.customOpenAPI();
 
         assertNotNull(openAPI);
 
-        // Security should not be configured when auth server is null
+        // Security should not be configured when auth server is null (even if Keycloak is enabled)
         if (openAPI.getComponents() != null) {
             assertNull(openAPI.getComponents().getSecuritySchemes());
         }
@@ -117,6 +165,7 @@ class OpenApiConfigTest {
         OpenApiConfig config = new OpenApiConfig();
         config.environment = environment;
         config.servletContext = servletContext;
+        config.keycloakEnabled = true;
 
         OpenAPI openAPI = config.customOpenAPI();
 

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import jakarta.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -18,13 +19,17 @@ import org.springframework.core.env.Environment;
 @Configuration
 public class OpenApiConfig {
 
-    private static final String SECURITY_SCHEME_NAME = "entando";
+    private static final String OAUTH2_SECURITY_SCHEME_NAME = "oauth2";
+    private static final String BASIC_AUTH_SECURITY_SCHEME_NAME = "basicAuth";
 
     @Autowired
     ServletContext servletContext; // package-private for testing
 
     @Autowired
     Environment environment; // package-private for testing
+
+    @Value("${keycloak.enabled:false}")
+    boolean keycloakEnabled; // package-private for testing
 
     private String getAuthServer() {
         String baseAuthServer = environment.getProperty(SystemConstants.SYSTEM_PROP_KEYCLOAK_AUTH_URL);
@@ -50,7 +55,18 @@ public class OpenApiConfig {
             openAPI.addServersItem(new Server().url(contextPath));
         }
 
-        // Add OAuth2 security scheme if auth server is configured
+        if (keycloakEnabled) {
+            // Add OAuth2 security scheme when Keycloak is enabled
+            configureOAuth2Security(openAPI);
+        } else {
+            // Add Basic Auth security scheme when Keycloak is disabled
+            configureBasicAuthSecurity(openAPI);
+        }
+
+        return openAPI;
+    }
+
+    private void configureOAuth2Security(OpenAPI openAPI) {
         String authServer = getAuthServer();
         if (authServer != null && !authServer.isEmpty()) {
             OAuthFlow authorizationCodeFlow = new OAuthFlow()
@@ -62,15 +78,24 @@ public class OpenApiConfig {
             authorizationCodeFlow.addExtension("x-logout-url", authServer + "/logout");
 
             openAPI.components(new Components()
-                    .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
+                    .addSecuritySchemes(OAUTH2_SECURITY_SCHEME_NAME, new SecurityScheme()
                             .type(SecurityScheme.Type.OAUTH2)
                             .flows(new OAuthFlows()
                                     .authorizationCode(authorizationCodeFlow))));
 
             // Apply security globally
-            openAPI.addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
+            openAPI.addSecurityItem(new SecurityRequirement().addList(OAUTH2_SECURITY_SCHEME_NAME));
         }
+    }
 
-        return openAPI;
+    private void configureBasicAuthSecurity(OpenAPI openAPI) {
+        openAPI.components(new Components()
+                .addSecuritySchemes(BASIC_AUTH_SECURITY_SCHEME_NAME, new SecurityScheme()
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("basic")
+                        .description("Basic Authentication - Use your Entando username and password")));
+
+        // Apply security globally
+        openAPI.addSecurityItem(new SecurityRequirement().addList(BASIC_AUTH_SECURITY_SCHEME_NAME));
     }
 }

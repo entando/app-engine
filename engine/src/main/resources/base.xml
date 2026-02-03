@@ -87,4 +87,10 @@
     </root>
     <!-- uncomment the following line to enable printing of MockMVC responses in tests -->
     <!--<logger name="org.entando.entando.web.AbstractControllerIntegrationTest" level="DEBUG"/>-->
+
+    <!-- Suppress Struts 2 warnings for missing i18n keys and OGNL security -->
+    <logger name="org.apache.struts2.util.TextProviderHelper" level="ERROR"/>
+    <logger name="org.apache.struts2.components.ServletUrlRenderer" level="ERROR"/>
+    <logger name="com.opensymphony.xwork2.ognl.SecurityMemberAccess" level="ERROR"/>
+
 </included>

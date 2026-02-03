@@ -13,14 +13,14 @@
  */
 package com.agiletec.aps.system.common;
 
+import com.agiletec.aps.system.common.notify.ApsEvent;
+import com.agiletec.aps.system.common.notify.INotifyManager;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanNameAware;
-
-import com.agiletec.aps.system.common.notify.ApsEvent;
-import com.agiletec.aps.system.common.notify.INotifyManager;
 import org.springframework.context.ApplicationEvent;
 
 /**
@@ -81,6 +81,12 @@ public abstract class AbstractService
 	@Override
 	public String getName() {
 		return _name;
+	}
+
+
+	protected String getTenantCode() {
+		return ApsTenantApplicationUtils.getTenant()
+				.orElse("");
 	}
 	
 	protected INotifyManager getNotifyManager() {

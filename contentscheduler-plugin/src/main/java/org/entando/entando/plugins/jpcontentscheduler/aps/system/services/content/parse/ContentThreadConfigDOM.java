@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentThreadConfig;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentTypeElem;
 import org.jdom2.CDATA;
@@ -42,7 +43,6 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 
 import com.agiletec.aps.system.ApsSystemUtils;
-import com.agiletec.aps.system.exception.ApsSystemException;
 
 /**
  * Classe DOM delegata alle operazioni di lettura/scrittura della configurazione
@@ -56,10 +56,10 @@ public class ContentThreadConfigDOM {
 	 * @param xml
 	 * The xml containing the configuration.
 	 * @return The contentthread configuration.
-	 * @throws ApsSystemException
+	 * @throws EntException
 	 * In case of parsing errors.
 	 */
-	public ContentThreadConfig extractConfig(String xml) throws ApsSystemException {
+	public ContentThreadConfig extractConfig(String xml) throws EntException {
 		ContentThreadConfig config = new ContentThreadConfig();
 		config.setGroupsContentType(new HashMap<>());
 		config.setUsersContentType(new HashMap<>());
@@ -80,10 +80,10 @@ public class ContentThreadConfigDOM {
 	 * @param config
 	 * The contentThread configuration.
 	 * @return The xml containing the configuration.
-	 * @throws ApsSystemException
+	 * @throws EntException
 	 * In case of errors.
 	 */
-	public String createConfigXml(ContentThreadConfig config) throws ApsSystemException {
+	public String createConfigXml(ContentThreadConfig config) throws EntException {
 		Element root = this.createConfigElement(config);
 		Document doc = new Document(root);
 		String xml = new XMLOutputter().outputString(doc);
@@ -440,10 +440,10 @@ public class ContentThreadConfigDOM {
 	 * @param xmlText
 	 * The text containing an Xml.
 	 * @return The Xml element from a given text.
-	 * @throws ApsSystemException
+	 * @throws EntException
 	 * In case of parsing exceptions.
 	 */
-	private Element getRootElement(String xmlText) throws ApsSystemException {
+	private Element getRootElement(String xmlText) throws EntException {
 		SAXBuilder builder = new SAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
@@ -453,10 +453,10 @@ public class ContentThreadConfigDOM {
 			root = doc.getRootElement();
 		} catch (JDOMException t) {
 			ApsSystemUtils.getLogger().error("Error parsing xml: " + t.getMessage());
-			throw new ApsSystemException("Error parsing xml", t);
+			throw new EntException("Error parsing xml", t);
 		} catch (IOException t) {
 			ApsSystemUtils.getLogger().error("Error parsing xml: " + t.getMessage());
-			throw new ApsSystemException("Error parsing xml", t);
+			throw new EntException("Error parsing xml", t);
 		}
 		return root;
 	}

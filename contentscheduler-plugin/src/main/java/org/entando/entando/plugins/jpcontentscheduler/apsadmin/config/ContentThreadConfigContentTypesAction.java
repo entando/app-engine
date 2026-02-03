@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.agiletec.aps.system.common.tree.ITreeNode;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.apsadmin.system.ITreeNodeBaseActionHelper;
 import com.agiletec.apsadmin.system.TreeNodeWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -37,11 +36,9 @@ import org.slf4j.LoggerFactory;
 
 import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
-import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.apsadmin.system.AbstractTreeAction;
 
-import static com.agiletec.apsadmin.system.BaseAction.FAILURE;
 
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import org.apache.struts2.action.Action;

@@ -51,6 +51,8 @@ import org.entando.entando.aps.system.services.cache.ICacheInfoManager;
 import org.entando.entando.aps.system.services.tenants.RefreshableBeanTenantAware;
 import org.entando.entando.aps.system.services.userprofile.model.UserProfile;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.ContentThreadConstants;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentState;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentSuspendMove;
@@ -58,8 +60,6 @@ import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.conten
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.model.ContentTypeElem;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.parse.ContentThreadConfigDOM;
 import org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.util.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 
@@ -70,7 +70,7 @@ import org.springframework.cache.annotation.CacheEvict;
 public class ContentSchedulerManager extends AbstractService implements IContentSchedulerManager,
         RefreshableBeanTenantAware {
 
-    private static final Logger _logger = LoggerFactory.getLogger(ContentSchedulerManager.class);
+    private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(ContentSchedulerManager.class);
     private static final long serialVersionUID = 6880576602469119814L;
 
     private IContentSearcherDAO _workContentSearcherDAO;
@@ -213,7 +213,7 @@ public class ContentSchedulerManager extends AbstractService implements IContent
      */
     @Override
     public void sendMailWithResults(List<ContentState> publishedContents, List<ContentState> suspendedContents, List<ContentState> movedContents, Date startJobDate,
-            Date endJobDate) throws EntException, ApsSystemException {
+            Date endJobDate) throws EntException {
         // TODO send to groups
         // sendToGroups(publishedContents, suspendedContents);
         sendToUsers(publishedContents, suspendedContents, movedContents, startJobDate, endJobDate);
@@ -229,11 +229,10 @@ public class ContentSchedulerManager extends AbstractService implements IContent
      * @throws EntException
      */
     private void sendToUsers(List<ContentState> publishedContents, List<ContentState> suspendedContents, List<ContentState> moveContents, Date startJobDate, Date endJobDate)
-            throws EntException, ApsSystemException {
+            throws EntException {
         Map<String, List<String>> mapUsers = this.getConfig().getUsersContentType();
         Set<String> keys = mapUsers.keySet();
-        for (Iterator<String> i = keys.iterator(); i.hasNext();) {
-            String key = i.next();
+        for (String key : keys) {
             List<String> typesList = mapUsers.get(key);
             List<ContentState> contentPList = contentOfTypes(publishedContents, typesList);
             List<ContentState> contentSList = contentOfTypes(suspendedContents, typesList);
@@ -241,7 +240,7 @@ public class ContentSchedulerManager extends AbstractService implements IContent
             if ((contentPList != null && contentPList.size() > 0) || (contentSList != null && contentSList.size() > 0) || (contentMList != null && contentMList.size() > 0)) {
                 UserDetails user = this.getUserManager().getUser(key);
                 if (user == null) {
-                    ApsSystemUtils.getLogger().error(ContentThreadConstants.USER_IS_NULL + key);
+                    _logger.error(ContentThreadConstants.USER_IS_NULL + "{}", key);
                     continue;
                 } else {
                     UserProfile profile = (UserProfile) user.getProfile();
@@ -251,28 +250,22 @@ public class ContentSchedulerManager extends AbstractService implements IContent
                         if (null != mailAttribute && mailAttribute.getText().trim().length() > 0) {
                             email[0] = mailAttribute.getText();
                             String simpleText = Utils.prepareMailText(contentPList, contentSList, contentMList, this.getConfig(), startJobDate, endJobDate);
+                            boolean issent = false;
                             if (this.getConfig().isAlsoHtml()) {
                                 String applBaseUrl = this.getConfigManager().getParam(SystemConstants.PAR_APPL_BASE_URL);
                                 String htmlText = Utils.prepareMailHtml(contentPList, contentSList, contentMList, this.getConfig(), startJobDate, endJobDate, applBaseUrl);
-                                boolean issent = this.getMailManager().sendMixedMail(simpleText, htmlText, config.getSubject(), null, email, null, null, config.getSenderCode());
-                                // System.out.println("***MAIL html");
-                                if (issent) {
-                                    ApsSystemUtils.getLogger().info(ContentThreadConstants.MAIL_SENT + key);
-                                } else {
-                                    ApsSystemUtils.getLogger().error(ContentThreadConstants.SEND_ERROR + key);
-                                }
+                                issent = this.getMailManager().sendMixedMail(simpleText, htmlText, config.getSubject(), null, email, null, null, config.getSenderCode());
                             } else {
-                                // System.out.println("***MAIL simple");
-                                boolean issent = this.getMailManager().sendMail(simpleText, config.getSubject(), email, null, null, config.getSenderCode());
-                                if (issent) {
-                                    ApsSystemUtils.getLogger().info(ContentThreadConstants.MAIL_SENT + key);
-                                } else {
-                                    ApsSystemUtils.getLogger().error(ContentThreadConstants.SEND_ERROR + key);
-                                }
+                                issent = this.getMailManager().sendMail(simpleText, config.getSubject(), email, null, null, config.getSenderCode());
+                            }
+                            if (issent) {
+                                _logger.info(ContentThreadConstants.MAIL_SENT + "{}", key);
+                            } else {
+                                _logger.error(ContentThreadConstants.SEND_ERROR + "{}", key);
                             }
                         }
                     } else {
-                        ApsSystemUtils.getLogger().error(ContentThreadConstants.PROFILE_IS_NULL + key);
+                        _logger.error(ContentThreadConstants.PROFILE_IS_NULL + "{}", key);
                     }
                 }
             }
@@ -358,8 +351,6 @@ public class ContentSchedulerManager extends AbstractService implements IContent
             Map<String, String> systemParams = SystemParamsUtils.getParams(xmlParams);
             param = systemParams.get(paramName);
         } catch (Throwable t) {
-            // _logger.error("error getting the system parameter " + paramName,
-            // t);
             ApsSystemUtils.logThrowable(t, this, "error getting the system parameter " + paramName);
         }
         return param;
