@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.agiletec.aps.system.ApsSystemUtils;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -53,8 +55,15 @@ public class ActionLoggerInterceptor extends AbstractInterceptor {
         ActionLogRecord actionRecord = null;
         String result = null;
         try {
+            // ESB-805 - Adding logs for tenant
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - intercept - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
             actionRecord = this.buildActionRecord(invocation);
             result = invocation.invoke();
+            // ESB-805 - Adding logs for tenant
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - invoked - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
+
             List<ActivityStreamInfo> asiList = null;
             Object actionObject = invocation.getAction();
             if (actionObject instanceof BaseAction) {
@@ -62,6 +71,9 @@ public class ActionLoggerInterceptor extends AbstractInterceptor {
                 asiList = action.getActivityStreamInfos();
             }
             this.includeActionProperties(actionRecord, actionObject);
+            // CDP - ESB-805 - Adding logs for tenant
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - saving log - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
             if (null == asiList || asiList.isEmpty()) {
                 this.getActionLoggerManager().addActionRecord(actionRecord);
             } else {
@@ -71,6 +83,9 @@ public class ActionLoggerInterceptor extends AbstractInterceptor {
                     this.getActionLoggerManager().addActionRecord(clone);
                 }
             }
+            ApsTenantApplicationUtils.removeTenant();
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - log saved - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
         } catch (Throwable t) {
             _logger.error("error in intercept", t);
         }

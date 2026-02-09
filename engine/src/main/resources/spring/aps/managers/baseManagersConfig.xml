@@ -15,12 +15,13 @@
 			http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
     <context:component-scan base-package="org.entando.entando.aps.util.crypto" />
-    
+
     <cache:annotation-driven cache-manager="springCacheManager" />
     <aop:aspectj-autoproxy proxy-target-class="true" />
 
     <bean id="NotifyManager" class="com.agiletec.aps.system.common.notify.NotifyManager" />
-
+    <bean id="GlobalLockManager" class="org.entando.entando.aps.system.services.sync.GlobalLockManager" />
+    
     <bean id="abstractService" abstract="true" class="com.agiletec.aps.system.common.AbstractService"
           init-method="init" destroy-method="destroy" >
         <property name="notifyManager" ref="NotifyManager" />
@@ -359,6 +360,7 @@
                 <property name="dataSource" ref="portDataSource" />
             </bean>
         </property>
+        <property name="globalLockManager" ref="GlobalLockManager" />
     </bean>
 
     <bean id="ActionLogManager" class="org.entando.entando.aps.system.services.actionlog.ActionLogManager"

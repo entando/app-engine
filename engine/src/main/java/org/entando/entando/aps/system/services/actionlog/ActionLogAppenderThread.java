@@ -13,6 +13,8 @@
  */
 package org.entando.entando.aps.system.services.actionlog;
 
+import com.agiletec.aps.system.ApsSystemUtils;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.entando.entando.aps.system.services.actionlog.model.ActionLogRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +38,11 @@ public class ActionLogAppenderThread extends Thread {
     @Override
     public void run() {
         try {
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - start - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
             this.actionLogManager.addActionRecordByThread(this.actionRecordToAdd);
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - end - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
         } catch (Throwable t) {
             logger.error("error in run", t);
         }

@@ -13,6 +13,7 @@
  */
 package org.entando.entando.apsadmin.system;
 
+import com.agiletec.aps.system.ApsSystemUtils;
 import com.agiletec.aps.system.EntThreadLocal;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.apache.struts2.ActionInvocation;
@@ -25,7 +26,11 @@ public class MultitenancyStrutsInterceptor extends AbstractInterceptor {
     @Override
     public String intercept(ActionInvocation invocation) throws Exception {
 
-        try {
+        //try {
+            // ESB-805 - Adding logs for tenant
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - intercept - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
+
             EntThreadLocal.clear();
 
             HttpServletRequest request = ServletActionContext.getRequest();
@@ -34,8 +39,9 @@ public class MultitenancyStrutsInterceptor extends AbstractInterceptor {
 
             return invocation.invoke();
 
-        } finally {
-            ApsTenantApplicationUtils.removeTenant();
-        }
+        //} finally {
+        // ESB-805 - Removed to preserve tenant
+        //    ApsTenantApplicationUtils.removeTenant();
+        //}
     }
 }

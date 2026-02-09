@@ -30,7 +30,8 @@ class MDCStrutsTenantInterceptorTest {
             tenantUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.of("currentTenant"));
             interceptor.intercept(invocation);
             mdc.verify(() -> MDC.put("tenant", "currentTenant"));
-            mdc.verify(() -> MDC.remove("tenant"));
+            // ESB-805 - Removed to preserve tenant
+            // mdc.verify(() -> MDC.remove("tenant"));
             Mockito.verify(invocation, Mockito.times(1)).invoke();
         }
     }
@@ -43,7 +44,8 @@ class MDCStrutsTenantInterceptorTest {
             tenantUtils.when(() -> ApsTenantApplicationUtils.getTenant()).thenReturn(Optional.empty());
             interceptor.intercept(invocation);
             mdc.verify(() -> MDC.put("tenant", ""));
-            mdc.verify(() -> MDC.remove("tenant"));
+            // ESB-805 - Removed to preserve tenant
+            // mdc.verify(() -> MDC.remove("tenant"));
             Mockito.verify(invocation, Mockito.times(1)).invoke();
         }
     }
@@ -57,7 +59,8 @@ class MDCStrutsTenantInterceptorTest {
             Mockito.doThrow(NullPointerException.class).when(invocation).invoke();
             Assertions.assertThrows(NullPointerException.class, () -> interceptor.intercept(invocation));
             mdc.verify(() -> MDC.put("tenant", ""));
-            mdc.verify(() -> MDC.remove("tenant"));
+            // ESB-805 - Removed to preserve tenant
+            // mdc.verify(() -> MDC.remove("tenant"));
             Mockito.verify(invocation, Mockito.times(1)).invoke();
         }
     }

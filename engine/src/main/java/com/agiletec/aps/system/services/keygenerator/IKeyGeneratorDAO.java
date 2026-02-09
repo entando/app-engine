@@ -20,6 +20,12 @@ package com.agiletec.aps.system.services.keygenerator;
 public interface IKeyGeneratorDAO {
 
 	/**
+	 * Incrementa la chiave presente nel db.
+	 * @return La chiave incrementata.
+	 */
+	public int getNextUniqueKey();
+
+	/**
 	 * Estrae la chiave presente nel db.
 	 * Il metodo viene chiamato solo in fase di inizializzazione.
 	 * @return La chiave estratta.

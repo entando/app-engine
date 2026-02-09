@@ -14,12 +14,14 @@
 package com.agiletec.aps.system;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.Enumeration;
+import java.util.Optional;
 
 /**
  * Utility class for system logger
@@ -207,6 +209,13 @@ public class ApsSystemUtils {
     public static String getEnv(String name, String def) {
         String res = System.getenv(name);
         return (res != null) ? res : def;
+    }
+
+    public static Integer getEnv(String name, Integer defaultValue) {
+        return Optional.ofNullable(System.getenv(name))
+                .filter(StringUtils::isNotBlank)
+                .map(Integer::parseInt)
+                .orElse(defaultValue);
     }
 
     public static boolean getEnvFlag(String name, boolean def) {

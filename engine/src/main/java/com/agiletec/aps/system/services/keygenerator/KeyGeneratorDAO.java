@@ -13,10 +13,7 @@
  */
 package com.agiletec.aps.system.services.keygenerator;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -30,7 +27,30 @@ import com.agiletec.aps.system.common.AbstractDAO;
 public class KeyGeneratorDAO extends AbstractDAO implements IKeyGeneratorDAO {
 	
 	private static final EntLogger _logger =  EntLogFactory.getSanitizedLogger(KeyGeneratorDAO.class);
-	
+
+	@Override
+	public int getNextUniqueKey() {
+		Connection conn = null;
+		int nextKey = 0;
+		Statement stat = null;
+		ResultSet res = null;
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+			nextKey = this.getUniqueKey(conn) + 1;
+			this.updateKey(nextKey, conn);
+			conn.commit();
+		} catch (Throwable t) {
+			this.executeRollback(conn);
+			_logger.error("Error while getting the unique key",  t);
+			throw new RuntimeException("Error while getting the unique key", t);
+			//processDaoException(e, "Error while getting the unique key", "getUniqueKey");
+		} finally {
+			closeConnection(conn);
+		}
+		return nextKey;
+	}
+
 	/**
 	 * Estrae la chiave presente nel db.
 	 * Il metodo viene chiamato solo in fase di inizializzazione.
@@ -39,21 +59,15 @@ public class KeyGeneratorDAO extends AbstractDAO implements IKeyGeneratorDAO {
 	public int getUniqueKey() {
 		Connection conn = null;
 		int currentKey = 0;
-		Statement stat = null;
-		ResultSet res = null;
 		try {
 			conn = this.getConnection();
-			stat = conn.createStatement();
-			res = stat.executeQuery(EXTRACT_KEY);
-			if (res.next()) {
-				currentKey = res.getInt(1);
-			}
+			currentKey = this.getUniqueKey(conn);
 		} catch (Throwable t) {
 			_logger.error("Error while getting the unique key",  t);
 			throw new RuntimeException("Error while getting the unique key", t);
 			//processDaoException(e, "Error while getting the unique key", "getUniqueKey");
 		} finally {
-			closeDaoResources(res, stat, conn);
+			closeConnection(conn);
 		}
 		return currentKey;
 	}
@@ -64,21 +78,46 @@ public class KeyGeneratorDAO extends AbstractDAO implements IKeyGeneratorDAO {
 	 */
 	public synchronized void updateKey(int currentKey) {
 		Connection conn = null;
-		PreparedStatement stat = null;
 		try {
 			conn = this.getConnection();
-			conn.setAutoCommit(false);
-			stat = conn.prepareStatement(UPDATE_KEY);
-			stat.setInt(1, currentKey);
-			stat.executeUpdate();
-			conn.commit();
+			this.updateKey(currentKey, conn);
 		} catch (Throwable t) {
-			this.executeRollback(conn);
 			_logger.error("Error while updating a key",  t);
 			throw new RuntimeException("Error while updating a key", t);
 			//processDaoException(e, "Error while updating a key", "getUpdateKey");
 		} finally {
-			closeDaoResources(null, stat, conn);
+			closeConnection(conn);
+		}
+	}
+
+	protected int getUniqueKey(Connection conn) throws SQLException {
+		int currentKey = 0;
+		Statement stat = null;
+		ResultSet res = null;
+		try {
+			stat = conn.createStatement();
+			res = stat.executeQuery(EXTRACT_KEY);
+			if (res.next()) {
+				currentKey = res.getInt(1);
+			}
+		} finally {
+			closeDaoResources(res, stat);
+		}
+		return currentKey;
+	}
+
+	/**
+	 * Aggiorna la chiave univoca nel db.
+	 * @param currentKey Il valore della chiave corrente.
+	 */
+	protected void updateKey(int currentKey, Connection conn) throws SQLException {
+		PreparedStatement stat = null;
+		try {
+			stat = conn.prepareStatement(UPDATE_KEY);
+			stat.setInt(1, currentKey);
+			stat.executeUpdate();
+		} finally {
+			closeDaoResources(null, stat);
 		}
 	}
 

@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.agiletec.aps.system.ApsSystemUtils;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import jakarta.servlet.http.HttpSession;
 
 import org.apache.struts2.ServletActionContext;
@@ -44,6 +46,9 @@ public abstract class BaseInterceptorMadMax extends AbstractInterceptor {
     public String intercept(ActionInvocation invocation) throws Exception {
         boolean isAuthorized = false;
         try {
+            // ESB-805 - Adding logs for tenant
+            ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - intercept - tenant %s",
+                    this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
             HttpSession session = ServletActionContext.getRequest().getSession();
             UserDetails currentUser = (UserDetails) session.getAttribute(SystemConstants.SESSIONPARAM_CURRENT_USER);
             IAuthorizationManager authManager = (IAuthorizationManager) ApsWebApplicationUtils.getBean(SystemConstants.AUTHORIZATION_SERVICE, ServletActionContext.getRequest());
@@ -60,7 +65,11 @@ public abstract class BaseInterceptorMadMax extends AbstractInterceptor {
                 }
             }
             if (isAuthorized) {
-                return this.invoke(invocation);
+                String result = this.invoke(invocation);
+                // ESB-805 - Adding logs for tenant
+                ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - invoked - tenant %s",
+                        this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
+                return result;
             }
         } catch (Throwable t) {
         	_logger.error("Error occurred verifying authority of current user", t);
