@@ -162,7 +162,11 @@ public class KeycloakUserManager extends AbstractParameterizableService implemen
     }
 
     private Optional<UserRepresentation> getUserRepresentation(final String username) {
-        return keycloakService.listUsers(username).stream().filter(f->f.getUsername().equals(username)).findFirst();
+        return ofNullable(keycloakService.listUsers(username))
+                .orElse(emptyList())
+                .stream()
+                .filter(f->f.getUsername().equals(username))
+                .findFirst();
     }
 
     @Override

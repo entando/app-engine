@@ -256,7 +256,7 @@ public class KeycloakFilter implements Filter {
                 session.setAttribute(SESSION_PARAM_ID_TOKEN, responseEntity.getBody().getIdToken());
                 session.setAttribute(SESSION_PARAM_REFRESH_TOKEN, responseEntity.getBody().getRefreshToken());
 
-                keycloakGroupManager.processNewUser(user);
+                keycloakGroupManager.processNewUser(user, responseEntity.getBody().getAccessToken(), true);
                 saveUserOnSession(request, user);
                 log.info("Successfully authenticated user {}", user.getUsername());
             } catch (HttpClientErrorException e) {

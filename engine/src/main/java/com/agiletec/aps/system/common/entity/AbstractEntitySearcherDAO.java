@@ -136,6 +136,7 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
 
     private PreparedStatement buildStatement(EntitySearchFilter[] filters, boolean isCount, boolean selectAll, Connection conn) {
         String query = this.createQueryString(filters, isCount, selectAll);
+
         PreparedStatement stat = null;
         try {
             stat = conn.prepareStatement(query);

@@ -2,6 +2,7 @@ package org.entando.entando.keycloak.services.oidc.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 public class UserRepresentation implements Serializable {
 
@@ -15,6 +16,16 @@ public class UserRepresentation implements Serializable {
     private String lastName;
     private String email;
     private List<String> requiredActions;
+    // ESB-890
+    private Map<String, Object> attributes;
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
 
     public String getId() {
         return id;
