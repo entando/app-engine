@@ -38,6 +38,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
+import org.entando.entando.keycloak.services.mapping.PersistKind;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -330,29 +331,39 @@ public class KeycloakAuthorizationManager extends AbstractService {
         Group group = null;
         Role role = null;
 
-        if (elem.persist) {
+
+        if (elem.persist == PersistKind.AUTH
+                || elem.persist == PersistKind.FULL) {
+            // create a group
             if (StringUtils.isNotBlank(groupName)) {
                 group = findOrCreateGroup(groupName);
             }
-
+            // create an EMPTY role or use the existing one
             if (StringUtils.isNotBlank(roleName)) {
                 role = findOrCreateRole(roleName);
             }
+            // create the auth
             authorization = new Authorization(group, role);
 
-            persistAuthIfMissing(user, authorization);
+            // persist the association between user and auth
+            if (elem.persist == PersistKind.FULL) {
+                persistAuthIfMissing(user, authorization);
+            }
         } else {
+            // create a group on the fly
             if (StringUtils.isNotBlank(groupName)) {
                 group = new Group();
                 group.setName(groupName);
                 group.setDescription("sys:" + groupName);
             }
+            // assign an existing ROLE
             if (StringUtils.isNotBlank(roleName)) {
                 // make sure all the permissions are assigned to the current role
                 role = roleManager.getRole(roleName);
             }
             authorization = new Authorization(group, role);
         }
+        // finally
         user.addAuthorization(authorization);
     }
 
@@ -372,6 +383,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
         for (String kca: authorizations) {
             try {
+                Authorization auth;
+
                 // skip if the group is already mapped
                 if (user.getAuthorizations()
                         .stream()
@@ -380,9 +393,18 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     log.debug("Role {} already assigned to user {}", kca, user.getUsername());
                     return;
                 }
-                final Authorization auth = elem.persist
-                        ? createPersistedRoleAuthorization(user, kca)
-                        : createTransientRoleAuthorization(kca);
+
+                if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
+                    final Role role = findOrCreateRole(kca);
+
+                    auth = new Authorization(null, role);
+
+                    if (elem.persist == PersistKind.FULL) {
+                        persistAuthIfMissing(user, auth);
+                    }
+                } else {
+                    auth = createTransientRoleAuthorization(kca);
+                }
 
                 user.addAuthorization(auth);
                 log.info("Successfully assigned role {} to user {}", kca, user.getUsername());
@@ -392,18 +414,12 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    private Authorization createPersistedRoleAuthorization(KeycloakUser user, String roleName) throws EntException {
-        Role role = findOrCreateRole(roleName);
-        Authorization auth = new Authorization(null, role);
-        persistAuthIfMissing(user, auth);
-        return auth;
-    }
-
     private Authorization createTransientRoleAuthorization(String roleName) {
         Role role = roleManager.getRole(roleName);
         if (role == null) {
             role = new Role();
             role.setName(roleName);
+            role.setDescription(roleName);
         }
         return new Authorization(null, role);
     }
@@ -424,6 +440,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private void finalizeGroupAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
         for (String kca: authorizations) {
             try {
+                Authorization auth;
+
                 // skip if the role is already mapped
                 if (user.getAuthorizations()
                         .stream()
@@ -432,9 +450,18 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     log.debug("Group {} already assigned to user {}", kca, user.getUsername());
                     return;
                 }
-                final Authorization auth = elem.persist
-                        ? createPersistedGroupAuthorization(user, kca)
-                        : createTransientGroupAuthorization(kca);
+
+                if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
+                    final Group group = findOrCreateGroup(kca);
+
+                    auth = new Authorization(group, null);
+
+                    if (elem.persist == PersistKind.FULL) {
+                        persistAuthIfMissing(user, auth);
+                    }
+                } else {
+                    auth = createTransientGroupAuthorization(kca);
+                }
 
                 user.addAuthorization(auth);
                 log.info("Successfully assigned group {} to user {}", kca, user.getUsername());
@@ -444,16 +471,10 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    private Authorization createPersistedGroupAuthorization(KeycloakUser user, String groupName) throws EntException {
-        final Group group = findOrCreateGroup(groupName);
-        final Authorization auth = new Authorization(group, null);
-        persistAuthIfMissing(user, auth);
-        return auth;
-    }
-
     private Authorization createTransientGroupAuthorization(String groupName) {
         Group group = new Group();
         group.setName(groupName);
+        group.setDescription(groupName);
         return new Authorization(group, null);
     }
 

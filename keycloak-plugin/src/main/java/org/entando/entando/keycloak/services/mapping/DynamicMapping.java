@@ -9,7 +9,13 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class DynamicMapping {
 
+    // if NOT null, import only authorizations containing this value
+    public String id;
+
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<DynamicMappingElement> mapping;
+
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public List<String> ignore;
 
 }
