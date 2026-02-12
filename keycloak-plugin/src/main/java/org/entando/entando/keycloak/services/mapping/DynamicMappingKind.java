@@ -10,7 +10,8 @@ public enum DynamicMappingKind {
     GROUP("group", false),
     ROLE("role", false),
     GROUPROLE("grouprole", false),
-    CLIENTROLE("clientrole", true);
+    ROLECLAIM("roleclaim", true),
+    GROUPCLAIM("groupclaim", true);
 
     private final String kind;
     @Getter

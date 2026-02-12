@@ -9,7 +9,7 @@ public class DynamicMappingElement {
     public String injectTo;
     public boolean persist;
     public String separator; // FOR GROUPROLE ONLY
-    public String client;   // FOR CLIENTROLE ONLY
+    public String path; // FOR *CLAIM ONLY
 
     public String toString() {
         return "DynamicMappingElement(enabled=" + this.enabled + ", attribute=" + this.attribute + ", kind="

@@ -156,7 +156,7 @@ class KeycloakAuthorizationManagerTest {
         when(roleManager.getRole(anyString())).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
         when(userDetails.getUsername()).thenReturn("testuser");
-        when(configManager.getConfigItem(anyString())).thenReturn(XML_CLIENT_ROLE);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM);
 
         manager.init();
 
@@ -164,16 +164,40 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), authCaptor.capture());
+        verify(authorizationManager, times(4)).addUserAuthorization(eq("testuser"), authCaptor.capture());
 
-        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("generico");
+//        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("generico");
+        assertThat(authCaptor.getAllValues())
+                .extracting(a -> a.getRole().getName())
+                .containsOnly("generico","offline_access", "uma_authorization", "default-roles-entando");
         assertThat(authCaptor.getValue().getGroup()).isNull();
+    }
+
+    @Test
+    void testDynamicConfigurationGroupOnLoginFromJwt() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_CLAIM);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, times(2)).addUserAuthorization(eq("testuser"), authCaptor.capture());
+
+        assertThat(authCaptor.getAllValues())
+                .extracting(a -> a.getGroup().getName())
+                .containsExactlyInAnyOrder("Gruppo-Microsoft-Importato", "altro-gruppo");
+        assertThat(authCaptor.getValue().getRole()).isNull();
     }
 
     @Test
     void testDynamicConfigurationRoleOnLoginWithWrongJwt() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
-        when(configManager.getConfigItem(anyString())).thenReturn(XML_CLIENT_ROLE);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM);
 
         manager.init();
 
@@ -494,11 +518,20 @@ class KeycloakAuthorizationManagerTest {
             + " </mapping>"
             + "</mappings>";
 
-    private static final String XML_CLIENT_ROLE = "<mappings>"
+    private static final String XML_ROLE_CLAIM = "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
-            + "  <client>sim730</client>"
-            + "  <kind>CLIENTROLE</kind>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLECLAIM</kind>"
+            + "  <persist>true</persist>"
+            + " </mapping>"
+            + "</mappings>";
+
+    private static final String XML_GROUP_CLAIM = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>groups</path>"
+            + "  <kind>GROUPCLAIM</kind>"
             + "  <persist>true</persist>"
             + " </mapping>"
             + "</mappings>";
@@ -533,7 +566,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_ROLE</attribute>"
-            + "  <kind>CLIENTROLE</kind>"  // no client
+            + "  <kind>ROLECLAIM</kind>"  // no path
             + "  <persist>true</persist>"
             + " </mapping>"
 
@@ -549,81 +582,84 @@ class KeycloakAuthorizationManagerTest {
     
     private static final String JWT_NO_ROLE = "{\n"
             + "  \"header\" : {\n"
-            + "    \"alg\" : \"RS256\",\n"
-            + "    \"typ\" : \"JWT\",\n"
+            + "    \"alg\" : \"RS256\","
+            + "    \"typ\" : \"JWT\","
             + "    \"kid\" : \"l09Wlf_NY_dmMORYBjkr7deFVGVJ5TRLHW1p7DIT1ds\"\n"
-            + "  },\n"
+            + "  },"
             + "  \"payload\" : {\n"
-            + "    \"exp\" : 1768319443,\n"
-            + "    \"iat\" : 1768319143,\n"
-            + "    \"auth_time\" : 1768319142,\n"
-            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\",\n"
-            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\",\n"
-            + "    \"aud\" : [ \"sim730\", \"account\" ],\n"
-            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\",\n"
-            + "    \"typ\" : \"Bearer\",\n"
-            + "    \"azp\" : \"entando-web\",\n"
-            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\",\n"
-            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\",\n"
-            + "    \"acr\" : \"1\",\n"
-            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],\n"
+            + "    \"exp\" : 1768319443,"
+            + "    \"iat\" : 1768319143,"
+            + "    \"auth_time\" : 1768319142,"
+            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\","
+            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\","
+            + "    \"aud\" : [ \"sim730\", \"account\" ],"
+            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\","
+            + "    \"typ\" : \"Bearer\","
+            + "    \"azp\" : \"entando-web\","
+            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\","
+            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"acr\" : \"1\","
+            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
             + "    \"realm_access\" : {\n"
             + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
-            + "    },\n"
+            + "    },"
             + "    \"resource_access\" : {\n"
             + "      \"aclient\" : {\n"
             + "        \"roles\" : [ \"generico\" ]\n"
-            + "      },\n"
+            + "      },"
             + "      \"account\" : {\n"
             + "        \"roles\" : [ \"manage-account\", \"manage-account-links\", \"view-profile\" ]\n"
             + "      }\n"
-            + "    },\n"
-            + "    \"scope\" : \"openid profile email\",\n"
-            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\",\n"
-            + "    \"email_verified\" : false,\n"
-            + "    \"name\" : \"User lastname\",\n"
-            + "    \"preferred_username\" : \"user@email.it\",\n"
-            + "    \"given_name\" : \"User\",\n"
-            + "    \"family_name\" : \"lastname\",\n"
-            + "    \"email\" : \"user@email.it\",\n"
+            + "    },"
+            + "    \"scope\" : \"openid profile email\","
+            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"email_verified\" : false,"
+            + "    \"name\" : \"User lastname\","
+            + "    \"preferred_username\" : \"user@email.it\","
+            + "    \"given_name\" : \"User\","
+            + "    \"family_name\" : \"lastname\","
+            + "    \"email\" : \"user@email.it\","
             + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
-            + "  },\n"
+            + "  },"
             + "  \"signature\" : \"dLENSPEPw\"\n"
             + "}";
 
     private static final String JWT = "{\n"
-            + "    \"exp\" : 1768319443,\n"
-            + "    \"iat\" : 1768319143,\n"
-            + "    \"auth_time\" : 1768319142,\n"
-            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\",\n"
-            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\",\n"
-            + "    \"aud\" : [ \"sim730\", \"account\" ],\n"
-            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\",\n"
-            + "    \"typ\" : \"Bearer\",\n"
-            + "    \"azp\" : \"entando-web\",\n"
-            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\",\n"
-            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\",\n"
-            + "    \"acr\" : \"1\",\n"
-            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],\n"
+            + "    \"exp\" : 1768319443,"
+            + "    \"iat\" : 1768319143,"
+            + "    \"auth_time\" : 1768319142,"
+            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\","
+            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\","
+            + "    \"aud\" : [ \"sim730\", \"account\" ],"
+            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\","
+            + "    \"typ\" : \"Bearer\","
+            + "    \"azp\" : \"entando-web\","
+            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\","
+            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"acr\" : \"1\","
+            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
             + "    \"realm_access\" : {\n"
-            + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
-            + "    },\n"
+            + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\", \"generico\" ]\n"
+            + "    },"
             + "    \"resource_access\" : {\n"
             + "      \"sim730\" : {\n"
             + "        \"roles\" : [ \"generico\" ]\n"
-            + "      },\n"
+            + "      },"
             + "      \"account\" : {\n"
             + "        \"roles\" : [ \"manage-account\", \"manage-account-links\", \"view-profile\" ]\n"
             + "      }\n"
-            + "    },\n"
-            + "    \"scope\" : \"openid profile email\",\n"
-            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\",\n"
-            + "    \"email_verified\" : false,\n"
-            + "    \"name\" : \"User lastname\",\n"
-            + "    \"preferred_username\" : \"user@email.it\",\n"
-            + "    \"given_name\" : \"User\",\n"
-            + "    \"family_name\" : \"lastname\",\n"
-            + "    \"email\" : \"user@email.it\",\n"
+            + "    },"
+            + "    \"scope\" : \"openid profile email\","
+            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"email_verified\" : false,"
+            + "    \"name\" : \"User lastname\","
+            + "    \"groups\": [\n"
+            + "         \"Gruppo-Microsoft-Importato\", \"altro-gruppo\" "
+            + "     ],"
+            + "    \"preferred_username\" : \"user@email.it\","
+            + "    \"given_name\" : \"User\","
+            + "    \"family_name\" : \"lastname\","
+            + "    \"email\" : \"user@email.it\","
             + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
             + "  }";
 }

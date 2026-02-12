@@ -1,11 +1,11 @@
 package org.entando.entando.keycloak.services;
 
-import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
-import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.CLIENTROLE;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUP;
+import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUPCLAIM;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUPROLE;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLE;
+import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLECLAIM;
 
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.services.authorization.Authorization;
@@ -138,12 +138,12 @@ public class KeycloakAuthorizationManager extends AbstractService {
             log.error("invalid dynamic mapping element, 'kind' is blank");
             return false;
         }
-        if (StringUtils.isBlank(elem.attribute) && elem.kind != CLIENTROLE) {
+        if (StringUtils.isBlank(elem.attribute) && (elem.kind != ROLECLAIM && elem.kind != GROUPCLAIM)) {
             log.error("invalid dynamic mapping element, 'attribute' is blank");
             return false;
         }
-        if (StringUtils.isBlank(elem.client) && elem.kind == CLIENTROLE) {
-            log.error("invalid dynamic mapping element, 'client' is blank for CLIENTROLE kind");
+        if (StringUtils.isBlank(elem.path) && elem.kind == ROLECLAIM) {
+            log.error("invalid dynamic mapping element, 'path' is blank for ROLECLAIM kind");
             return false;
         }
         if (StringUtils.isBlank(elem.separator) && elem.kind == GROUPROLE) {
@@ -157,16 +157,10 @@ public class KeycloakAuthorizationManager extends AbstractService {
         processNewUser(user);
         readLock.lock();
         try {
-            // TODO for the future: handle also groups ~ "claim to group import" type
-            final List<DynamicMappingElement> jwtRoleMapper = ofNullable(jwtMappings)
-                    .orElse(emptyList())
-                    .stream()
-                    .filter(m -> m.kind == CLIENTROLE)
-                    .collect(Collectors.toList());
-            // process client role claims, if any...
-            if (StringUtils.isNotBlank(token) && !jwtRoleMapper.isEmpty()) {
-                for (DynamicMappingElement cur: jwtRoleMapper) {
-                    processRoleClaimAttributes(user, token, decode, cur);
+            // process path role claims, if any...
+            if (StringUtils.isNotBlank(token) && !jwtMappings.isEmpty()) {
+                for (DynamicMappingElement cur: jwtMappings) {
+                    processJwtClaimAttributes(user, token, decode, cur);
                 }
             }
             // ...then process attributes coming from the user profile, if needed
@@ -185,33 +179,36 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param user logged in user
      * @param token access token
      * @param decode is true the access token is decoded from the base64 form
-     * @param tokenMapper the mapping configuration
+     * @param claimMapper the mapping configuration
      */
-    private void processRoleClaimAttributes(UserDetails user, String token, boolean decode, DynamicMappingElement tokenMapper) {
+    private void processJwtClaimAttributes(final UserDetails user, final String token, final boolean decode, final DynamicMappingElement claimMapper) {
         final String payload = decode ? token.split("\\.")[1] : token;
         final String json = decode ? new String(Base64.getUrlDecoder().decode(payload)) : payload;
 
         try {
             final JsonNode root = mapper.readTree(json);
+            // root.at("/realm_access/roles")
+            final String jwtPath = "/".concat(claimMapper.path.replace(".", "/"));
+            JsonNode authNode = root
+                    .at(jwtPath);
 
-            JsonNode roleNode = root
-                    .path("resource_access")
-                    .path(tokenMapper.client)
-                    .path("roles");
-
-            if (roleNode == null) {
+            if (authNode == null) {
                 return ;
             }
 
-            List<String> roles = StreamSupport.stream(roleNode.spliterator(), false)
+            List<String> authorizations = StreamSupport.stream(authNode.spliterator(), false)
                     .map(JsonNode::asText)
                     .collect(Collectors.toList());
             if (user instanceof KeycloakUser) {
-                finalizeRoleAssociation((KeycloakUser) user, tokenMapper, roles);
+                if (claimMapper.kind == ROLECLAIM) {
+                    finalizeRoleAssociation((KeycloakUser) user, claimMapper, authorizations);
+                } else {
+                    finalizeGroupAssociation((KeycloakUser) user, claimMapper, authorizations);
+                }
             }
 
         } catch (Exception e) {
-            log.error("error importing client role into Entando roles", e);
+            log.error("error importing path role into Entando roles", e);
         }
     }
 
@@ -421,6 +418,10 @@ public class KeycloakAuthorizationManager extends AbstractService {
         if (authorizations == null) {
             return;
         }
+        finalizeGroupAssociation(user, elem, authorizations);
+    }
+
+    private void finalizeGroupAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
         for (String kca: authorizations) {
             try {
                 // skip if the role is already mapped
