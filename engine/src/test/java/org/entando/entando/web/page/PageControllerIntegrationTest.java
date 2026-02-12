@@ -204,7 +204,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 .build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
-                .perform(get("/pages/search")
+                .perform(get("/pages/utils/search")
                         .param("pageSize", "5")
                         .param("pageCodeToken", "pagin")
                         .header("Authorization", "Bearer " + accessToken));
@@ -220,7 +220,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 .build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
-                .perform(get("/pages/search")
+                .perform(get("/pages/utils/search")
                         .param("pageSize", "20")
                         .param("title", "errore")
                         .header("Authorization", "Bearer " + accessToken));
@@ -230,7 +230,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
         result.andExpect(jsonPath("$.payload[0].code", is("errorpage")));
 
         result = mockMvc
-                .perform(get("/pages/search")
+                .perform(get("/pages/utils/search")
                         .param("pageSize", "20")
                         .param("title", "iniziale")
                         .header("Authorization", "Bearer " + accessToken));
@@ -240,7 +240,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
         result.andExpect(jsonPath("$.payload[0].code", is("homepage")));
 
         result = mockMvc
-                .perform(get("/pages/search")
+                .perform(get("/pages/utils/search")
                         .param("pageSize", "20")
                         .param("title", "di")
                         .header("Authorization", "Bearer " + accessToken));
@@ -250,7 +250,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
         result.andExpect(jsonPath("$.payload[0].code", is("errorpage")));
 
         result = mockMvc
-                .perform(get("/pages/search")
+                .perform(get("/pages/utils/search")
                         .param("pageSize", "20")
                         .param("title", "start")
                         .header("Authorization", "Bearer " + accessToken));
@@ -421,7 +421,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 .build();
         String accessToken = mockOAuthInterceptor(user);
         ResultActions result = mockMvc
-                .perform(get("/pages/search/group/free")
+                .perform(get("/pages/utils/search/group/free")
                         .param("pageSize", "50")
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk());
@@ -1872,7 +1872,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
 
 
     private ResultActions performListViewPages(String accessToken) throws Exception {
-        return mockMvc.perform(get("/pages/viewpages")
+        return mockMvc.perform(get("/pages/utils/viewpages")
                 .header("Authorization", "Bearer " + accessToken));
     }
 
@@ -2246,7 +2246,7 @@ class PageControllerIntegrationTest extends AbstractControllerIntegrationTest {
                 .andExpect(status().isOk());
 
         // search
-        mockMvc.perform(get("/pages/search")
+        mockMvc.perform(get("/pages/utils/search")
                         .param("sort", "code")
                         .param("direction", "ASC")
                         .param("pageCodeToken", "homepage")

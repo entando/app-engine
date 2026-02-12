@@ -88,6 +88,28 @@ class PageValidatorTest {
         Assertions.assertTrue(errors.hasErrors());
     }
 
+    @Test
+    void validateRootPageShouldRejectRootPageDeletion() {
+        IPage rootPage = Mockito.mock(IPage.class);
+        Mockito.when(rootPage.getCode()).thenReturn("homepage");
+        Mockito.when(pageManager.getDraftRoot()).thenReturn(rootPage);
+
+        BindingResult errors = (new DataBinder(new Object())).getBindingResult();
+        validator.validateRootPage("homepage", errors);
+        Assertions.assertTrue(errors.hasErrors());
+    }
+
+    @Test
+    void validateRootPageShouldAllowNonRootPageDeletion() {
+        IPage rootPage = Mockito.mock(IPage.class);
+        Mockito.when(rootPage.getCode()).thenReturn("homepage");
+        Mockito.when(pageManager.getDraftRoot()).thenReturn(rootPage);
+
+        BindingResult errors = (new DataBinder(new Object())).getBindingResult();
+        validator.validateRootPage("some_other_page", errors);
+        Assertions.assertFalse(errors.hasErrors());
+    }
+
     private UserDetails getMockUser(){
         User u = new User();
         u.setUsername("mockUser");

@@ -112,14 +112,18 @@ public class PageController {
     @RequestMapping(value = "/pages", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestResponse<List<PageDto>, Map<String, Object>>> getPages(
             @RequestAttribute("user") UserDetails user,
-            @RequestParam(value = "parentCode", required = false, defaultValue = "homepage") String parentCode,
+            @RequestParam(value = "parentCode", required = false) String parentCode,
             @RequestParam(value = "forLinkingToOwnerGroup", required = false) String forLinkingToOwnerGroup,
             @RequestParam(value = "forLinkingToExtraGroups", required = false) String forLinkingToExtraGroups) {
+        if (parentCode == null || parentCode.isEmpty()) {
+            parentCode = this.getPageService().getRootPageCode();
+        }
         logger.debug("getting page tree for parent {} ({}|{})", parentCode,
                 forLinkingToOwnerGroup, forLinkingToExtraGroups);
 
+        String rootPageCode = this.getPageService().getRootPageCode();
         boolean editableParent = this.getAuthorizationService().canEdit(user, parentCode);
-        if (!editableParent && !parentCode.equals("homepage")) {
+        if (!editableParent && !parentCode.equals(rootPageCode)) {
             throw new ResourcePermissionsException(user.getUsername(), parentCode);
         }
 
@@ -145,7 +149,7 @@ public class PageController {
     }
 
     @RestAccessControl(permission = Permission.MANAGE_PAGES)
-    @RequestMapping(value = "/pages/search", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/pages/utils/search", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PagedRestResponse<PageDto>> getPages(@RequestAttribute("user") UserDetails user, PageSearchRequest searchRequest) {
         logger.debug("getting page list with request {}", searchRequest);
         this.getPageValidator().validateRestListRequest(searchRequest, PageDto.class);
@@ -155,7 +159,7 @@ public class PageController {
     }
 
     @RestAccessControl(permission = Permission.MANAGE_PAGES)
-    @RequestMapping(value = "/pages/search/group/free", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/pages/utils/search/group/free", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PagedRestResponse<PageDto>> getFreeOnlinePages(@RequestAttribute("user") UserDetails user, RestListRequest restListRequest) {
         logger.debug("getting free pages list with request {}", restListRequest);
         this.getPageValidator().validateRestListRequest(restListRequest, PageDto.class);
@@ -164,12 +168,24 @@ public class PageController {
     }
 
     @RestAccessControl(permission = Permission.MANAGE_PAGES)
-    @RequestMapping(value = "/pages/viewpages", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/pages/utils/viewpages", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<List<PageDto>>> listViewPages() {
         logger.debug("REST request - content type list view pages");
 
         return ResponseEntity.ok(
                 new SimpleRestResponse<>(pageService.listViewPages()));
+    }
+
+    @RestAccessControl(permission = Permission.MANAGE_PAGES)
+    @RequestMapping(value = "/pages/utils/root", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RestResponse<PageDto, Map<String, String>>> getRootPage(
+            @RequestAttribute("user") UserDetails user,
+            @RequestParam(value = "status", required = false, defaultValue = IPageService.STATUS_DRAFT) String status) {
+        logger.debug("getting root page");
+        PageDto page = this.getPageService().getRootPage(status, user);
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("status", status);
+        return new ResponseEntity<>(new RestResponse<>(page, metadata), HttpStatus.OK);
     }
 
     @RestAccessControl(permission = Permission.MANAGE_PAGES)
@@ -348,6 +364,10 @@ public class PageController {
             throw new ValidationGenericException(bindingResult);
         }
         //business validations
+        getPageValidator().validateRootPage(pageCode, bindingResult);
+        if (bindingResult.hasErrors()) {
+            throw new ValidationGenericException(bindingResult);
+        }
         getPageValidator().validateOnlinePage(pageCode, bindingResult);
         if (bindingResult.hasErrors()) {
             throw new ValidationGenericException(bindingResult);

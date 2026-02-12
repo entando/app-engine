@@ -48,6 +48,12 @@ public interface IPageService extends IComponentUsageService {
 
     PageDto getPage(String pageCode, String status);
 
+    PageDto getRootPage(String status, UserDetails user);
+
+    PageDto getRootPage(String status);
+
+    String getRootPageCode();
+
     PageDto addPage(PageRequest pageRequest);
 
     void removePage(String pageName);

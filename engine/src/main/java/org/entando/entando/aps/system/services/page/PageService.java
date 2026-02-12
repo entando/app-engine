@@ -241,6 +241,41 @@ public class PageService implements IComponentExistsService, IPageService,
         return pageDto;
     }
 
+    @Override
+    public PageDto getRootPage(String status, UserDetails user) {
+        PageDto pageDto = this.getRootPage(status);
+        return this.loadVirtualChildren(pageDto, user);
+    }
+
+    @Override
+    public PageDto getRootPage(String status) {
+        IPage page;
+        switch (status) {
+            case STATUS_ONLINE:
+                page = this.getPageManager().getOnlineRoot();
+                break;
+            case STATUS_DRAFT:
+            default:
+                page = this.getPageManager().getDraftRoot();
+                break;
+        }
+        if (null == page) {
+            throw new RestServerError("Root page not found");
+        }
+        PageDto pageDto = this.getDtoBuilder().convert(page);
+        String token = this.getPageTokenManager().encrypt(page.getCode());
+        String urlToken = getUrlToken(token);
+        pageDto.setToken(urlToken);
+        pageDto.setReferences(this.getReferencesInfo(page));
+        return pageDto;
+    }
+
+    @Override
+    public String getRootPageCode() {
+        IPage root = this.getPageManager().getDraftRoot();
+        return root != null ? root.getCode() : "homepage";
+    }
+
     private String getUrlToken(String token) {
         try {
             return URLEncoder.encode(token, "UTF-8");
@@ -377,6 +412,12 @@ public class PageService implements IComponentExistsService, IPageService,
                 this.getPageManager().setPageOnline(pageCode);
                 newPage = this.getPageManager().getOnlinePage(pageCode);
             } else if (status.equals(STATUS_DRAFT)) {
+                IPage rootPage = this.getPageManager().getOnlineRoot();
+                if (rootPage != null && rootPage.getCode().equals(pageCode)) {
+                    bindingResult.reject(PageValidator.ERRCODE_ROOT_PAGE,
+                            new String[]{pageCode}, "page.status.root.unpublish");
+                    throw new ValidationGenericException(bindingResult);
+                }
                 String[] childCodes = currentPage.getChildrenCodes();
                 for (String childCode : childCodes) {
                     IPage publicChild = this.getPageManager().getOnlinePage(childCode);

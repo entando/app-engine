@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.entando.entando.aps.system.services.page.IPageService;
 import org.entando.entando.aps.system.services.page.PageAuthorizationService;
 import org.entando.entando.aps.system.services.page.PageService;
 import org.entando.entando.aps.system.services.page.model.PageDto;
@@ -219,6 +220,7 @@ class PageControllerTest extends AbstractControllerTest {
         List<PageDto> mockResult = List.of(page1);
 
         Mockito.when(pageService.getPagesTree(eq("homepage"), any())).thenReturn(mockResult);
+        Mockito.when(pageService.getRootPageCode()).thenReturn("homepage");
         Mockito.when(authorizationService.canEdit(any(UserDetails.class), eq("homepage"))).thenReturn(false);
 
         ResultActions result = mockMvc.perform(
@@ -912,6 +914,7 @@ class PageControllerTest extends AbstractControllerTest {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
 
+        when(pageService.getRootPageCode()).thenReturn("homepage");
         when(pageService.getPagesTree(eq("homepage"), any())).thenReturn(List.of());
 
         mockMvc.perform(get("/pages")
@@ -926,6 +929,44 @@ class PageControllerTest extends AbstractControllerTest {
         List<PageDto> result = mapper.readValue(json, new TypeReference<List<PageDto>>() {
         });
         return result;
+    }
+
+    @Test
+    void shouldGetRootPage() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "managePages", Permission.MANAGE_PAGES)
+                .build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        PageDto rootPageDto = new PageDto();
+        rootPageDto.setCode("home");
+
+        when(pageService.getRootPage(eq(IPageService.STATUS_DRAFT), any(UserDetails.class))).thenReturn(rootPageDto);
+
+        mockMvc.perform(get("/pages/utils/root")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload.code", is("home")))
+                .andExpect(jsonPath("$.metaData.status", is("draft")));
+    }
+
+    @Test
+    void shouldValidateDeleteRootPage() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        Page rootPage = new Page();
+        rootPage.setCode("homepage");
+        when(authorizationService.canEdit(any(UserDetails.class), any(String.class))).thenReturn(true);
+        when(this.controller.getPageValidator().getPageManager().getDraftRoot()).thenReturn(rootPage);
+
+        ResultActions result = mockMvc.perform(
+                delete("/pages/{pageCode}", "homepage")
+                        .header("Authorization", "Bearer " + accessToken));
+
+        result.andExpect(status().isBadRequest());
+        result.andExpect(jsonPath("$.errors", hasSize(1)));
+        result.andExpect(jsonPath("$.errors[0].code", is(PageValidator.ERRCODE_ROOT_PAGE)));
     }
 
     private class PageM extends Page {
