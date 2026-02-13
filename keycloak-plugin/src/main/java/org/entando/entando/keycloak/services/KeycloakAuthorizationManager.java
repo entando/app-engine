@@ -4,7 +4,6 @@ import static java.util.Optional.ofNullable;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUP;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUPROLE;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLE;
-import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLECLAIM;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUPCLAIM;
 
 import com.agiletec.aps.system.common.AbstractService;
@@ -33,7 +32,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;

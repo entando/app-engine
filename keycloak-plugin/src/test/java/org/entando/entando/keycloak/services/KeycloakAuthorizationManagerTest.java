@@ -522,7 +522,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT_ROLEGROUP_EDGE, false);
 
-        // "group1" -> tokens.length < 2 -> treated as role "group1" with NO group
+        // NOTE!!! "group1" -> tokens.length < 2 -> treated as a ROLE "group1" with NO group
         // "_SEP_group2" -> tokens = ["", "group2"] -> roleName = "" -> isBlank -> skipped
         verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any(Authorization.class));
 
@@ -533,6 +533,36 @@ class KeycloakAuthorizationManagerTest {
 
         assertThat(capturedAuths.get(0).getRole().getName()).isEqualTo("group1");
         assertThat(capturedAuths.get(0).getGroup()).isNull();
+    }
+
+    @Test
+    void testDynamicConfigurationRoleGroupOnLoginFromJwtNoPersist() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_CLAIM_AUTH);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT_ROLEGROUP, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
+        verify(userDetails, times(2)).addAuthorization(authCaptor.capture());
+
+        List<Authorization> capturedAuths = authCaptor.getAllValues();
+        assertThat(capturedAuths).hasSize(2);
+
+        assertThat(capturedAuths)
+                .anySatisfy(auth -> {
+                    assertThat(auth.getRole().getName()).isEqualTo("role1");
+                    assertThat(auth.getGroup().getName()).isEqualTo("group1");
+                })
+                .anySatisfy(auth -> {
+                    assertThat(auth.getRole().getName()).isEqualTo("role2");
+                    assertThat(auth.getGroup().getName()).isEqualTo("group2");
+                });
     }
 
     private Authorization authorization(final String groupName, final String roleName) {
@@ -695,6 +725,16 @@ class KeycloakAuthorizationManagerTest {
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
             + "  <persist>FULL</persist>"
+            + "  <separator>_SEP_</separator>"
+            + " </mapping>"
+            + "</mappings>";
+
+    private static final String XML_ROLEGROUP_CLAIM_AUTH = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLEGROUPCLAIM</kind>"
+            + "  <persist>AUTH</persist>"
             + "  <separator>_SEP_</separator>"
             + " </mapping>"
             + "</mappings>";
