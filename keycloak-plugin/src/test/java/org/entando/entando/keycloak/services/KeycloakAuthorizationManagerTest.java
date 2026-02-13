@@ -477,6 +477,64 @@ class KeycloakAuthorizationManagerTest {
         verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
     }
 
+    @Test
+    void testDynamicConfigurationRoleGroupOnLoginFromJwt() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(roleManager.getRole(anyString())).thenReturn(null);
+        when(groupManager.getGroup(anyString())).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_CLAIM);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT_ROLEGROUP, false);
+
+        verify(authorizationManager, times(2)).addUserAuthorization(eq("testuser"), authCaptor.capture());
+
+        List<Authorization> capturedAuths = authCaptor.getAllValues();
+        assertThat(capturedAuths).hasSize(2);
+
+        assertThat(capturedAuths)
+                .anySatisfy(auth -> {
+                    assertThat(auth.getRole().getName()).isEqualTo("role1");
+                    assertThat(auth.getGroup().getName()).isEqualTo("group1");
+                })
+                .anySatisfy(auth -> {
+                    assertThat(auth.getRole().getName()).isEqualTo("role2");
+                    assertThat(auth.getGroup().getName()).isEqualTo("group2");
+                });
+    }
+
+    @Test
+    void testDynamicConfigurationRoleGroupOnLoginFromJwtEdgeCases() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(roleManager.getRole(anyString())).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_CLAIM);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT_ROLEGROUP_EDGE, false);
+
+        // "group1" -> tokens.length < 2 -> treated as role "group1" with NO group
+        // "_SEP_group2" -> tokens = ["", "group2"] -> roleName = "" -> isBlank -> skipped
+        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any(Authorization.class));
+
+        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
+
+        List<Authorization> capturedAuths = authCaptor.getAllValues();
+        assertThat(capturedAuths).hasSize(1);
+
+        assertThat(capturedAuths.get(0).getRole().getName()).isEqualTo("group1");
+        assertThat(capturedAuths.get(0).getGroup()).isNull();
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
@@ -631,6 +689,16 @@ class KeycloakAuthorizationManagerTest {
             + " </mapping>"
             + "</mappings>";
 
+    private static final String XML_ROLEGROUP_CLAIM = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLEGROUPCLAIM</kind>"
+            + "  <persist>FULL</persist>"
+            + "  <separator>_SEP_</separator>"
+            + " </mapping>"
+            + "</mappings>";
+
     private static final String XML_NO_MAPPING = "<mappings>"
             + "</mappings>";
 
@@ -757,4 +825,59 @@ class KeycloakAuthorizationManagerTest {
             + "    \"email\" : \"user@email.it\","
             + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
             + "  }";
+
+    private static final String JWT_ROLEGROUP = "{\n"
+            + "    \"exp\" : 1768319443,"
+            + "    \"iat\" : 1768319143,"
+            + "    \"auth_time\" : 1768319142,"
+            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\","
+            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\","
+            + "    \"aud\" : [ \"sim730\", \"account\" ],"
+            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\","
+            + "    \"typ\" : \"Bearer\","
+            + "    \"azp\" : \"entando-web\","
+            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\","
+            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"acr\" : \"1\","
+            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
+            + "    \"realm_access\" : {\n"
+            + "      \"roles\" : [ \"role1_SEP_group1\", \"role2_SEP_group2\" ]\n"
+            + "    },"
+            + "    \"scope\" : \"openid profile email\","
+            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"email_verified\" : false,"
+            + "    \"name\" : \"User lastname\","
+            + "    \"preferred_username\" : \"user@email.it\","
+            + "    \"given_name\" : \"User\","
+            + "    \"family_name\" : \"lastname\","
+            + "    \"email\" : \"user@email.it\""
+            + "  }";
+
+    private static final String JWT_ROLEGROUP_EDGE = "{\n"
+            + "    \"exp\" : 1768319443,"
+            + "    \"iat\" : 1768319143,"
+            + "    \"auth_time\" : 1768319142,"
+            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\","
+            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\","
+            + "    \"aud\" : [ \"sim730\", \"account\" ],"
+            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\","
+            + "    \"typ\" : \"Bearer\","
+            + "    \"azp\" : \"entando-web\","
+            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\","
+            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"acr\" : \"1\","
+            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
+            + "    \"realm_access\" : {\n"
+            + "      \"roles\" : [ \"group1\", \"_SEP_group2\" ]\n"
+            + "    },"
+            + "    \"scope\" : \"openid profile email\","
+            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"email_verified\" : false,"
+            + "    \"name\" : \"User lastname\","
+            + "    \"preferred_username\" : \"user@email.it\","
+            + "    \"given_name\" : \"User\","
+            + "    \"family_name\" : \"lastname\","
+            + "    \"email\" : \"user@email.it\""
+            + "  }";
+
 }

@@ -2,10 +2,10 @@ package org.entando.entando.keycloak.services;
 
 import static java.util.Optional.ofNullable;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUP;
-import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUPCLAIM;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUPROLE;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLE;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLECLAIM;
+import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUPCLAIM;
 
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.services.authorization.Authorization;
@@ -16,6 +16,7 @@ import com.agiletec.aps.system.services.group.GroupManager;
 import com.agiletec.aps.system.services.role.Role;
 import com.agiletec.aps.system.services.role.RoleManager;
 import com.agiletec.aps.system.services.user.UserDetails;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,14 +40,17 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
+import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.mapping.PersistKind;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeycloakAuthorizationManager extends AbstractService {
 
     private static final EntLogger log = EntLogFactory.getSanitizedLogger(KeycloakAuthorizationManager.class);
-    private static final String DEFAULT_SEPARATOR = "_";
+
+    private static final String DEFAULT_SEPARATOR = "_SEP_";
 
     private final KeycloakConfiguration configuration;
     private final AuthorizationManager authorizationManager;
@@ -144,16 +148,16 @@ public class KeycloakAuthorizationManager extends AbstractService {
             log.error("invalid dynamic mapping element, 'kind' is blank");
             return false;
         }
-        if (StringUtils.isBlank(elem.attribute) && (elem.kind != ROLECLAIM && elem.kind != GROUPCLAIM)) {
-            log.error("invalid dynamic mapping element, 'attribute' is blank");
+        if (StringUtils.isBlank(elem.attribute) && !elem.kind.isJwtMapping()) {
+            log.error("invalid dynamic mapping element, 'attribute' is blank for kind {}", elem.kind);
             return false;
         }
-        if (StringUtils.isBlank(elem.path) && elem.kind == ROLECLAIM) {
-            log.error("invalid dynamic mapping element, 'path' is blank for ROLECLAIM kind");
+        if (StringUtils.isBlank(elem.path) && elem.kind.isJwtMapping()) {
+            log.error("invalid dynamic mapping element, 'path' is blank for {} kind", elem.kind);
             return false;
         }
-        if (StringUtils.isBlank(elem.separator) && elem.kind == GROUPROLE) {
-            log.error("invalid dynamic mapping element, 'separator' is blank for GROUPROLE kind");
+        if (StringUtils.isBlank(elem.separator) && (elem.kind == GROUPROLE || elem.kind == ROLEGROUPCLAIM)) {
+            log.error("invalid dynamic mapping element, 'separator' is blank for {} kind", elem.kind);
             return false;
         }
         return true;
@@ -188,33 +192,122 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param claimMapper the mapping configuration
      */
     private void processJwtClaimAttributes(final UserDetails user, final String token, final boolean decode, final DynamicMappingElement claimMapper) {
-        final String payload = decode ? token.split("\\.")[1] : token;
-        final String json = decode ? new String(Base64.getUrlDecoder().decode(payload)) : payload;
-
         try {
-            final JsonNode root = mapper.readTree(json);
-            // root.at("/realm_access/roles")
-            final String jwtPath = "/".concat(claimMapper.path.replace(".", "/"));
-            JsonNode authNode = root
-                    .at(jwtPath);
-
-            if (authNode == null) {
-                return ;
+            String json;
+            if (decode) {
+                String[] parts = token.split("\\.");
+                if (parts.length != 3) {
+                    log.error("Invalid JWT token format: expected 3 parts, found {}", parts.length);
+                    return;
+                }
+                json = new String(Base64.getUrlDecoder().decode(parts[1]));
+            } else {
+                json = token;
             }
 
-            List<String> authorizations = StreamSupport.stream(authNode.spliterator(), false)
-                    .map(JsonNode::asText)
-                    .collect(Collectors.toList());
-            if (user instanceof KeycloakUser) {
-                if (claimMapper.kind == ROLECLAIM) {
-                    finalizeRoleAssociation((KeycloakUser) user, claimMapper, authorizations);
+            final JsonNode root = mapper.readTree(json);
+            final String jwtPath = "/" + claimMapper.path.replace(".", "/");
+            JsonNode authNode = root.at(jwtPath);
+
+
+            if (authNode == null || authNode.isMissingNode() || authNode.isNull()) {
+                log.debug("Path '{}' not found in JWT claims for user {}", claimMapper.path, user.getUsername());
+                return;
+            }
+
+            List<String> authorizations = new ArrayList<>();
+            if (authNode.isArray()) {
+                //handle an array of authorizations
+                for (JsonNode node : authNode) {
+                    if (node.isTextual()) {
+                        authorizations.add(node.asText());
+                    }
+                }
+            } else if (authNode.isTextual()) {
+                // handle the immediate value, just in case
+                authorizations.add(authNode.asText());
+            } else {
+                log.warn("Unsupported node type for path '{}' in JWT: {}", claimMapper.path, authNode.getNodeType());
+                return;
+
+            }
+
+            if (user instanceof KeycloakUser && !authorizations.isEmpty()) {
+                KeycloakUser kcUser = (KeycloakUser) user;
+                if (claimMapper.kind == DynamicMappingKind.ROLECLAIM) {
+                    finalizeRoleAssociation(kcUser, claimMapper, authorizations);
+                } else if (claimMapper.kind == DynamicMappingKind.GROUPCLAIM) {
+                    finalizeGroupAssociation(kcUser, claimMapper, authorizations);
                 } else {
-                    finalizeGroupAssociation((KeycloakUser) user, claimMapper, authorizations);
+                    finalizeGroupRoleAssociation(kcUser, claimMapper, authorizations);
                 }
             }
 
+        } catch (IllegalArgumentException e) {
+            log.error("Error decoding JWT payload for user {}", user.getUsername(), e);
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing JWT JSON for user {}", user.getUsername(), e);
         } catch (Exception e) {
-            log.error("error importing path role into Entando roles", e);
+            log.error("Unexpected error importing JWT claims from path '{}' for user {}",
+                    claimMapper.path, user.getUsername(), e);
+        }
+    }
+
+    private void finalizeGroupRoleAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
+        if (authorizations == null) return;
+
+        for (String candidate : authorizations) {
+            try {
+                if (StringUtils.isBlank(candidate)) {
+                    continue;
+                }
+
+                final String sep = StringUtils.isNotBlank(elem.separator) ? elem.separator : DEFAULT_SEPARATOR;
+                final String[] tokens = candidate.split(sep);
+
+                if (tokens.length < 2) {
+                    // treat as a role
+                    finalizeRoleAssociation(user, elem, List.of(candidate.trim()));
+                    continue;
+                }
+
+                final String roleName = tokens[0].trim();
+                final String groupName = tokens[1].trim();
+
+                if (StringUtils.isBlank(roleName)) {
+                    log.warn("Invalid role name extracted from candidate '{}' for user {}", candidate, user.getUsername());
+                    continue;
+                }
+
+                // skip if the couple has already been assigned
+                if (isGroupRoleAlreadyAssigned(user, roleName, groupName)) {
+                    log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
+                    continue;
+                }
+
+                Authorization auth;
+
+                if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
+                    final Group group = StringUtils.isNotBlank(groupName) ? findOrCreateGroup(groupName) : null;
+                    final Role role = findOrCreateRole(roleName);
+
+                    auth = new Authorization(group, role);
+                } else {
+                    final Group group = createTransientGroup(groupName);
+                    final Role role = createTransientRole(roleName);
+
+                    auth = new Authorization(group, role);
+                }
+
+                if (elem.persist == PersistKind.FULL) {
+                    persistAuthIfMissing(user, auth);
+                }
+
+                user.addAuthorization(auth);
+                log.info("Successfully assigned group-role {} to user {}", candidate, user.getUsername());
+            } catch (Exception e) {
+                log.error("Error processing dynamic group-role '{}' for user {}", candidate, user.getUsername(), e);
+            }
         }
     }
 
@@ -405,19 +498,35 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    private boolean isRoleAlreadyAssigned(KeycloakUser user, String roleName) {
+    private boolean isRoleAlreadyAssigned(final KeycloakUser user, final String roleName) {
         return user.getAuthorizations().stream()
                 .anyMatch(a -> a.getRole() != null && roleName.equals(a.getRole().getName()));
     }
 
+    private boolean isGroupRoleAlreadyAssigned(final KeycloakUser user, final String roleName, final String groupName) {
+        return user.getAuthorizations().stream()
+                .anyMatch(a -> {
+                    final String existingRoleName = (a.getRole() != null) ? a.getRole().getName() : null;
+                    final String existingGroupName = (a.getGroup() != null) ? a.getGroup().getName() : null;
+
+                    return Objects.equals(existingRoleName, roleName)
+                            && Objects.equals(existingGroupName, groupName);
+                });
+    }
+
     private Authorization createTransientRoleAuthorization(String roleName) {
+        final Role role = createTransientRole(roleName);
+        return new Authorization(null, role);
+    }
+
+    private @NonNull Role createTransientRole(String roleName) {
         Role role = roleManager.getRole(roleName);
         if (role == null) {
             role = new Role();
             role.setName(roleName);
             role.setDescription(roleName);
         }
-        return new Authorization(null, role);
+        return role;
     }
 
     /**
@@ -493,15 +602,15 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     /**
-     * To avoid creating duplicate records, we are forced to check if the authorization already exists. Synchronized here
-     * is needed to protect against concurrent modifications and ensure atomicity of the operation inside the same POD.
-     * In a replicated environment, there is still the possibility to create multiple, identical associations, depending
-     * on the database vendor when the role and/or group are null.
+     * To avoid creating duplicate records, we check if the authorization already exists. 
+     * In a replicated environment or under high concurrency, there is still the possibility 
+     * to attempt to create multiple, identical associations. This is handled by a database
+     * unique constraint and a try-catch block.
      * @param user the user being processed
      * @param auth the authorization to persist
      * @throws EntException in case of errors
      */
-    private synchronized void persistAuthIfMissing(KeycloakUser user, Authorization auth) throws EntException {
+    private void persistAuthIfMissing(KeycloakUser user, Authorization auth) throws EntException {
         final String username = user.getUsername();
         final List<Authorization> existing = authorizationManager.getUserAuthorizations(username);
 
@@ -522,8 +631,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
             try {
                 authorizationManager.addUserAuthorization(username, auth);
             } catch (EntException e) {
-                log.debug("Error persisting authorization for user '{}': group={}, role={}. "
-                        + "It might have been already added by another process.",
+                log.debug("Error persisting authorization for user '{}': group={}, role={} "
+                        + "(it might have been already added by another process).",
                         username, targetGroupName, targetRoleName);
             }
         } else {

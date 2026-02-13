@@ -7,7 +7,7 @@ public class DynamicMappingElement {
     public String attribute;
     public DynamicMappingKind kind;
     public PersistKind persist;
-    public String separator; // FOR GROUPROLE ONLY
+    public String separator; // FOR GROUPROLE and GROUPROLECLAIM ONLY
     public String path; // FOR *CLAIM ONLY
 
 }
