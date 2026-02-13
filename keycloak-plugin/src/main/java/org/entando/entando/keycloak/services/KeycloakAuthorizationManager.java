@@ -15,15 +15,9 @@ import com.agiletec.aps.system.services.group.GroupManager;
 import com.agiletec.aps.system.services.role.Role;
 import com.agiletec.aps.system.services.role.RoleManager;
 import com.agiletec.aps.system.services.user.UserDetails;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,6 +34,7 @@ import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.mapping.PersistKind;
+import org.entando.entando.keycloak.services.oidc.OidcMappingService;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,11 +50,11 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private final GroupManager groupManager;
     private final RoleManager roleManager;
     private final BaseConfigManager configManager;
+    private final OidcMappingService oidcMappingService;
 
     private static final int GROUP_POSITION = 0;
     private static final int ROLE_POSITION = 1;
 
-    private final ObjectMapper mapper = new ObjectMapper();
     private final XmlMapper xmlMapper = new XmlMapper();
 
     private final transient ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
@@ -71,12 +66,14 @@ public class KeycloakAuthorizationManager extends AbstractService {
             final AuthorizationManager authorizationManager,
             final GroupManager groupManager,
             final RoleManager roleManager,
-            final BaseConfigManager configManager1) {
+            final BaseConfigManager configManager1,
+            final OidcMappingService oidcMappingService) {
         this.configuration = configuration;
         this.authorizationManager = authorizationManager;
         this.groupManager = groupManager;
         this.roleManager = roleManager;
         this.configManager = configManager1;
+        this.oidcMappingService = oidcMappingService;
     }
 
     /**
@@ -190,64 +187,17 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param claimMapper the mapping configuration
      */
     private void processJwtClaimAttributes(final UserDetails user, final String token, final boolean decode, final DynamicMappingElement claimMapper) {
-        try {
-            String json;
-            if (decode) {
-                String[] parts = token.split("\\.");
-                if (parts.length != 3) {
-                    log.error("Invalid JWT token format: expected 3 parts, found {}", parts.length);
-                    return;
-                }
-                json = new String(Base64.getUrlDecoder().decode(parts[1]));
+        final List<String> authorizations = oidcMappingService.extractAuthorizationsFromJwt(token, decode, claimMapper, user.getUsername());
+
+        if (user instanceof KeycloakUser && !authorizations.isEmpty()) {
+            KeycloakUser kcUser = (KeycloakUser) user;
+            if (claimMapper.kind == DynamicMappingKind.ROLECLAIM) {
+                finalizeRoleAssociation(kcUser, claimMapper, authorizations);
+            } else if (claimMapper.kind == DynamicMappingKind.GROUPCLAIM) {
+                finalizeGroupAssociation(kcUser, claimMapper, authorizations);
             } else {
-                json = token;
+                finalizeGroupRoleAssociation(kcUser, claimMapper, authorizations);
             }
-
-            final JsonNode root = mapper.readTree(json);
-            final String jwtPath = "/" + claimMapper.path.replace(".", "/");
-            JsonNode authNode = root.at(jwtPath);
-
-
-            if (authNode == null || authNode.isMissingNode() || authNode.isNull()) {
-                log.debug("Path '{}' not found in JWT claims for user {}", claimMapper.path, user.getUsername());
-                return;
-            }
-
-            List<String> authorizations = new ArrayList<>();
-            if (authNode.isArray()) {
-                //handle an array of authorizations
-                for (JsonNode node : authNode) {
-                    if (node.isTextual()) {
-                        authorizations.add(node.asText());
-                    }
-                }
-            } else if (authNode.isTextual()) {
-                // handle the immediate value, just in case
-                authorizations.add(authNode.asText());
-            } else {
-                log.warn("Unsupported node type for path '{}' in JWT: {}", claimMapper.path, authNode.getNodeType());
-                return;
-
-            }
-
-            if (user instanceof KeycloakUser && !authorizations.isEmpty()) {
-                KeycloakUser kcUser = (KeycloakUser) user;
-                if (claimMapper.kind == DynamicMappingKind.ROLECLAIM) {
-                    finalizeRoleAssociation(kcUser, claimMapper, authorizations);
-                } else if (claimMapper.kind == DynamicMappingKind.GROUPCLAIM) {
-                    finalizeGroupAssociation(kcUser, claimMapper, authorizations);
-                } else {
-                    finalizeGroupRoleAssociation(kcUser, claimMapper, authorizations);
-                }
-            }
-
-        } catch (IllegalArgumentException e) {
-            log.error("Error decoding JWT payload for user {}", user.getUsername(), e);
-        } catch (JsonProcessingException e) {
-            log.error("Error parsing JWT JSON for user {}", user.getUsername(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error importing JWT claims from path '{}' for user {}",
-                    claimMapper.path, user.getUsername(), e);
         }
     }
 
@@ -407,7 +357,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 DEFAULT_SEPARATOR : elem.separator;
 
         try {
-            final List<String> authorizations = processUserProfileAttribute(user, elem);
+            final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
 
             if (authorizations == null) {
                 return;
@@ -465,7 +415,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param elem a single dynamic configuration
      */
     private void doProcessRole(KeycloakUser user, DynamicMappingElement elem) {
-        final List<String> authorizations = processUserProfileAttribute(user, elem);
+        final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
         finalizeRoleAssociation(user, elem, authorizations);
     }
 
@@ -533,7 +483,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param elem a single dynamic configuration
      */
     private void doProcessGroup(KeycloakUser user, DynamicMappingElement elem) {
-        final List<String> authorizations = processUserProfileAttribute(user, elem);
+        final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
         if (authorizations == null) {
             return;
         }
@@ -586,18 +536,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param elem the dynamic mapping element
      * @return the list of processed attribute tokens or null if the attribute is missing
      */
-    private static List<String> processUserProfileAttribute(KeycloakUser user, DynamicMappingElement elem) {
-        if (user.getUserRepresentation() == null
-                || user.getUserRepresentation().getAttributes() == null
-                || !user.getUserRepresentation().getAttributes().containsKey(elem.attribute)) {
-            log.info("skipping dynamic processing for user {}", user.getUsername());
-            return Collections.emptyList();
-        }
-        final Object kcProfileAttr = user.getUserRepresentation()
-                .getAttributes()
-                .get(elem.attribute);
-        return handleKeycloakAttribute(kcProfileAttr);
-    }
 
     /**
      * To avoid creating duplicate records, we check if the authorization already exists. 
@@ -645,21 +583,5 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param attribute the attribute data 
      * @return the list of the processed attribute tokens
      */
-    protected static List<String> handleKeycloakAttribute(Object attribute) {
-        if (attribute instanceof List) {
-            List<Object> list = (List) attribute;
-            return list.stream()
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .flatMap(s -> Arrays.stream(s.split("\\s+")))
-                    .filter(token -> !token.isBlank())
-                    .collect(Collectors.toUnmodifiableList());
-        } else if (attribute instanceof String) {
-            return Arrays.stream(((String) attribute).split("\\s+"))
-                    .filter(token -> !token.isBlank())
-                    .collect(Collectors.toUnmodifiableList());
-        }
-        return new ArrayList<>();
-    }
 
 }

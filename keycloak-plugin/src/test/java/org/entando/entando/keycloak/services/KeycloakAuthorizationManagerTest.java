@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.keycloak.services.oidc.OidcMappingService;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,12 +43,13 @@ class KeycloakAuthorizationManagerTest {
     @Mock private GroupManager groupManager;
     @Mock private RoleManager roleManager;
     @Mock private BaseConfigManager configManager;
+    private OidcMappingService oidcMappingService = new OidcMappingService();
 
     private KeycloakAuthorizationManager manager;
 
     @BeforeEach
     public void setUp() {
-        manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager);
+        manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager, oidcMappingService);
     }
 
     @Test
