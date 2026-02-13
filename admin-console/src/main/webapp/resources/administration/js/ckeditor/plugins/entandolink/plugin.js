@@ -1,5 +1,6 @@
 /*
  entandolink is a customized version of the original link plugin.
+ Modified to save selection state before opening popup (fixes selection loss in newer browsers).
 */
 CKEDITOR.plugins.add('entandolink', {
 		requires: ['fakeobjects'],
@@ -8,6 +9,10 @@ CKEDITOR.plugins.add('entandolink', {
 				if (window.entandoCKEditor === undefined) {
 						window.entandoCKEditor = {};
 				}
+				// Storage for saved selection state (needed because selection can be lost when popup gets focus)
+				if (window.entandoCKEditorSelection === undefined) {
+						window.entandoCKEditorSelection = {};
+				}
 				// Add the link and unlink buttons.
 				editor.addCommand('entandolink', {
 					exec: function(editor) {
@@ -15,7 +20,63 @@ CKEDITOR.plugins.add('entandolink', {
 						var ranges = selection.getRanges(true);
 						if (!(ranges.length == 1 && ranges[0].collapsed)) {
 							var id = 'entando_link_window_' + editor.element.$.id;
-							window.entandoCKEditor[id] = editor;
+
+							// Save selection state BEFORE opening popup (selection may be lost when popup gets focus)
+							var startElement = selection.getStartElement();
+							var isLink = startElement && startElement.getName() === 'a';
+							var savedBookmarks = selection.createBookmarks(true);
+							var savedSelectedHtml = editor.getSelectedHtml(true);
+
+							window.entandoCKEditorSelection[id] = {
+								bookmarks: savedBookmarks,
+								selectedHtml: savedSelectedHtml,
+								startElement: startElement,
+								isLink: isLink
+							};
+
+							// Create a wrapper around the editor that uses saved selection data
+							var originalEditor = editor;
+
+							// Create a mock selection object that returns saved values
+							var mockSelection = {
+								getStartElement: function() { return startElement; },
+								getSelectedElement: function() { return isLink ? startElement : null; },
+								getRanges: function() { return []; },
+								getType: function() { return CKEDITOR.SELECTION_TEXT; }
+							};
+
+							var editorWrapper = {
+								// Return mock selection with saved startElement
+								getSelection: function() {
+									return mockSelection;
+								},
+								getSelectedHtml: function(toString) {
+									// Return saved HTML since selection may be lost
+									return savedSelectedHtml;
+								},
+								// Delegate all other properties/methods to original editor
+								focus: function() { return originalEditor.focus(); },
+								document: originalEditor.document,
+								insertElement: function(el) {
+									// Before inserting, try to restore selection
+									originalEditor.focus();
+									try {
+										var sel = originalEditor.getSelection();
+										if (savedBookmarks && sel) {
+											sel.selectBookmarks(savedBookmarks);
+										}
+									} catch(e) {
+										console.warn('Could not restore bookmarks, inserting at cursor:', e);
+									}
+									return originalEditor.insertElement(el);
+								},
+								updateElement: function() { return originalEditor.updateElement(); },
+								// Access to original editor for anything else
+								_original: originalEditor,
+								// Expose saved data for direct access if needed
+								_savedSelection: window.entandoCKEditorSelection[id]
+							};
+							window.entandoCKEditor[id] = editorWrapper;
 							var width = window.innerWidth / 2;
 							if (width < 780 && window.innerWidth > 780) {
 									width = 780;
