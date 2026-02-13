@@ -165,11 +165,33 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, times(4)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-
-//        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("generico");
+        
         assertThat(authCaptor.getAllValues())
                 .extracting(a -> a.getRole().getName())
                 .containsOnly("generico","offline_access", "uma_authorization", "default-roles-entando");
+        assertThat(authCaptor.getValue().getGroup()).isNull();
+    }
+
+    @Test
+    void testDynamicConfigurationRoleOnLoginFromJwtNoPersist() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(roleManager.getRole(anyString())).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM_AUTH);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
+        verify(userDetails, times(4)).addAuthorization(authCaptor.capture());
+
+        assertThat(authCaptor.getAllValues())
+                .extracting(a -> a.getRole().getName())
+                .containsOnly("generico", "offline_access", "uma_authorization", "default-roles-entando");
         assertThat(authCaptor.getValue().getGroup()).isNull();
     }
 
@@ -187,6 +209,28 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, times(2)).addUserAuthorization(eq("testuser"), authCaptor.capture());
+
+        assertThat(authCaptor.getAllValues())
+                .extracting(a -> a.getGroup().getName())
+                .containsExactlyInAnyOrder("Gruppo-Microsoft-Importato", "altro-gruppo");
+        assertThat(authCaptor.getValue().getRole()).isNull();
+    }
+
+    @Test
+    void testDynamicConfigurationGroupOnLoginFromJwtNoPersist() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_CLAIM_AUTH);
+
+        manager.init();
+
+        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
+        verify(userDetails, times(2)).addAuthorization(authCaptor.capture());
 
         assertThat(authCaptor.getAllValues())
                 .extracting(a -> a.getGroup().getName())
@@ -400,6 +444,39 @@ class KeycloakAuthorizationManagerTest {
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
     }
 
+    @Test
+    void testDynamicConfigurationGroupRoleOnLoginConflict() throws Exception {
+        Group group = new Group();
+        Role role = new Role();
+        group.setName("agroup");
+        group.setDescription("agroup");
+        role.setName("arole");
+        role.setDescription("arole");
+
+        when(authorizationManager.getUserAuthorizations(anyString())).thenReturn(List.of());
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
+        when(groupManager.getGroup(anyString())).thenReturn(group);
+        when(roleManager.getRole(anyString())).thenReturn(role);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        // Simulate a conflict exception
+        org.mockito.Mockito.doThrow(new EntException("Conflict"))
+                .when(authorizationManager).addUserAuthorization(eq("testuser"), any());
+
+        manager.init();
+
+        // This should not throw an exception because it's caught in persistAuthIfMissing
+        manager.processNewUser(userDetails, JWT, true);
+
+        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
@@ -527,12 +604,30 @@ class KeycloakAuthorizationManagerTest {
             + " </mapping>"
             + "</mappings>";
 
+    private static final String XML_ROLE_CLAIM_AUTH = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLECLAIM</kind>"
+            + "  <persist>AUTH</persist>"
+            + " </mapping>"
+            + "</mappings>";
+
     private static final String XML_GROUP_CLAIM = "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>groups</path>"
             + "  <kind>GROUPCLAIM</kind>"
             + "  <persist>FULL</persist>"
+            + " </mapping>"
+            + "</mappings>";
+
+    private static final String XML_GROUP_CLAIM_AUTH = "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>groups</path>"
+            + "  <kind>GROUPCLAIM</kind>"
+            + "  <persist>AUTH</persist>"
             + " </mapping>"
             + "</mappings>";
 

@@ -17,4 +17,6 @@
 
     <include file="serv/20230228000000_unused_permission.xml" relativeToChangelogFile="true" />
 
+    <include file="serv/00000000000003_schemaServ.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>

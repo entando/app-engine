@@ -26,6 +26,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -83,6 +84,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      */
     private transient List<DynamicMappingElement> profileMappings;
     private transient List<DynamicMappingElement> jwtMappings;
+    private transient List<String> ignore;
 
     @Override
     public void init() throws Exception {
@@ -93,18 +95,21 @@ public class KeycloakAuthorizationManager extends AbstractService {
             String xml = configManager.getConfigItem("dynamicAuthMapping");
             if (StringUtils.isNotBlank(xml)) {
                 DynamicMapping dynConf = xmlMapper.readValue(xml, DynamicMapping.class);
-                if (dynConf != null && dynConf.mapping != null) {
+                if (dynConf != null) {
+                    if (dynConf.mapping != null) {
 
-                    Map<Boolean, List<DynamicMappingElement>> partitioned =
-                            dynConf.mapping.stream()
-                                    .filter(this::isValid)
-                                    .collect(Collectors.partitioningBy(
-                                            item -> item.kind.isJwtMapping()
-                                    ));
-                    profileMappings = List.copyOf(partitioned.get(false));
-                    jwtMappings = List.copyOf(partitioned.get(true));
-                    log.debug("{} dynamic auth mapping found, {} profileMappings",
-                            dynConf.mapping.size(), profileMappings.size());
+                        final Map<Boolean, List<DynamicMappingElement>> partitioned =
+                                dynConf.mapping.stream()
+                                        .filter(this::isValid)
+                                        .collect(Collectors.partitioningBy(
+                                                item -> item.kind.isJwtMapping()
+                                        ));
+                        profileMappings = List.copyOf(partitioned.get(false));
+                        jwtMappings = List.copyOf(partitioned.get(true));
+                        log.debug("{} dynamic auth mapping found, {} profileMappings",
+                                dynConf.mapping.size(), profileMappings.size());
+                    }
+                    ignore = dynConf.ignore;
                 }
             }
             if (profileMappings != null) {
@@ -246,34 +251,45 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    private synchronized Group findOrCreateGroup(final String groupName) {
+    private Group findOrCreateGroup(String groupName) {
         Group group = groupManager.getGroup(groupName);
-        if (group == null) {
-            group = new Group();
-            group.setName(groupName);
-            group.setDescription(groupName);
-            try {
-                groupManager.addGroup(group);
-            } catch (EntException e) {
-                log.error("Failed to create group: {}", groupName, e);
-            }
+
+        if (group != null) {
+            return group;
         }
-        return group;
+
+        Group newGroup = new Group();
+        newGroup.setName(groupName);
+        newGroup.setDescription(groupName);
+
+        try {
+            groupManager.addGroup(newGroup);
+            return newGroup;
+        } catch (EntException e) {
+            log.debug("Error persisting group {} ( It might have been already added by another process).",
+                    groupName);
+            return groupManager.getGroup(groupName);
+        }
     }
 
-    private synchronized Role findOrCreateRole(final String roleName) {
+    private Role findOrCreateRole(final String roleName) {
         Role role = roleManager.getRole(roleName);
-        if (role == null) {
-            role = new Role();
-            role.setName(roleName);
-            role.setDescription(roleName);
-            try {
-                roleManager.addRole(role);
-            } catch (EntException e) {
-                log.error("Failed to create role: {}", roleName, e);
-            }
+
+        if (role != null) {
+            return role;
         }
-        return role;
+
+        role = new Role();
+        role.setName(roleName);
+        role.setDescription(roleName);
+        try {
+            roleManager.addRole(role);
+            return role;
+        } catch (EntException e) {
+            log.debug("Error persisting role {} (It might have been already added by another process).",
+                    roleName);
+            return roleManager.getRole(roleName);
+        }
     }
 
     /**
@@ -281,7 +297,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * keycloak
      * @param user the currently logged user
      */
-    private synchronized void processProfileAttributes(final KeycloakUser user) {
+    private void processProfileAttributes(final KeycloakUser user) {
         profileMappings.forEach(m -> {
             if (m.kind == ROLE) {
                 doProcessRole(user, m);
@@ -326,45 +342,30 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
         final String groupName = tokens[0];
         final String roleName = tokens[1];
+        final boolean shouldPersistAuth = (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL);
 
-        Authorization authorization;
-        Group group = null;
-        Role role = null;
+        Group group = shouldPersistAuth
+                ? findOrCreateGroup(groupName)
+                : createTransientGroup(groupName);
 
+        Role role = shouldPersistAuth
+                ? findOrCreateRole(roleName)
+                : roleManager.getRole(roleName);
 
-        if (elem.persist == PersistKind.AUTH
-                || elem.persist == PersistKind.FULL) {
-            // create a group
-            if (StringUtils.isNotBlank(groupName)) {
-                group = findOrCreateGroup(groupName);
-            }
-            // create an EMPTY role or use the existing one
-            if (StringUtils.isNotBlank(roleName)) {
-                role = findOrCreateRole(roleName);
-            }
-            // create the auth
-            authorization = new Authorization(group, role);
+        Authorization authorization = new Authorization(group, role);
 
-            // persist the association between user and auth
-            if (elem.persist == PersistKind.FULL) {
-                persistAuthIfMissing(user, authorization);
-            }
-        } else {
-            // create a group on the fly
-            if (StringUtils.isNotBlank(groupName)) {
-                group = new Group();
-                group.setName(groupName);
-                group.setDescription("sys:" + groupName);
-            }
-            // assign an existing ROLE
-            if (StringUtils.isNotBlank(roleName)) {
-                // make sure all the permissions are assigned to the current role
-                role = roleManager.getRole(roleName);
-            }
-            authorization = new Authorization(group, role);
+        if (elem.persist == PersistKind.FULL) {
+            persistAuthIfMissing(user, authorization);
         }
-        // finally
+
         user.addAuthorization(authorization);
+    }
+
+    private Group createTransientGroup(String groupName) {
+        Group group = new Group();
+        group.setName(groupName);
+        group.setDescription("sys:" + groupName);
+        return group;
     }
 
     /**
@@ -378,40 +379,35 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     private void finalizeRoleAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
-        if (authorizations == null) {
-            return;
-        }
-        for (String kca: authorizations) {
-            try {
-                Authorization auth;
+        if (authorizations == null) return;
 
-                // skip if the group is already mapped
-                if (user.getAuthorizations()
-                        .stream()
-                        .anyMatch(a -> a.getRole() != null
-                                && a.getRole().getName().equals(kca))) {
-                    log.debug("Role {} already assigned to user {}", kca, user.getUsername());
-                    return;
+        for (String roleName : authorizations) {
+            try {
+                if (isRoleAlreadyAssigned(user, roleName)) {
+                    log.debug("Role {} already assigned to user {}", roleName, user.getUsername());
+                    continue;
                 }
 
-                if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
-                    final Role role = findOrCreateRole(kca);
+                Authorization auth = (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL)
+                        ? new Authorization(null, findOrCreateRole(roleName))
+                        : createTransientRoleAuthorization(roleName);
 
-                    auth = new Authorization(null, role);
-
-                    if (elem.persist == PersistKind.FULL) {
-                        persistAuthIfMissing(user, auth);
-                    }
-                } else {
-                    auth = createTransientRoleAuthorization(kca);
+                if (elem.persist == PersistKind.FULL) {
+                    persistAuthIfMissing(user, auth);
                 }
 
                 user.addAuthorization(auth);
-                log.info("Successfully assigned role {} to user {}", kca, user.getUsername());
+                log.info("Successfully assigned role {} to user {}", roleName, user.getUsername());
+
             } catch (Exception e) {
-                log.error("Error processing dynamic role '{}' for user {}", kca , user.getUsername(), e);
+                log.error("Error processing dynamic role '{}' for user {}", roleName, user.getUsername(), e);
             }
         }
+    }
+
+    private boolean isRoleAlreadyAssigned(KeycloakUser user, String roleName) {
+        return user.getAuthorizations().stream()
+                .anyMatch(a -> a.getRole() != null && roleName.equals(a.getRole().getName()));
     }
 
     private Authorization createTransientRoleAuthorization(String roleName) {
@@ -438,37 +434,36 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     private void finalizeGroupAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
-        for (String kca: authorizations) {
-            try {
-                Authorization auth;
+        if (authorizations == null) return;
 
-                // skip if the role is already mapped
-                if (user.getAuthorizations()
-                        .stream()
-                        .anyMatch(a -> a.getGroup() != null
-                                && a.getGroup().getName().equals(kca))) {
-                    log.debug("Group {} already assigned to user {}", kca, user.getUsername());
-                    return;
+        for (String groupName : authorizations) {
+            try {
+                if (isGroupAlreadyAssigned(user, groupName)) {
+                    log.debug("Group {} already assigned to user {}", groupName, user.getUsername());
+                    continue;
                 }
 
-                if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
-                    final Group group = findOrCreateGroup(kca);
+                Authorization auth = (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL)
+                        ? new Authorization(findOrCreateGroup(groupName), null)
+                        : createTransientGroupAuthorization(groupName);
 
-                    auth = new Authorization(group, null);
-
-                    if (elem.persist == PersistKind.FULL) {
-                        persistAuthIfMissing(user, auth);
-                    }
-                } else {
-                    auth = createTransientGroupAuthorization(kca);
+                // optionally persist
+                if (elem.persist == PersistKind.FULL) {
+                    persistAuthIfMissing(user, auth);
                 }
 
                 user.addAuthorization(auth);
-                log.info("Successfully assigned group {} to user {}", kca, user.getUsername());
+                log.info("Successfully assigned group {} to user {}", groupName, user.getUsername());
+
             } catch (Exception e) {
-                log.error("Error processing dynamic group for user {}", user.getUsername(), e);
+                log.error("Error processing dynamic group '{}' for user {}", groupName, user.getUsername(), e);
             }
         }
+    }
+
+    private boolean isGroupAlreadyAssigned(KeycloakUser user, String groupName) {
+        return user.getAuthorizations().stream()
+                .anyMatch(a -> a.getGroup() != null && groupName.equals(a.getGroup().getName()));
     }
 
     private Authorization createTransientGroupAuthorization(String groupName) {
@@ -498,34 +493,42 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     /**
-     * To avoid creating duplicate records, we are forced to check if the authorization already exists.
+     * To avoid creating duplicate records, we are forced to check if the authorization already exists. Synchronized here
+     * is needed to protect against concurrent modifications and ensure atomicity of the operation inside the same POD.
+     * In a replicated environment, there is still the possibility to create multiple, identical associations, depending
+     * on the database vendor when the role and/or group are null.
      * @param user the user being processed
      * @param auth the authorization to persist
      * @throws EntException in case of errors
      */
     private synchronized void persistAuthIfMissing(KeycloakUser user, Authorization auth) throws EntException {
-        final List<Authorization> existing = authorizationManager.getUserAuthorizations(user.getUsername());
-        if (existing.stream()
-                .noneMatch(a -> (a.getGroup() != null && a.getRole() == null
-                        && auth.getGroup() != null
-                        && a.getGroup().getName().equals(auth.getGroup().getName()))
-                        ||
-                        (a.getRole() != null  && a.getGroup() == null
-                                && auth.getRole() != null
-                                && a.getRole().getName().equals(auth.getRole().getName()))
+        final String username = user.getUsername();
+        final List<Authorization> existing = authorizationManager.getUserAuthorizations(username);
 
-                        ||
-                        (a.getRole() != null && a.getGroup() != null
-                                && auth.getRole() != null
-                                && auth.getGroup() != null
-                                && a.getRole().getName().equals(auth.getRole().getName())
-                                && a.getGroup().getName().equals(auth.getGroup().getName()))
-                )
-        ) {
-            log.debug("dynamically persisting authorization for user '{}' : group {}, role {}", user.getUsername(),
-                    auth.getGroup() != null ? auth.getGroup().getName() : "N/A",
-                    auth.getRole() != null ? auth.getRole().getName() : "N/A");
-            authorizationManager.addUserAuthorization(user.getUsername(), auth);
+        final String targetGroupName = (null != auth.getGroup()) ? auth.getGroup().getName() : null;
+        final String targetRoleName = (null != auth.getRole()) ? auth.getRole().getName() : null;
+
+        boolean alreadyExists = existing.stream().anyMatch(a -> {
+            String existingGroupName = (null != a.getGroup()) ? a.getGroup().getName() : null;
+            String existingRoleName = (null != a.getRole()) ? a.getRole().getName() : null;
+
+            return Objects.equals(existingGroupName, targetGroupName) &&
+                    Objects.equals(existingRoleName, targetRoleName);
+        });
+
+        if (!alreadyExists) {
+            log.debug("Persisting new authorization for user '{}': group={}, role={}",
+                    username, targetGroupName, targetRoleName);
+            try {
+                authorizationManager.addUserAuthorization(username, auth);
+            } catch (EntException e) {
+                log.debug("Error persisting authorization for user '{}': group={}, role={}. "
+                        + "It might have been already added by another process.",
+                        username, targetGroupName, targetRoleName);
+            }
+        } else {
+            log.debug("Authorization already exists for user '{}': group={}, role={}. Skipping persistence.",
+                    username, targetGroupName, targetRoleName);
         }
     }
 
