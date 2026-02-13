@@ -16,6 +16,8 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.opentest4j.TestAbortedException;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.DockerComposeContainer;
 
 public class RedisSentinelTestExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
@@ -28,17 +30,23 @@ public class RedisSentinelTestExtension implements BeforeAllCallback, AfterAllCa
     public static final String REDIS_SENTINEL_SERVICE = "redis-sentinel";
 
     private static DockerComposeContainer composeContainer;
+    private static boolean composeStarted = false;
 
     private MockedStatic<RedisEnvironmentVariables> mockedRedisEnvironment;
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
-        if (composeContainer == null) {
-            composeContainer = new DockerComposeContainer(new File("docker-compose-sentinel.yaml"))
+        if (!DockerClientFactory.instance().isDockerAvailable()) {
+            throw new TestAbortedException("Docker is not available");
+        }
+        if (!composeStarted) {
+            DockerComposeContainer container = new DockerComposeContainer(new File("docker-compose-sentinel.yaml"))
                     .withExposedService(REDIS_SERVICE, REDIS_PORT)
                     .withExposedService(REDIS_SLAVE_SERVICE, REDIS_PORT)
                     .withExposedService(REDIS_SENTINEL_SERVICE, REDIS_SENTINEL_PORT);
-            composeContainer.start();
+            container.start();
+            composeContainer = container;
+            composeStarted = true;
         }
         mockedRedisEnvironment = Mockito.mockStatic(RedisEnvironmentVariables.class);
         mockedRedisEnvironment.when(() -> RedisEnvironmentVariables.active()).thenReturn(true);
@@ -54,7 +62,9 @@ public class RedisSentinelTestExtension implements BeforeAllCallback, AfterAllCa
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        mockedRedisEnvironment.close();
+        if (mockedRedisEnvironment != null) {
+            mockedRedisEnvironment.close();
+        }
     }
 
     @Retention(RetentionPolicy.RUNTIME)

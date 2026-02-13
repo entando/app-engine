@@ -24,7 +24,7 @@ jobs:
       contents: write
       pull-requests: read
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -75,7 +75,7 @@ jobs:
       contents: read
       pull-requests: write
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
@@ -130,7 +130,7 @@ jobs:
       contents: read
       pull-requests: write
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [build, test-and-scan]
 
     steps:

@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.opentest4j.TestAbortedException;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 
 public class RedisTestExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
@@ -22,9 +24,13 @@ public class RedisTestExtension implements BeforeAllCallback, AfterAllCallback, 
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
-        if (redisContainer == null) {
-            redisContainer = new GenericContainer(REDIS_IMAGE).withExposedPorts(REDIS_PORT);
-            redisContainer.start();
+        if (!DockerClientFactory.instance().isDockerAvailable()) {
+            throw new TestAbortedException("Docker is not available");
+        }
+        if (redisContainer == null || !redisContainer.isRunning()) {
+            GenericContainer container = new GenericContainer(REDIS_IMAGE).withExposedPorts(REDIS_PORT);
+            container.start();
+            redisContainer = container;
         }
         mockedRedisEnvironment = Mockito.mockStatic(RedisEnvironmentVariables.class);
         mockedRedisEnvironment.when(() -> RedisEnvironmentVariables.active()).thenReturn(true);
@@ -35,7 +41,9 @@ public class RedisTestExtension implements BeforeAllCallback, AfterAllCallback, 
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        mockedRedisEnvironment.close();
+        if (mockedRedisEnvironment != null) {
+            mockedRedisEnvironment.close();
+        }
     }
 
     @Override
