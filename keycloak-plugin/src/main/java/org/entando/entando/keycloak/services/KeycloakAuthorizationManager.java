@@ -395,7 +395,19 @@ public class KeycloakAuthorizationManager extends AbstractService {
         finalizeAssociation(user, elem, roleName, groupName, originalCandidate, true);
     }
 
+    private boolean isIgnored(String name) {
+        if (ignore == null || StringUtils.isBlank(name)) {
+            return false;
+        }
+        return ignore.contains(name.trim());
+    }
+
     private void finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName, String originalCandidate, boolean createRoleIfMissing) throws EntException {
+        if (isIgnored(roleName) || isIgnored(groupName)) {
+            log.info("Role {} or Group {} is in the ignore list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
+            return;
+        }
+
         if (isAlreadyAssigned(user, roleName, groupName)) {
             log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
             return;

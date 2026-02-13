@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -567,6 +568,40 @@ class KeycloakAuthorizationManagerTest {
                 });
     }
 
+    @Test
+    void testDynamicConfigurationWithIgnoredRoles() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_WITH_IGNORE);
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        // JWT contains "generico", "offline_access", "uma_authorization", "default-roles-entando"
+        // "generico" is ignored, so we expect only 3 calls
+        verify(authorizationManager, times(3)).addUserAuthorization(eq("testuser"), any());
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), argThat(auth ->
+                auth.getRole() != null && "generico".equals(auth.getRole().getName())));
+    }
+
+    @Test
+    void testDynamicConfigurationWithIgnoredGroups() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_WITH_IGNORE_GROUP);
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        // JWT contains groups "Gruppo-Microsoft-Importato", "altro-gruppo"
+        // "altro-gruppo" is ignored, so we expect only 1 call
+        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
+        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), argThat(auth ->
+                auth.getGroup() != null && "altro-gruppo".equals(auth.getGroup().getName())));
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
@@ -684,6 +719,27 @@ class KeycloakAuthorizationManagerTest {
             + "  <persist>NONE</persist>"
             + " </mapping>"
             + "</mappings>";
+
+    private static final String XML_WITH_IGNORE_GROUP = "<dynamicmapping>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>groups</path>"
+            + "  <kind>GROUPCLAIM</kind>"
+            + "  <persist>FULL</persist>"
+            + " </mapping>"
+            + " <ignore>altro-gruppo</ignore>"
+            + "</dynamicmapping>";
+
+    private static final String XML_WITH_IGNORE = "<dynamicmapping>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLECLAIM</kind>"
+            + "  <persist>FULL</persist>"
+            + " </mapping>"
+            + " <ignore>generico</ignore>"
+            + " <ignore>another_ignored</ignore>"
+            + "</dynamicmapping>";
 
     private static final String XML_ROLE_CLAIM = "<mappings>"
             + " <mapping>"
