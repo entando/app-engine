@@ -227,32 +227,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     continue;
                 }
 
-                // skip if the couple has already been assigned
-                if (isGroupRoleAlreadyAssigned(user, roleName, groupName)) {
-                    log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
-                    continue;
-                }
-
-                Authorization auth;
-
-                if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
-                    final Group group = StringUtils.isNotBlank(groupName) ? findOrCreateGroup(groupName) : null;
-                    final Role role = findOrCreateRole(roleName);
-
-                    auth = new Authorization(group, role);
-                } else {
-                    final Group group = createTransientGroup(groupName);
-                    final Role role = createTransientRole(roleName);
-
-                    auth = new Authorization(group, role);
-                }
-
-                if (elem.persist == PersistKind.FULL) {
-                    persistAuthIfMissing(user, auth);
-                }
-
-                user.addAuthorization(auth);
-                log.info("Successfully assigned group-role {} to user {}", candidate, user.getUsername());
+                finalizeAssociation(user, elem, roleName, groupName, candidate);
             } catch (Exception e) {
                 log.error("Error processing dynamic group-role '{}' for user {}", candidate, user.getUsername(), e);
             }
@@ -383,23 +358,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
         final String groupName = tokens[0];
         final String roleName = tokens[1];
-        final boolean shouldPersistAuth = (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL);
 
-        Group group = shouldPersistAuth
-                ? findOrCreateGroup(groupName)
-                : createTransientGroup(groupName);
-
-        Role role = shouldPersistAuth
-                ? findOrCreateRole(roleName)
-                : roleManager.getRole(roleName);
-
-        Authorization authorization = new Authorization(group, role);
-
-        if (elem.persist == PersistKind.FULL) {
-            persistAuthIfMissing(user, authorization);
-        }
-
-        user.addAuthorization(authorization);
+        finalizeAssociation(user, elem, roleName, groupName, groupRoleToken, false);
     }
 
     private Group createTransientGroup(String groupName) {
@@ -424,34 +384,43 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
         for (String roleName : authorizations) {
             try {
-                if (isRoleAlreadyAssigned(user, roleName)) {
-                    log.debug("Role {} already assigned to user {}", roleName, user.getUsername());
-                    continue;
-                }
-
-                Authorization auth = (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL)
-                        ? new Authorization(null, findOrCreateRole(roleName))
-                        : createTransientRoleAuthorization(roleName);
-
-                if (elem.persist == PersistKind.FULL) {
-                    persistAuthIfMissing(user, auth);
-                }
-
-                user.addAuthorization(auth);
-                log.info("Successfully assigned role {} to user {}", roleName, user.getUsername());
-
+                finalizeAssociation(user, elem, roleName, null, roleName);
             } catch (Exception e) {
                 log.error("Error processing dynamic role '{}' for user {}", roleName, user.getUsername(), e);
             }
         }
     }
 
-    private boolean isRoleAlreadyAssigned(final KeycloakUser user, final String roleName) {
-        return user.getAuthorizations().stream()
-                .anyMatch(a -> a.getRole() != null && roleName.equals(a.getRole().getName()));
+    private void finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName, String originalCandidate) throws EntException {
+        finalizeAssociation(user, elem, roleName, groupName, originalCandidate, true);
     }
 
-    private boolean isGroupRoleAlreadyAssigned(final KeycloakUser user, final String roleName, final String groupName) {
+    private void finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName, String originalCandidate, boolean createRoleIfMissing) throws EntException {
+        if (isAlreadyAssigned(user, roleName, groupName)) {
+            log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
+            return;
+        }
+
+        Authorization auth;
+        if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
+            final Group group = StringUtils.isNotBlank(groupName) ? findOrCreateGroup(groupName) : null;
+            final Role role = StringUtils.isNotBlank(roleName) ? findOrCreateRole(roleName) : null;
+            auth = new Authorization(group, role);
+        } else {
+            final Group group = StringUtils.isNotBlank(groupName) ? createTransientGroup(groupName) : null;
+            final Role role = StringUtils.isNotBlank(roleName) ? (createRoleIfMissing ? createTransientRole(roleName) : roleManager.getRole(roleName)) : null;
+            auth = new Authorization(group, role);
+        }
+
+        if (elem.persist == PersistKind.FULL) {
+            persistAuthIfMissing(user, auth);
+        }
+
+        user.addAuthorization(auth);
+        log.info("Successfully assigned {} to user {}", originalCandidate, user.getUsername());
+    }
+
+    private boolean isAlreadyAssigned(final KeycloakUser user, final String roleName, final String groupName) {
         return user.getAuthorizations().stream()
                 .anyMatch(a -> {
                     final String existingRoleName = (a.getRole() != null) ? a.getRole().getName() : null;
@@ -462,10 +431,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 });
     }
 
-    private Authorization createTransientRoleAuthorization(String roleName) {
-        final Role role = createTransientRole(roleName);
-        return new Authorization(null, role);
-    }
 
     private @NonNull Role createTransientRole(String roleName) {
         Role role = roleManager.getRole(roleName);
@@ -495,47 +460,14 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
         for (String groupName : authorizations) {
             try {
-                if (isGroupAlreadyAssigned(user, groupName)) {
-                    log.debug("Group {} already assigned to user {}", groupName, user.getUsername());
-                    continue;
-                }
-
-                Authorization auth = (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL)
-                        ? new Authorization(findOrCreateGroup(groupName), null)
-                        : createTransientGroupAuthorization(groupName);
-
-                // optionally persist
-                if (elem.persist == PersistKind.FULL) {
-                    persistAuthIfMissing(user, auth);
-                }
-
-                user.addAuthorization(auth);
-                log.info("Successfully assigned group {} to user {}", groupName, user.getUsername());
-
+                finalizeAssociation(user, elem, null, groupName, groupName);
             } catch (Exception e) {
                 log.error("Error processing dynamic group '{}' for user {}", groupName, user.getUsername(), e);
             }
         }
     }
 
-    private boolean isGroupAlreadyAssigned(KeycloakUser user, String groupName) {
-        return user.getAuthorizations().stream()
-                .anyMatch(a -> a.getGroup() != null && groupName.equals(a.getGroup().getName()));
-    }
 
-    private Authorization createTransientGroupAuthorization(String groupName) {
-        Group group = new Group();
-        group.setName(groupName);
-        group.setDescription(groupName);
-        return new Authorization(group, null);
-    }
-
-    /**
-     * Process dynamic configuration element for a user. If the attribute is missing, it skips processing.
-     * @param user the Keycloak user
-     * @param elem the dynamic mapping element
-     * @return the list of processed attribute tokens or null if the attribute is missing
-     */
 
     /**
      * To avoid creating duplicate records, we check if the authorization already exists. 
@@ -576,12 +508,5 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     username, targetGroupName, targetRoleName);
         }
     }
-
-    /**
-     * Process user attribute of the Keycloak profile. If it's a list, it will be flattened and split by whitespace.
-     * If it's a string, it will be split by whitespace.
-     * @param attribute the attribute data 
-     * @return the list of the processed attribute tokens
-     */
 
 }

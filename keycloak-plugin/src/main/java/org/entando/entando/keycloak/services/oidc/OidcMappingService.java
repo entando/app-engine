@@ -71,6 +71,12 @@ public class OidcMappingService {
         return Collections.emptyList();
     }
 
+    /**
+     * Process dynamic configuration element for a user. If the attribute is missing, it skips processing.
+     * @param user the Keycloak user
+     * @param elem the dynamic mapping element
+     * @return the list of processed attribute tokens or null if the attribute is missing
+     */
     public List<String> extractAuthorizationsFromProfile(KeycloakUser user, DynamicMappingElement elem) {
         if (user.getUserRepresentation() == null
                 || user.getUserRepresentation().getAttributes() == null
@@ -84,6 +90,12 @@ public class OidcMappingService {
         return handleKeycloakAttribute(kcProfileAttr);
     }
 
+    /**
+     * Process user attribute of the Keycloak profile. If it's a list, it will be flattened and split by whitespace.
+     * If it's a string, it will be split by whitespace.
+     * @param attribute the attribute data
+     * @return the list of the processed attribute tokens
+     */
     protected List<String> handleKeycloakAttribute(Object attribute) {
         if (attribute instanceof List) {
             List<Object> list = (List) attribute;
