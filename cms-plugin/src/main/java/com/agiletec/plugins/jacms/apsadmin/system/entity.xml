@@ -24,7 +24,7 @@
 				<param name="namespace">/do/jacms/Entity</param>
 				<param name="actionName">viewEntityTypes</param>
 			</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do/jacms/Entity</param>
 				<param name="actionName">viewEntityTypes</param>
 				<param name="entityManagerName">${entityManagerName}</param>
@@ -61,7 +61,7 @@
 		
 		<action name="addAttribute" class="jacmsContentTypeConfigAction" method="addAttribute">
 			<result name="input" type="tiles">admin.jacms.entityManagement.viewEntityType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do/Entity/Attribute</param>
 				<param name="actionName">addAttribute</param>
 				<param name="attributeTypeCode">${attributeTypeCode}</param>
@@ -71,7 +71,7 @@
 		
 		<action name="editAttribute*" class="jacmsContentTypeConfigAction" method="editAttribute">
 			<result name="input" type="tiles">admin.jacms.entityManagement.viewEntityType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do/Entity/Attribute</param>
 				<param name="actionName">editAttribute</param>
 				<param name="attributeName">${attributeName}</param>
@@ -97,7 +97,7 @@
 		
 		<action name="saveEntityType" class="jacmsContentTypeConfigAction" method="saveEntityType">
 			<result name="input" type="tiles">admin.jacms.entityManagement.viewEntityType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do/Entity</param>
 				<param name="actionName">initViewEntityTypes</param>
 				<param name="entityManagerName">${entityManagerName}</param>

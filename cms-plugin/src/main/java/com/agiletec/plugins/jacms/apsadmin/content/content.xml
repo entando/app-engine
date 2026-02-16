@@ -187,7 +187,7 @@
     	
         <action name="createNewVoid" class="jacmsIntroNewContentAction" method="createNewVoid">
             <result name="input" type="tiles">admin.jacms.content.new</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">entryContent</param>
                 <param name="contentOnSessionMarker">${contentOnSessionMarker}</param>
             </result>
@@ -196,7 +196,7 @@
         
         <action name="createNew" class="jacmsIntroNewContentAction" method="createNew">
             <result name="input" type="tiles">admin.jacms.content.new</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">entryContent</param>
                 <param name="contentOnSessionMarker">${contentOnSessionMarker}</param>
             </result>
@@ -219,7 +219,7 @@
         </action>
         
         <action name="joinCategory*" class="jacmsContentCategoryAction" method="joinCategory">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">entryContent</param>
                 <param name="categoryCode">${categoryCode}</param>
                 <param name="contentOnSessionMarker">${contentOnSessionMarker}</param>
@@ -229,7 +229,7 @@
         </action>
         
         <action name="removeCategory*" class="jacmsContentCategoryAction" method="removeCategory">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">entryContent</param>
                 <param name="contentOnSessionMarker">${contentOnSessionMarker}</param>
                 <!-- Following parameter is necessary otherwise removing a category will collapse the tree -->
@@ -250,7 +250,7 @@
         
         <action name="save" class="jacmsContentAction" method="saveContent">
             <result name="input" type="tiles">admin.jacms.content.entry</result>
-            <result type="redirectAction">results</result>
+            <result type="redirectActionXF">results</result>
             <interceptor-ref name="entandoActionLogger" />
             <interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">editContents</param></interceptor-ref>
         </action>
@@ -262,7 +262,7 @@
         
         <action name="saveAndApprove" class="jacmsContentAction" method="saveAndApprove">
             <result name="input" type="tiles">admin.jacms.content.entry</result>
-            <result type="redirectAction">results</result>
+            <result type="redirectActionXF">results</result>
             <interceptor-ref name="entandoActionLogger" />
             <interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">validateContents</param></interceptor-ref>
         </action>
@@ -270,7 +270,7 @@
         <action name="suspend" class="jacmsContentAction" method="suspend">
             <result name="input" type="tiles">admin.jacms.content.entry</result>
             <result name="references" type="tiles">admin.jacms.content.references</result>
-            <result type="redirectAction">results</result>
+            <result type="redirectActionXF">results</result>
             <interceptor-ref name="entandoActionLogger" />
             <interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">validateContents</param></interceptor-ref>
         </action>
@@ -278,7 +278,7 @@
         <!-- ######## INIZIO GESTIONE ATTRIBUTI IN LISTA ######## -->
         
         <action name="addListElement*" class="jacmsListAttributeAction" method="addListElement">
-            <result name="chooseResource" type="redirectAction">
+            <result name="chooseResource" type="redirectActionXF">
                 <param name="actionName">chooseResource</param>
                 <param name="attributeName">${attributeName}</param>
                 <param name="elementIndex">${elementIndex}</param>
@@ -286,7 +286,7 @@
                 <param name="resourceLangCode">${listLangCode}</param>
                 <param name="contentOnSessionMarker">${contentOnSessionMarker}</param>
             </result>
-            <result name="chooseLink" type="redirectAction">
+            <result name="chooseLink" type="redirectActionXF">
                 <param name="actionName">chooseLink</param>
                 <param name="attributeName">${attributeName}</param>
                 <param name="elementIndex">${elementIndex}</param>
@@ -326,7 +326,7 @@
         <!-- ######## INIZIO GESTIONE ATTRIBUTI RISORSA ######## -->
         
         <action name="chooseResource*" class="jacmsResourceAttributeAction" method="chooseResource">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="namespace">/do/jacms/Content/Resource</param>
                 <param name="actionName">findResource</param>
                 <param name="attributeName">${attributeName}</param>
