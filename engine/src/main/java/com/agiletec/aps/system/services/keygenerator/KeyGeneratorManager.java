@@ -25,6 +25,8 @@ import com.agiletec.aps.system.services.keygenerator.cache.IKeyGeneratorManagerC
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.Duration;
 import java.util.function.Supplier;
 
@@ -43,7 +45,7 @@ public class KeyGeneratorManager extends AbstractService implements IKeyGenerato
 
 	private static Duration KEYGEN_LOCK_DURATION = Duration.ofMinutes(getEnv("KEYGEN_LOCK_DURATION", 5));
 
-	private static Duration KEYGEN_LOCK_MAX_WAIT = Duration.ofMinutes(getEnv("KEYGEN_LOCK_MAX_WAIT_MILLIS", 250));
+	private static Duration KEYGEN_LOCK_MAX_WAIT = Duration.ofMillis(getEnv("KEYGEN_LOCK_MAX_WAIT_MILLIS", 500));
 
 	private IKeyGeneratorDAO keyGeneratorDao;
 
@@ -106,14 +108,17 @@ public class KeyGeneratorManager extends AbstractService implements IKeyGenerato
 		String token = globalLockManager.lock(lockKey, "system",
 				KEYGEN_LOCK_DURATION,
 				KEYGEN_LOCK_MAX_WAIT);
-
-		T result = supplier.get();
-
-		globalLockManager.unlock(lockKey, token);
-
-		ApsSystemUtils.ApsDeepDebug.print("CACHE:TENANT", String.format("%s  - closing cache lock - tenant %s",
-				this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
-		return result;
+		if (StringUtils.isBlank(token)) {
+			throw new GlobalLockEntException(
+					"Failed to acquire lock '" + lockKey + "' within timeout");
+		}
+		try {
+			return supplier.get();
+		} finally {
+			globalLockManager.unlock(lockKey, token);
+			ApsSystemUtils.ApsDeepDebug.print("CACHE:TENANT", String.format("%s  - closing cache lock - tenant %s",
+					this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
+		}
 	}
 
 	private String getLockKey() {

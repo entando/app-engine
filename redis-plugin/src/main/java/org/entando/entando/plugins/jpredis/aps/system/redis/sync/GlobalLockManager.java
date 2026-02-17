@@ -27,7 +27,7 @@ public class GlobalLockManager implements IGlobalLockManager {
     public static final String ENTANDO_GLOBAL_LOCK = "Entando_GlobalLock::";
     public static final int LOCK_TOKEN_SIZE = 16;
 
-    private final RedisClient redisClient;
+    private final StatefulRedisConnection<String, String> connection;
     private final SecureRandom rnd = new SecureRandom();
 
     private static final String LOCK_LUA =
@@ -46,21 +46,12 @@ public class GlobalLockManager implements IGlobalLockManager {
                     "else return 0 end";
 
     public GlobalLockManager(RedisClient redisClient) {
-        this.redisClient = redisClient;
+        this.connection = redisClient.connect();
         ApsDeepDebug.print("global-lock", "Redis global-lock enabled");
     }
 
-    private StatefulRedisConnection<String, String> redisSyncConnection() {
-        return redisClient.connect();
-    }
-
-    private RedisCommands<String, String> redisCommands(StatefulRedisConnection<String, String> conn) {
-        return conn.sync();
-    }
-
     private RedisCommands<String, String> getSyncCommand() {
-        StatefulRedisConnection<String, String> conn = redisSyncConnection();
-        return redisCommands(conn);
+        return connection.sync();
     }
 
     @Override

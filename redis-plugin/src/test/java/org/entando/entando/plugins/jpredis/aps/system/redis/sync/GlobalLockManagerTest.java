@@ -42,11 +42,11 @@ class GlobalLockManagerTest {
 
     @BeforeEach
     void setUp() {
+        when(redisClient.connect()).thenReturn(connection);
         lockManager = new GlobalLockManager(redisClient);
     }
 
     private void stubRedisConnection() {
-        when(redisClient.connect()).thenReturn(connection);
         when(connection.sync()).thenReturn(commands);
     }
 

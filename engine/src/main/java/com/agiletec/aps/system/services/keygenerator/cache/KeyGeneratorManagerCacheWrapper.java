@@ -48,7 +48,7 @@ public class KeyGeneratorManagerCacheWrapper extends AbstractCacheWrapper implem
     }
 
     @Override
-    public synchronized int getAndIncrementUniqueKeyCurrentValue(IKeyGeneratorDAO keyGeneratorDAO) {
+    public int getAndIncrementUniqueKeyCurrentValue(IKeyGeneratorDAO keyGeneratorDAO) {
         Cache cache = this.getCache();
         // apro il lock
         ApsSystemUtils.ApsDeepDebug.print("CACHE:TENANT", String.format("%s  - start getAndIncrement - tenant %s",
