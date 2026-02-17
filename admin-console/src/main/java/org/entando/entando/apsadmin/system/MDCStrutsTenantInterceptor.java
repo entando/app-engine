@@ -1,5 +1,6 @@
 package org.entando.entando.apsadmin.system;
 
+import com.agiletec.aps.system.ApsSystemUtils;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.apache.struts2.ActionInvocation;
 import org.apache.struts2.interceptor.AbstractInterceptor;
@@ -11,11 +12,15 @@ public class MDCStrutsTenantInterceptor extends AbstractInterceptor {
 
     @Override
     public String intercept(ActionInvocation invocation) throws Exception {
-        try {
-            MDC.put(MDC_KEY_TENANT, ApsTenantApplicationUtils.getTenant().orElse(""));
-            return invocation.invoke();
-        } finally {
-            MDC.remove(MDC_KEY_TENANT);
-        }
+        //try {
+        //  ESB-805 - Adding logs for tenant
+        ApsSystemUtils.ApsDeepDebug.print("TENANT", String.format("%s  - intercept - tenant %s",
+                this.getClass().getSimpleName(), ApsTenantApplicationUtils.getTenant().orElse("primary")));
+        MDC.put(MDC_KEY_TENANT, ApsTenantApplicationUtils.getTenant().orElse(""));
+        return invocation.invoke();
+        //} finally {
+        // ESB-805 - Removed to preserve tenant
+        //  MDC.remove(MDC_KEY_TENANT);
+        //}
     }
 }
