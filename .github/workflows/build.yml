@@ -42,7 +42,10 @@ jobs:
         if [ -f ".github/configure" ]; then . .github/configure "build"; fi
         gh.job.outputVar SKIP_SCANS
         gh.job.outputVar SKIP_TESTS
-
+        
+    - name: Fix Docker environment for Testcontainers
+      run: echo "DOCKER_API_VERSION=" >> $GITHUB_ENV
+       
     - name: Cache Maven packages
       uses: actions/cache@v4
       with:
@@ -74,7 +77,7 @@ jobs:
       contents: read
       pull-requests: write
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
@@ -109,6 +112,9 @@ jobs:
         id: configure
         run: if [ -f ".github/configure" ]; then . .github/configure "test-and-scan"; fi
 
+      - name: Fix Docker environment for Testcontainers
+        run: echo "DOCKER_API_VERSION=" >> $GITHUB_ENV
+
       - name: Test and Scan
         run: .github/test-and-scan.sh
 
@@ -129,7 +135,7 @@ jobs:
       contents: read
       pull-requests: write
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
 
     steps:
