@@ -28,6 +28,6 @@ public enum PersistKind {
                 .filter(k -> k.kind.equalsIgnoreCase(value))
                 .findFirst()
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Unknown DynamicMappingKind: " + value));
+                        new IllegalArgumentException("Unknown PersistKind: " + value));
     }
 }

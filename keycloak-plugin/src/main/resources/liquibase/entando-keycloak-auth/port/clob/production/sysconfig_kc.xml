@@ -2,27 +2,42 @@
 <mappings>
     <mapping>
         <enabled>false</enabled>
-        <client>sim730</client>
-        <kind>CLIENTROLE</kind>
-        <persist>false</persist>
+        <path>groups</path>
+        <kind>GROUPCLAIM</kind>
+        <persist>none</persist>
+    </mapping>
+    <mapping>
+        <enabled>true</enabled>
+        <path>realm_access.roles</path>
+        <kind>ROLECLAIM</kind>
+        <persist>none</persist>
+    </mapping>
+    <mapping>
+        <enabled>true</enabled>
+        <path>realm_access.roles</path>
+        <kind>ROLEGROUPCLAIM</kind>
+        <separator>_SEP_</separator>
+        <persist>none</persist>
     </mapping>
     <mapping>
         <enabled>false</enabled>
         <attribute>AD_ROLE</attribute>
         <kind>ROLE</kind>
-        <persist>false</persist>
+        <persist>none</persist>
     </mapping>
     <mapping>
         <enabled>false</enabled>
         <attribute>AD_GROUP</attribute>
         <kind>GROUP</kind>
-        <persist>false</persist>
+        <persist>none</persist>
     </mapping>
     <mapping>
         <enabled>false</enabled>
         <attribute>AD_GROUPROLE</attribute>
         <kind>GROUPROLE</kind>
         <separator>_r_</separator>
-        <persist>false</persist>
+        <persist>none</persist>
     </mapping>
+    <ignore>ignore_keycloak_group</ignore>
+    <ignore>ignore_keycloak_role</ignore>
 </mappings>
