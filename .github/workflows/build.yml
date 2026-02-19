@@ -24,7 +24,7 @@ jobs:
       contents: write
       pull-requests: read
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -116,7 +116,9 @@ jobs:
         run: echo "DOCKER_API_VERSION=" >> $GITHUB_ENV
 
       - name: Test and Scan
-        run: .github/test-and-scan.sh
+        run: |
+         unset DOCKER_API_VERSION
+         .github/test-and-scan.sh
 
       - name: Save the test report
         if: failure()
