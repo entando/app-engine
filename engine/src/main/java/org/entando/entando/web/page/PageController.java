@@ -115,13 +115,13 @@ public class PageController {
             @RequestParam(value = "parentCode", required = false) String parentCode,
             @RequestParam(value = "forLinkingToOwnerGroup", required = false) String forLinkingToOwnerGroup,
             @RequestParam(value = "forLinkingToExtraGroups", required = false) String forLinkingToExtraGroups) {
+        String rootPageCode = this.getPageService().getRootPageCode();
         if (parentCode == null || parentCode.isEmpty()) {
-            parentCode = this.getPageService().getRootPageCode();
+            parentCode = rootPageCode;
         }
         logger.debug("getting page tree for parent {} ({}|{})", parentCode,
                 forLinkingToOwnerGroup, forLinkingToExtraGroups);
 
-        String rootPageCode = this.getPageService().getRootPageCode();
         boolean editableParent = this.getAuthorizationService().canEdit(user, parentCode);
         if (!editableParent && !parentCode.equals(rootPageCode)) {
             throw new ResourcePermissionsException(user.getUsername(), parentCode);

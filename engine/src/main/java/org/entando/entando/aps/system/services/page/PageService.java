@@ -273,7 +273,10 @@ public class PageService implements IComponentExistsService, IPageService,
     @Override
     public String getRootPageCode() {
         IPage root = this.getPageManager().getDraftRoot();
-        return root != null ? root.getCode() : "homepage";
+        if (root == null) {
+            throw new ResourceNotFoundException(ERRCODE_PAGE_NOT_FOUND, "page", "RootPage");
+        }
+        return  root.getCode();
     }
 
     private String getUrlToken(String token) {
