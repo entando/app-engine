@@ -87,7 +87,6 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
         }
 
         final String bearerToken = authorization.substring("Bearer ".length());
-
         final ResponseEntity<AccessToken> resp = oidcService.validateToken(bearerToken);
         final AccessToken accessToken = resp.getBody();
 

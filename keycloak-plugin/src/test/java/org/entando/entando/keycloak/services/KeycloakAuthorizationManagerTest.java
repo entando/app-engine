@@ -649,6 +649,83 @@ class KeycloakAuthorizationManagerTest {
         assertThat(captured).anySatisfy(a -> assertThat(a.getRole().getName()).isEqualTo("generico"));
     }
 
+    @Test
+    void testAuthAssignmentWhenRoleGroupExistWithPersistAuth() throws Exception {
+        String xmlConf = "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_ROLE</attribute>"
+                + "  <kind>ROLE</kind>"
+                + "  <persist>AUTH</persist>"
+                + " </mapping>"
+                + "</mappings>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        Role existingRole = new Role();
+        existingRole.setName("existing_role");
+        when(roleManager.getRole("existing_role")).thenReturn(existingRole);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("existing_role")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        // Verifichiamo che l'autorizzazione sia stata aggiunta all'utente
+        ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
+        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("existing_role");
+
+        // Verifichiamo che non sia stata chiamata la persistenza
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+    }
+
+    @Test
+    void testAuthAssignmentWhenRoleExistsAndAddRoleFailsWithPersistAuth() throws Exception {
+        String xmlConf = "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_ROLE</attribute>"
+                + "  <kind>ROLE</kind>"
+                + "  <persist>AUTH</persist>"
+                + " </mapping>"
+                + "</mappings>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        Role existingRole = new Role();
+        existingRole.setName("conflict_role");
+
+        // Prima ritorna null (simulando che non lo trova), poi dopo l'errore di addRole lo trova
+        when(roleManager.getRole("conflict_role"))
+                .thenReturn(null)
+                .thenReturn(existingRole);
+
+        // Simula conflitto su addRole
+        org.mockito.Mockito.doThrow(new EntException("Conflict"))
+                .when(roleManager).addRole(any(Role.class));
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("conflict_role")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        // Verifichiamo che l'autorizzazione sia stata comunque aggiunta all'utente
+        ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
+        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("conflict_role");
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
