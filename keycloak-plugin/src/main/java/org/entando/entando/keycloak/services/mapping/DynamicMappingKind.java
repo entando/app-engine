@@ -9,7 +9,7 @@ public enum DynamicMappingKind {
 
     GROUP("group", false),
     ROLE("role", false),
-    GROUPROLE("grouprole", false),
+    ROLEGROUP("rolegroup", false),
     ROLECLAIM("roleclaim", true),
     GROUPCLAIM("groupclaim", true),
     ROLEGROUPCLAIM("rolegroupclaim", true);

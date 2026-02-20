@@ -307,7 +307,7 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
 
         when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
@@ -330,7 +330,7 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF_NO_PERSIST);
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
 
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
@@ -364,7 +364,7 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
 
         when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
@@ -384,7 +384,7 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("_r_arole")));
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_")));
 
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
@@ -401,7 +401,7 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("group_r_")));
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("_r_agroup")));
 
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
@@ -463,7 +463,7 @@ class KeycloakAuthorizationManagerTest {
         when(roleManager.getRole(anyString())).thenReturn(role);
 
         UserRepresentation userRepresentation = new UserRepresentation();
-        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("agroup_r_arole")));
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
 
         when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
@@ -602,6 +602,53 @@ class KeycloakAuthorizationManagerTest {
                 auth.getGroup() != null && "altro-gruppo".equals(auth.getGroup().getName())));
     }
 
+    @Test
+    void testRoleFromProfileAndJwtWithPersistAuth() throws Exception {
+        // Configurazione: un mapping per profilo (ROLE) e uno per JWT (ROLECLAIM), entrambi con persist=AUTH
+        String xmlConf = "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_ROLE</attribute>"
+                + "  <kind>ROLE</kind>"
+                + "  <persist>AUTH</persist>"
+                + " </mapping>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLECLAIM</kind>"
+                + "  <persist>AUTH</persist>"
+                + " </mapping>"
+                + "</mappings>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        // Ruolo dal profilo
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("role_from_profile")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        // Il JWT (costante JWT definita nella classe) contiene "generico" tra i ruoli in realm_access.roles
+        // JWT_NO_ROLE non ha "generico" ma ha "offline_access", "uma_authorization", "default-roles-entando"
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        // Verifichiamo che addUserAuthorization NON sia mai chiamato (perché persist è AUTH, non FULL)
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+
+        // Verifichiamo che le autorizzazioni siano state aggiunte all'oggetto userDetails
+        ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+        // "generico" e "role_from_profile" (più altri eventuali dal JWT standard se non filtrati)
+        verify(userDetails, org.mockito.Mockito.atLeastOnce()).addAuthorization(authCaptor.capture());
+
+        List<Authorization> captured = authCaptor.getAllValues();
+        assertThat(captured).anySatisfy(a -> assertThat(a.getRole().getName()).isEqualTo("role_from_profile"));
+        assertThat(captured).anySatisfy(a -> assertThat(a.getRole().getName()).isEqualTo("generico"));
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
@@ -626,7 +673,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>FULL</persist>"
             + " </mapping>"
@@ -648,7 +695,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>FULL</persist>"
             + " </mapping>"
@@ -670,7 +717,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>FULL</persist>"
             + " </mapping>"
@@ -692,7 +739,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>FULL</persist>"
             + " </mapping>"
@@ -714,7 +761,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>NONE</persist>"
             + " </mapping>"
@@ -819,7 +866,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>false</enabled>"
 //            + "  <attribute>AD_GROUPROLE</attribute>" // attribute null
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
             + "  <persist>FULL</persist>"
             + " </mapping>"
@@ -834,7 +881,7 @@ class KeycloakAuthorizationManagerTest {
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>GROUPROLE</kind>"
+            + "  <kind>ROLEGROUP</kind>"
 //            + "  <separator>_r_</separator>"  // separator null
             + "  <persist>FULL</persist>"
             + " </mapping>"

@@ -7,13 +7,13 @@
         <persist>none</persist>
     </mapping>
     <mapping>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
         <path>realm_access.roles</path>
         <kind>ROLECLAIM</kind>
         <persist>none</persist>
     </mapping>
     <mapping>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
         <path>realm_access.roles</path>
         <kind>ROLEGROUPCLAIM</kind>
         <separator>_SEP_</separator>
@@ -34,7 +34,7 @@
     <mapping>
         <enabled>false</enabled>
         <attribute>AD_GROUPROLE</attribute>
-        <kind>GROUPROLE</kind>
+        <kind>ROLEGROUP</kind>
         <separator>_r_</separator>
         <persist>none</persist>
     </mapping>

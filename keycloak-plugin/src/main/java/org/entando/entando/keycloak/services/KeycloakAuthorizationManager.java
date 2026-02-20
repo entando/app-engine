@@ -2,7 +2,7 @@ package org.entando.entando.keycloak.services;
 
 import static java.util.Optional.ofNullable;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUP;
-import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUPROLE;
+import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUP;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLE;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUPCLAIM;
 
@@ -151,7 +151,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
             log.error("invalid dynamic mapping element, 'path' is blank for {} kind", elem.kind);
             return false;
         }
-        if (StringUtils.isBlank(elem.separator) && (elem.kind == GROUPROLE || elem.kind == ROLEGROUPCLAIM)) {
+        if (StringUtils.isBlank(elem.separator) && (elem.kind == ROLEGROUP || elem.kind == ROLEGROUPCLAIM)) {
             log.error("invalid dynamic mapping element, 'separator' is blank for {} kind", elem.kind);
             return false;
         }
@@ -321,13 +321,13 @@ public class KeycloakAuthorizationManager extends AbstractService {
             if (m.kind == GROUP) {
                 doProcessGroup(user, m);
             }
-            if (m.kind == GROUPROLE) {
-                doProcessGroupRole(user, m);
+            if (m.kind == ROLEGROUP) {
+                doProcessRoleGroup(user, m);
             }
         });
     }
 
-    private void doProcessGroupRole(KeycloakUser user, DynamicMappingElement elem) {
+    private void doProcessRoleGroup(KeycloakUser user, DynamicMappingElement elem) {
         final String separator = StringUtils.isBlank(elem.separator) ?
                 DEFAULT_SEPARATOR : elem.separator;
 
@@ -338,14 +338,14 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 return;
             }
             for (String groupRoleToken : authorizations) {
-                parseAuthForGroupRole(user, elem, groupRoleToken, separator);
+                parseAuthForRoleGroup(user, elem, groupRoleToken, separator);
             }
         } catch (Exception e) {
             log.error("error processing dynamic GRUOPROLE association", e);
         }
     }
 
-    private void parseAuthForGroupRole(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator)
+    private void parseAuthForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator)
             throws EntException {
         final String[] tokens = groupRoleToken.split(separator);
 
@@ -356,8 +356,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
             return;
         }
 
-        final String groupName = tokens[0];
-        final String roleName = tokens[1];
+        final String groupName = tokens[1];
+        final String roleName = tokens[0];
 
         finalizeAssociation(user, elem, roleName, groupName, groupRoleToken, false);
     }
