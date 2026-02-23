@@ -281,7 +281,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         try {
             groupManager.addGroup(newGroup);
             return newGroup;
-        } catch (EntException e) {
+        } catch (Exception e) {
             log.debug("Error persisting group {} ( It might have been already added by another process).",
                     groupName);
             return groupManager.getGroup(groupName);
@@ -289,19 +289,19 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     private Role findOrCreateRole(final String roleName) {
-        Role role = roleManager.getRole(roleName);
+        Role newRole = roleManager.getRole(roleName);
 
-        if (role != null) {
-            return role;
+        if (newRole != null) {
+            return newRole;
         }
 
-        role = new Role();
-        role.setName(roleName);
-        role.setDescription(roleName);
+        newRole = new Role();
+        newRole.setName(roleName);
+        newRole.setDescription(roleName);
         try {
-            roleManager.addRole(role);
-            return role;
-        } catch (EntException e) {
+            roleManager.addRole(newRole);
+            return newRole;
+        } catch (Exception e) {
             log.debug("Error persisting role {} (It might have been already added by another process).",
                     roleName);
             return roleManager.getRole(roleName);
