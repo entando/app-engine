@@ -50,7 +50,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private final GroupManager groupManager;
     private final RoleManager roleManager;
     private final BaseConfigManager configManager;
-    private final OidcMappingService oidcMappingService;
 
     private static final int GROUP_POSITION = 0;
     private static final int ROLE_POSITION = 1;
@@ -60,6 +59,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private final transient ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
     private final transient Lock readLock = configUpdateLock.readLock();
     private final transient Lock writeLock = configUpdateLock.writeLock();
+    private final transient OidcMappingService oidcMappingService;
 
     @Autowired
     public KeycloakAuthorizationManager(final KeycloakConfiguration configuration,
@@ -413,16 +413,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
             return;
         }
 
-        Authorization auth;
-        if (elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL) {
-            final Group group = StringUtils.isNotBlank(groupName) ? findOrCreateGroup(groupName) : null;
-            final Role role = StringUtils.isNotBlank(roleName) ? findOrCreateRole(roleName) : null;
-            auth = new Authorization(group, role);
-        } else {
-            final Group group = StringUtils.isNotBlank(groupName) ? createTransientGroup(groupName) : null;
-            final Role role = StringUtils.isNotBlank(roleName) ? (createRoleIfMissing ? createTransientRole(roleName) : roleManager.getRole(roleName)) : null;
-            auth = new Authorization(group, role);
-        }
+        Authorization auth = createAuthorization(elem, roleName, groupName, createRoleIfMissing);
 
         if (elem.persist == PersistKind.FULL) {
             persistAuthIfMissing(user, auth);
@@ -430,6 +421,36 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
         user.addAuthorization(auth);
         log.info("Successfully assigned {} to user {}", originalCandidate, user.getUsername());
+    }
+
+    private Authorization createAuthorization(DynamicMappingElement elem, String roleName, String groupName, boolean createRoleIfMissing) {
+        if (shouldPersistAuthorization(elem)) {
+            return createPersistedAuthorization(roleName, groupName);
+        }
+        return createTransientAuthorization(roleName, groupName, createRoleIfMissing);
+    }
+
+    private boolean shouldPersistAuthorization(DynamicMappingElement elem) {
+        return elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL;
+    }
+
+    private Authorization createPersistedAuthorization(String roleName, String groupName) {
+        final Group group = StringUtils.isNotBlank(groupName) ? findOrCreateGroup(groupName) : null;
+        final Role role = StringUtils.isNotBlank(roleName) ? findOrCreateRole(roleName) : null;
+        return new Authorization(group, role);
+    }
+
+    private Authorization createTransientAuthorization(String roleName, String groupName, boolean createRoleIfMissing) {
+        final Group group = StringUtils.isNotBlank(groupName) ? createTransientGroup(groupName) : null;
+        final Role role = resolveTransientRole(roleName, createRoleIfMissing);
+        return new Authorization(group, role);
+    }
+
+    private Role resolveTransientRole(String roleName, boolean createRoleIfMissing) {
+        if (StringUtils.isBlank(roleName)) {
+            return null;
+        }
+        return createRoleIfMissing ? createTransientRole(roleName) : roleManager.getRole(roleName);
     }
 
     private boolean isAlreadyAssigned(final KeycloakUser user, final String roleName, final String groupName) {

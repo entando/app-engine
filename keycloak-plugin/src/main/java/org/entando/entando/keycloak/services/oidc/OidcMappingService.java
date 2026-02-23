@@ -24,41 +24,15 @@ public class OidcMappingService {
 
     public List<String> extractAuthorizationsFromJwt(String token, boolean decode, DynamicMappingElement claimMapper, String username) {
         try {
-            String json;
-            if (decode) {
-                String[] parts = token.split("\\.");
-                if (parts.length != 3) {
-                    log.error("Invalid JWT token format: expected 3 parts, found {}", parts.length);
-                    return Collections.emptyList();
-                }
-                json = new String(Base64.getUrlDecoder().decode(parts[1]));
-            } else {
-                json = token;
-            }
+            String json = decodeTokenIfNeeded(token, decode);
+            JsonNode authNode = extractAuthNodeFromJson(json, claimMapper);
 
-            final JsonNode root = mapper.readTree(json);
-            final String jwtPath = "/" + claimMapper.path.replace(".", "/");
-            JsonNode authNode = root.at(jwtPath);
-
-            if (authNode == null || authNode.isMissingNode() || authNode.isNull()) {
+            if (isNodeMissing(authNode)) {
                 log.debug("Path '{}' not found in JWT claims for user {}", claimMapper.path, username);
                 return Collections.emptyList();
             }
 
-            List<String> authorizations = new ArrayList<>();
-            if (authNode.isArray()) {
-                for (JsonNode node : authNode) {
-                    if (node.isTextual()) {
-                        authorizations.add(node.asText());
-                    }
-                }
-            } else if (authNode.isTextual()) {
-                authorizations.add(authNode.asText());
-            } else {
-                log.warn("Unsupported node type for path '{}' in JWT: {}", claimMapper.path, authNode.getNodeType());
-                return Collections.emptyList();
-            }
-            return authorizations;
+            return extractAuthorizationsFromNode(authNode, claimMapper);
 
         } catch (IllegalArgumentException e) {
             log.error("Error decoding JWT payload for user {}", username, e);
@@ -69,6 +43,48 @@ public class OidcMappingService {
                     claimMapper.path, username, e);
         }
         return Collections.emptyList();
+    }
+
+    private String decodeTokenIfNeeded(String token, boolean decode) {
+        if (!decode) {
+            return token;
+        }
+        String[] parts = token.split("\\.");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid JWT token format: expected 3 parts, found " + parts.length);
+        }
+        return new String(Base64.getUrlDecoder().decode(parts[1]));
+    }
+
+    private JsonNode extractAuthNodeFromJson(String json, DynamicMappingElement claimMapper) throws JsonProcessingException {
+        final JsonNode root = mapper.readTree(json);
+        final String jwtPath = "/" + claimMapper.path.replace(".", "/");
+        return root.at(jwtPath);
+    }
+
+    private boolean isNodeMissing(JsonNode node) {
+        return node == null || node.isMissingNode() || node.isNull();
+    }
+
+    private List<String> extractAuthorizationsFromNode(JsonNode authNode, DynamicMappingElement claimMapper) {
+        if (authNode.isArray()) {
+            return extractFromArrayNode(authNode);
+        }
+        if (authNode.isTextual()) {
+            return List.of(authNode.asText());
+        }
+        log.warn("Unsupported node type for path '{}' in JWT: {}", claimMapper.path, authNode.getNodeType());
+        return Collections.emptyList();
+    }
+
+    private List<String> extractFromArrayNode(JsonNode arrayNode) {
+        List<String> authorizations = new ArrayList<>();
+        for (JsonNode node : arrayNode) {
+            if (node.isTextual()) {
+                authorizations.add(node.asText());
+            }
+        }
+        return authorizations;
     }
 
     /**
