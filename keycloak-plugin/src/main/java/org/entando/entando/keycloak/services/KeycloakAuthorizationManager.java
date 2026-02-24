@@ -84,6 +84,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private transient List<DynamicMappingElement> profileMappings;
     private transient List<DynamicMappingElement> jwtMappings;
     private transient List<String> ignore;
+    private transient List<String> roles;
+    private transient List<String> groups;
 
     @Override
     public void init() throws Exception {
@@ -109,6 +111,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
                                 dynConf.mapping.size(), profileMappings.size());
                     }
                     ignore = dynConf.ignore;
+                    roles = dynConf.roles;
+                    groups = dynConf.groups;
                 }
             }
             if (profileMappings != null) {
@@ -174,8 +178,54 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     && !profileMappings.isEmpty()) {
                 processProfileAttributes((KeycloakUser) user);
             }
+
+            this.cleanupManagedAuthorizations(user);
         }  finally {
             readLock.unlock();
+        }
+    }
+
+    private void cleanupManagedAuthorizations(UserDetails user) {
+        if ((roles == null || roles.isEmpty()) && (groups == null || groups.isEmpty())) {
+            return;
+        }
+
+        final List<Authorization> userAuths = user.getAuthorizations();
+        final Set<String> assignedRoles = userAuths.stream()
+                .map(Authorization::getRole)
+                .filter(Objects::nonNull)
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+        final Set<String> assignedGroups = userAuths.stream()
+                .map(Authorization::getGroup)
+                .filter(Objects::nonNull)
+                .map(Group::getName)
+                .collect(Collectors.toSet());
+
+        if (roles != null) {
+            for (String managedRole : roles) {
+                if (!assignedRoles.contains(managedRole)) {
+                    log.debug("Removing managed role {} from user {}", managedRole, user.getUsername());
+                    try {
+                        authorizationManager.deleteUserAuthorization(user.getUsername(), null, managedRole);
+                    } catch (Exception e) {
+                        log.error("Error removing managed role {} for user {}", managedRole, user.getUsername(), e);
+                    }
+                }
+            }
+        }
+
+        if (groups != null) {
+            for (String managedGroup : groups) {
+                if (!assignedGroups.contains(managedGroup)) {
+                    log.debug("Removing managed group {} from user {}", managedGroup, user.getUsername());
+                    try {
+                        authorizationManager.deleteUserAuthorization(user.getUsername(), managedGroup, null);
+                    } catch (Exception e) {
+                        log.error("Error removing managed group {} for user {}", managedGroup, user.getUsername(), e);
+                    }
+                }
+            }
         }
     }
 

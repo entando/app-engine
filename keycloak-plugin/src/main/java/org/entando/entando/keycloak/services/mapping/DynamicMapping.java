@@ -15,4 +15,10 @@ public class DynamicMapping {
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<String> ignore;
 
+    @JacksonXmlElementWrapper(localName = "roles")
+    public List<String> roles;
+
+    @JacksonXmlElementWrapper(localName = "groups")
+    public List<String> groups;
+
 }
