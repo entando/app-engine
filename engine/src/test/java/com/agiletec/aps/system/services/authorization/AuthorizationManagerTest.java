@@ -1,5 +1,6 @@
 package com.agiletec.aps.system.services.authorization;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -55,11 +56,9 @@ class AuthorizationManagerTest {
         
         when(authorizationDAO.deleteUserRoles(anyString(), anyList())).thenThrow(new RuntimeException("DAO error"));
 
-        try {
-            authorizationManager.deleteUserRoles(username, roles);
-        } catch (EntException e) {
-            // expected
-        }
+        assertThrows(EntException.class, () ->
+            authorizationManager.deleteUserRoles(username, roles)
+        );
     }
 
     @Test
@@ -69,10 +68,8 @@ class AuthorizationManagerTest {
         
         when(authorizationDAO.deleteUserGroups(anyString(), anyList())).thenThrow(new RuntimeException("DAO error"));
 
-        try {
-            authorizationManager.deleteUserGroups(username, groups);
-        } catch (EntException e) {
-            // expected
-        }
+        assertThrows(EntException.class, () ->
+                authorizationManager.deleteUserGroups(username, groups)
+        );
     }
 }

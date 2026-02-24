@@ -21,12 +21,12 @@ import com.agiletec.aps.system.services.role.Role;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import java.util.StringJoiner;
 import org.apache.commons.collections.CollectionUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -160,7 +160,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	}
 
 	@Override
-	public int deleteUserGroups(String utente, List<String> groups) {
+	public int deleteUserGroups(String username, List<String> groups) {
 
 		Connection conn = null;
 		PreparedStatement stat = null;
@@ -172,30 +172,11 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
+			stat = conn.prepareStatement(
+					generateGroupRemoveSql(groups.size())
+			);
 
-			final StringJoiner placeholders = new StringJoiner(", ");
-
-			for (int i = 0; i < groups.size(); i++) {
-				placeholders.add("?");
-			}
-
-			final String sql = DELETE_USER_AUTHORIZATIONS + " AND groupname IN ("
-					+ placeholders + ")";
-
-			stat = conn.prepareStatement(sql);
-
-			int index = 1;
-			stat.setString(index++, utente);
-
-			for (String role : groups) {
-				stat.setString(index++, role);
-			}
-
-			int rowsDeleted = stat.executeUpdate();
-
-			conn.commit();
-			return rowsDeleted;
-
+			return doDeleteAuth(username, groups, conn, stat);
 		} catch (Exception e) {
 			this.executeRollback(conn);
 			throw new RuntimeException("Error detected while deleting user groups authorizations", e);
@@ -204,8 +185,20 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		}
 	}
 
+	private String generateGroupRemoveSql(final int size) {
+		if (size <= 0) {
+			throw new IllegalArgumentException("Size must be > 0");
+		}
+
+		String placeholders = String.join(", ",
+				java.util.Collections.nCopies(size, "?"));
+
+		return DELETE_USER_AUTHORIZATIONS +
+				" AND groupname IN (" + placeholders + ")";
+	}
+
 	@Override
-	public int deleteUserRoles(String utente, List<String> roles) {
+	public int deleteUserRoles(String username, List<String> roles) {
 		Connection conn = null;
 		PreparedStatement stat = null;
 
@@ -214,32 +207,13 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		}
 
 		try {
-			// Inizio transazione
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
+			stat = conn.prepareStatement(
+					generateRoleRemoveSql(roles.size())
+			);
 
-			final StringJoiner placeholders = new StringJoiner(", ");
-
-			for (int i = 0; i < roles.size(); i++) {
-				placeholders.add("?");
-			}
-
-			final String sql = DELETE_USER_AUTHORIZATIONS + " AND rolename IN ("
-					+ placeholders + ")";
-
-			stat = conn.prepareStatement(sql);
-
-			int index = 1;
-			stat.setString(index++, utente);
-
-			for (String role : roles) {
-				stat.setString(index++, role);
-			}
-
-			int rowsDeleted = stat.executeUpdate();
-
-			conn.commit();
-			return rowsDeleted;
+			return doDeleteAuth(username, roles, conn, stat);
 		} catch (Exception e) {
 			this.executeRollback(conn);
 			throw new RuntimeException("Error detected while deleting user role authorizations", e);
@@ -247,7 +221,34 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			this.closeDaoResources(null, stat, conn);
 		}
 	}
-	
+
+	private String generateRoleRemoveSql(int size) {
+		if (size <= 0) {
+			throw new IllegalArgumentException("Size must be > 0");
+		}
+
+		String placeholders = String.join(", ",
+				java.util.Collections.nCopies(size, "?"));
+
+		return DELETE_USER_AUTHORIZATIONS +
+				" AND rolename IN (" + placeholders + ")";
+	}
+
+	private int doDeleteAuth(String username, List<String> roles, Connection conn, PreparedStatement stat)
+			throws SQLException {
+		int index = 1;
+		stat.setString(index++, username);
+
+		for (String role : roles) {
+			stat.setString(index++, role);
+		}
+
+		int rowsDeleted = stat.executeUpdate();
+
+		conn.commit();
+		return rowsDeleted;
+	}
+
 	@Override
 	protected String getTableFieldName(String metadataFieldKey) {
 		return metadataFieldKey;

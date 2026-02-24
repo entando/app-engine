@@ -40,7 +40,7 @@ public interface IAuthorizationDAO {
 	
 	public List<String> getUsersByAuthorities(List<String> groupNames, List<String> roleNames);
 
-	int deleteUserGroups(String utente, List<String> groups);
+	int deleteUserGroups(String username, List<String> groups);
 
-	int deleteUserRoles(String utente, List<String> roles);
+	int deleteUserRoles(String username, List<String> roles);
 }
