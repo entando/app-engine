@@ -726,48 +726,6 @@ class KeycloakAuthorizationManagerTest {
         assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("conflict_role");
     }
 
-    @Test
-    void testCleanupManagedAuthorizations() throws Exception {
-        String xml = "<dynamicmapping>"
-                + "  <roles>"
-                + "    <role>managed-role-1</role>"
-                + "    <role>managed-role-2</role>"
-                + "  </roles>"
-                + "  <groups>"
-                + "    <group>managed-group-1</group>"
-                + "    <group>managed-group-2</group>"
-                + "  </groups>"
-                + "</dynamicmapping>";
-
-        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
-        manager.init();
-
-        List<Authorization> userAuths = new ArrayList<>();
-        // L'utente ha managed-role-1 e un ruolo NON gestito
-        userAuths.add(authorization(null, "managed-role-1"));
-        userAuths.add(authorization(null, "other-role"));
-        // L'utente ha managed-group-1 e un gruppo NON gestito
-        userAuths.add(authorization("managed-group-1", null));
-        userAuths.add(authorization("other-group", null));
-
-        when(userDetails.getAuthorizations()).thenReturn(userAuths);
-        when(userDetails.getUsername()).thenReturn("test-user");
-
-        manager.processNewUser(userDetails, null, false);
-
-        // managed-role-2 deve essere rimosso perché gestito ma non presente
-        verify(authorizationManager).deleteUserAuthorization("test-user", null, "managed-role-2");
-        // managed-group-2 deve essere rimosso perché gestito ma non presente
-        verify(authorizationManager).deleteUserAuthorization("test-user", "managed-group-2", null);
-
-        // managed-role-1 NON deve essere rimosso
-        verify(authorizationManager, never()).deleteUserAuthorization("test-user", null, "managed-role-1");
-        // managed-group-1 NON deve essere rimosso
-        verify(authorizationManager, never()).deleteUserAuthorization("test-user", "managed-group-1", null);
-        // Ruoli e gruppi non gestiti non devono essere rimossi
-        verify(authorizationManager, never()).deleteUserAuthorization("test-user", null, "other-role");
-        verify(authorizationManager, never()).deleteUserAuthorization("test-user", "other-group", null);
-    }
 
     @Test
     void testCleanupManagedAuthorizationsEmptyLists() throws Exception {
@@ -796,6 +754,68 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, null, false);
 
         verify(authorizationManager, never()).deleteUserAuthorization(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testCleanupManagedAuthorizationsWithRolesAndGroups() throws Exception {
+        String xml = "<dynamicmapping>"
+                + "  <roles>"
+                + "    <roles>roleA</roles>"
+                + "    <roles>roleB</roles>"
+                + "  </roles>"
+                + "  <groups>"
+                + "    <groups>groupA</groups>"
+                + "    <groups>groupB</groups>"
+                + "  </groups>"
+                + "</dynamicmapping>";
+
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
+
+        manager.init();
+
+        String username = "john";
+        manager.cleanupManagedAuthorizations(username);
+
+        verify(authorizationManager, times(1)).deleteUserRoles(eq(username), eq(List.of("roleA", "roleB")));
+        verify(authorizationManager, times(1)).deleteUserGroups(eq(username), eq(List.of("groupA", "groupB")));
+    }
+
+    @Test
+    void testCleanupManagedAuthorizationsOnlyRoles() throws Exception {
+        String xml = "<dynamicmapping>"
+                + "  <roles>"
+                + "    <roles>roleA</roles>"
+                + "  </roles>"
+                + "</dynamicmapping>";
+
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
+
+        manager.init();
+
+        String username = "jane";
+        manager.cleanupManagedAuthorizations(username);
+
+        verify(authorizationManager, times(1)).deleteUserRoles(eq(username), eq(List.of("roleA")));
+        verify(authorizationManager, never()).deleteUserGroups(anyString(), any());
+    }
+
+    @Test
+    void testCleanupManagedAuthorizationsOnlyGroups() throws Exception {
+        String xml = "<dynamicmapping>"
+                + "  <groups>"
+                + "    <groups>groupA</groups>"
+                + "  </groups>"
+                + "</dynamicmapping>";
+
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
+
+        manager.init();
+
+        String username = "mark";
+        manager.cleanupManagedAuthorizations(username);
+
+        verify(authorizationManager, times(1)).deleteUserGroups(eq(username), eq(List.of("groupA")));
+        verify(authorizationManager, never()).deleteUserRoles(anyString(), any());
     }
 
     private Authorization authorization(final String groupName, final String roleName) {

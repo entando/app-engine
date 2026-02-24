@@ -251,6 +251,8 @@ public class KeycloakFilter implements Filter {
                         || tokenResponse.getBody() == null || !tokenResponse.getBody().isActive()) {
                     throw new EntandoTokenException("invalid or expired token", request, "guest");
                 }
+
+                keycloakGroupManager.cleanupManagedAuthorizations(tokenResponse.getBody().getUsername());
                 final UserDetails user = providerManager.getUser(tokenResponse.getBody().getUsername());
                 session.setAttribute(SESSION_PARAM_ACCESS_TOKEN, responseEntity.getBody().getAccessToken());
                 session.setAttribute(SESSION_PARAM_ID_TOKEN, responseEntity.getBody().getIdToken());

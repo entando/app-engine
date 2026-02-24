@@ -638,6 +638,26 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
     }
 
     @Override
+    public void deleteUserRoles(String username, List<String> roles) throws EntException {
+        try {
+            this.getAuthorizationDAO().deleteUserRoles(username, roles);
+        } catch (Throwable t) {
+            _logger.error("Error deleting user roles for user '{}'", username, t);
+            throw new EntException("Error deleting user roles for user " + username, t);
+        }
+    }
+
+    @Override
+    public void deleteUserGroups(String username, List<String> groups) throws EntException {
+        try {
+            this.getAuthorizationDAO().deleteUserGroups(username, groups);
+        } catch (Throwable t) {
+            _logger.error("Error deleting user groups for user '{}'", username, t);
+            throw new EntException("Error deleting user groups for user " + username, t);
+        }
+    }
+
+    @Override
     public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException {
         if (null == authority || !(authority instanceof Role) || null == this.getRoleManager().getRole(authority.getAuthority())) {
             return null;
@@ -720,6 +740,7 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
     public List<String> getGroupUtilizers(String groupName) throws EntException {
 		return this.getUsersByGroup(groupName, false);
 	}
+
 
     protected IAuthorizationDAO getAuthorizationDAO() {
         return _authorizationDAO;

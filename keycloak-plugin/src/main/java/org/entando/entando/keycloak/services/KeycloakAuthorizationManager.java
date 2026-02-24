@@ -178,54 +178,17 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     && !profileMappings.isEmpty()) {
                 processProfileAttributes((KeycloakUser) user);
             }
-
-            this.cleanupManagedAuthorizations(user);
-        }  finally {
+        } finally {
             readLock.unlock();
         }
     }
 
-    private void cleanupManagedAuthorizations(UserDetails user) {
-        if ((roles == null || roles.isEmpty()) && (groups == null || groups.isEmpty())) {
-            return;
+    public void cleanupManagedAuthorizations(final String username) throws EntException {
+        if (roles != null && !roles.isEmpty()) {
+            authorizationManager.deleteUserRoles(username, roles);
         }
-
-        final List<Authorization> userAuths = user.getAuthorizations();
-        final Set<String> assignedRoles = userAuths.stream()
-                .map(Authorization::getRole)
-                .filter(Objects::nonNull)
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-        final Set<String> assignedGroups = userAuths.stream()
-                .map(Authorization::getGroup)
-                .filter(Objects::nonNull)
-                .map(Group::getName)
-                .collect(Collectors.toSet());
-
-        if (roles != null) {
-            for (String managedRole : roles) {
-                if (!assignedRoles.contains(managedRole)) {
-                    log.debug("Removing managed role {} from user {}", managedRole, user.getUsername());
-                    try {
-                        authorizationManager.deleteUserAuthorization(user.getUsername(), null, managedRole);
-                    } catch (Exception e) {
-                        log.error("Error removing managed role {} for user {}", managedRole, user.getUsername(), e);
-                    }
-                }
-            }
-        }
-
-        if (groups != null) {
-            for (String managedGroup : groups) {
-                if (!assignedGroups.contains(managedGroup)) {
-                    log.debug("Removing managed group {} from user {}", managedGroup, user.getUsername());
-                    try {
-                        authorizationManager.deleteUserAuthorization(user.getUsername(), managedGroup, null);
-                    } catch (Exception e) {
-                        log.error("Error removing managed group {} for user {}", managedGroup, user.getUsername(), e);
-                    }
-                }
-            }
+        if (groups != null && !groups.isEmpty()) {
+            authorizationManager.deleteUserGroups(username, groups);
         }
     }
 

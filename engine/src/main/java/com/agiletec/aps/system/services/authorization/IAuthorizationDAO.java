@@ -16,6 +16,8 @@ package com.agiletec.aps.system.services.authorization;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -37,4 +39,8 @@ public interface IAuthorizationDAO {
 	public void deleteUserAuthorizations(String username);
 	
 	public List<String> getUsersByAuthorities(List<String> groupNames, List<String> roleNames);
+
+	int deleteUserGroups(String utente, List<String> groups);
+
+	int deleteUserRoles(String utente, List<String> roles);
 }

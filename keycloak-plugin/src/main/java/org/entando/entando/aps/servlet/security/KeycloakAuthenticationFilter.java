@@ -111,6 +111,7 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
             setUserOnContext(request, user, userAuthentication);
 
             // TODO optimise to not check on every request
+            keycloakGroupManager.cleanupManagedAuthorizations(user.getUsername());
             keycloakGroupManager.processNewUser(user, bearerToken, true);
 
             return userAuthentication;

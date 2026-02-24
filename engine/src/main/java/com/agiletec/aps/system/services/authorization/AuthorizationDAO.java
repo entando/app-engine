@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import java.util.StringJoiner;
 import org.apache.commons.collections.CollectionUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -156,6 +157,95 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			filters = super.addFilter(filters, filter);
 		}
 		return super.searchId(filters);
+	}
+
+	@Override
+	public int deleteUserGroups(String utente, List<String> groups) {
+
+		Connection conn = null;
+		PreparedStatement stat = null;
+
+		if (groups == null || groups.isEmpty()) {
+			return 0;
+		}
+
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+
+			final StringJoiner placeholders = new StringJoiner(", ");
+
+			for (int i = 0; i < groups.size(); i++) {
+				placeholders.add("?");
+			}
+
+			final String sql = DELETE_USER_AUTHORIZATIONS + " AND groupname IN ("
+					+ placeholders + ")";
+
+			stat = conn.prepareStatement(sql);
+
+			int index = 1;
+			stat.setString(index++, utente);
+
+			for (String role : groups) {
+				stat.setString(index++, role);
+			}
+
+			int rowsDeleted = stat.executeUpdate();
+
+			conn.commit();
+			return rowsDeleted;
+
+		} catch (Exception e) {
+			this.executeRollback(conn);
+			throw new RuntimeException("Error detected while deleting user groups authorizations", e);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
+	}
+
+	@Override
+	public int deleteUserRoles(String utente, List<String> roles) {
+		Connection conn = null;
+		PreparedStatement stat = null;
+
+		if (roles == null || roles.isEmpty()) {
+			return 0;
+		}
+
+		try {
+			// Inizio transazione
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+
+			final StringJoiner placeholders = new StringJoiner(", ");
+
+			for (int i = 0; i < roles.size(); i++) {
+				placeholders.add("?");
+			}
+
+			final String sql = DELETE_USER_AUTHORIZATIONS + " AND rolename IN ("
+					+ placeholders + ")";
+
+			stat = conn.prepareStatement(sql);
+
+			int index = 1;
+			stat.setString(index++, utente);
+
+			for (String role : roles) {
+				stat.setString(index++, role);
+			}
+
+			int rowsDeleted = stat.executeUpdate();
+
+			conn.commit();
+			return rowsDeleted;
+		} catch (Exception e) {
+			this.executeRollback(conn);
+			throw new RuntimeException("Error detected while deleting user role authorizations", e);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
 	}
 	
 	@Override

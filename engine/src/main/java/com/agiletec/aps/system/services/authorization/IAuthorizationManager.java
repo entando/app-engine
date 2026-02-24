@@ -185,5 +185,8 @@ public interface IAuthorizationManager {
 	public List<String> getUsersByGroup(IApsAuthority authority, boolean includeAdmin) throws EntException;
 	
 	public List<String> getUsersByGroup(String groupName, boolean includeAdmin) throws EntException;
-	
+
+    void deleteUserRoles(String username, List<String> roles) throws EntException;
+
+	void deleteUserGroups(String username, List<String> groups) throws EntException;
 }
