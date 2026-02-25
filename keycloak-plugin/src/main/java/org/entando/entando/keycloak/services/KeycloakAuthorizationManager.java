@@ -18,9 +18,11 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -86,6 +88,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private transient List<String> ignore;
     private transient List<String> roles;
     private transient List<String> groups;
+    private transient Boolean enabled;
+    private transient PersistKind persist;
 
     @Override
     public void init() throws Exception {
@@ -113,9 +117,16 @@ public class KeycloakAuthorizationManager extends AbstractService {
                         log.debug("{} dynamic auth mapping found, {} profileMappings",
                                 dynConf.mapping.size(), profileMappings.size());
                     }
-                    ignore = dynConf.ignore;
-                    roles = dynConf.roles;
-                    groups = dynConf.groups;
+                    ignore = Optional.ofNullable(dynConf.exclusions)
+                            .orElse(List.of());
+                    roles = Optional.ofNullable(dynConf.roles)
+                            .orElseGet(List::of);
+                    groups = Optional.ofNullable(dynConf.groups)
+                            .orElse(List.of());
+                    enabled = Optional.ofNullable(dynConf.enabled)
+                            .orElse(false);
+                    persist = Optional.ofNullable(dynConf.persist)
+                            .orElse(PersistKind.FULL);
                 }
             }
             if (profileMappings != null) {
@@ -125,6 +136,10 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
         } catch (Exception e) {
+            // defaults
+            enabled = false;
+            roles = new ArrayList<>();
+            groups = new ArrayList<>();
             log.error("Error initializing KeycloakAuthorizationManager", e);
             throw e;
         } finally {
@@ -168,8 +183,9 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return true;
     }
 
-    public synchronized void processNewUser(final UserDetails user, final String token, final boolean decode) {
+    public void processNewUser(final UserDetails user, final String token, final boolean decode) {
         processNewUser(user);
+        if (!enabled) return;
         readLock.lock();
         try {
             // Authorizations coming from dynamic mapping (that is, external sources)
@@ -187,76 +203,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     && !profileMappings.isEmpty()) {
                 dynamicAuthorizations.addAll(processProfileAttributes((KeycloakUser) user));
             }
-            // se l'autorizzazione dinamica non è già assegnata all'utente allora va aggiunta
-            List<Authorization> toAdd = dynamicAuthorizations
-                    .stream()
-                    .filter(a -> {
-                        final String groupName = a.getGroup() != null ? a.getGroup().getName() : null;
-                        final String roleName = a.getRole() != null ? a.getRole().getName() : null;
-
-                        assert user instanceof KeycloakUser;
-                        return !isAlreadyAssigned((KeycloakUser) user, roleName, groupName);
-                    })
-                    .collect(Collectors.toList());
-            // list of the _managed_ authorizations currently assigned to the user
-            List<Authorization> existingAuths = user.getAuthorizations()
-                    .stream()
-                    .filter(a -> (a.getGroup() != null && groups.contains(a.getRole().getName())
-                            || (a.getRole() != null && roles.contains(a.getRole().getName())))
-                    )
-                    .collect(Collectors.toList());
-            // se l'autorizzazione esistente non è contenuta nelle dynamic auths allora va cancellata
-            List<Authorization> toDelete = existingAuths
-                    .stream()
-                    .filter(a -> {
-                        return dynamicAuthorizations.stream()
-                                .noneMatch(d -> d.equals(a));
-                    })
-                    .collect(Collectors.toList());
-            // finally
-            for (Authorization authorization : toAdd) {
-                persistAuthIfMissing((KeycloakUser) user, authorization);
-
-                user.addAuthorization(authorization);
-            }
-//            for (Authorization authorization: toDelete) {
-//                List<String> rolesToDelete = new ArrayList<>();
-//                List<String> groupsToDelete = new ArrayList<>();
-//
-//                if (authorization.getRole() != null) {
-//                    rolesToDelete.add(authorization.getRole().getName());
-//                }
-//                if (authorization.getGroup() != null) {
-//                    groupsToDelete.add(authorization.getGroup().getName());
-//                }
-//
-//            }
-
-            System.out.println("-------------------\n");
-            dynamicAuthorizations.forEach(n-> {
-                final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
-                final String roleName = n.getRole() != null ? n.getRole().getName() : null;
-
-                System.out.println("JWT " + user.getUsername() + " role " + roleName +  " group " + groupName);
-            });
-            existingAuths.forEach(n-> {
-                final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
-                final String roleName = n.getRole() != null ? n.getRole().getName() : null;
-
-                System.out.println("USER " + user.getUsername() + " role " + roleName +  " group " + groupName);
-            });
-            toAdd.forEach(n-> {
-                final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
-                final String roleName = n.getRole() != null ? n.getRole().getName() : null;
-
-                System.out.println("ADD " + user.getUsername() + " role " + roleName +  " group " + groupName);
-            });
-            toDelete.forEach(d-> {
-                final String groupName = d.getGroup() != null ? d.getGroup().getName() : null;
-                final String roleName = d.getRole() != null ? d.getRole().getName() : null;
-
-                System.out.println("DELETE " + user.getUsername() + " role " + roleName +  " group " + groupName);
-            });
+            syncAuthorizations(user, dynamicAuthorizations);
         } catch (EntException e) {
             throw new RuntimeException(e);
         } finally {
@@ -264,13 +211,127 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    public void cleanupManagedAuthorizations(final String username) throws EntException {
-        if (roles != null && !roles.isEmpty()) {
-            authorizationManager.deleteUserRoles(username, roles);
+    private void syncAuthorizations(final UserDetails user, final List<Authorization> dynamicAuthorizations) throws EntException {
+        // se l'autorizzazione dinamica non è già assegnata all'utente allora va aggiunta
+        List<Authorization> toAdd = dynamicAuthorizations
+                .stream()
+                .filter(a -> {
+                    final String groupName = a.getGroup() != null ? a.getGroup().getName() : null;
+                    final String roleName = a.getRole() != null ? a.getRole().getName() : null;
+
+                    assert user instanceof KeycloakUser;
+                    return !isAlreadyAssigned((KeycloakUser) user, roleName, groupName);
+                })
+                .collect(Collectors.toList());
+        // list of the _managed_ authorizations currently assigned to the user
+        List<Authorization> existingAuths = Optional.ofNullable(user.getAuthorizations())
+                .orElse(List.of())
+                .stream()
+                .filter(a -> (a.getGroup() != null && groups.contains(a.getRole().getName())
+                        || (a.getRole() != null && roles.contains(a.getRole().getName())))
+                )
+                .collect(Collectors.toList());
+        // se l'autorizzazione esistente non è contenuta nelle dynamic auths allora va cancellata
+        List<Authorization> toDelete = existingAuths
+                .stream()
+                .filter(a -> {
+                    return dynamicAuthorizations.stream()
+                            .noneMatch(d -> d.equals(a));
+                })
+                .collect(Collectors.toList());
+        // finally
+        sillyDebug(user, dynamicAuthorizations, existingAuths, toAdd, toDelete); // DO NOT TEST, IGNORE
+        persistAuthorizations(user, toAdd, toDelete);
+    }
+
+    private void persistAuthorizations(UserDetails user, List<Authorization> toAdd, List<Authorization> toDelete)
+            throws EntException {
+        // finally
+        for (Authorization authorization : toAdd) {
+
+            if (persist == PersistKind.FULL) {
+                try {
+                    authorizationManager.addUserAuthorization(user.getUsername(), authorization);
+                } catch (Exception e) {
+                    log.debug("Failed to persist authorization for user {}: {}", user.getUsername(), e.getMessage());
+                }
+            }
+            user.addAuthorization(authorization);
         }
-        if (groups != null && !groups.isEmpty()) {
-            authorizationManager.deleteUserGroups(username, groups);
+        List<Integer> index = new ArrayList<>();
+        for (Authorization authorization: toDelete) {
+            List<String> rolesToDelete = new ArrayList<>();
+            List<String> groupsToDelete = new ArrayList<>();
+
+            if (authorization.getRole() != null) {
+                rolesToDelete.add(authorization.getRole().getName());
+            }
+            if (authorization.getGroup() != null) {
+                groupsToDelete.add(authorization.getGroup().getName());
+            }
+            if (persist == PersistKind.FULL) {
+                authorizationManager.deleteUserAuthorizationByGroupAndRole(user.getUsername(), groupsToDelete, rolesToDelete);
+            }
+            index.add(indexOfAuthorization(user, authorization));
         }
+        index.sort(Comparator.reverseOrder());
+        // sync permissions without reloading user auths
+        if (!index.isEmpty()) {
+            index.stream()
+                    .filter(idx -> idx >= 0)
+                    .forEach(idx -> user.getAuthorizations().remove(idx));
+        }
+    }
+
+    public static int indexOfAuthorization(UserDetails user, Authorization target) {
+
+        if (user == null || target == null) {
+            return -1;
+        }
+
+        List<Authorization> authorizations = user.getAuthorizations();
+        if (authorizations == null || authorizations.isEmpty()) {
+            return -1;
+        }
+
+        for (int i = 0; i < authorizations.size(); i++) {
+            Authorization current = authorizations.get(i);
+
+            if (current.equals(target)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static void sillyDebug(UserDetails user, List<Authorization> dynamicAuthorizations,
+            List<Authorization> existingAuths, List<Authorization> toAdd, List<Authorization> toDelete) {
+        System.out.println("-------------------\n");
+        dynamicAuthorizations.forEach(n-> {
+            final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
+            final String roleName = n.getRole() != null ? n.getRole().getName() : null;
+
+            System.out.println("INCOMING " + user.getUsername() + " role " + roleName +  " group " + groupName);
+        });
+        existingAuths.forEach(n-> {
+            final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
+            final String roleName = n.getRole() != null ? n.getRole().getName() : null;
+
+            System.out.println("USER " + user.getUsername() + " role " + roleName +  " group " + groupName);
+        });
+        toAdd.forEach(n-> {
+            final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
+            final String roleName = n.getRole() != null ? n.getRole().getName() : null;
+
+            System.out.println("ADD " + user.getUsername() + " role " + roleName +  " group " + groupName);
+        });
+        toDelete.forEach(d-> {
+            final String groupName = d.getGroup() != null ? d.getGroup().getName() : null;
+            final String roleName = d.getRole() != null ? d.getRole().getName() : null;
+
+            System.out.println("DELETE " + user.getUsername() + " role " + roleName +  " group " + groupName);
+        });
     }
 
     /**
@@ -520,23 +581,33 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
     private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName,
             boolean createRoleIfMissing) {
+        // is ignored?
         if (isIgnored(roleName) || isIgnored(groupName)) {
-            log.info("Role {} or Group {} is in the ignore list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
+            log.info("Role {} or Group {} is in the exclusions list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
             return null;
         }
-
+        if (StringUtils.isNotBlank(roleName) &&!roles.contains(roleName)) {
+            System.out.println(">>> IGNORO RUOLO " + roleName);
+            log.info("Role {} is not managed. Skipping assignment for user {}", roleName, user.getUsername());
+            return null;
+        }
+        if (StringUtils.isNotBlank(groupName) && !groups.contains(groupName)) {
+            System.out.println(">>> IGNORO GRUPPO " + groupName);
+            log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
+            return null;
+        }
         return createAuthorization(elem, roleName, groupName, createRoleIfMissing);
     }
 
     private Authorization createAuthorization(DynamicMappingElement elem, String roleName, String groupName, boolean createRoleIfMissing) {
-        if (shouldPersistAuthorization(elem)) {
+        if (shouldPersistAuthorization()) {
             return createPersistedAuthorization(roleName, groupName);
         }
         return createTransientAuthorization(roleName, groupName, createRoleIfMissing);
     }
 
-    private boolean shouldPersistAuthorization(DynamicMappingElement elem) {
-        return elem.persist == PersistKind.AUTH || elem.persist == PersistKind.FULL;
+    private boolean shouldPersistAuthorization() {
+        return this.persist == PersistKind.AUTH || this.persist == PersistKind.FULL;
     }
 
     private Authorization createPersistedAuthorization(String roleName, String groupName) {
@@ -609,48 +680,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
             }
         }
         return result;
-    }
-
-
-
-    /**
-     * To avoid creating duplicate records, we check if the authorization already exists.
-     * In a replicated environment or under high concurrency, there is still the possibility
-     * to attempt to create multiple, identical associations. This is handled by a database
-     * unique constraint and a try-catch block.
-     * @param user the user being processed
-     * @param auth the authorization to persist
-     * @throws EntException in case of errors
-     */
-    private void persistAuthIfMissing(KeycloakUser user, Authorization auth) throws EntException {
-        final String username = user.getUsername();
-        final List<Authorization> existing = authorizationManager.getUserAuthorizations(username);
-
-        final String targetGroupName = (null != auth.getGroup()) ? auth.getGroup().getName() : null;
-        final String targetRoleName = (null != auth.getRole()) ? auth.getRole().getName() : null;
-
-        boolean alreadyExists = existing.stream().anyMatch(a -> {
-            String existingGroupName = (null != a.getGroup()) ? a.getGroup().getName() : null;
-            String existingRoleName = (null != a.getRole()) ? a.getRole().getName() : null;
-
-            return Objects.equals(existingGroupName, targetGroupName) &&
-                    Objects.equals(existingRoleName, targetRoleName);
-        });
-
-        if (!alreadyExists) {
-            log.debug("Persisting new authorization for user '{}': group={}, role={}",
-                    username, targetGroupName, targetRoleName);
-            try {
-                authorizationManager.addUserAuthorization(username, auth);
-            } catch (EntException e) {
-                log.debug("Error persisting authorization for user '{}': group={}, role={} "
-                        + "(it might have been already added by another process).",
-                        username, targetGroupName, targetRoleName);
-            }
-        } else {
-            log.debug("Authorization already exists for user '{}': group={}, role={}. Skipping persistence.",
-                    username, targetGroupName, targetRoleName);
-        }
     }
 
 }

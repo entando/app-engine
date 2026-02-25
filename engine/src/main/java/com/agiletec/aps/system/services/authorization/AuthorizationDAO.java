@@ -160,93 +160,73 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	}
 
 	@Override
-	public int deleteUserGroups(String username, List<String> groups) {
-
+	public int deleteUserAuthorizationByGroupAndRole(final String username, final List<String> groups,
+			final List<String> roles) {
+		final boolean hasRoles = roles != null && !roles.isEmpty();
+		final boolean hasGroups = groups != null && !groups.isEmpty();
 		Connection conn = null;
 		PreparedStatement stat = null;
-
-		if (groups == null || groups.isEmpty()) {
-			return 0;
-		}
 
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
-			stat = conn.prepareStatement(
-					generateGroupRemoveSql(groups.size())
-			);
+			stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles));
 
-			return doDeleteAuth(username, groups, conn, stat);
+			// username
+			int index = 1;
+			stat.setString(index++, username);
+			// groups
+			if (hasGroups) {
+				for (String role : groups) {
+					stat.setString(index++, role);
+				}
+			}
+			// roles
+			if (hasRoles) {
+				for (String role : roles) {
+					stat.setString(index++, role);
+				}
+			}
+			final int rowsDeleted = stat.executeUpdate();
+			conn.commit();
+			return rowsDeleted;
 		} catch (Exception e) {
 			this.executeRollback(conn);
-			throw new RuntimeException("Error detected while deleting user groups authorizations", e);
+			throw new RuntimeException("Error detected while deleting user authorizations", e);
 		} finally {
 			this.closeDaoResources(null, stat, conn);
 		}
 	}
 
-	private String generateGroupRemoveSql(final int size) {
-		if (size <= 0) {
-			throw new IllegalArgumentException("Size must be > 0");
+	private String createSqlForAuthDeletion(final String username, final List<String> groups, final List<String> roles) {
+		final StringBuilder sb = new StringBuilder(DELETE_USER_AUTHORIZATIONS);
+		final boolean hasRoles = roles != null && !roles.isEmpty();
+		final boolean hasGroups = groups != null && !groups.isEmpty();
+
+		sb.append("AND ("); // apertura AND
+
+		if (hasGroups) {
+			final String placeholders = String.join(", ",
+					java.util.Collections.nCopies(groups.size(), "?"));
+
+			sb.append("groupname IN ( ");
+			sb.append(placeholders);
+			sb.append(") "); // chiusura groupname
+			// append OR if needed
+			if (hasRoles) {
+				sb.append("OR ");
+			}
 		}
-
-		String placeholders = String.join(", ",
-				java.util.Collections.nCopies(size, "?"));
-
-		return DELETE_USER_AUTHORIZATIONS +
-				" AND groupname IN (" + placeholders + ")";
-	}
-
-	@Override
-	public int deleteUserRoles(String username, List<String> roles) {
-		Connection conn = null;
-		PreparedStatement stat = null;
-
-		if (roles == null || roles.isEmpty()) {
-			return 0;
+		if (hasRoles) {
+			final String placeholders = String.join(", ",
+					java.util.Collections.nCopies(roles.size(), "?"));
+			sb.append("rolename IN ( ");
+			sb.append(placeholders);
+			sb.append(") "); // chiusura rolename
 		}
-
-		try {
-			conn = this.getConnection();
-			conn.setAutoCommit(false);
-			stat = conn.prepareStatement(
-					generateRoleRemoveSql(roles.size())
-			);
-
-			return doDeleteAuth(username, roles, conn, stat);
-		} catch (Exception e) {
-			this.executeRollback(conn);
-			throw new RuntimeException("Error detected while deleting user role authorizations", e);
-		} finally {
-			this.closeDaoResources(null, stat, conn);
-		}
-	}
-
-	private String generateRoleRemoveSql(int size) {
-		if (size <= 0) {
-			throw new IllegalArgumentException("Size must be > 0");
-		}
-
-		String placeholders = String.join(", ",
-				java.util.Collections.nCopies(size, "?"));
-
-		return DELETE_USER_AUTHORIZATIONS +
-				" AND rolename IN (" + placeholders + ")";
-	}
-
-	private int doDeleteAuth(String username, List<String> roles, Connection conn, PreparedStatement stat)
-			throws SQLException {
-		int index = 1;
-		stat.setString(index++, username);
-
-		for (String role : roles) {
-			stat.setString(index++, role);
-		}
-
-		int rowsDeleted = stat.executeUpdate();
-
-		conn.commit();
-		return rowsDeleted;
+		sb.append(")"); // chiusura AND
+		System.out.println("\n\n>>> " + sb.toString());
+		return sb.toString();
 	}
 
 	@Override

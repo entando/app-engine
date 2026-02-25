@@ -5,15 +5,15 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "dynamicmapping")
+@JacksonXmlRootElement(localName = "dynamicMapping")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class DynamicMapping {
 
-    @JacksonXmlElementWrapper(useWrapping = false)
+    @JacksonXmlElementWrapper(localName = "mappings")
     public List<DynamicMappingElement> mapping;
 
-    @JacksonXmlElementWrapper(useWrapping = false)
-    public List<String> ignore;
+    @JacksonXmlElementWrapper(localName = "exclusions")
+    public List<String> exclusions;
 
     @JacksonXmlElementWrapper(localName = "roles")
     public List<String> roles;
@@ -21,4 +21,6 @@ public class DynamicMapping {
     @JacksonXmlElementWrapper(localName = "groups")
     public List<String> groups;
 
+    public Boolean enabled;
+    public PersistKind persist;
 }

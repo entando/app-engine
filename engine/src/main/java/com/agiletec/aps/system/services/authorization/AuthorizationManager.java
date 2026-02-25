@@ -638,22 +638,12 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
     }
 
     @Override
-    public void deleteUserRoles(String username, List<String> roles) throws EntException {
+    public void deleteUserAuthorizationByGroupAndRole(String username, List<String> groups, List<String> roles) throws EntException {
         try {
-            this.getAuthorizationDAO().deleteUserRoles(username, roles);
+            this.getAuthorizationDAO().deleteUserAuthorizationByGroupAndRole(username, groups, roles);
         } catch (Throwable t) {
-            _logger.error("Error deleting user roles for user '{}'", username, t);
-            throw new EntException("Error deleting user roles for user " + username, t);
-        }
-    }
-
-    @Override
-    public void deleteUserGroups(String username, List<String> groups) throws EntException {
-        try {
-            this.getAuthorizationDAO().deleteUserGroups(username, groups);
-        } catch (Throwable t) {
-            _logger.error("Error deleting user groups for user '{}'", username, t);
-            throw new EntException("Error deleting user groups for user " + username, t);
+            _logger.error("Error deleting user authorization by group and role for user '{}'", username, t);
+            throw new EntException("Error deleting user authorization by group and role for user " + username, t);
         }
     }
 

@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 import org.entando.entando.ent.exception.EntException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,51 +24,28 @@ class AuthorizationManagerTest {
     @InjectMocks
     private AuthorizationManager authorizationManager;
 
-    @BeforeEach
-    void setUp() {
-    }
-
     @Test
-    void shouldDeleteUserRoles() throws EntException {
-        String username = "testUser";
-        List<String> roles = Arrays.asList("role1", "role2");
-
-        authorizationManager.deleteUserRoles(username, roles);
-
-        verify(authorizationDAO).deleteUserRoles(username, roles);
-    }
-
-    @Test
-    void shouldDeleteUserGroups() throws EntException {
+    void shouldDeleteUserAuthorizationByGroupAndRole() throws EntException {
         String username = "testUser";
         List<String> groups = Arrays.asList("group1", "group2");
+        List<String> roles = Arrays.asList("role1", "role2");
 
-        authorizationManager.deleteUserGroups(username, groups);
+        authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, roles);
 
-        verify(authorizationDAO).deleteUserGroups(username, groups);
+        verify(authorizationDAO).deleteUserAuthorizationByGroupAndRole(username, groups, roles);
     }
 
     @Test
-    void shouldThrowExceptionWhenDaoFailsOnDeleteUserRoles() {
-        String username = "testUser";
-        List<String> roles = Arrays.asList("role1");
-        
-        when(authorizationDAO.deleteUserRoles(anyString(), anyList())).thenThrow(new RuntimeException("DAO error"));
-
-        assertThrows(EntException.class, () ->
-            authorizationManager.deleteUserRoles(username, roles)
-        );
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDaoFailsOnDeleteUserGroups() {
+    void shouldThrowExceptionWhenDaoFailsOnDeleteUserAuthorizationByGroupAndRole() {
         String username = "testUser";
         List<String> groups = Arrays.asList("group1");
-        
-        when(authorizationDAO.deleteUserGroups(anyString(), anyList())).thenThrow(new RuntimeException("DAO error"));
+        List<String> roles = Arrays.asList("role1");
+
+        when(authorizationDAO.deleteUserAuthorizationByGroupAndRole(anyString(), anyList(), anyList()))
+                .thenThrow(new RuntimeException("DAO error"));
 
         assertThrows(EntException.class, () ->
-                authorizationManager.deleteUserGroups(username, groups)
+                authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, roles)
         );
     }
 }

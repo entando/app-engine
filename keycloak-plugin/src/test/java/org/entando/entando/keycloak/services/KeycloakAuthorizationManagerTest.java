@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.keycloak.services.mapping.PersistKind;
 import org.entando.entando.keycloak.services.oidc.OidcMappingService;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
@@ -54,11 +55,13 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
-    void testGroupCreation() throws EntException {
+    void testGroupCreation() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn("readers");
         when(groupManager.getGroup(anyString())).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn("<DynamicMapping><enabled>true</enabled></DynamicMapping>");
 
+        manager.init();
         manager.processNewUser(userDetails, null, false);
 
         final ArgumentCaptor<Group> groupCaptor = ArgumentCaptor.forClass(Group.class);
@@ -82,12 +85,14 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
-    void testGroupAndRoleCreation() throws EntException {
+    void testGroupAndRoleCreation() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn("readers:read-all");
         when(groupManager.getGroup(anyString())).thenReturn(null);
         when(roleManager.getRole(anyString())).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn("<DynamicMapping><enabled>true</enabled></DynamicMapping>");
 
+        manager.init();
         manager.processNewUser(userDetails, null, false);
 
         final ArgumentCaptor<Group> groupCaptor = ArgumentCaptor.forClass(Group.class);
@@ -114,7 +119,24 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
-    void testVerification() {
+    void testVerification() throws Exception {
+        final String xmlEmptyGroupsRoles = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<DynamicMapping>"
+                + "    <enabled>true</enabled>"
+                + "    <persist>FULL</persist>"
+                + "    <mappings></mappings>"
+                + "    <exclusions></exclusions>"
+                + "    <roles></roles>"
+                + "    <groups></groups>"
+                + "</DynamicMapping>";
+
+        // 2. Mocking del configManager per restituire questo XML
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xmlEmptyGroupsRoles);
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+
         final Authorization readers = authorization("readers", "read-all");
         final Authorization writers = authorization("writers", "write-all");
 
@@ -126,6 +148,7 @@ class KeycloakAuthorizationManagerTest {
         verify(roleManager, times(0)).getRole(anyString());
         verify(groupManager, times(0)).getGroup(anyString());
         verify(userDetails, times(0)).addAuthorization(any());
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
     }
 
     @Test
@@ -167,11 +190,11 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(4)).addUserAuthorization(eq("testuser"), authCaptor.capture());
+        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), authCaptor.capture());
         
         assertThat(authCaptor.getAllValues())
                 .extracting(a -> a.getRole().getName())
-                .containsOnly("generico","offline_access", "uma_authorization", "default-roles-entando");
+                .containsOnly("generico");
         assertThat(authCaptor.getValue().getGroup()).isNull();
     }
 
@@ -190,11 +213,11 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
-        verify(userDetails, times(4)).addAuthorization(authCaptor.capture());
+        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
 
         assertThat(authCaptor.getAllValues())
                 .extracting(a -> a.getRole().getName())
-                .containsOnly("generico", "offline_access", "uma_authorization", "default-roles-entando");
+                .containsOnly("generico");
         assertThat(authCaptor.getValue().getGroup()).isNull();
     }
 
@@ -359,7 +382,6 @@ class KeycloakAuthorizationManagerTest {
         role.setName("arole");
         role.setDescription("arole");
 
-        when(authorizationManager.getUserAuthorizations(anyString())).thenReturn(List.of(auth));
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
 
@@ -368,6 +390,7 @@ class KeycloakAuthorizationManagerTest {
 
         when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+        when(userDetails.getAuthorizations()).thenReturn(List.of(auth));
 
         manager.init();
 
@@ -456,7 +479,6 @@ class KeycloakAuthorizationManagerTest {
         role.setName("arole");
         role.setDescription("arole");
 
-        when(authorizationManager.getUserAuthorizations(anyString())).thenReturn(List.of());
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
         when(groupManager.getGroup(anyString())).thenReturn(group);
@@ -474,7 +496,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        // This should not throw an exception because it's caught in persistAuthIfMissing
+        // This should not throw an exception because it's caught in syncAuthorizations
         manager.processNewUser(userDetails, JWT, true);
 
         verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
@@ -580,8 +602,8 @@ class KeycloakAuthorizationManagerTest {
 
         // JWT contains "generico", "offline_access", "uma_authorization", "default-roles-entando"
         // "generico" is ignored, so we expect only 3 calls
-        verify(authorizationManager, times(3)).addUserAuthorization(eq("testuser"), any());
-        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), argThat(auth ->
+        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
+        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), argThat(auth ->
                 auth.getRole() != null && "generico".equals(auth.getRole().getName())));
     }
 
@@ -605,20 +627,37 @@ class KeycloakAuthorizationManagerTest {
     @Test
     void testRoleFromProfileAndJwtWithPersistAuth() throws Exception {
         // Configurazione: un mapping per profilo (ROLE) e uno per JWT (ROLECLAIM), entrambi con persist=AUTH
-        String xmlConf = "<mappings>"
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
                 + " <mapping>"
                 + "  <enabled>true</enabled>"
                 + "  <attribute>AD_ROLE</attribute>"
                 + "  <kind>ROLE</kind>"
-                + "  <persist>AUTH</persist>"
                 + " </mapping>"
                 + " <mapping>"
                 + "  <enabled>true</enabled>"
                 + "  <path>realm_access.roles</path>"
                 + "  <kind>ROLECLAIM</kind>"
-                + "  <persist>AUTH</persist>"
                 + " </mapping>"
-                + "</mappings>";
+                + "</mappings>"
+
+                + " <exclusions>"
+                + "   <exclusion>default-roles-entando-development</exclusion>"
+                + "   <exclusion>offline_access</exclusion>"
+                + "   <exclusion>uma_authorization</exclusion>"
+                + "  </exclusions>"
+                + "  <roles>"
+                + "   <role>generico</role>"
+                + "   <role>role_from_profile</role>"
+                + "  </roles>"
+                + "  <groups>"
+                + "   <group>imported_group</group>"
+                + "   <group>imported_group2</group>"
+                + "  </groups>"
+
+                + "</DynamicMapping>";
 
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
@@ -651,14 +690,22 @@ class KeycloakAuthorizationManagerTest {
 
     @Test
     void testAuthAssignmentWhenRoleGroupExistWithPersistAuth() throws Exception {
-        String xmlConf = "<mappings>"
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
                 + " <mapping>"
                 + "  <enabled>true</enabled>"
                 + "  <attribute>AD_ROLE</attribute>"
                 + "  <kind>ROLE</kind>"
-                + "  <persist>AUTH</persist>"
                 + " </mapping>"
-                + "</mappings>";
+                + "</mappings>"
+
+                + "  <roles>"
+                + "   <role>existing_role</role>"
+                + "  </roles>"
+
+                + "</DynamicMapping>";
 
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
@@ -687,14 +734,20 @@ class KeycloakAuthorizationManagerTest {
 
     @Test
     void testAuthAssignmentWhenRoleExistsAndAddRoleFailsWithPersistAuth() throws Exception {
-        String xmlConf = "<mappings>"
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
                 + " <mapping>"
                 + "  <enabled>true</enabled>"
                 + "  <attribute>AD_ROLE</attribute>"
                 + "  <kind>ROLE</kind>"
-                + "  <persist>AUTH</persist>"
                 + " </mapping>"
-                + "</mappings>";
+                + "</mappings>"
+                + "  <roles>"
+                + "   <role>conflict_role</role>"
+                + "  </roles>"
+                + "</DynamicMapping>";
 
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
@@ -727,95 +780,34 @@ class KeycloakAuthorizationManagerTest {
     }
 
 
-    @Test
-    void testCleanupManagedAuthorizationsEmptyLists() throws Exception {
-        String xml = "<dynamicmapping>"
-                + "</dynamicmapping>";
-
-        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
-        manager.init();
-
-        manager.processNewUser(userDetails, null, false);
-
-        verify(authorizationManager, never()).deleteUserAuthorization(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void testCleanupManagedAuthorizationsNullLists() throws Exception {
-        // configManager.getConfigItem returns null or empty
-        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn("");
-        manager.init();
-
-        List<Authorization> userAuths = new ArrayList<>();
-        userAuths.add(authorization(null, "some-role"));
-        // No need to mock userDetails.getAuthorizations() if roles/groups are null/empty,
-        // but it doesn't hurt.
-
-        manager.processNewUser(userDetails, null, false);
-
-        verify(authorizationManager, never()).deleteUserAuthorization(anyString(), anyString(), anyString());
-    }
 
     @Test
     void testCleanupManagedAuthorizationsWithRolesAndGroups() throws Exception {
-        String xml = "<dynamicmapping>"
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>full</persist>"
                 + "  <roles>"
-                + "    <roles>roleA</roles>"
-                + "    <roles>roleB</roles>"
+                + "    <item>roleA</item>"
+                + "    <item>roleB</item>"
                 + "  </roles>"
                 + "  <groups>"
-                + "    <groups>groupA</groups>"
-                + "    <groups>groupB</groups>"
+                + "    <item>groupA</item>"
+                + "    <item>groupB</item>"
                 + "  </groups>"
-                + "</dynamicmapping>";
+                + "</dynamicMapping>";
 
         when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("john");
+
+        List<Authorization> existingAuths = new ArrayList<>();
+        existingAuths.add(authorization("groupA", "roleA"));
+        when(userDetails.getAuthorizations()).thenReturn(existingAuths);
 
         manager.init();
+        manager.processNewUser(userDetails, null, false);
 
-        String username = "john";
-        manager.cleanupManagedAuthorizations(username);
-
-        verify(authorizationManager, times(1)).deleteUserRoles(eq(username), eq(List.of("roleA", "roleB")));
-        verify(authorizationManager, times(1)).deleteUserGroups(eq(username), eq(List.of("groupA", "groupB")));
-    }
-
-    @Test
-    void testCleanupManagedAuthorizationsOnlyRoles() throws Exception {
-        String xml = "<dynamicmapping>"
-                + "  <roles>"
-                + "    <roles>roleA</roles>"
-                + "  </roles>"
-                + "</dynamicmapping>";
-
-        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
-
-        manager.init();
-
-        String username = "jane";
-        manager.cleanupManagedAuthorizations(username);
-
-        verify(authorizationManager, times(1)).deleteUserRoles(eq(username), eq(List.of("roleA")));
-        verify(authorizationManager, never()).deleteUserGroups(anyString(), any());
-    }
-
-    @Test
-    void testCleanupManagedAuthorizationsOnlyGroups() throws Exception {
-        String xml = "<dynamicmapping>"
-                + "  <groups>"
-                + "    <groups>groupA</groups>"
-                + "  </groups>"
-                + "</dynamicmapping>";
-
-        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn(xml);
-
-        manager.init();
-
-        String username = "mark";
-        manager.cleanupManagedAuthorizations(username);
-
-        verify(authorizationManager, times(1)).deleteUserGroups(eq(username), eq(List.of("groupA")));
-        verify(authorizationManager, never()).deleteUserRoles(anyString(), any());
+        // It should try to delete groupA/roleA because it's managed but not in current dynamic auths (which are empty)
+        verify(authorizationManager, times(1)).deleteUserAuthorizationByGroupAndRole(eq("john"), eq(List.of("groupA")), eq(List.of("roleA")));
     }
 
     private Authorization authorization(final String groupName, final String roleName) {
@@ -826,225 +818,433 @@ class KeycloakAuthorizationManagerTest {
         return new Authorization(group, role);
     }
 
-    private static final String XML_ROLE_CONF = "<mappings>"
-            + " <mapping>"
-            + "  <enabled>true</enabled>"
-            + "  <attribute>AD_ROLE</attribute>"
-            + "  <kind>ROLE</kind>"
-            + "  <persist>FULL</persist>"
-            + " </mapping>"
+    private static final String XML_ROLE_CONF =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                    + "<DynamicMapping>"
+                    + "<persist>FULL</persist>"
+                    + "<enabled>true</enabled>"
+                    + "<mappings>"
+                    + " <mapping>"
+                    + "  <enabled>true</enabled>"
+                    + "  <attribute>AD_ROLE</attribute>"
+                    + "  <kind>ROLE</kind>"
+                    + " </mapping>"
+                    + " <mapping>"
+                    + "  <enabled>false</enabled>"
+                    + "  <attribute>AD_GROUP</attribute>"
+                    + "  <kind>GROUP</kind>"
+                    + " </mapping>"
+                    + " <mapping>"
+                    + "  <enabled>false</enabled>"
+                    + "  <attribute>AD_GROUPROLE</attribute>"
+                    + "  <kind>ROLEGROUP</kind>"
+                    + "  <separator>_r_</separator>"
+                    + " </mapping>"
+                    + "</mappings>"
+                    + ""
+                    + "<exclusions>"
+                    + "   <exclusions>default-roles-entando-development</exclusions>"
+                    + "   <exclusions>offline_access</exclusions>"
+                    + "   <exclusions>uma_authorization</exclusions>"
+                    + "  </exclusions>"
+                    + "  <roles>"
+                    + "   <role>imported_role</role>"
+                    + "   <role>imported_role2</role>"
+                    + "   <role>ruolo</role>"
+                    + "  </roles>"
+                    + "  <groups>"
+                    + "   <group>imported_group</group>"
+                    + "   <group>imported_group2</group>"
+                    + "  </groups>"
+                    + "</DynamicMapping>";
+
+    private static final String XML_GROUP_CONF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + "             <mapping>"
+            + "              <enabled>false</enabled>"
+            + "              <attribute>AD_ROLE</attribute>"
+            + "              <kind>ROLE</kind>"
+            + "             </mapping>"
+            + "             <mapping>"
+            + "              <enabled>true</enabled>"
+            + "              <attribute>AD_GROUP</attribute>"
+            + "              <kind>GROUP</kind>"
+            + "             </mapping>"
+            + "             <mapping>"
+            + "              <enabled>false</enabled>"
+            + "              <attribute>AD_GROUPROLE</attribute>"
+            + "              <kind>ROLEGROUP</kind>"
+            + "              <separator>_r_</separator>"
+            + "             </mapping>"
+            + "            </mappings>"
+            + " <exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>group</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_GROUP_CONF_NO_PERSIST = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<DynamicMapping>"
+            + " <persist>NONE</persist>"
+            + " <enabled>true</enabled>" +
+            "<mappings>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
+            + "  <attribute>AD_ROLE</attribute>"
+            + "  <kind>ROLE</kind>"
+            + " </mapping>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
             + "  <attribute>AD_GROUP</attribute>"
             + "  <kind>GROUP</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            +"<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>group</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_GROUP_CONF = "<mappings>"
+    private static final String XML_GROUP_ROLE_CONF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_ROLE</attribute>"
             + "  <kind>ROLE</kind>"
-            + "  <persist>FULL</persist>"
-            + " </mapping>"
-            + " <mapping>"
-            + "  <enabled>true</enabled>"
-            + "  <attribute>AD_GROUP</attribute>"
-            + "  <kind>GROUP</kind>"
-            + "  <persist>FULL</persist>"
-            + " </mapping>"
-            + " <mapping>"
-            + "  <enabled>false</enabled>"
-            + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>ROLEGROUP</kind>"
-            + "  <separator>_r_</separator>"
-            + "  <persist>FULL</persist>"
-            + " </mapping>"
-            + "</mappings>";
-
-    private static final String XML_GROUP_CONF_NO_PERSIST = "<mappings>"
-            + " <mapping>"
-            + "  <enabled>false</enabled>"
-            + "  <attribute>AD_ROLE</attribute>"
-            + "  <kind>ROLE</kind>"
-            + "  <persist>FULL</persist>"
-            + " </mapping>"
-            + " <mapping>"
-            + "  <enabled>true</enabled>"
-            + "  <attribute>AD_GROUP</attribute>"
-            + "  <kind>GROUP</kind>"
-            + "  <persist>NONE</persist>"
-            + " </mapping>"
-            + " <mapping>"
-            + "  <enabled>false</enabled>"
-            + "  <attribute>AD_GROUPROLE</attribute>"
-            + "  <kind>ROLEGROUP</kind>"
-            + "  <separator>_r_</separator>"
-            + "  <persist>FULL</persist>"
-            + " </mapping>"
-            + "</mappings>";
-
-    private static final String XML_GROUP_ROLE_CONF = "<mappings>"
-            + " <mapping>"
-            + "  <enabled>false</enabled>"
-            + "  <attribute>AD_ROLE</attribute>"
-            + "  <kind>ROLE</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUP</attribute>"
             + "  <kind>GROUP</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>arole</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>agroup</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_GROUP_ROLE_CONF_NO_PERSIST = "<mappings>"
+    private static final String XML_GROUP_ROLE_CONF_NO_PERSIST = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<DynamicMapping>"
+            + " <persist>NONE</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_ROLE</attribute>"
             + "  <kind>ROLE</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_GROUP</attribute>"
             + "  <kind>GROUP</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
-            + "  <persist>NONE</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>arole</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>agroup</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_WITH_IGNORE_GROUP = "<dynamicmapping>"
+    private static final String XML_WITH_IGNORE_GROUP = "<DynamicMapping>"
+            + "<persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>groups</path>"
             + "  <kind>GROUPCLAIM</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
-            + " <ignore>altro-gruppo</ignore>"
-            + "</dynamicmapping>";
+            + "</mappings>"
+            + " <exclusions><exclusions>altro-gruppo</exclusions></exclusions>"
+            + "<roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>Gruppo-Microsoft-Importato</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_WITH_IGNORE = "<dynamicmapping>"
+    private static final String XML_WITH_IGNORE = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLECLAIM</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
-            + " <ignore>generico</ignore>"
-            + " <ignore>another_ignored</ignore>"
-            + "</dynamicmapping>";
+            + "</mappings>"
+            + "<exclusions>"
+            + " <exclusions>offline_access</exclusions>"
+            + " <exclusions>uma_authorization</exclusions>"
+            + " <exclusions>default-roles-entando</exclusions>"
+            + "</exclusions>"
+            + "<roles>"
+            + "   <role>generico</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_ROLE_CLAIM = "<mappings>"
+    private static final String XML_ROLE_CLAIM = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLECLAIM</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "   <exclusions>default-roles-entando</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>generico</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_ROLE_CLAIM_AUTH = "<mappings>"
+    private static final String XML_ROLE_CLAIM_AUTH = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLECLAIM</kind>"
-            + "  <persist>AUTH</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "   <exclusions>default-roles-entando</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>generico</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_GROUP_CLAIM = "<mappings>"
+    private static final String XML_GROUP_CLAIM = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>groups</path>"
             + "  <kind>GROUPCLAIM</kind>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>altro-gruppo</group>"
+            + "   <group>Gruppo-Microsoft-Importato</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_GROUP_CLAIM_AUTH = "<mappings>"
+    private static final String XML_GROUP_CLAIM_AUTH =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>groups</path>"
             + "  <kind>GROUPCLAIM</kind>"
-            + "  <persist>AUTH</persist>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>altro-gruppo</group>"
+            + "   <group>Gruppo-Microsoft-Importato</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_ROLEGROUP_CLAIM = "<mappings>"
+    private static final String XML_ROLEGROUP_CLAIM = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
-            + "  <persist>FULL</persist>"
             + "  <separator>_SEP_</separator>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>role1</role>"
+            + "   <role>role2</role>"
+            + "   <role>group1</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>group1</group>"
+            + "   <group>group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_ROLEGROUP_CLAIM_AUTH = "<mappings>"
+    private static final String XML_ROLEGROUP_CLAIM_AUTH = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
-            + "  <persist>AUTH</persist>"
             + "  <separator>_SEP_</separator>"
             + " </mapping>"
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>role1</role>"
+            + "   <role>role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>group1</group>"
+            + "   <group>group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
 
-    private static final String XML_NO_MAPPING = "<mappings>"
-            + "</mappings>";
+    private static final String XML_NO_MAPPING = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + "</mappings>"
+            +"</DynamicMapping>";
 
     private static final String XML_MALFORMED_MAPPING = "<mappings>"
             + "</mappings";
 
-    private static final String XML_WRONG_CONF = "<mappings>"
+    private static final String XML_WRONG_CONF = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_ROLE</attribute>"
 //            + "  <kind>ROLE</kind>"  // kind null
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             + " <mapping>"
             + "  <enabled>true</enabled>"
             + "  <attribute>AD_GROUP</attribute>"
             + "  <kind>GROUP</kind>" // unknown
-            + "  <persist>FULL</persist>"
             + " </mapping>"
+
             + " <mapping>"
             + "  <enabled>false</enabled>"
 //            + "  <attribute>AD_GROUPROLE</attribute>" // attribute null
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_r_</separator>"
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             
             + " <mapping>"
             + "  <enabled>false</enabled>"
             + "  <attribute>AD_ROLE</attribute>"
             + "  <kind>ROLECLAIM</kind>"  // no path
-            + "  <persist>FULL</persist>"
             + " </mapping>"
 
             + " <mapping>"
@@ -1052,18 +1252,31 @@ class KeycloakAuthorizationManagerTest {
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
 //            + "  <separator>_r_</separator>"  // separator null
-            + "  <persist>FULL</persist>"
             + " </mapping>"
             
-            + "</mappings>";
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>imported_role</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
     
-    private static final String JWT_NO_ROLE = "{\n"
-            + "  \"header\" : {\n"
+    private static final String JWT_NO_ROLE = "{"
+            + "  \"header\" : {"
             + "    \"alg\" : \"RS256\","
             + "    \"typ\" : \"JWT\","
-            + "    \"kid\" : \"l09Wlf_NY_dmMORYBjkr7deFVGVJ5TRLHW1p7DIT1ds\"\n"
+            + "    \"kid\" : \"l09Wlf_NY_dmMORYBjkr7deFVGVJ5TRLHW1p7DIT1ds\""
             + "  },"
-            + "  \"payload\" : {\n"
+            + "  \"payload\" : {"
             + "    \"exp\" : 1768319443,"
             + "    \"iat\" : 1768319143,"
             + "    \"auth_time\" : 1768319142,"
@@ -1077,16 +1290,16 @@ class KeycloakAuthorizationManagerTest {
             + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
             + "    \"acr\" : \"1\","
             + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
-            + "    \"realm_access\" : {\n"
-            + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
+            + "    \"realm_access\" : {"
+            + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]"
             + "    },"
-            + "    \"resource_access\" : {\n"
-            + "      \"aclient\" : {\n"
-            + "        \"roles\" : [ \"generico\" ]\n"
+            + "    \"resource_access\" : {"
+            + "      \"aclient\" : {"
+            + "        \"roles\" : [ \"generico\" ]"
             + "      },"
-            + "      \"account\" : {\n"
-            + "        \"roles\" : [ \"manage-account\", \"manage-account-links\", \"view-profile\" ]\n"
-            + "      }\n"
+            + "      \"account\" : {"
+            + "        \"roles\" : [ \"manage-account\", \"manage-account-links\", \"view-profile\" ]"
+            + "      }"
             + "    },"
             + "    \"scope\" : \"openid profile email\","
             + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
@@ -1096,12 +1309,12 @@ class KeycloakAuthorizationManagerTest {
             + "    \"given_name\" : \"User\","
             + "    \"family_name\" : \"lastname\","
             + "    \"email\" : \"user@email.it\","
-            + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
+            + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]"
             + "  },"
-            + "  \"signature\" : \"dLENSPEPw\"\n"
+            + "  \"signature\" : \"dLENSPEPw\""
             + "}";
 
-    private static final String JWT = "{\n"
+    private static final String JWT = "{"
             + "    \"exp\" : 1768319443,"
             + "    \"iat\" : 1768319143,"
             + "    \"auth_time\" : 1768319142,"
@@ -1115,32 +1328,32 @@ class KeycloakAuthorizationManagerTest {
             + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
             + "    \"acr\" : \"1\","
             + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
-            + "    \"realm_access\" : {\n"
-            + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\", \"generico\" ]\n"
+            + "    \"realm_access\" : {"
+            + "      \"roles\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\", \"generico\" ]"
             + "    },"
-            + "    \"resource_access\" : {\n"
-            + "      \"sim730\" : {\n"
-            + "        \"roles\" : [ \"generico\" ]\n"
+            + "    \"resource_access\" : {"
+            + "      \"sim730\" : {"
+            + "        \"roles\" : [ \"generico\" ]"
             + "      },"
-            + "      \"account\" : {\n"
-            + "        \"roles\" : [ \"manage-account\", \"manage-account-links\", \"view-profile\" ]\n"
-            + "      }\n"
+            + "      \"account\" : {"
+            + "        \"roles\" : [ \"manage-account\", \"manage-account-links\", \"view-profile\" ]"
+            + "      }"
             + "    },"
             + "    \"scope\" : \"openid profile email\","
             + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
             + "    \"email_verified\" : false,"
             + "    \"name\" : \"User lastname\","
-            + "    \"groups\": [\n"
+            + "    \"groups\": ["
             + "         \"Gruppo-Microsoft-Importato\", \"altro-gruppo\" "
             + "     ],"
             + "    \"preferred_username\" : \"user@email.it\","
             + "    \"given_name\" : \"User\","
             + "    \"family_name\" : \"lastname\","
             + "    \"email\" : \"user@email.it\","
-            + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]\n"
+            + "    \"miei_ruoli_custom\" : [ \"offline_access\", \"uma_authorization\", \"default-roles-entando\" ]"
             + "  }";
 
-    private static final String JWT_ROLEGROUP = "{\n"
+    private static final String JWT_ROLEGROUP = "{"
             + "    \"exp\" : 1768319443,"
             + "    \"iat\" : 1768319143,"
             + "    \"auth_time\" : 1768319142,"
@@ -1154,8 +1367,8 @@ class KeycloakAuthorizationManagerTest {
             + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
             + "    \"acr\" : \"1\","
             + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
-            + "    \"realm_access\" : {\n"
-            + "      \"roles\" : [ \"role1_SEP_group1\", \"role2_SEP_group2\" ]\n"
+            + "    \"realm_access\" : {"
+            + "      \"roles\" : [ \"role1_SEP_group1\", \"role2_SEP_group2\" ]"
             + "    },"
             + "    \"scope\" : \"openid profile email\","
             + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
@@ -1167,7 +1380,7 @@ class KeycloakAuthorizationManagerTest {
             + "    \"email\" : \"user@email.it\""
             + "  }";
 
-    private static final String JWT_ROLEGROUP_EDGE = "{\n"
+    private static final String JWT_ROLEGROUP_EDGE = "{"
             + "    \"exp\" : 1768319443,"
             + "    \"iat\" : 1768319143,"
             + "    \"auth_time\" : 1768319142,"
@@ -1181,8 +1394,8 @@ class KeycloakAuthorizationManagerTest {
             + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
             + "    \"acr\" : \"1\","
             + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
-            + "    \"realm_access\" : {\n"
-            + "      \"roles\" : [ \"group1\", \"_SEP_group2\" ]\n"
+            + "    \"realm_access\" : {"
+            + "      \"roles\" : [ \"group1\", \"_SEP_group2\" ]"
             + "    },"
             + "    \"scope\" : \"openid profile email\","
             + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","

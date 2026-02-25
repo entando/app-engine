@@ -177,8 +177,11 @@ public interface IAuthorizationManager {
 	public List<String> getUsersByAuthority(IApsAuthority authority, boolean includeAdmin) throws EntException;
 	
 	public List<String> getUsersByAuthorities(String groupName, String roleName, boolean includeAdmin) throws EntException;
-	
-	public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException;
+
+    void deleteUserAuthorizationByGroupAndRole(String username, List<String> groups,
+            List<String> roles) throws EntException;
+
+    public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException;
 	
 	public List<String> getUsersByRole(String roleName, boolean includeAdmin) throws EntException;
 	
@@ -186,7 +189,4 @@ public interface IAuthorizationManager {
 	
 	public List<String> getUsersByGroup(String groupName, boolean includeAdmin) throws EntException;
 
-    void deleteUserRoles(String username, List<String> roles) throws EntException;
-
-	void deleteUserGroups(String username, List<String> groups) throws EntException;
 }

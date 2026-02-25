@@ -6,7 +6,6 @@ public class DynamicMappingElement {
     public boolean enabled;
     public String attribute;
     public DynamicMappingKind kind;
-    public PersistKind persist;
     public String separator; // FOR ROLEGROUP and GROUPROLECLAIM ONLY
     public String path; // FOR *CLAIM ONLY
 
