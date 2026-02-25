@@ -22,7 +22,7 @@ class TestAuthorizationDAO extends BaseTestCase {
 
         String username = "admin";
 
-        // 1. Setup: Add multiple authorizations
+        // Setup with multiple authorizations
         Group freeGroup = new Group();
         freeGroup.setName("free");
         Role editorRole = new Role();
@@ -59,7 +59,7 @@ class TestAuthorizationDAO extends BaseTestCase {
         assertTrue(containsAuth(authorizations, "coach", "pageManager"));
         assertTrue(containsAuth(authorizations, "customers", "supervisor"));
 
-        // 2. Test deleteUserAuthorizationByGroupAndRole with specific groups and roles
+        //Test deleteUserAuthorizationByGroupAndRole with specific groups and roles
         authorizationDAO.deleteUserAuthorizationByGroupAndRole(
                 username,
                 Arrays.asList("free", "coach"),
@@ -98,7 +98,7 @@ class TestAuthorizationDAO extends BaseTestCase {
         Map<String, Group> groups = Map.of("free", freeGroup, "coach", coachGroup);
         Map<String, Role> roles = Map.of("editor", editorRole, "pageManager", pageManagerRole);
 
-        // Delete by groups only
+        // Delete it by groups only
         authorizationDAO.deleteUserAuthorizationByGroupAndRole(
                 username,
                 Arrays.asList("free"),
@@ -111,7 +111,7 @@ class TestAuthorizationDAO extends BaseTestCase {
     }
 
     @Test
-    void testDeleteUserAuthorizationByGroupAndRoleWithOnlyRoles() throws Throwable {
+    void testDeleteUserAuthorizationByGroupAndRoleWithOnlyRoles() {
         DataSource dataSource = (DataSource) this.getApplicationContext().getBean("servDataSource");
         AuthorizationDAO authorizationDAO = new AuthorizationDAO();
         authorizationDAO.setDataSource(dataSource);
@@ -136,7 +136,7 @@ class TestAuthorizationDAO extends BaseTestCase {
         Map<String, Group> groups = Map.of("free", freeGroup, "coach", coachGroup);
         Map<String, Role> roles = Map.of("editor", editorRole, "pageManager", pageManagerRole);
 
-        // Delete by roles only
+        // Delete it by roles only
         authorizationDAO.deleteUserAuthorizationByGroupAndRole(
                 username,
                 null,

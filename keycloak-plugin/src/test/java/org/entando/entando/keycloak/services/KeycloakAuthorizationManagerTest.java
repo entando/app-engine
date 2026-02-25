@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.keycloak.services.mapping.PersistKind;
 import org.entando.entando.keycloak.services.oidc.OidcMappingService;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
@@ -309,7 +308,7 @@ class KeycloakAuthorizationManagerTest {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_GROUP", List.of("group")));
 
-        when(userDetails.getUsername()).thenReturn("testuser");
+//        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
         final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
@@ -388,7 +387,7 @@ class KeycloakAuthorizationManagerTest {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
 
-        when(userDetails.getUsername()).thenReturn("testuser");
+//        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
         when(userDetails.getAuthorizations()).thenReturn(List.of(auth));
 
@@ -700,11 +699,9 @@ class KeycloakAuthorizationManagerTest {
                 + "  <kind>ROLE</kind>"
                 + " </mapping>"
                 + "</mappings>"
-
                 + "  <roles>"
                 + "   <role>existing_role</role>"
                 + "  </roles>"
-
                 + "</DynamicMapping>";
 
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
@@ -717,7 +714,7 @@ class KeycloakAuthorizationManagerTest {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("existing_role")));
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
-        when(userDetails.getUsername()).thenReturn("testuser");
+//        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
 
         manager.init();
@@ -755,19 +752,19 @@ class KeycloakAuthorizationManagerTest {
         Role existingRole = new Role();
         existingRole.setName("conflict_role");
 
-        // Prima ritorna null (simulando che non lo trova), poi dopo l'errore di addRole lo trova
+        // First it returns null (simulating that it can’t find it), then after the addRole error, it finds it
         when(roleManager.getRole("conflict_role"))
                 .thenReturn(null)
                 .thenReturn(existingRole);
 
-        // Simula conflitto su addRole
+        // Simulate a conflict on addRole
         org.mockito.Mockito.doThrow(new EntException("Conflict"))
                 .when(roleManager).addRole(any(Role.class));
 
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("conflict_role")));
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
-        when(userDetails.getUsername()).thenReturn("testuser");
+//        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
 
         manager.init();

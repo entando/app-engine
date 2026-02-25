@@ -55,6 +55,9 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
     private final IAuthenticationProviderManager authenticationProviderManager;
     private final KeycloakAuthorizationManager keycloakGroupManager;
 
+    private static final int STRIPES = 256;
+    private final Object[] stripedLocks = new Object[STRIPES];
+
     @Autowired
     public KeycloakAuthenticationFilter(final KeycloakConfiguration configuration,
                                         final IUserManager userManager,
@@ -69,6 +72,10 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
         this.userManager = userManager;
         this.oidcService = oidcService;
         this.authenticationProviderManager = authenticationProviderManager;
+        // format the lock cache
+        for (int i = 0; i < STRIPES; i++) {
+            stripedLocks[i] = new Object();
+        }
     }
 
     @Override
@@ -100,21 +107,24 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
         }
 
         try {
-            final UserDetails user = authenticationProviderManager.getUser(accessToken.getUsername());
-            final UserAuthentication userAuthentication = new UserAuthentication(user);
+            int index = accessToken.getUsername().hashCode() & (STRIPES - 1);
+            Object lock = stripedLocks[index];
 
-            ofNullable(accessToken.getResourceAccess())
-                    .map(access -> access.get(configuration.getClientId()))
-                    .map(TokenRoles::getRoles)
-                    .ifPresent(permissions -> addAuthorizations(permissions, user));
+            // user-based lock, collisions are still possible, but it is acceptable
+            synchronized (lock) {
+                final UserDetails user = authenticationProviderManager.getUser(accessToken.getUsername());
+                final UserAuthentication userAuthentication = new UserAuthentication(user);
 
-            setUserOnContext(request, user, userAuthentication);
+                ofNullable(accessToken.getResourceAccess())
+                        .map(access -> access.get(configuration.getClientId()))
+                        .map(TokenRoles::getRoles)
+                        .ifPresent(permissions -> addAuthorizations(permissions, user));
 
-            // TODO optimise to not check on every request
-//            keycloakGroupManager.cleanupManagedAuthorizations(user.getUsername());
-            keycloakGroupManager.processNewUser(user, bearerToken, true);
+                setUserOnContext(request, user, userAuthentication);
 
-            return userAuthentication;
+                keycloakGroupManager.processNewUser(user, bearerToken, true);
+                return userAuthentication;
+            }
         } catch (EntException e) {
             log.error("System exception", e);
             throw new InsufficientAuthenticationException("error parsing OAuth parameters");

@@ -227,11 +227,11 @@ public class KeycloakAuthorizationManager extends AbstractService {
         List<Authorization> existingAuths = Optional.ofNullable(user.getAuthorizations())
                 .orElse(List.of())
                 .stream()
-                .filter(a -> (a.getGroup() != null && groups.contains(a.getRole().getName())
+                .filter(a -> (a.getGroup() != null && groups.contains(a.getGroup().getName())
                         || (a.getRole() != null && roles.contains(a.getRole().getName())))
                 )
                 .collect(Collectors.toList());
-        // se l'autorizzazione esistente non è contenuta nelle dynamic auths allora va cancellata
+        // If the existing authorization is not included in the dynamic authorizations, it must be removed
         List<Authorization> toDelete = existingAuths
                 .stream()
                 .filter(a -> {
@@ -240,7 +240,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 })
                 .collect(Collectors.toList());
         // finally
-        sillyDebug(user, dynamicAuthorizations, existingAuths, toAdd, toDelete); // DO NOT TEST, IGNORE
+        sillyDebug(user, dynamicAuthorizations, existingAuths, toAdd, toDelete);
         persistAuthorizations(user, toAdd, toDelete);
     }
 
@@ -284,12 +284,12 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     public static int indexOfAuthorization(UserDetails user, Authorization target) {
-
         if (user == null || target == null) {
             return -1;
         }
 
-        List<Authorization> authorizations = user.getAuthorizations();
+        final List<Authorization> authorizations = user.getAuthorizations();
+
         if (authorizations == null || authorizations.isEmpty()) {
             return -1;
         }
@@ -301,10 +301,11 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 return i;
             }
         }
-
+        // oops
         return -1;
     }
 
+/**/
     private static void sillyDebug(UserDetails user, List<Authorization> dynamicAuthorizations,
             List<Authorization> existingAuths, List<Authorization> toAdd, List<Authorization> toDelete) {
         System.out.println("-------------------\n");
@@ -333,6 +334,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
             System.out.println("DELETE " + user.getUsername() + " role " + roleName +  " group " + groupName);
         });
     }
+/**/
 
     /**
      * Analyze the JWT looking for known mappings to translate into Entando roles
@@ -516,8 +518,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return result;
     }
 
-    private Authorization parseAuthForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator)
-            throws EntException {
+    private Authorization parseAuthForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator) {
         final String[] tokens = groupRoleToken.split(separator);
 
         if (tokens.length != 2
@@ -568,7 +569,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return result;
     }
 
-    private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName) throws EntException {
+    private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName) {
         return finalizeAssociation(user, elem, roleName, groupName, true);
     }
 
@@ -581,18 +582,17 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
     private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName,
             boolean createRoleIfMissing) {
-        // is ignored?
+        // is it excluded?
         if (isIgnored(roleName) || isIgnored(groupName)) {
             log.info("Role {} or Group {} is in the exclusions list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
             return null;
         }
-        if (StringUtils.isNotBlank(roleName) &&!roles.contains(roleName)) {
-            System.out.println(">>> IGNORO RUOLO " + roleName);
+        // are they managed?
+        if (StringUtils.isNotBlank(roleName) && !roles.contains(roleName)) {
             log.info("Role {} is not managed. Skipping assignment for user {}", roleName, user.getUsername());
             return null;
         }
         if (StringUtils.isNotBlank(groupName) && !groups.contains(groupName)) {
-            System.out.println(">>> IGNORO GRUPPO " + groupName);
             log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
             return null;
         }

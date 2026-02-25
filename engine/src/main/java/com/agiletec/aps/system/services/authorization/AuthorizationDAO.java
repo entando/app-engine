@@ -17,19 +17,16 @@ import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
 
 /**
  * @author E.Santoboni
@@ -203,7 +200,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		final boolean hasRoles = roles != null && !roles.isEmpty();
 		final boolean hasGroups = groups != null && !groups.isEmpty();
 
-		sb.append("AND ("); // apertura AND
+		sb.append(" AND ("); // apertura AND
 
 		if (hasGroups) {
 			final String placeholders = String.join(", ",
@@ -225,7 +222,6 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			sb.append(") "); // chiusura rolename
 		}
 		sb.append(")"); // chiusura AND
-		System.out.println("\n\n>>> " + sb.toString());
 		return sb.toString();
 	}
 
