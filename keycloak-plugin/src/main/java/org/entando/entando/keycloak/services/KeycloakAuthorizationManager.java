@@ -90,8 +90,10 @@ public class KeycloakAuthorizationManager extends AbstractService {
     @Override
     public void init() throws Exception {
         writeLock.lock();
+
         profileMappings = new ArrayList<>();
         jwtMappings = new ArrayList<>();
+
         try {
             String xml = configManager.getConfigItem("dynamicAuthMapping");
             if (StringUtils.isNotBlank(xml)) {
@@ -102,6 +104,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                         final Map<Boolean, List<DynamicMappingElement>> partitioned =
                                 dynConf.mapping.stream()
                                         .filter(this::isValid)
+                                        .filter(m -> m.enabled)
                                         .collect(Collectors.partitioningBy(
                                                 item -> item.kind.isJwtMapping()
                                         ));
@@ -116,7 +119,10 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 }
             }
             if (profileMappings != null) {
-                profileMappings.forEach(m -> log.debug("mapping active: {}", m.toString()));
+                profileMappings.forEach(m -> log.debug("profile mapping active: {}", m.toString()));
+            }
+            if (jwtMappings != null) {
+                jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);
@@ -162,22 +168,100 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return true;
     }
 
-    public void processNewUser(final UserDetails user, final String token, final boolean decode) {
+    public synchronized void processNewUser(final UserDetails user, final String token, final boolean decode) {
         processNewUser(user);
         readLock.lock();
         try {
+            // Authorizations coming from dynamic mapping (that is, external sources)
+            final List<Authorization> dynamicAuthorizations = new ArrayList<>();
+
             // process path role claims, if any...
             if (StringUtils.isNotBlank(token) && !jwtMappings.isEmpty()) {
                 for (DynamicMappingElement cur: jwtMappings) {
-                    processJwtClaimAttributes(user, token, decode, cur);
+                    dynamicAuthorizations.addAll(processJwtClaimAttributes(user, token, decode, cur));
                 }
             }
             // ...then process attributes coming from the user profile, if needed
             if (user instanceof KeycloakUser
                     && profileMappings != null
                     && !profileMappings.isEmpty()) {
-                processProfileAttributes((KeycloakUser) user);
+                dynamicAuthorizations.addAll(processProfileAttributes((KeycloakUser) user));
             }
+            // se l'autorizzazione dinamica non è già assegnata all'utente allora va aggiunta
+            List<Authorization> toAdd = dynamicAuthorizations
+                    .stream()
+                    .filter(a -> {
+                        final String groupName = a.getGroup() != null ? a.getGroup().getName() : null;
+                        final String roleName = a.getRole() != null ? a.getRole().getName() : null;
+
+                        if (isAlreadyAssigned((KeycloakUser) user, roleName, groupName)) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    })
+                    .collect(Collectors.toList());
+            // list of the _managed_ authorizations currently assigned to the user
+            List<Authorization> existingAuths = user.getAuthorizations()
+                    .stream()
+                    .filter(a -> (a.getGroup() != null && groups.contains(a.getRole().getName())
+                            || (a.getRole() != null && roles.contains(a.getRole().getName())))
+                    )
+                    .collect(Collectors.toList());
+            // se l'autorizzazione esistente non è contenuta nelle dynamic auths allora va cancellata
+            List<Authorization> toDelete = existingAuths
+                    .stream()
+                    .filter(a -> {
+                        return !dynamicAuthorizations.stream()
+                                .anyMatch(d -> d.equals(a));
+                    })
+                    .collect(Collectors.toList());
+            // finally
+            for (Authorization authorization : toAdd) {
+                persistAuthIfMissing((KeycloakUser) user, authorization);
+
+                user.addAuthorization(authorization);
+            }
+//            for (Authorization authorization: toDelete) {
+//                List<String> rolesToDelete = new ArrayList<>();
+//                List<String> groupsToDelete = new ArrayList<>();
+//
+//                if (authorization.getRole() != null) {
+//                    rolesToDelete.add(authorization.getRole().getName());
+//                }
+//                if (authorization.getGroup() != null) {
+//                    groupsToDelete.add(authorization.getGroup().getName());
+//                }
+//
+//            }
+
+            System.out.println("-------------------\n");
+            dynamicAuthorizations.forEach(n-> {
+                final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
+                final String roleName = n.getRole() != null ? n.getRole().getName() : null;
+
+                System.out.println("JWT " + user.getUsername() + " role " + roleName +  " group " + groupName);
+            });
+            existingAuths.forEach(n-> {
+                final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
+                final String roleName = n.getRole() != null ? n.getRole().getName() : null;
+
+                System.out.println("USER " + user.getUsername() + " role " + roleName +  " group " + groupName);
+            });
+            toAdd.forEach(n-> {
+                final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
+                final String roleName = n.getRole() != null ? n.getRole().getName() : null;
+
+                System.out.println("ADD " + user.getUsername() + " role " + roleName +  " group " + groupName);
+            });
+            toDelete.forEach(d-> {
+                final String groupName = d.getGroup() != null ? d.getGroup().getName() : null;
+                final String roleName = d.getRole() != null ? d.getRole().getName() : null;
+
+                System.out.println("DELETE " + user.getUsername() + " role " + roleName +  " group " + groupName);
+            });
+        } catch (EntException e) {
+            throw new RuntimeException(e);
         } finally {
             readLock.unlock();
         }
@@ -198,24 +282,28 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @param token access token
      * @param decode is true the access token is decoded from the base64 form
      * @param claimMapper the mapping configuration
+     * @return the list of authorizations extracted from the JWT
      */
-    private void processJwtClaimAttributes(final UserDetails user, final String token, final boolean decode, final DynamicMappingElement claimMapper) {
+    private List<Authorization> processJwtClaimAttributes(final UserDetails user, final String token, final boolean decode, final DynamicMappingElement claimMapper) {
         final List<String> authorizations = oidcMappingService.extractAuthorizationsFromJwt(token, decode, claimMapper, user.getUsername());
+        List<Authorization> jwtAuthorizations = new ArrayList<>();
 
         if (user instanceof KeycloakUser && !authorizations.isEmpty()) {
             KeycloakUser kcUser = (KeycloakUser) user;
             if (claimMapper.kind == DynamicMappingKind.ROLECLAIM) {
-                finalizeRoleAssociation(kcUser, claimMapper, authorizations);
+                jwtAuthorizations.addAll(finalizeRoleAssociation(kcUser, claimMapper, authorizations));
             } else if (claimMapper.kind == DynamicMappingKind.GROUPCLAIM) {
-                finalizeGroupAssociation(kcUser, claimMapper, authorizations);
+                jwtAuthorizations.addAll(finalizeGroupAssociation(kcUser, claimMapper, authorizations));
             } else {
-                finalizeGroupRoleAssociation(kcUser, claimMapper, authorizations);
+                jwtAuthorizations.addAll(finalizeGroupRoleAssociation(kcUser, claimMapper, authorizations));
             }
         }
+        return jwtAuthorizations;
     }
 
-    private void finalizeGroupRoleAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
-        if (authorizations == null) return;
+    private List<Authorization> finalizeGroupRoleAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
+        List<Authorization> result = new ArrayList<>();
+        if (authorizations == null) return result;
 
         for (String candidate : authorizations) {
             try {
@@ -228,7 +316,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
                 if (tokens.length < 2) {
                     // treat as a role
-                    finalizeRoleAssociation(user, elem, List.of(candidate.trim()));
+                    result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
                     continue;
                 }
 
@@ -240,11 +328,15 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     continue;
                 }
 
-                finalizeAssociation(user, elem, roleName, groupName, candidate);
+                Authorization auth = finalizeAssociation(user, elem, roleName, groupName);
+                if (auth != null) {
+                    result.add(auth);
+                }
             } catch (Exception e) {
                 log.error("Error processing dynamic group-role '{}' for user {}", candidate, user.getUsername(), e);
             }
         }
+        return result;
     }
 
     private void processNewUser(final UserDetails user) {
@@ -325,22 +417,26 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * Map dynamically, optionally persisting, authorization coming from the user profile in
      * keycloak
      * @param user the currently logged user
+     * @return the list of authorizations extracted from the user profile
      */
-    private void processProfileAttributes(final KeycloakUser user) {
+    private List<Authorization> processProfileAttributes(final KeycloakUser user) {
+        List<Authorization> result = new ArrayList<>();
         profileMappings.forEach(m -> {
             if (m.kind == ROLE) {
-                doProcessRole(user, m);
+                result.addAll(doProcessRole(user, m));
             }
             if (m.kind == GROUP) {
-                doProcessGroup(user, m);
+                result.addAll(doProcessGroup(user, m));
             }
             if (m.kind == ROLEGROUP) {
-                doProcessRoleGroup(user, m);
+                result.addAll(doProcessRoleGroup(user, m));
             }
         });
+        return result;
     }
 
-    private void doProcessRoleGroup(KeycloakUser user, DynamicMappingElement elem) {
+    private List<Authorization> doProcessRoleGroup(KeycloakUser user, DynamicMappingElement elem) {
+        List<Authorization> result = new ArrayList<>();
         final String separator = StringUtils.isBlank(elem.separator) ?
                 DEFAULT_SEPARATOR : elem.separator;
 
@@ -348,17 +444,21 @@ public class KeycloakAuthorizationManager extends AbstractService {
             final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
 
             if (authorizations == null) {
-                return;
+                return result;
             }
             for (String groupRoleToken : authorizations) {
-                parseAuthForRoleGroup(user, elem, groupRoleToken, separator);
+                Authorization auth = parseAuthForRoleGroup(user, elem, groupRoleToken, separator);
+                if (auth != null) {
+                    result.add(auth);
+                }
             }
         } catch (Exception e) {
             log.error("error processing dynamic GRUOPROLE association", e);
         }
+        return result;
     }
 
-    private void parseAuthForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator)
+    private Authorization parseAuthForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator)
             throws EntException {
         final String[] tokens = groupRoleToken.split(separator);
 
@@ -366,13 +466,13 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 || StringUtils.isBlank(tokens[0])
                 || StringUtils.isBlank(tokens[1])) {
             log.error("invalid dynamic config configuration detected");
-            return;
+            return null;
         }
 
         final String groupName = tokens[1];
         final String roleName = tokens[0];
 
-        finalizeAssociation(user, elem, roleName, groupName, groupRoleToken, false);
+        return finalizeAssociation(user, elem, roleName, groupName, false);
     }
 
     private Group createTransientGroup(String groupName) {
@@ -386,26 +486,32 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * Process the dynamic Role authorization for the given user
      * @param user the currently logging-in user
      * @param elem a single dynamic configuration
+     * @return the list of authorizations extracted from the user profile
      */
-    private void doProcessRole(KeycloakUser user, DynamicMappingElement elem) {
+    private List<Authorization> doProcessRole(KeycloakUser user, DynamicMappingElement elem) {
         final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
-        finalizeRoleAssociation(user, elem, authorizations);
+        return finalizeRoleAssociation(user, elem, authorizations);
     }
 
-    private void finalizeRoleAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
-        if (authorizations == null) return;
+    private List<Authorization> finalizeRoleAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
+        List<Authorization> result = new ArrayList<>();
+        if (authorizations == null) return result;
 
         for (String roleName : authorizations) {
             try {
-                finalizeAssociation(user, elem, roleName, null, roleName);
+                Authorization auth = finalizeAssociation(user, elem, roleName, null);
+                if (auth != null) {
+                    result.add(auth);
+                }
             } catch (Exception e) {
                 log.error("Error processing dynamic role '{}' for user {}", roleName, user.getUsername(), e);
             }
         }
+        return result;
     }
 
-    private void finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName, String originalCandidate) throws EntException {
-        finalizeAssociation(user, elem, roleName, groupName, originalCandidate, true);
+    private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName) throws EntException {
+        return finalizeAssociation(user, elem, roleName, groupName, true);
     }
 
     private boolean isIgnored(String name) {
@@ -415,25 +521,25 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return ignore.contains(name.trim());
     }
 
-    private void finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName, String originalCandidate, boolean createRoleIfMissing) throws EntException {
+    private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName,
+            boolean createRoleIfMissing) throws EntException {
         if (isIgnored(roleName) || isIgnored(groupName)) {
             log.info("Role {} or Group {} is in the ignore list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
-            return;
+            return null;
         }
 
-        if (isAlreadyAssigned(user, roleName, groupName)) {
-            log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
-            return;
-        }
+//        if (isAlreadyAssigned(user, roleName, groupName)) {
+//            log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
+//            return null;
+//        }
 
         Authorization auth = createAuthorization(elem, roleName, groupName, createRoleIfMissing);
-
-        if (elem.persist == PersistKind.FULL) {
-            persistAuthIfMissing(user, auth);
-        }
-
-        user.addAuthorization(auth);
-        log.info("Successfully assigned {} to user {}", originalCandidate, user.getUsername());
+//        if (elem.persist == PersistKind.FULL) {
+//            persistAuthIfMissing(user, auth);
+//        }
+//        user.addAuthorization(auth);
+//        log.info("Successfully assigned {} to user {}", originalCandidate, user.getUsername());
+        return auth;
     }
 
     private Authorization createAuthorization(DynamicMappingElement elem, String roleName, String groupName, boolean createRoleIfMissing) {
@@ -492,32 +598,38 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * Process the dynamic Group authorization for the given user
      * @param user the currently logging-in user
      * @param elem a single dynamic configuration
+     * @return the list of authorizations extracted from the user profile
      */
-    private void doProcessGroup(KeycloakUser user, DynamicMappingElement elem) {
+    private List<Authorization> doProcessGroup(KeycloakUser user, DynamicMappingElement elem) {
         final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
         if (authorizations == null) {
-            return;
+            return new ArrayList<>();
         }
-        finalizeGroupAssociation(user, elem, authorizations);
+        return finalizeGroupAssociation(user, elem, authorizations);
     }
 
-    private void finalizeGroupAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
-        if (authorizations == null) return;
+    private List<Authorization> finalizeGroupAssociation(KeycloakUser user, DynamicMappingElement elem, List<String> authorizations) {
+        List<Authorization> result = new ArrayList<>();
+        if (authorizations == null) return result;
 
         for (String groupName : authorizations) {
             try {
-                finalizeAssociation(user, elem, null, groupName, groupName);
+                Authorization auth = finalizeAssociation(user, elem, null, groupName);
+                if (auth != null) {
+                    result.add(auth);
+                }
             } catch (Exception e) {
                 log.error("Error processing dynamic group '{}' for user {}", groupName, user.getUsername(), e);
             }
         }
+        return result;
     }
 
 
 
     /**
-     * To avoid creating duplicate records, we check if the authorization already exists. 
-     * In a replicated environment or under high concurrency, there is still the possibility 
+     * To avoid creating duplicate records, we check if the authorization already exists.
+     * In a replicated environment or under high concurrency, there is still the possibility
      * to attempt to create multiple, identical associations. This is handled by a database
      * unique constraint and a try-catch block.
      * @param user the user being processed
