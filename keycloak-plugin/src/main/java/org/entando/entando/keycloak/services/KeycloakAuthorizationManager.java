@@ -194,11 +194,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
                         final String groupName = a.getGroup() != null ? a.getGroup().getName() : null;
                         final String roleName = a.getRole() != null ? a.getRole().getName() : null;
 
-                        if (isAlreadyAssigned((KeycloakUser) user, roleName, groupName)) {
-                            return false;
-                        } else {
-                            return true;
-                        }
+                        assert user instanceof KeycloakUser;
+                        return !isAlreadyAssigned((KeycloakUser) user, roleName, groupName);
                     })
                     .collect(Collectors.toList());
             // list of the _managed_ authorizations currently assigned to the user
@@ -212,8 +209,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
             List<Authorization> toDelete = existingAuths
                     .stream()
                     .filter(a -> {
-                        return !dynamicAuthorizations.stream()
-                                .anyMatch(d -> d.equals(a));
+                        return dynamicAuthorizations.stream()
+                                .noneMatch(d -> d.equals(a));
                     })
                     .collect(Collectors.toList());
             // finally
@@ -522,24 +519,13 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName,
-            boolean createRoleIfMissing) throws EntException {
+            boolean createRoleIfMissing) {
         if (isIgnored(roleName) || isIgnored(groupName)) {
             log.info("Role {} or Group {} is in the ignore list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
             return null;
         }
 
-//        if (isAlreadyAssigned(user, roleName, groupName)) {
-//            log.debug("Role {} and group {} already assigned to user {}", roleName, groupName, user.getUsername());
-//            return null;
-//        }
-
-        Authorization auth = createAuthorization(elem, roleName, groupName, createRoleIfMissing);
-//        if (elem.persist == PersistKind.FULL) {
-//            persistAuthIfMissing(user, auth);
-//        }
-//        user.addAuthorization(auth);
-//        log.info("Successfully assigned {} to user {}", originalCandidate, user.getUsername());
-        return auth;
+        return createAuthorization(elem, roleName, groupName, createRoleIfMissing);
     }
 
     private Authorization createAuthorization(DynamicMappingElement elem, String roleName, String groupName, boolean createRoleIfMissing) {
