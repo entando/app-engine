@@ -145,7 +145,7 @@ class KeycloakAuthenticationFilterTest {
     }
 
     @Test
-    void apiAuthenticationShouldSetAttributeRequest() throws Exception {
+    void apiAuthenticationShouldSetAttributeRequest() {
         when(request.getServletPath()).thenReturn("/api");
         try ( MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);

@@ -838,7 +838,6 @@ class KeycloakAuthorizationManagerTest {
                     + "  <separator>_r_</separator>"
                     + " </mapping>"
                     + "</mappings>"
-                    + ""
                     + "<exclusions>"
                     + "   <exclusions>default-roles-entando-development</exclusions>"
                     + "   <exclusions>offline_access</exclusions>"

@@ -611,13 +611,13 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
         // further optimization
 //        if (!isAlreadyAssigned(user, groupName, roleName)) {
-            return createAuthorization(elem, roleName, groupName, createRoleIfMissing);
+            return createAuthorization(roleName, groupName, createRoleIfMissing);
 //        } else {
 //            return null;
 //        }
     }
 
-    private Authorization createAuthorization(DynamicMappingElement elem, String roleName, String groupName, boolean createRoleIfMissing) {
+    private Authorization createAuthorization(String roleName, String groupName, boolean createRoleIfMissing) {
         if (shouldPersistAuthorization()) {
             return createPersistedAuthorization(roleName, groupName);
         }
