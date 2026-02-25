@@ -212,7 +212,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     private void syncAuthorizations(final UserDetails user, final List<Authorization> dynamicAuthorizations) throws EntException {
-        // se l'autorizzazione dinamica non è già assegnata all'utente allora va aggiunta
+        //If the dynamic authorization is not already assigned to the user, then it must be added
         List<Authorization> toAdd = dynamicAuthorizations
                 .stream()
                 .filter(a -> {
@@ -220,7 +220,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     final String roleName = a.getRole() != null ? a.getRole().getName() : null;
 
                     assert user instanceof KeycloakUser;
-                    return !isAlreadyAssigned((KeycloakUser) user, roleName, groupName);
+                    return !isAlreadyAssigned((KeycloakUser) user, groupName, roleName);
                 })
                 .collect(Collectors.toList());
         // list of the _managed_ authorizations currently assigned to the user
@@ -246,7 +246,15 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
     private void persistAuthorizations(UserDetails user, List<Authorization> toAdd, List<Authorization> toDelete)
             throws EntException {
-        // finally
+        // add the newly granted authorizations
+        addAuthorizations(user, toAdd);
+        // remove authorizations that aren't granted anymore
+        if (!toDelete.isEmpty()) {
+            deleteAuthorizations(user, toDelete);
+        }
+    }
+
+    private void addAuthorizations(UserDetails user, List<Authorization> toAdd) {
         for (Authorization authorization : toAdd) {
 
             if (persist == PersistKind.FULL) {
@@ -256,26 +264,31 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     log.debug("Failed to persist authorization for user {}: {}", user.getUsername(), e.getMessage());
                 }
             }
+            // sync authorizations
             user.addAuthorization(authorization);
         }
-        List<Integer> index = new ArrayList<>();
-        for (Authorization authorization: toDelete) {
-            List<String> rolesToDelete = new ArrayList<>();
-            List<String> groupsToDelete = new ArrayList<>();
+    }
 
+    private void deleteAuthorizations(UserDetails user, List<Authorization> toDelete) throws EntException {
+        final List<Integer> index = new ArrayList<>();
+        final List<String> rolesToDelete = new ArrayList<>();
+        final List<String> groupsToDelete = new ArrayList<>();
+
+        for (Authorization authorization: toDelete) {
             if (authorization.getRole() != null) {
                 rolesToDelete.add(authorization.getRole().getName());
             }
             if (authorization.getGroup() != null) {
                 groupsToDelete.add(authorization.getGroup().getName());
             }
-            if (persist == PersistKind.FULL) {
-                authorizationManager.deleteUserAuthorizationByGroupAndRole(user.getUsername(), groupsToDelete, rolesToDelete);
-            }
             index.add(indexOfAuthorization(user, authorization));
         }
+        // execute a single delete
+        if (persist == PersistKind.FULL) {
+            authorizationManager.deleteUserAuthorizationByGroupAndRole(user.getUsername(), groupsToDelete, rolesToDelete);
+        }
+        // sync authorizations
         index.sort(Comparator.reverseOrder());
-        // sync permissions without reloading user auths
         if (!index.isEmpty()) {
             index.stream()
                     .filter(idx -> idx >= 0)
@@ -596,7 +609,12 @@ public class KeycloakAuthorizationManager extends AbstractService {
             log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
             return null;
         }
-        return createAuthorization(elem, roleName, groupName, createRoleIfMissing);
+        // further optimization
+//        if (!isAlreadyAssigned(user, groupName, roleName)) {
+            return createAuthorization(elem, roleName, groupName, createRoleIfMissing);
+//        } else {
+//            return null;
+//        }
     }
 
     private Authorization createAuthorization(DynamicMappingElement elem, String roleName, String groupName, boolean createRoleIfMissing) {
@@ -629,7 +647,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return createRoleIfMissing ? createTransientRole(roleName) : roleManager.getRole(roleName);
     }
 
-    private boolean isAlreadyAssigned(final KeycloakUser user, final String roleName, final String groupName) {
+    private boolean isAlreadyAssigned(final KeycloakUser user, final String groupName, final String roleName) {
         return user.getAuthorizations().stream()
                 .anyMatch(a -> {
                     final String existingRoleName = (a.getRole() != null) ? a.getRole().getName() : null;
@@ -639,7 +657,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
                             && Objects.equals(existingGroupName, groupName);
                 });
     }
-
 
     private @NonNull Role createTransientRole(String roleName) {
         Role role = roleManager.getRole(roleName);

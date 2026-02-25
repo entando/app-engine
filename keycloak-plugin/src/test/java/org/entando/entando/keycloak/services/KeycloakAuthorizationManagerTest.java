@@ -389,7 +389,7 @@ class KeycloakAuthorizationManagerTest {
 
 //        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
-        when(userDetails.getAuthorizations()).thenReturn(List.of(auth));
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>(List.of(auth)));
 
         manager.init();
 
