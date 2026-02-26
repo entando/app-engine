@@ -147,7 +147,12 @@ class KeycloakAuthorizationManagerTest {
 
         verify(roleManager, times(0)).getRole(anyString());
         verify(groupManager, times(0)).getGroup(anyString());
-        verify(userDetails, times(0)).addAuthorization(any());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).isEmpty();
+
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
     }
 
@@ -166,8 +171,6 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
@@ -182,8 +185,6 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM);
 
         manager.init();
-
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
 
         manager.processNewUser(userDetails, JWT, false);
 
@@ -200,17 +201,19 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
-        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
 
-        assertThat(authCaptor.getAllValues())
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured)
                 .extracting(a -> a.getRole().getName())
                 .containsOnly("generico");
-        assertThat(authCaptor.getValue().getGroup()).isNull();
+        assertThat(captured.get(0).getGroup()).isNull();
     }
 
     @Test
@@ -221,8 +224,6 @@ class KeycloakAuthorizationManagerTest {
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_CLAIM);
 
         manager.init();
-
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
 
         manager.processNewUser(userDetails, JWT, false);
 
@@ -238,17 +239,19 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
-        verify(userDetails, times(2)).addAuthorization(authCaptor.capture());
 
-        assertThat(authCaptor.getAllValues())
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured)
                 .extracting(a -> a.getGroup().getName())
                 .containsExactlyInAnyOrder("Gruppo-Microsoft-Importato", "altro-gruppo");
-        assertThat(authCaptor.getValue().getRole()).isNull();
+        captured.forEach(ac -> assertThat(ac.getRole()).isNull());
     }
 
     @Test
@@ -278,8 +281,6 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
@@ -296,16 +297,19 @@ class KeycloakAuthorizationManagerTest {
 //        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.init();
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
-        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
 
-        assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("group");
-        assertThat(authCaptor.getValue().getRole()).isNull();
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getGroup().getName()).isEqualTo("group");
+        assertThat(captured.get(0).getRole()).isNull();
     }
 
     @Test
@@ -320,8 +324,6 @@ class KeycloakAuthorizationManagerTest {
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
         manager.init();
-
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
 
         manager.processNewUser(userDetails, JWT, false);
 
@@ -340,16 +342,19 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
-        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
 
-        assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("agroup");
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getGroup().getName()).isEqualTo("agroup");
         // role doesn't exist, so it's not associated
-        assertNull(authCaptor.getValue().getRole());
+        assertNull(captured.get(0).getRole());
     }
 
     @Test
@@ -365,21 +370,33 @@ class KeycloakAuthorizationManagerTest {
 
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF);
+        when(userDetails.getUsername()).thenReturn("testuser");
 
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
 
-//        when(userDetails.getUsername()).thenReturn("testuser");
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>(List.of(auth)));
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), authCaptor.capture());
+        // externalAuthSync is called (persist=FULL) but with empty toAdd since auth is already present
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toAddCaptor = ArgumentCaptor.forClass(List.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toDeleteCaptor = ArgumentCaptor.forClass(List.class);
+        verify(authorizationManager, times(1)).externalAuthSync(
+                eq("testuser"), anyLong(), toAddCaptor.capture(), toDeleteCaptor.capture());
+        assertThat(toAddCaptor.getValue()).isEmpty();
+        assertThat(toDeleteCaptor.getValue()).isEmpty();
+
+        // addAuthorizations called with empty list (nothing new to add)
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).isEmpty();
     }
 
     @Test
@@ -494,8 +511,6 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT_ROLEGROUP, false);
 
         verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
@@ -511,8 +526,6 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT_ROLEGROUP_EDGE, false);
 
         verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
@@ -527,14 +540,15 @@ class KeycloakAuthorizationManagerTest {
 
         manager.init();
 
-        final ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-
         manager.processNewUser(userDetails, JWT_ROLEGROUP, false);
 
         verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), any());
-        verify(userDetails, times(2)).addAuthorization(authCaptor.capture());
 
-        List<Authorization> capturedAuths = authCaptor.getAllValues();
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> capturedAuths = listCaptor.getValue();
         assertThat(capturedAuths).hasSize(2);
 
         assertThat(capturedAuths)
@@ -629,11 +643,12 @@ class KeycloakAuthorizationManagerTest {
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
 
         // Verifichiamo che le autorizzazioni siano state aggiunte all'oggetto userDetails
-        ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
         // "generico" e "role_from_profile" (più altri eventuali dal JWT standard se non filtrati)
-        verify(userDetails, org.mockito.Mockito.atLeastOnce()).addAuthorization(authCaptor.capture());
+        verify(userDetails, org.mockito.Mockito.atLeastOnce()).addAuthorizations(listCaptor.capture());
 
-        List<Authorization> captured = authCaptor.getAllValues();
+        List<Authorization> captured = listCaptor.getValue();
         assertThat(captured).anySatisfy(a -> assertThat(a.getRole().getName()).isEqualTo("role_from_profile"));
         assertThat(captured).anySatisfy(a -> assertThat(a.getRole().getName()).isEqualTo("generico"));
     }
@@ -672,9 +687,12 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, null, false);
 
         // Verifichiamo che l'autorizzazione sia stata aggiunta all'utente
-        ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
-        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("existing_role");
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getRole().getName()).isEqualTo("existing_role");
 
         // Verifichiamo che non sia stata chiamata la persistenza
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
@@ -722,9 +740,12 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, null, false);
 
         // Verifichiamo che l'autorizzazione sia stata comunque aggiunta all'utente
-        ArgumentCaptor<Authorization> authCaptor = ArgumentCaptor.forClass(Authorization.class);
-        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
-        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("conflict_role");
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getRole().getName()).isEqualTo("conflict_role");
     }
 
 
@@ -758,12 +779,282 @@ class KeycloakAuthorizationManagerTest {
         verify(authorizationManager, times(1)).externalAuthSync(eq("john"), anyLong(), anyList(), anyList());
     }
 
+    @Test
+    void testSyncAuthorizationsRemovesStaleAuthorization() throws Exception {
+        // User has [A(groupA,roleA), B(groupB,roleB)], dynamic produces only [A]
+        // B should be in toDelete, removed from user
+        String xml = "<DynamicMapping>"
+                + "<persist>FULL</persist>"
+                + "<enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping><enabled>true</enabled><attribute>AD_ROLE</attribute><kind>ROLE</kind></mapping>"
+                + "</mappings>"
+                + "<roles><role>roleA</role><role>roleB</role></roles>"
+                + "<groups><group>groupA</group><group>groupB</group></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("roleA")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        Role existingRoleA = new Role();
+        existingRoleA.setName("roleA");
+        when(roleManager.getRole("roleA")).thenReturn(existingRoleA);
+
+        Authorization authA = roleOnlyAuthorization("roleA");
+        Authorization authB = roleOnlyAuthorization("roleB");
+        List<Authorization> userAuths = new ArrayList<>(List.of(authA, authB));
+        when(userDetails.getAuthorizations()).thenReturn(userAuths);
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        // Capture externalAuthSync args
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toAddCaptor = ArgumentCaptor.forClass(List.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toDeleteCaptor = ArgumentCaptor.forClass(List.class);
+        verify(authorizationManager, times(1)).externalAuthSync(
+                eq("testuser"), anyLong(), toAddCaptor.capture(), toDeleteCaptor.capture());
+
+        // A is already assigned, so toAdd should be empty
+        assertThat(toAddCaptor.getValue()).isEmpty();
+        // B is stale (managed but not in dynamic), so it should be in toDelete
+        assertThat(toDeleteCaptor.getValue()).hasSize(1);
+        assertThat(toDeleteCaptor.getValue().get(0).getRole().getName()).isEqualTo("roleB");
+
+        // After removeAll, the user's mutable list should no longer contain B
+        assertThat(userAuths).hasSize(1);
+        assertThat(userAuths.get(0).getRole().getName()).isEqualTo("roleA");
+    }
+
+    @Test
+    void testSyncAuthorizationsMixAddAndDelete() throws Exception {
+        // User has [A(roleA)], dynamic produces [B(roleB)]. A deleted, B added.
+        String xml = "<DynamicMapping>"
+                + "<persist>FULL</persist>"
+                + "<enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping><enabled>true</enabled><attribute>AD_ROLE</attribute><kind>ROLE</kind></mapping>"
+                + "</mappings>"
+                + "<roles><role>roleA</role><role>roleB</role></roles>"
+                + "<groups></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("roleB")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        Role existingRoleB = new Role();
+        existingRoleB.setName("roleB");
+        when(roleManager.getRole("roleB")).thenReturn(existingRoleB);
+
+        Authorization authA = roleOnlyAuthorization("roleA");
+        List<Authorization> userAuths = new ArrayList<>(List.of(authA));
+        when(userDetails.getAuthorizations()).thenReturn(userAuths);
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toAddCaptor = ArgumentCaptor.forClass(List.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toDeleteCaptor = ArgumentCaptor.forClass(List.class);
+        verify(authorizationManager, times(1)).externalAuthSync(
+                eq("testuser"), anyLong(), toAddCaptor.capture(), toDeleteCaptor.capture());
+
+        assertThat(toAddCaptor.getValue()).hasSize(1);
+        assertThat(toAddCaptor.getValue().get(0).getRole().getName()).isEqualTo("roleB");
+
+        assertThat(toDeleteCaptor.getValue()).hasSize(1);
+        assertThat(toDeleteCaptor.getValue().get(0).getRole().getName()).isEqualTo("roleA");
+    }
+
+    @Test
+    void testProcessNewUserDisabledSkipsAuthProcessing() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_DISABLED);
+        lenient().when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).externalAuthSync(anyString(), anyLong(), anyList(), anyList());
+        verify(userDetails, never()).addAuthorizations(anyList());
+    }
+
+    @Test
+    void testProcessNewUserAlreadySyncedSkipsProcessing() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM);
+        lenient().when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        // Override the lenient stub: checkExternalAuthSync returns true
+        when(authorizationManager.checkExternalAuthSync(eq("testuser"), anyLong())).thenReturn(true);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).externalAuthSync(anyString(), anyLong(), anyList(), anyList());
+        verify(userDetails, never()).addAuthorizations(anyList());
+    }
+
+    @Test
+    void testRefreshConfigurationSuccess() throws Exception {
+        // First init with no mappings
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_NO_MAPPING);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        // No real mappings → externalAuthSync called with empty lists
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toAddCaptor1 = ArgumentCaptor.forClass(List.class);
+        verify(authorizationManager, times(1)).externalAuthSync(
+                eq("testuser"), anyLong(), toAddCaptor1.capture(), anyList());
+        assertThat(toAddCaptor1.getValue()).isEmpty();
+
+        // Now change config to have a real mapping and refresh
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM);
+
+        manager.refreshConfiguration();
+
+        // Reset the checkExternalAuthSync to allow re-processing
+        when(authorizationManager.checkExternalAuthSync(anyString(), anyLong())).thenReturn(false);
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        // After refresh, the ROLECLAIM mapping should be active and produce "generico"
+        verify(authorizationManager, times(2)).externalAuthSync(
+                eq("testuser"), anyLong(), anyList(), anyList());
+    }
+
+    @Test
+    void testRefreshConfigurationErrorDoesNotThrow() throws Exception {
+        // First init with valid config
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_NO_MAPPING);
+        manager.init();
+
+        // Now refresh with malformed XML - should NOT throw
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_MALFORMED_MAPPING);
+        manager.refreshConfiguration(); // should not throw
+
+        // After error, enabled=false, so processNewUser skips dynamic processing
+        lenient().when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).externalAuthSync(anyString(), anyLong(), anyList(), anyList());
+        verify(userDetails, never()).addAuthorizations(anyList());
+    }
+
+    @Test
+    void testPersistNoneDoesNotCallExternalAuthSync() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM_NONE);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        // NONE → externalAuthSync never called
+        verify(authorizationManager, never()).externalAuthSync(anyString(), anyLong(), anyList(), anyList());
+
+        // But addAuthorizations IS called with the dynamic auths
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).isNotEmpty();
+        assertThat(captured).extracting(a -> a.getRole().getName()).contains("generico");
+    }
+
+    @Test
+    void testPersistNoneCreatesTransientObjectsNotPersisted() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_GROUP_ROLE_CONF_NO_PERSIST);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("arole_r_agroup")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        // NONE persist → no DB operations for role/group creation
+        verify(roleManager, never()).addRole(any());
+        verify(groupManager, never()).addGroup(any());
+
+        // But authorizations are still added to the user object
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        // Transient group has description starting with "sys:"
+        assertThat(captured.get(0).getGroup().getDescription()).startsWith("sys:");
+    }
+
+    @Test
+    void testExternalAuthSyncArgsVerifiedExactly() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLE_CLAIM);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Long> iatCaptor = ArgumentCaptor.forClass(Long.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toAddCaptor = ArgumentCaptor.forClass(List.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> toDeleteCaptor = ArgumentCaptor.forClass(List.class);
+
+        verify(authorizationManager, times(1)).externalAuthSync(
+                usernameCaptor.capture(), iatCaptor.capture(), toAddCaptor.capture(), toDeleteCaptor.capture());
+
+        assertThat(usernameCaptor.getValue()).isEqualTo("testuser");
+        assertThat(iatCaptor.getValue()).isEqualTo(1768319143L);
+
+        // toAdd should have exactly "generico" (the only managed role in JWT)
+        assertThat(toAddCaptor.getValue()).hasSize(1);
+        assertThat(toAddCaptor.getValue().get(0).getRole().getName()).isEqualTo("generico");
+        assertThat(toAddCaptor.getValue().get(0).getGroup()).isNull();
+
+        // toDelete should be empty (user had no existing managed auths)
+        assertThat(toDeleteCaptor.getValue()).isEmpty();
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
         final Role role = new Role();
         role.setName(roleName);
         return new Authorization(group, role);
+    }
+
+    private Authorization roleOnlyAuthorization(final String roleName) {
+        final Role role = new Role();
+        role.setName(roleName);
+        return new Authorization(null, role);
     }
 
     private static final String XML_ROLE_CONF =
@@ -1217,6 +1508,42 @@ class KeycloakAuthorizationManagerTest {
             + "  </groups>"
             + "</DynamicMapping>";
     
+    private static final String XML_DISABLED = "<DynamicMapping>"
+            + "<persist>FULL</persist>"
+            + "<enabled>false</enabled>"
+            + "<mappings>"
+            + " <mapping><enabled>true</enabled><path>realm_access.roles</path><kind>ROLECLAIM</kind></mapping>"
+            + "</mappings>"
+            + "<roles><role>generico</role></roles>"
+            + "<groups><group>agroup</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_ROLE_CLAIM_NONE = "<DynamicMapping>"
+            + " <persist>NONE</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLECLAIM</kind>"
+            + " </mapping>"
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>default-roles-entando-development</exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "   <exclusions>default-roles-entando</exclusions>"
+            + "  </exclusions>"
+            + "  <roles>"
+            + "   <role>generico</role>"
+            + "   <role>imported_role2</role>"
+            + "  </roles>"
+            + "  <groups>"
+            + "   <group>imported_group</group>"
+            + "   <group>imported_group2</group>"
+            + "  </groups>"
+            + "</DynamicMapping>";
+
     private static final String JWT_NO_ROLE = "{"
             + "  \"header\" : {"
             + "    \"alg\" : \"RS256\","
