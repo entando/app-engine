@@ -652,7 +652,7 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
             throws EntException {
         try {
             this.getAuthorizationDAO().externalAuthSync(username, iat, toAdd, toRemove);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             _logger.error("Error syncing external authorization for user '{}'", username, t);
             throw new EntException("Error syncing external authorization for user " + username, t);
         }

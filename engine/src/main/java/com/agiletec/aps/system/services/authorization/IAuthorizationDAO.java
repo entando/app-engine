@@ -15,7 +15,6 @@ package com.agiletec.aps.system.services.authorization;
 
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
-
 import java.util.List;
 import java.util.Map;
 

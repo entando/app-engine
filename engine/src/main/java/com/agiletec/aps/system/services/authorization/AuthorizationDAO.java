@@ -188,7 +188,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		final boolean hasRoles = roles != null && !roles.isEmpty();
 		final boolean hasGroups = groups != null && !groups.isEmpty();
 
-		try (PreparedStatement stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles))) {
+		try (PreparedStatement stat = conn.prepareStatement(createSqlForAuthDeletion(groups, roles))) {
 
 			// username
 			int index = 1;
@@ -346,8 +346,10 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		)) {
 			int batchSize = 0;
 
+			stmt.setString(1, username);
+
 			for (Authorization cur : list) {
-				stmt.setString(1, username);
+
 
 				if (cur.getGroup() != null) {
 					stmt.setString(2, cur.getGroup().getName());
@@ -371,7 +373,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		}
 	}
 
-	private String createSqlForAuthDeletion(final String username, final List<String> groups, final List<String> roles) {
+	private String createSqlForAuthDeletion(final List<String> groups, final List<String> roles) {
 		final StringBuilder sb = new StringBuilder(DELETE_USER_AUTHORIZATIONS);
 		final boolean hasRoles = roles != null && !roles.isEmpty();
 		final boolean hasGroups = groups != null && !groups.isEmpty();
