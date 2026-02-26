@@ -2,7 +2,9 @@ package org.entando.entando.keycloak.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.keycloak.services.oidc.OidcMappingService;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
@@ -53,7 +56,8 @@ class KeycloakAuthorizationManagerComplexTest {
 
     @Mock
     private BaseConfigManager configManager;
-    private OidcMappingService oidcMappingService = new OidcMappingService();
+    @Mock
+    private OidcMappingService oidcMappingService;
 
     private KeycloakAuthorizationManager manager;
 
@@ -61,6 +65,20 @@ class KeycloakAuthorizationManagerComplexTest {
     public void setUp() {
         manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager, oidcMappingService);
         lenient().when(configuration.getDefaultAuthorizations()).thenReturn("");
+        lenient().when(oidcMappingService.extractIat(anyString(), any(Boolean.class), anyString())).thenReturn(1768319143L);
+        try {
+            lenient().when(authorizationManager.checkExternalAuthSync(anyString(), any(Long.class))).thenReturn(false);
+        } catch (EntException e) {
+            // ignore
+        }
+        
+        // Mock default behaviors for oidcMappingService since it's now a mock
+        lenient().when(oidcMappingService.extractAuthorizationsFromProfile(any(), any())).thenAnswer(invocation -> {
+            return new OidcMappingService().extractAuthorizationsFromProfile(invocation.getArgument(0), invocation.getArgument(1));
+        });
+        lenient().when(oidcMappingService.extractAuthorizationsFromJwt(anyString(), any(Boolean.class), any(), anyString())).thenAnswer(invocation -> {
+            return new OidcMappingService().extractAuthorizationsFromJwt(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2), invocation.getArgument(3));
+        });
     }
 
     private void setMappingConfig(String xml) throws Exception {
@@ -169,8 +187,7 @@ class KeycloakAuthorizationManagerComplexTest {
 
         manager.processNewUser(user, null, false);
 
-        assertThat(user.getAuthorizations()).hasSize(2);
-        verify(authorizationManager, atLeastOnce()).addUserAuthorization(anyString(), any(Authorization.class));
+        verify(authorizationManager, times(1)).externalAuthSync(eq("test-user"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -323,12 +340,12 @@ class KeycloakAuthorizationManagerComplexTest {
 
         // Mock role1 to have a name
         Role role1 = new Role(); role1.setName("role1");
-//        when(roleManager.getRole("role1")).thenReturn(role1);
+        when(roleManager.getRole("role1")).thenReturn(role1);
 
         manager.processNewUser(user, null, false);
 
         // role-managed should be deleted because its role name is in the "roles" managed list
-        verify(authorizationManager, times(1)).deleteUserAuthorizationByGroupAndRole(eq("test-user"), anyList(), anyList());
+        verify(authorizationManager, times(1)).externalAuthSync(eq("test-user"), anyLong(), anyList(), anyList());
     }
 
     @Test

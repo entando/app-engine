@@ -251,6 +251,11 @@ public class KeycloakAuthorizationManager extends AbstractService {
             this.authorizationManager.externalAuthSync(user.getUsername(), iat, toAdd, toDelete);
             // update current auths
             syncUserAuthorizations(user, toDelete);
+        } else if (persist == PersistKind.AUTH || persist == PersistKind.NONE) {
+            for (Authorization authorization : toAdd) {
+                user.addAuthorization(authorization);
+            }
+            syncUserAuthorizations(user, toDelete);
         }
     }
 

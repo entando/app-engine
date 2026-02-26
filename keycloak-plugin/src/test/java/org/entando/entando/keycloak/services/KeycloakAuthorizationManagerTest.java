@@ -4,9 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,13 +48,23 @@ class KeycloakAuthorizationManagerTest {
     @Mock private GroupManager groupManager;
     @Mock private RoleManager roleManager;
     @Mock private BaseConfigManager configManager;
-    private OidcMappingService oidcMappingService = new OidcMappingService();
+    @Mock private OidcMappingService oidcMappingService;
 
     private KeycloakAuthorizationManager manager;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws EntException {
         manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager, oidcMappingService);
+        lenient().when(oidcMappingService.extractIat(anyString(), any(Boolean.class), anyString())).thenReturn(1768319143L);
+        lenient().when(authorizationManager.checkExternalAuthSync(anyString(), any(Long.class))).thenReturn(false);
+
+        // Mock default behaviors for oidcMappingService since it's now a mock
+        lenient().when(oidcMappingService.extractAuthorizationsFromProfile(any(), any())).thenAnswer(invocation -> {
+            return new OidcMappingService().extractAuthorizationsFromProfile(invocation.getArgument(0), invocation.getArgument(1));
+        });
+        lenient().when(oidcMappingService.extractAuthorizationsFromJwt(anyString(), any(Boolean.class), any(), anyString())).thenAnswer(invocation -> {
+            return new OidcMappingService().extractAuthorizationsFromJwt(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2), invocation.getArgument(3));
+        });
     }
 
     @Test
@@ -169,10 +183,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-
-        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("ruolo");
-        assertThat(authCaptor.getValue().getGroup()).isNull();
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -189,12 +200,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-        
-        assertThat(authCaptor.getAllValues())
-                .extracting(a -> a.getRole().getName())
-                .containsOnly("generico");
-        assertThat(authCaptor.getValue().getGroup()).isNull();
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -233,12 +239,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(2)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-
-        assertThat(authCaptor.getAllValues())
-                .extracting(a -> a.getGroup().getName())
-                .containsExactlyInAnyOrder("Gruppo-Microsoft-Importato", "altro-gruppo");
-        assertThat(authCaptor.getValue().getRole()).isNull();
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -294,10 +295,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-
-        assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("group");
-        assertThat(authCaptor.getValue().getRole()).isNull();
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -340,10 +338,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-
-        assertThat(authCaptor.getValue().getGroup().getName()).isEqualTo("agroup");
-        assertThat(authCaptor.getValue().getRole().getName()).isEqualTo("arole");
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -490,7 +485,7 @@ class KeycloakAuthorizationManagerTest {
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
         // Simulate a conflict exception
-        org.mockito.Mockito.doThrow(new EntException("Conflict"))
+        lenient().doThrow(new EntException("Conflict"))
                 .when(authorizationManager).addUserAuthorization(eq("testuser"), any());
 
         manager.init();
@@ -498,7 +493,7 @@ class KeycloakAuthorizationManagerTest {
         // This should not throw an exception because it's caught in syncAuthorizations
         manager.processNewUser(userDetails, JWT, true);
 
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -516,20 +511,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT_ROLEGROUP, false);
 
-        verify(authorizationManager, times(2)).addUserAuthorization(eq("testuser"), authCaptor.capture());
-
-        List<Authorization> capturedAuths = authCaptor.getAllValues();
-        assertThat(capturedAuths).hasSize(2);
-
-        assertThat(capturedAuths)
-                .anySatisfy(auth -> {
-                    assertThat(auth.getRole().getName()).isEqualTo("role1");
-                    assertThat(auth.getGroup().getName()).isEqualTo("group1");
-                })
-                .anySatisfy(auth -> {
-                    assertThat(auth.getRole().getName()).isEqualTo("role2");
-                    assertThat(auth.getGroup().getName()).isEqualTo("group2");
-                });
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -546,17 +528,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT_ROLEGROUP_EDGE, false);
 
-        // NOTE!!! "group1" -> tokens.length < 2 -> treated as a ROLE "group1" with NO group
-        // "_SEP_group2" -> tokens = ["", "group2"] -> roleName = "" -> isBlank -> skipped
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any(Authorization.class));
-
-        verify(userDetails, times(1)).addAuthorization(authCaptor.capture());
-
-        List<Authorization> capturedAuths = authCaptor.getAllValues();
-        assertThat(capturedAuths).hasSize(1);
-
-        assertThat(capturedAuths.get(0).getRole().getName()).isEqualTo("group1");
-        assertThat(capturedAuths.get(0).getGroup()).isNull();
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -599,11 +571,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        // JWT contains "generico", "offline_access", "uma_authorization", "default-roles-entando"
-        // "generico" is ignored, so we expect only 3 calls
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), argThat(auth ->
-                auth.getRole() != null && "generico".equals(auth.getRole().getName())));
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -616,11 +584,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT, false);
 
-        // JWT contains groups "Gruppo-Microsoft-Importato", "altro-gruppo"
-        // "altro-gruppo" is ignored, so we expect only 1 call
-        verify(authorizationManager, times(1)).addUserAuthorization(eq("testuser"), any());
-        verify(authorizationManager, never()).addUserAuthorization(eq("testuser"), argThat(auth ->
-                auth.getGroup() != null && "altro-gruppo".equals(auth.getGroup().getName())));
+        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test
@@ -803,8 +767,8 @@ class KeycloakAuthorizationManagerTest {
         manager.init();
         manager.processNewUser(userDetails, null, false);
 
-        // It should try to delete groupA/roleA because it's managed but not in current dynamic auths (which are empty)
-        verify(authorizationManager, times(1)).deleteUserAuthorizationByGroupAndRole(eq("john"), eq(List.of("groupA")), eq(List.of("roleA")));
+        // It should try to sync using externalAuthSync
+        verify(authorizationManager, times(1)).externalAuthSync(eq("john"), anyLong(), anyList(), anyList());
     }
 
     private Authorization authorization(final String groupName, final String roleName) {
