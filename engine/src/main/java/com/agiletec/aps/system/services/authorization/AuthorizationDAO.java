@@ -187,10 +187,9 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			final List<String> roles) {
 		final boolean hasRoles = roles != null && !roles.isEmpty();
 		final boolean hasGroups = groups != null && !groups.isEmpty();
-		PreparedStatement stat;
 
-		try {
-			stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles));
+		try (PreparedStatement stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles))) {
+
 			// username
 			int index = 1;
 
