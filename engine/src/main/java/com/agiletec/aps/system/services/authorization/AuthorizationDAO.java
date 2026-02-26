@@ -187,10 +187,9 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			final List<String> roles) {
 		final boolean hasRoles = roles != null && !roles.isEmpty();
 		final boolean hasGroups = groups != null && !groups.isEmpty();
-		PreparedStatement stat;
 
-		try {
-			stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles));
+		try (PreparedStatement stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles))) {
+
 			// username
 			int index = 1;
 
@@ -262,7 +261,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
 
-			Long lastSyncedIat = null;
+			Long oldIat = null;
 			String usernameTracked = null;
 
 			try (PreparedStatement selectStmt = conn.prepareStatement(
@@ -272,12 +271,13 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 				try (ResultSet rs = selectStmt.executeQuery()) {
 					if (rs.next()) {
 						usernameTracked = rs.getString("username");
-						lastSyncedIat = rs.getLong("iat");
+						oldIat = rs.getLong("iat");
 					}
 				}
 			}
 
 			if (usernameTracked == null) {
+				_logger.debug("creating entry for user {}", username);
 				try (PreparedStatement insertStmt = conn.prepareStatement(
 						"INSERT INTO ext_sync (username, iat) VALUES (?, ?)")) {
 					insertStmt.setString(1, username);
@@ -289,24 +289,27 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 				deleteAuthorities(conn, username, toRemove);
 				addAuthorities(conn, username, toAdd);
 
-			} else if (iat > lastSyncedIat) {
-
-				// update authorizations
-				deleteAuthorities(conn, username, toRemove);
-				addAuthorities(conn, username, toAdd);
-
+			} else if (iat > oldIat) {
+				_logger.debug("updating entry for user {}", username);
 				// Aggiorna iat
 				try (PreparedStatement updateIat = conn.prepareStatement(
-						"UPDATE ext_sync SET iat = ? WHERE username = ?"
+						"UPDATE ext_sync SET iat = ? WHERE username = ? AND iat < ?"
 				)) {
 					updateIat.setLong(1, iat);
 					updateIat.setString(2, username);
-					updateIat.executeUpdate();
+					updateIat.setLong(3, iat);
+
+					int rows = updateIat.executeUpdate();
+					if (rows > 0) {
+						// update authorizations
+						deleteAuthorities(conn, username, toRemove);
+						addAuthorities(conn, username, toAdd);
+						_logger.debug("updated {} row with iat {} for username {}", rows, iat, username);
+					}
 				}
 			} else {
-				// do nothing // NOSONAR
+				_logger.debug("no need to sync {}", username);
 			}
-
 			conn.commit();
 		} catch (Exception e) {
 			this.executeRollback(conn);
