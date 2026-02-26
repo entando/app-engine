@@ -194,7 +194,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 iat = 0L;
             }
 
-            if (iat == null) { // this shouldn't really happen!
+            if (iat == null) {
                 log.debug("Could not extract IAT from JWT, skipping user '{}' synchronization", user.getUsername());
                 return;
             }
@@ -265,11 +265,11 @@ public class KeycloakAuthorizationManager extends AbstractService {
         // update authorizations
         if (persist == PersistKind.FULL) {
             this.authorizationManager.externalAuthSync(user.getUsername(), iat, toAdd, toDelete);
-        }
-        // update the current authorization
+    }
+
         user.getAuthorizations().removeAll(toDelete);
         user.addAuthorizations(toAdd);
-    }
+        }
 
 /**/
     private static void sillyDebug(UserDetails user, List<Authorization> dynamicAuthorizations,
