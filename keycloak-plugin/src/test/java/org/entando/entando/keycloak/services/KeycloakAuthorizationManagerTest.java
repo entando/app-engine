@@ -294,7 +294,7 @@ class KeycloakAuthorizationManagerTest {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_GROUP", List.of("group")));
 
-//        when(userDetails.getUsername()).thenReturn("testuser");
+
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
 
         manager.init();
@@ -680,7 +680,7 @@ class KeycloakAuthorizationManagerTest {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("existing_role")));
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
-//        when(userDetails.getUsername()).thenReturn("testuser");
+
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
 
         manager.init();
@@ -733,7 +733,7 @@ class KeycloakAuthorizationManagerTest {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setAttributes(Map.of("AD_ROLE", List.of("conflict_role")));
         when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
-//        when(userDetails.getUsername()).thenReturn("testuser");
+
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
 
         manager.init();

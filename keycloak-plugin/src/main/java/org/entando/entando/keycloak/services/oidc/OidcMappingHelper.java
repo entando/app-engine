@@ -16,6 +16,8 @@ import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 
 public class OidcMappingHelper {
 
+    private OidcMappingHelper() {}
+
     private static final EntLogger log = EntLogFactory.getSanitizedLogger(OidcMappingHelper.class);
 
     private static final ObjectMapper mapper = new ObjectMapper();

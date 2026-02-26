@@ -18,7 +18,6 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -465,7 +464,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         final String groupName = tokens[1];
         final String roleName = tokens[0];
 
-        return finalizeAssociation(user, elem, roleName, groupName, false);
+        return finalizeAssociation(user, roleName, groupName, false);
     }
 
     private Group createTransientGroup(String groupName) {
@@ -504,7 +503,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
     }
 
     private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName) {
-        return finalizeAssociation(user, elem, roleName, groupName, true);
+        return finalizeAssociation(user, roleName, groupName, true);
     }
 
     private boolean isIgnored(String name) {
@@ -514,7 +513,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return ignore.contains(name.trim());
     }
 
-    private Authorization finalizeAssociation(KeycloakUser user, DynamicMappingElement elem, String roleName, String groupName,
+    private Authorization finalizeAssociation(KeycloakUser user, String roleName, String groupName,
             boolean createRoleIfMissing) {
         // is it excluded?
         if (isIgnored(roleName) || isIgnored(groupName)) {
@@ -530,12 +529,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
             log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
             return null;
         }
-        // further optimization
-//        if (!isAlreadyAssigned(user, groupName, roleName)) {
-            return createAuthorization(roleName, groupName, createRoleIfMissing);
-//        } else {
-//            return null;
-//        }
+        return createAuthorization(roleName, groupName, createRoleIfMissing);
     }
 
     private Authorization createAuthorization(String roleName, String groupName, boolean createRoleIfMissing) {
