@@ -648,6 +648,27 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
     }
 
     @Override
+    public void externalAuthSync(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove)
+            throws EntException {
+        try {
+            this.getAuthorizationDAO().externalAuthSync(username, iat, toAdd, toRemove);
+        } catch (Throwable t) {
+            _logger.error("Error syncing external authorization for user '{}'", username, t);
+            throw new EntException("Error syncing external authorization for user " + username, t);
+        }
+    }
+
+    @Override
+    public boolean checkExternalAuthSync(final String username, final Long iat) throws EntException {
+        try {
+            return this.getAuthorizationDAO().checkExternalAuthSync(username, iat);
+        } catch (Exception t) {
+            _logger.error("Error checking synchronization status for user '{}'", username, t);
+            throw new EntException("Error checking synchronization status  for user " + username, t);
+        }
+    }
+
+    @Override
     public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException {
         if (null == authority || !(authority instanceof Role) || null == this.getRoleManager().getRole(authority.getAuthority())) {
             return null;

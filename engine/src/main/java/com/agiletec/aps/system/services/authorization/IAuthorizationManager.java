@@ -181,7 +181,12 @@ public interface IAuthorizationManager {
     void deleteUserAuthorizationByGroupAndRole(String username, List<String> groups,
             List<String> roles) throws EntException;
 
-    public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException;
+	void externalAuthSync(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove)
+			throws EntException;
+
+	boolean checkExternalAuthSync(String username, Long iat) throws EntException;
+
+	public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException;
 	
 	public List<String> getUsersByRole(String roleName, boolean includeAdmin) throws EntException;
 	

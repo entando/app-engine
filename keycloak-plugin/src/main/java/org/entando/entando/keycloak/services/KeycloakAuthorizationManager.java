@@ -190,6 +190,12 @@ public class KeycloakAuthorizationManager extends AbstractService {
         try {
             // Authorizations coming from dynamic mapping (that is, external sources)
             final List<Authorization> dynamicAuthorizations = new ArrayList<>();
+            final Long iat = oidcMappingService.extractIat(token, decode, user.getUsername());
+
+            if (iat == null || authorizationManager.checkExternalAuthSync(user.getUsername(), iat)) {
+                log.debug("no need to sync user {}", user.getUsername());
+                return;
+            }
 
             // process path role claims, if any...
             if (StringUtils.isNotBlank(token) && !jwtMappings.isEmpty()) {
@@ -203,7 +209,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                     && !profileMappings.isEmpty()) {
                 dynamicAuthorizations.addAll(processProfileAttributes((KeycloakUser) user));
             }
-            syncAuthorizations(user, dynamicAuthorizations);
+            syncAuthorizations(user, dynamicAuthorizations, iat);
         } catch (EntException e) {
             throw new RuntimeException(e);
         } finally {
@@ -211,7 +217,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         }
     }
 
-    private void syncAuthorizations(final UserDetails user, final List<Authorization> dynamicAuthorizations) throws EntException {
+    private void syncAuthorizations(final UserDetails user, final List<Authorization> dynamicAuthorizations, final Long iat) throws EntException {
         //If the dynamic authorization is not already assigned to the user, then it must be added
         List<Authorization> toAdd = dynamicAuthorizations
                 .stream()
@@ -239,37 +245,16 @@ public class KeycloakAuthorizationManager extends AbstractService {
                             .noneMatch(d -> d.equals(a));
                 })
                 .collect(Collectors.toList());
-        // finally
-        sillyDebug(user, dynamicAuthorizations, existingAuths, toAdd, toDelete);
-        persistAuthorizations(user, toAdd, toDelete);
-    }
-
-    private void persistAuthorizations(UserDetails user, List<Authorization> toAdd, List<Authorization> toDelete)
-            throws EntException {
-        // add the newly granted authorizations
-        addAuthorizations(user, toAdd);
-        // remove authorizations that aren't granted anymore
-        if (!toDelete.isEmpty()) {
-            deleteAuthorizations(user, toDelete);
+//        sillyDebug(user, dynamicAuthorizations, existingAuths, toAdd, toDelete);
+        // update authorizations
+        if (persist == PersistKind.FULL) {
+            this.authorizationManager.externalAuthSync(user.getUsername(), iat, toAdd, toDelete);
+            // update current auths
+            syncUserAuthorizations(user, toDelete);
         }
     }
 
-    private void addAuthorizations(UserDetails user, List<Authorization> toAdd) {
-        for (Authorization authorization : toAdd) {
-
-            if (persist == PersistKind.FULL) {
-                try {
-                    authorizationManager.addUserAuthorization(user.getUsername(), authorization);
-                } catch (Exception e) {
-                    log.debug("Failed to persist authorization for user {}: {}", user.getUsername(), e.getMessage());
-                }
-            }
-            // sync authorizations
-            user.addAuthorization(authorization);
-        }
-    }
-
-    private void deleteAuthorizations(UserDetails user, List<Authorization> toDelete) throws EntException {
+    private void syncUserAuthorizations(UserDetails user, List<Authorization> toDelete) throws EntException {
         final List<Integer> index = new ArrayList<>();
         final List<String> rolesToDelete = new ArrayList<>();
         final List<String> groupsToDelete = new ArrayList<>();
@@ -282,10 +267,6 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 groupsToDelete.add(authorization.getGroup().getName());
             }
             index.add(indexOfAuthorization(user, authorization));
-        }
-        // execute a single delete
-        if (persist == PersistKind.FULL) {
-            authorizationManager.deleteUserAuthorizationByGroupAndRole(user.getUsername(), groupsToDelete, rolesToDelete);
         }
         // sync authorizations
         index.sort(Comparator.reverseOrder());
@@ -318,7 +299,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return -1;
     }
 
-/**/
+/*
     private static void sillyDebug(UserDetails user, List<Authorization> dynamicAuthorizations,
             List<Authorization> existingAuths, List<Authorization> toAdd, List<Authorization> toDelete) {
         System.out.println("-------------------\n");
@@ -347,7 +328,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
             System.out.println("DELETE " + user.getUsername() + " role " + roleName +  " group " + groupName);
         });
     }
-/**/
+*/
 
     /**
      * Analyze the JWT looking for known mappings to translate into Entando roles

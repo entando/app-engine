@@ -19,4 +19,6 @@
 
     <include file="serv/00000000000003_schemaServ.xml" relativeToChangelogFile="true" />
 
+    <include file="serv/00000000000004_schemaServ.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>

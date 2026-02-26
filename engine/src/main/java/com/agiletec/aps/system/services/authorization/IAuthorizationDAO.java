@@ -39,4 +39,10 @@ public interface IAuthorizationDAO {
 	public List<String> getUsersByAuthorities(List<String> groupNames, List<String> roleNames);
 
 	int deleteUserAuthorizationByGroupAndRole(String username, List<String> groups, List<String> roles);
+
+    // Returns true if the user's external authentication synchronization is up to date
+    boolean checkExternalAuthSync(String username, Long iat);
+
+	void externalAuthSync(String username, Long iat,
+			List<Authorization> toAdd, List<Authorization> toRemove);
 }

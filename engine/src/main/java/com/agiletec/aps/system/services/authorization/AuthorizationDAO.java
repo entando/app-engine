@@ -20,11 +20,13 @@ import com.agiletec.aps.system.services.role.Role;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 
@@ -32,9 +34,11 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
  * @author E.Santoboni
  */
 public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizationDAO {
-	
+
+	public static final int BATCH_SIZE_FLUSH = 50;
+
 	private static final EntLogger _logger =  EntLogFactory.getSanitizedLogger(AuthorizationDAO.class);
-	
+
 	@Override
 	public void addUserAuthorization(String username, Authorization authorization) {
 		if (null == authorization || null == username) return;
@@ -167,10 +171,29 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
-			stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles));
 
+			final int rowsDeleted = doDeleteUserAuthorizationByGroupAndRole(conn, username, groups, roles);
+			conn.commit();
+			return rowsDeleted;
+		} catch (Exception e) {
+			this.executeRollback(conn);
+			throw new RuntimeException("Error detected while deleting user authorizations", e);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
+	}
+
+	private int doDeleteUserAuthorizationByGroupAndRole(final Connection conn, final String username, final List<String> groups,
+			final List<String> roles) {
+		final boolean hasRoles = roles != null && !roles.isEmpty();
+		final boolean hasGroups = groups != null && !groups.isEmpty();
+		PreparedStatement stat;
+
+		try {
+			stat = conn.prepareStatement(createSqlForAuthDeletion(username, groups, roles));
 			// username
 			int index = 1;
+
 			stat.setString(index++, username);
 			// groups
 			if (hasGroups) {
@@ -184,14 +207,164 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 					stat.setString(index++, role);
 				}
 			}
-			final int rowsDeleted = stat.executeUpdate();
-			conn.commit();
-			return rowsDeleted;
+			return stat.executeUpdate();
+		} catch (SQLException e) {
+			throw new RuntimeException("Error deleting user authorization", e);
+		}
+	}
+
+	// Returns true if the user's external authentication synchronization is up to date
+	@Override
+	public boolean checkExternalAuthSync(final String username, final Long iat) {
+		Connection conn = null;
+		PreparedStatement stat = null;
+
+		try {
+			conn = this.getConnection();
+
+			Long lastSyncedIat = null;
+			String userId = null;
+
+			try (PreparedStatement selectStmt = conn.prepareStatement(
+					"SELECT username, iat FROM ext_sync WHERE username = ? FOR UPDATE")) {
+				selectStmt.setString(1, username);
+
+				try (ResultSet rs = selectStmt.executeQuery()) {
+					if (rs.next()) {
+						userId = rs.getString("username");
+						lastSyncedIat = rs.getLong("iat");
+					}
+				}
+			}
+
+			if (StringUtils.isBlank(userId)) {
+				_logger.debug("must track user {}", username);
+				return false;
+			} else if (iat > lastSyncedIat) {
+				_logger.debug("must synchronize user {}", username);
+				return false;
+			}
 		} catch (Exception e) {
-			this.executeRollback(conn);
-			throw new RuntimeException("Error detected while deleting user authorizations", e);
+			throw new RuntimeException("Error detected while checking user synchronization", e);
 		} finally {
 			this.closeDaoResources(null, stat, conn);
+		}
+		return true;
+	}
+
+	@Override
+	public void externalAuthSync(final String username, final Long iat,
+			final List<Authorization> toAdd, final List<Authorization> toRemove) {
+		Connection conn = null;
+		PreparedStatement stat = null;
+
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+
+			Long lastSyncedIat = null;
+			String usernameTracked = null;
+
+			try (PreparedStatement selectStmt = conn.prepareStatement(
+					"SELECT username, iat FROM ext_sync WHERE username = ? FOR UPDATE")) {
+				selectStmt.setString(1, username);
+
+				try (ResultSet rs = selectStmt.executeQuery()) {
+					if (rs.next()) {
+						usernameTracked = rs.getString("username");
+						lastSyncedIat = rs.getLong("iat");
+					}
+				}
+			}
+
+			if (usernameTracked == null) {
+				try (PreparedStatement insertStmt = conn.prepareStatement(
+						"INSERT INTO ext_sync (username, iat) VALUES (?, ?)")) {
+					insertStmt.setString(1, username);
+					insertStmt.setLong(2, iat);
+					insertStmt.executeUpdate();
+				}
+
+				// update authorizations
+				deleteAuthorities(conn, username, toRemove);
+				addAuthorities(conn, username, toAdd);
+
+			} else if (iat > lastSyncedIat) {
+
+				// update authorizations
+				deleteAuthorities(conn, username, toRemove);
+				addAuthorities(conn, username, toAdd);
+
+				// Aggiorna iat
+				try (PreparedStatement updateIat = conn.prepareStatement(
+						"UPDATE ext_sync SET iat = ? WHERE username = ?"
+				)) {
+					updateIat.setLong(1, iat);
+					updateIat.setString(2, username);
+					updateIat.executeUpdate();
+				}
+			} else {
+				// do nothing // NOSONAR
+			}
+
+			conn.commit();
+		} catch (Exception e) {
+			this.executeRollback(conn);
+			throw new RuntimeException("Error detected while checking user synchronization", e);
+		} finally {
+			this.closeDaoResources(null, stat, conn);
+		}
+	}
+
+	private void deleteAuthorities(final Connection conn, final String username, final List<Authorization> list) {
+		if (conn == null || list == null || list.isEmpty() || StringUtils.isBlank(username)) return;
+
+		final List<String> groups = new ArrayList<>();
+		final List<String> roles = new ArrayList<>();
+
+		for (Authorization cur: list) {
+			if (cur.getGroup() != null) {
+				groups.add(cur.getGroup().getName());
+			}
+
+			if (cur.getRole() != null) {
+				roles.add(cur.getRole().getName());
+			}
+		}
+		doDeleteUserAuthorizationByGroupAndRole(conn, username, groups, roles);
+	}
+
+	private void addAuthorities(final Connection conn, final String username, final List<Authorization> list)
+            throws SQLException {
+		if (conn == null || list == null || list.isEmpty() || StringUtils.isBlank(username)) return;
+
+		try (PreparedStatement stmt = conn.prepareStatement(
+				ADD_AUTHORIZATION
+		)) {
+			int batchSize = 0;
+
+			for (Authorization cur : list) {
+				stmt.setString(1, username);
+
+				if (cur.getGroup() != null) {
+					stmt.setString(2, cur.getGroup().getName());
+				} else {
+					stmt.setNull(2, Types.VARCHAR);
+				}
+
+				if (cur.getRole() != null) {
+					stmt.setString(3, cur.getRole().getName());
+				} else {
+					stmt.setNull(3, Types.VARCHAR);
+				}
+				stmt.addBatch();
+
+				// avoid memory leaking
+				if (++batchSize % BATCH_SIZE_FLUSH == 0) {
+					stmt.executeBatch();
+				}
+			}
+			stmt.executeBatch();
 		}
 	}
 

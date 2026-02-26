@@ -22,7 +22,7 @@ public class OidcMappingService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public List<String> extractAuthorizationsFromJwt(String token, boolean decode, DynamicMappingElement claimMapper, String username) {
+    public List<String> extractAuthorizationsFromJwt(final String token, final boolean decode, final DynamicMappingElement claimMapper, final String username) {
         try {
             String json = decodeTokenIfNeeded(token, decode);
             JsonNode authNode = extractAuthNodeFromJson(json, claimMapper);
@@ -43,6 +43,36 @@ public class OidcMappingService {
                     claimMapper.path, username, e);
         }
         return Collections.emptyList();
+    }
+
+    public Long extractIat(final String token, final boolean decode, final String username) {
+        final DynamicMappingElement dme = new DynamicMappingElement();
+
+        // fake claim
+        dme.path = "iat";
+        try {
+            String json = decodeTokenIfNeeded(token, decode);
+            JsonNode authNode = extractAuthNodeFromJson(json, dme);
+
+            if (isNodeMissing(authNode)) {
+                log.debug("Path '{}' in JWT claims not found for user {}", dme.path, username);
+                return null;
+            }
+
+            final List<String> res = extractAuthorizationsFromNode(authNode, dme);
+            // finally
+            if (res != null && !res.isEmpty()) {
+                return Long.valueOf(res.get(0));
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Error decoding JWT payload for user {}", username, e);
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing JWT JSON for user {}", username, e);
+        } catch (Exception e) {
+            log.error("Unexpected error importing JWT claims from path '{}' for user {}",
+                    dme.path, username, e);
+        }
+        return null;
     }
 
     private String decodeTokenIfNeeded(String token, boolean decode) {
@@ -71,6 +101,9 @@ public class OidcMappingService {
             return extractFromArrayNode(authNode);
         }
         if (authNode.isTextual()) {
+            return List.of(authNode.asText());
+        }
+        if (authNode.isNumber()) {
             return List.of(authNode.asText());
         }
         log.warn("Unsupported node type for path '{}' in JWT: {}", claimMapper.path, authNode.getNodeType());
