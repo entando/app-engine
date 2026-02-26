@@ -261,46 +261,14 @@ public class KeycloakAuthorizationManager extends AbstractService {
                             .noneMatch(d -> d.equals(a));
                 })
                 .collect(Collectors.toList());
-        sillyDebug(user, dynamicAuthorizations, existingAuths, toAdd, toDelete);
+
         // update authorizations
         if (persist == PersistKind.FULL) {
             this.authorizationManager.externalAuthSync(user.getUsername(), iat, toAdd, toDelete);
-    }
-
+        }
         user.getAuthorizations().removeAll(toDelete);
         user.addAuthorizations(toAdd);
-        }
-
-/**/
-    private static void sillyDebug(UserDetails user, List<Authorization> dynamicAuthorizations,
-            List<Authorization> existingAuths, List<Authorization> toAdd, List<Authorization> toDelete) {
-        System.out.println("-------------------\n");
-        dynamicAuthorizations.forEach(n-> {
-            final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
-            final String roleName = n.getRole() != null ? n.getRole().getName() : null;
-
-            System.out.println("INCOMING " + user.getUsername() + " role " + roleName +  " group " + groupName);
-        });
-        existingAuths.forEach(n-> {
-            final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
-            final String roleName = n.getRole() != null ? n.getRole().getName() : null;
-
-            System.out.println("USER " + user.getUsername() + " role " + roleName +  " group " + groupName);
-        });
-        toAdd.forEach(n-> {
-            final String groupName = n.getGroup() != null ? n.getGroup().getName() : null;
-            final String roleName = n.getRole() != null ? n.getRole().getName() : null;
-
-            System.out.println("ADD " + user.getUsername() + " role " + roleName +  " group " + groupName);
-        });
-        toDelete.forEach(d-> {
-            final String groupName = d.getGroup() != null ? d.getGroup().getName() : null;
-            final String roleName = d.getRole() != null ? d.getRole().getName() : null;
-
-            System.out.println("DELETE " + user.getUsername() + " role " + roleName +  " group " + groupName);
-        });
     }
-/**/
 
     /**
      * Analyze the JWT looking for known mappings to translate into Entando roles

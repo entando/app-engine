@@ -225,7 +225,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			String userId = null;
 
 			try (PreparedStatement selectStmt = conn.prepareStatement(
-					"SELECT username, iat FROM ext_sync WHERE username = ? FOR UPDATE")) {
+					QUERY_SYNC_STATUS)) {
 				selectStmt.setString(1, username);
 
 				try (ResultSet rs = selectStmt.executeQuery()) {
@@ -265,7 +265,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			String usernameTracked = null;
 
 			try (PreparedStatement selectStmt = conn.prepareStatement(
-					"SELECT username, iat FROM ext_sync WHERE username = ? FOR UPDATE")) {
+					QUERY_SYNC_STATUS)) {
 				selectStmt.setString(1, username);
 
 				try (ResultSet rs = selectStmt.executeQuery()) {
@@ -279,7 +279,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			if (usernameTracked == null) {
 				_logger.debug("creating entry for user {}", username);
 				try (PreparedStatement insertStmt = conn.prepareStatement(
-						"INSERT INTO ext_sync (username, iat) VALUES (?, ?)")) {
+						CREATE_SYNC_STATUS)) {
 					insertStmt.setString(1, username);
 					insertStmt.setLong(2, iat);
 					insertStmt.executeUpdate();
@@ -293,7 +293,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 				_logger.debug("updating entry for user {}", username);
 				// Aggiorna iat
 				try (PreparedStatement updateIat = conn.prepareStatement(
-						"UPDATE ext_sync SET iat = ? WHERE username = ? AND iat < ?"
+						UPDATE_SYNC_STATUS
 				)) {
 					updateIat.setLong(1, iat);
 					updateIat.setString(2, username);
@@ -427,5 +427,13 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	
 	private final String GET_USER_AUTHORIZATIONS = 
 		"SELECT groupname, rolename FROM authusergrouprole WHERE username = ? ";
-	
+
+	public static final String UPDATE_SYNC_STATUS =
+			"UPDATE ext_sync SET iat = ? WHERE username = ? AND iat < ?";
+
+	public static final String CREATE_SYNC_STATUS =
+			"INSERT INTO ext_sync (username, iat) VALUES (?, ?)";
+
+	public static final String QUERY_SYNC_STATUS =
+			"SELECT username, iat FROM ext_sync WHERE username = ? FOR UPDATE";
 }
