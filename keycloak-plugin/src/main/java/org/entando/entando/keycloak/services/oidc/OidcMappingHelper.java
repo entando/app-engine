@@ -13,16 +13,14 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
-import org.springframework.stereotype.Service;
 
-@Service
-public class OidcMappingService {
+public class OidcMappingHelper {
 
-    private static final EntLogger log = EntLogFactory.getSanitizedLogger(OidcMappingService.class);
+    private static final EntLogger log = EntLogFactory.getSanitizedLogger(OidcMappingHelper.class);
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    public List<String> extractAuthorizationsFromJwt(final String token, final boolean decode, final DynamicMappingElement claimMapper, final String username) {
+    public static List<String> extractAuthorizationsFromJwt(final String token, final boolean decode, final DynamicMappingElement claimMapper, final String username) {
         try {
             String json = decodeTokenIfNeeded(token, decode);
             JsonNode authNode = extractAuthNodeFromJson(json, claimMapper);
@@ -45,7 +43,7 @@ public class OidcMappingService {
         return Collections.emptyList();
     }
 
-    public Long extractIat(final String token, final boolean decode, final String username) {
+    public static Long extractIssuedAtFromJwt(final String token, final boolean decode, final String username) {
         final DynamicMappingElement dme = new DynamicMappingElement();
 
         // fake claim
@@ -75,7 +73,7 @@ public class OidcMappingService {
         return null;
     }
 
-    private String decodeTokenIfNeeded(String token, boolean decode) {
+    private static String decodeTokenIfNeeded(String token, boolean decode) {
         if (!decode) {
             return token;
         }
@@ -86,17 +84,17 @@ public class OidcMappingService {
         return new String(Base64.getUrlDecoder().decode(parts[1]));
     }
 
-    private JsonNode extractAuthNodeFromJson(String json, DynamicMappingElement claimMapper) throws JsonProcessingException {
+    private static JsonNode extractAuthNodeFromJson(String json, DynamicMappingElement claimMapper) throws JsonProcessingException {
         final JsonNode root = mapper.readTree(json);
         final String jwtPath = "/" + claimMapper.path.replace(".", "/");
         return root.at(jwtPath);
     }
 
-    private boolean isNodeMissing(JsonNode node) {
+    private static boolean isNodeMissing(JsonNode node) {
         return node == null || node.isMissingNode() || node.isNull();
     }
 
-    private List<String> extractAuthorizationsFromNode(JsonNode authNode, DynamicMappingElement claimMapper) {
+    private static List<String> extractAuthorizationsFromNode(JsonNode authNode, DynamicMappingElement claimMapper) {
         if (authNode.isArray()) {
             return extractFromArrayNode(authNode);
         }
@@ -110,7 +108,7 @@ public class OidcMappingService {
         return Collections.emptyList();
     }
 
-    private List<String> extractFromArrayNode(JsonNode arrayNode) {
+    private static List<String> extractFromArrayNode(JsonNode arrayNode) {
         List<String> authorizations = new ArrayList<>();
         for (JsonNode node : arrayNode) {
             if (node.isTextual()) {
@@ -126,7 +124,7 @@ public class OidcMappingService {
      * @param elem the dynamic mapping element
      * @return the list of processed attribute tokens or null if the attribute is missing
      */
-    public List<String> extractAuthorizationsFromProfile(KeycloakUser user, DynamicMappingElement elem) {
+    public static List<String> extractAuthorizationsFromProfile(KeycloakUser user, DynamicMappingElement elem) {
         if (user.getUserRepresentation() == null
                 || user.getUserRepresentation().getAttributes() == null
                 || !user.getUserRepresentation().getAttributes().containsKey(elem.attribute)) {
@@ -145,7 +143,7 @@ public class OidcMappingService {
      * @param attribute the attribute data
      * @return the list of the processed attribute tokens
      */
-    protected List<String> handleKeycloakAttribute(Object attribute) {
+    protected static List<String> handleKeycloakAttribute(Object attribute) {
         if (attribute instanceof List) {
             List<Object> list = (List) attribute;
             return list.stream()

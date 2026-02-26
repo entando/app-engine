@@ -2,7 +2,6 @@ package org.entando.entando.keycloak.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.keycloak.services.oidc.OidcMappingService;
+import org.entando.entando.keycloak.services.oidc.OidcMappingHelper;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,29 +55,22 @@ class KeycloakAuthorizationManagerComplexTest {
 
     @Mock
     private BaseConfigManager configManager;
-    @Mock
-    private OidcMappingService oidcMappingService;
 
     private KeycloakAuthorizationManager manager;
 
     @BeforeEach
     public void setUp() {
-        manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager, oidcMappingService);
+        manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager);
         lenient().when(configuration.getDefaultAuthorizations()).thenReturn("");
-        lenient().when(oidcMappingService.extractIat(anyString(), any(Boolean.class), anyString())).thenReturn(1768319143L);
         try {
             lenient().when(authorizationManager.checkExternalAuthSync(anyString(), any(Long.class))).thenReturn(false);
         } catch (EntException e) {
             // ignore
         }
-        
-        // Mock default behaviors for oidcMappingService since it's now a mock
-        lenient().when(oidcMappingService.extractAuthorizationsFromProfile(any(), any())).thenAnswer(invocation -> {
-            return new OidcMappingService().extractAuthorizationsFromProfile(invocation.getArgument(0), invocation.getArgument(1));
-        });
-        lenient().when(oidcMappingService.extractAuthorizationsFromJwt(anyString(), any(Boolean.class), any(), anyString())).thenAnswer(invocation -> {
-            return new OidcMappingService().extractAuthorizationsFromJwt(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2), invocation.getArgument(3));
-        });
+    }
+
+    private String createToken(String jsonPayload) {
+        return "header." + java.util.Base64.getUrlEncoder().encodeToString(jsonPayload.getBytes()) + ".signature";
     }
 
     private void setMappingConfig(String xml) throws Exception {
@@ -208,7 +200,7 @@ class KeycloakAuthorizationManagerComplexTest {
                 + "</dynamicMapping>";
         setMappingConfig(xml);
 
-        String token = "header." + java.util.Base64.getUrlEncoder().encodeToString("{\"resource_access\":{\"client1\":{\"roles\":[\"jwt-role1\"]}}}".getBytes()) + ".signature";
+        String token = createToken("{\"iat\":123, \"resource_access\":{\"client1\":{\"roles\":[\"jwt-role1\"]}}}");
         KeycloakUser user = createKeycloakUser("test-user", null, null);
 
         manager.processNewUser(user, token, true);
@@ -236,7 +228,7 @@ class KeycloakAuthorizationManagerComplexTest {
                 + "</dynamicMapping>";
         setMappingConfig(xml);
 
-        String token = "header." + java.util.Base64.getUrlEncoder().encodeToString("{\"custom_groups\":[\"jwt-group1\", \"jwt-group2\"]}".getBytes()) + ".signature";
+        String token = createToken("{\"iat\":123, \"custom_groups\":[\"jwt-group1\", \"jwt-group2\"]}");
         KeycloakUser user = createKeycloakUser("test-user", null, null);
 
         manager.processNewUser(user, token, true);
@@ -269,7 +261,7 @@ class KeycloakAuthorizationManagerComplexTest {
                 + "</dynamicMapping>";
         setMappingConfig(xml);
 
-        String token = "header." + java.util.Base64.getUrlEncoder().encodeToString("{\"complex_auth\":[\"roleA:groupA\", \"roleB:groupB\"]}".getBytes()) + ".signature";
+        String token = createToken("{\"iat\":123, \"complex_auth\":[\"roleA:groupA\", \"roleB:groupB\"]}");
         KeycloakUser user = createKeycloakUser("test-user", null, null);
 
         manager.processNewUser(user, token, true);

@@ -9,7 +9,6 @@ import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.group.IGroupManager;
 import com.agiletec.aps.system.services.role.IRoleManager;
 import com.agiletec.aps.system.services.role.Role;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;

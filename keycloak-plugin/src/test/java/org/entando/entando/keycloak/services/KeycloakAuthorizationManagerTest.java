@@ -4,11 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -29,7 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.keycloak.services.oidc.OidcMappingService;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,23 +45,13 @@ class KeycloakAuthorizationManagerTest {
     @Mock private GroupManager groupManager;
     @Mock private RoleManager roleManager;
     @Mock private BaseConfigManager configManager;
-    @Mock private OidcMappingService oidcMappingService;
 
     private KeycloakAuthorizationManager manager;
 
     @BeforeEach
     public void setUp() throws EntException {
-        manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager, oidcMappingService);
-        lenient().when(oidcMappingService.extractIat(anyString(), any(Boolean.class), anyString())).thenReturn(1768319143L);
+        manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager);
         lenient().when(authorizationManager.checkExternalAuthSync(anyString(), any(Long.class))).thenReturn(false);
-
-        // Mock default behaviors for oidcMappingService since it's now a mock
-        lenient().when(oidcMappingService.extractAuthorizationsFromProfile(any(), any())).thenAnswer(invocation -> {
-            return new OidcMappingService().extractAuthorizationsFromProfile(invocation.getArgument(0), invocation.getArgument(1));
-        });
-        lenient().when(oidcMappingService.extractAuthorizationsFromJwt(anyString(), any(Boolean.class), any(), anyString())).thenAnswer(invocation -> {
-            return new OidcMappingService().extractAuthorizationsFromJwt(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2), invocation.getArgument(3));
-        });
     }
 
     @Test
@@ -491,7 +478,7 @@ class KeycloakAuthorizationManagerTest {
         manager.init();
 
         // This should not throw an exception because it's caught in syncAuthorizations
-        manager.processNewUser(userDetails, JWT, true);
+        manager.processNewUser(userDetails, null, true);
 
         verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }

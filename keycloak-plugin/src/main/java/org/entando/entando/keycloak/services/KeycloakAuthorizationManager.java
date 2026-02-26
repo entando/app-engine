@@ -36,7 +36,7 @@ import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.mapping.PersistKind;
-import org.entando.entando.keycloak.services.oidc.OidcMappingService;
+import org.entando.entando.keycloak.services.oidc.OidcMappingHelper;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,21 +61,18 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private final transient ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
     private final transient Lock readLock = configUpdateLock.readLock();
     private final transient Lock writeLock = configUpdateLock.writeLock();
-    private final transient OidcMappingService oidcMappingService;
 
     @Autowired
     public KeycloakAuthorizationManager(final KeycloakConfiguration configuration,
             final AuthorizationManager authorizationManager,
             final GroupManager groupManager,
             final RoleManager roleManager,
-            final BaseConfigManager configManager1,
-            final OidcMappingService oidcMappingService) {
+            final BaseConfigManager configManager1) {
         this.configuration = configuration;
         this.authorizationManager = authorizationManager;
         this.groupManager = groupManager;
         this.roleManager = roleManager;
         this.configManager = configManager1;
-        this.oidcMappingService = oidcMappingService;
     }
 
     /**
@@ -190,10 +187,20 @@ public class KeycloakAuthorizationManager extends AbstractService {
         try {
             // Authorizations coming from dynamic mapping (that is, external sources)
             final List<Authorization> dynamicAuthorizations = new ArrayList<>();
-            final Long iat = oidcMappingService.extractIat(token, decode, user.getUsername());
+            final Long iat;
+            if (StringUtils.isNotBlank(token)) {
+                iat = OidcMappingHelper.extractIssuedAtFromJwt(token, decode, user.getUsername());
+            } else {
+                iat = 0L;
+            }
 
-            if (iat == null || authorizationManager.checkExternalAuthSync(user.getUsername(), iat)) {
+            if (iat == null) {
                 log.debug("no need to sync user {}", user.getUsername());
+                return;
+            }
+
+            if (iat > 0 && authorizationManager.checkExternalAuthSync(user.getUsername(), iat)) {
+                log.debug("user {} already synced (iat: {})", user.getUsername(), iat);
                 return;
             }
 
@@ -344,7 +351,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @return the list of authorizations extracted from the JWT
      */
     private List<Authorization> processJwtClaimAttributes(final UserDetails user, final String token, final boolean decode, final DynamicMappingElement claimMapper) {
-        final List<String> authorizations = oidcMappingService.extractAuthorizationsFromJwt(token, decode, claimMapper, user.getUsername());
+        final List<String> authorizations = OidcMappingHelper.extractAuthorizationsFromJwt(token, decode, claimMapper, user.getUsername());
         List<Authorization> jwtAuthorizations = new ArrayList<>();
 
         if (user instanceof KeycloakUser && !authorizations.isEmpty()) {
@@ -500,7 +507,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 DEFAULT_SEPARATOR : elem.separator;
 
         try {
-            final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
+            final List<String> authorizations = OidcMappingHelper.extractAuthorizationsFromProfile(user, elem);
 
             if (authorizations == null) {
                 return result;
@@ -547,7 +554,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @return the list of authorizations extracted from the user profile
      */
     private List<Authorization> doProcessRole(KeycloakUser user, DynamicMappingElement elem) {
-        final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
+        final List<String> authorizations = OidcMappingHelper.extractAuthorizationsFromProfile(user, elem);
         return finalizeRoleAssociation(user, elem, authorizations);
     }
 
@@ -661,7 +668,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
      * @return the list of authorizations extracted from the user profile
      */
     private List<Authorization> doProcessGroup(KeycloakUser user, DynamicMappingElement elem) {
-        final List<String> authorizations = oidcMappingService.extractAuthorizationsFromProfile(user, elem);
+        final List<String> authorizations = OidcMappingHelper.extractAuthorizationsFromProfile(user, elem);
         if (authorizations == null) {
             return new ArrayList<>();
         }

@@ -1,22 +1,12 @@
 package org.entando.entando.keycloak.services.oidc;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.List;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-class OidcMappingServiceTest {
-
-    private OidcMappingService oidcMappingService;
-
-    @BeforeEach
-    void setUp() {
-        oidcMappingService = new OidcMappingService();
-    }
+class OidcMappingHelperTest {
 
     @Test
     void shouldReturnEmptyListWhenJwtFormatIsInvalid() {
@@ -24,7 +14,7 @@ class OidcMappingServiceTest {
         DynamicMappingElement claimMapper = new DynamicMappingElement();
         claimMapper.path = "roles";
         
-        List<String> result = oidcMappingService.extractAuthorizationsFromJwt(invalidToken, true, claimMapper, "testUser");
+        List<String> result = OidcMappingHelper.extractAuthorizationsFromJwt(invalidToken, true, claimMapper, "testUser");
         
         Assertions.assertEquals(Collections.emptyList(), result);
     }
@@ -36,7 +26,7 @@ class OidcMappingServiceTest {
         DynamicMappingElement claimMapper = new DynamicMappingElement();
         claimMapper.path = "roles";
 
-        List<String> result = oidcMappingService.extractAuthorizationsFromJwt(invalidBase64Token, true, claimMapper, "testUser");
+        List<String> result = OidcMappingHelper.extractAuthorizationsFromJwt(invalidBase64Token, true, claimMapper, "testUser");
 
         Assertions.assertEquals(Collections.emptyList(), result);
     }
@@ -48,7 +38,7 @@ class OidcMappingServiceTest {
         DynamicMappingElement claimMapper = new DynamicMappingElement();
         claimMapper.path = "roles";
 
-        List<String> result = oidcMappingService.extractAuthorizationsFromJwt(invalidJson, false, claimMapper, "testUser");
+        List<String> result = OidcMappingHelper.extractAuthorizationsFromJwt(invalidJson, false, claimMapper, "testUser");
 
         Assertions.assertEquals(Collections.emptyList(), result);
     }
@@ -58,7 +48,7 @@ class OidcMappingServiceTest {
         // Passing null for claimMapper should trigger a NullPointerException, which is caught by the generic Exception catch block
         String token = "anyToken";
         
-        List<String> result = oidcMappingService.extractAuthorizationsFromJwt(token, false, null, "testUser");
+        List<String> result = OidcMappingHelper.extractAuthorizationsFromJwt(token, false, null, "testUser");
 
         Assertions.assertEquals(Collections.emptyList(), result);
     }
@@ -72,7 +62,7 @@ class OidcMappingServiceTest {
         DynamicMappingElement claimMapper = new DynamicMappingElement();
         claimMapper.path = "roles";
 
-        List<String> result = oidcMappingService.extractAuthorizationsFromJwt(token, true, claimMapper, "testUser");
+        List<String> result = OidcMappingHelper.extractAuthorizationsFromJwt(token, true, claimMapper, "testUser");
 
         Assertions.assertEquals(2, result.size());
         Assertions.assertTrue(result.contains("admin"));

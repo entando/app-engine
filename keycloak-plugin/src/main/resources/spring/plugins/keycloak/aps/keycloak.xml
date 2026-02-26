@@ -35,6 +35,7 @@
         <property name="publicClientId" value="${keycloak.public.client.id:entando-web}" />
         <property name="secureUris" value="${keycloak.secure.uris:}" />
         <property name="defaultAuthorizations" value="${keycloak.authenticated.user.default.authorizations:}" />
+<!--        <property name="mappingService" value="${keycloak.authenticated.user.default.authorizations:}" />-->
     </bean>
 
     <bean id="AuthenticationProviderManager" primary="true" parent="abstractService"
