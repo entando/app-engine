@@ -1,5 +1,6 @@
 package org.entando.entando.keycloak.services;
 
+import static com.agiletec.aps.system.SystemConstants.ADMIN_USER_NAME;
 import static java.util.Optional.ofNullable;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.GROUP;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUP;
@@ -198,6 +199,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
     public void processNewUser(final UserDetails user, final String token, final boolean decode) {
         processNewUser(user);
         if (!enabled) return;
+        // safety net! Admin is exempted from group and roles assignment
+        if (ADMIN_USER_NAME.equals(user.getUsername())) return;
         readLock.lock();
         try {
             // Authorizations coming from dynamic mapping (that is, external sources)

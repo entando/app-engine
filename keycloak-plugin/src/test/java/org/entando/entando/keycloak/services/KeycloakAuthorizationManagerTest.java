@@ -1,5 +1,6 @@
 package org.entando.entando.keycloak.services;
 
+import static com.agiletec.aps.system.SystemConstants.ADMIN_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -564,6 +565,21 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testDynamicConfigurationRoleGroupOnLoginForAdmin() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getUsername()).thenReturn(ADMIN_USER_NAME);
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_CLAIM_AUTH);
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT_ROLEGROUP, false);
+        // Per sicurezza l'utente admin non viene MAI modificato
+        verify(authorizationManager, never()).addUserAuthorization(eq(ADMIN_USER_NAME), any());
+        verify(userDetails, never()).addAuthorizations(anyList());
+        verify(authorizationManager, never()).externalAuthSync(eq(ADMIN_USER_NAME), anyLong(), anyList(), anyList());
+    }
+
+    @Test
     void testDynamicConfigurationWithIgnoredRoles() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(userDetails.getUsername()).thenReturn("testuser");
@@ -687,7 +703,7 @@ class KeycloakAuthorizationManagerTest {
         manager.init();
         manager.processNewUser(userDetails, null, false);
 
-        // Verifichiamo che l'autorizzazione sia stata aggiunta all'utente
+        // Verifica che l'autorizzazione sia stata aggiunta all'utente
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
         verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
@@ -695,7 +711,7 @@ class KeycloakAuthorizationManagerTest {
         assertThat(captured).hasSize(1);
         assertThat(captured.get(0).getRole().getName()).isEqualTo("existing_role");
 
-        // Verifichiamo che non sia stata chiamata la persistenza
+        // Verifica che non sia stata chiamata la persistenza
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
     }
 
