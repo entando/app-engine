@@ -31,6 +31,7 @@ import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
@@ -470,6 +471,32 @@ class TestAuthorizationManager extends BaseTestCase {
             assertTrue(this.authorizationManager.externalAuthSyncCheck(username, 1500L));
             // iat maggiore (3000) -> deve ritornare false (necessita sincronizzazione)
             assertFalse(this.authorizationManager.externalAuthSyncCheck(username, 3000L));
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
+        }
+    }
+
+    @Test
+    void testExternalAuthSyncClean() throws Throwable {
+        String username = "UserForSyncCleanTest";
+        String password = "PasswordForSyncCleanTest";
+        this.addUserForTest(username, password);
+        try {
+            long iat = 1000L;
+            this.authorizationManager.externalAuthSync(username, iat, new ArrayList<>(), new ArrayList<>());
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, iat));
+
+            // Pulizia con soglia superiore a 1000
+            Instant threshold = Instant.ofEpochSecond(2000);
+            int deleted = this.authorizationManager.externalAuthSyncClean(threshold, 100);
+            assertTrue(deleted >= 1);
+
+            // Adesso l'utente non dovrebbe più essere sincronizzato (record cancellato)
+            assertFalse(this.authorizationManager.externalAuthSyncCheck(username, iat));
 
         } finally {
             UserDetails user = this.userManager.getUser(username);

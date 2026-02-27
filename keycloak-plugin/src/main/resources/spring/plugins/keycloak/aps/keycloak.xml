@@ -9,10 +9,17 @@
     <context:component-scan base-package="org.entando.entando.keycloak.services"/>
 
     <task:scheduled-tasks>
+        <!-- Refresh configuration every minute -->
         <task:scheduled
                 ref="keycloakAuthorizationManager"
                 method="refreshConfiguration"
-                cron="${KC_MAPPING_UPDATE:0 * * * * *}" />
+                cron="${KC_CONFIG_REFRESH:0 * * * * *}" />
+
+        <!-- Clean sync data every 4 hours -->
+        <task:scheduled
+                ref="keycloakAuthorizationManager"
+                method="cleanSyncData"
+                cron="${KC_SYNC_CLEAN:0 0 0/4 * * *}" />
     </task:scheduled-tasks>
 
     <bean id="keycloakAuthorizationManager" class="org.entando.entando.keycloak.services.KeycloakAuthorizationManager"
@@ -22,6 +29,7 @@
         <constructor-arg index="2" ref="GroupManager"/>
         <constructor-arg index="3" ref="RoleManager"/>
         <constructor-arg index="4" ref="BaseConfigManager"/>
+        <property name="cleanBatchSize" value="${KC_SYNC_BATCH_SIZE:100}" />
     </bean>
 
 

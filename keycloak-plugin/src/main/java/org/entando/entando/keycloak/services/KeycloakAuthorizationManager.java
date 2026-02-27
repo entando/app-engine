@@ -17,6 +17,7 @@ import com.agiletec.aps.system.services.role.RoleManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Sets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,8 @@ public class KeycloakAuthorizationManager extends AbstractService {
     private final transient ReadWriteLock configUpdateLock = new ReentrantReadWriteLock();
     private final transient Lock readLock = configUpdateLock.readLock();
     private final transient Lock writeLock = configUpdateLock.writeLock();
+
+    private int cleanBatchSize;
 
     @Autowired
     public KeycloakAuthorizationManager(final KeycloakConfiguration configuration,
@@ -113,15 +116,15 @@ public class KeycloakAuthorizationManager extends AbstractService {
                         log.debug("{} dynamic auth mapping found, {} profileMappings",
                                 dynConf.mapping.size(), profileMappings.size());
                     }
-                    ignore = Optional.ofNullable(dynConf.exclusions)
+                    ignore = ofNullable(dynConf.exclusions)
                             .orElse(List.of());
-                    roles = Optional.ofNullable(dynConf.roles)
+                    roles = ofNullable(dynConf.roles)
                             .orElseGet(List::of);
-                    groups = Optional.ofNullable(dynConf.groups)
+                    groups = ofNullable(dynConf.groups)
                             .orElse(List.of());
-                    enabled = Optional.ofNullable(dynConf.enabled)
+                    enabled = ofNullable(dynConf.enabled)
                             .orElse(false);
-                    persist = Optional.ofNullable(dynConf.persist)
+                    persist = ofNullable(dynConf.persist)
                             .orElse(PersistKind.FULL);
                 }
             }
@@ -151,6 +154,19 @@ public class KeycloakAuthorizationManager extends AbstractService {
             init();
         } catch (Exception e) {
             log.error("Error refreshing dynamic mapping configuration");
+        }
+    }
+
+    public void cleanSyncData() {
+        try {
+            if (!this.enabled) return;
+            final Instant tenMinutesAgo = Instant.now().minusSeconds(600);
+
+            log.info("Cleaning sync data older than {} with a batch size of {}", tenMinutesAgo, cleanBatchSize);
+            authorizationManager.externalAuthSyncClean(tenMinutesAgo, cleanBatchSize);
+            log.info("Cleaning completed successfully");
+        } catch (Exception e) {
+            log.error("Error refreshing dynamic mapping configuration", e);
         }
     }
 
@@ -245,7 +261,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
                 })
                 .collect(Collectors.toList());
         // list of the _managed_ authorizations currently assigned to the user
-        List<Authorization> existingAuths = Optional.ofNullable(user.getAuthorizations())
+        List<Authorization> existingAuths = ofNullable(user.getAuthorizations())
                 .orElse(List.of())
                 .stream()
                 .filter(a -> (a.getGroup() != null && groups.contains(a.getGroup().getName())
@@ -614,4 +630,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
         return result;
     }
 
+    public void setCleanBatchSize(Integer cleanBatchSize) {
+        this.cleanBatchSize = cleanBatchSize;
+    }
 }

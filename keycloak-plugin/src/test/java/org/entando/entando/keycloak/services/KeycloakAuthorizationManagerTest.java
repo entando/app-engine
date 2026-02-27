@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1055,6 +1056,27 @@ class KeycloakAuthorizationManagerTest {
         final Role role = new Role();
         role.setName(roleName);
         return new Authorization(null, role);
+    }
+
+    @Test
+    void testCleanSyncData() throws Exception {
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn("<DynamicMapping><enabled>true</enabled></DynamicMapping>");
+        manager.init();
+        manager.setCleanBatchSize(100);
+
+        manager.cleanSyncData();
+
+        verify(authorizationManager, times(1)).externalAuthSyncClean(any(java.time.Instant.class), eq(100));
+    }
+
+    @Test
+    void testCleanSyncDataDisabled() throws Exception {
+        when(configManager.getConfigItem("dynamicAuthMapping")).thenReturn("<DynamicMapping><enabled>false</enabled></DynamicMapping>");
+        manager.init();
+
+        manager.cleanSyncData();
+
+        verify(authorizationManager, never()).externalAuthSyncClean(any(java.time.Instant.class), anyInt());
     }
 
     private static final String XML_ROLE_CONF =
