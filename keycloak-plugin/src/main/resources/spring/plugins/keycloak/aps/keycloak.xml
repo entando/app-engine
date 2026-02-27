@@ -4,6 +4,7 @@
         xmlns:context="http://www.springframework.org/schema/context"
         xmlns:task="http://www.springframework.org/schema/task"
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
                 http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
     <context:component-scan base-package="org.entando.entando.keycloak.services"/>
@@ -34,7 +35,7 @@
 
 
     <bean id="keycloakConfiguration"
-          class="org.entando.entando.keycloak.services.KeycloakConfiguration">
+            class="org.entando.entando.keycloak.services.KeycloakConfiguration">
         <property name="enabled" value="${keycloak.enabled:false}" />
         <property name="authUrl" value="${keycloak.auth.url:http://localhost:8081/auth}" />
         <property name="realm" value="${keycloak.realm:entando}" />
@@ -46,7 +47,7 @@
     </bean>
 
     <bean id="AuthenticationProviderManager" primary="true" parent="abstractService"
-          class="org.entando.entando.keycloak.adapter.AuthenticationProviderManagerAdapter">
+            class="org.entando.entando.keycloak.adapter.AuthenticationProviderManagerAdapter">
 
         <constructor-arg index="0" ref="UserManager" />
 
@@ -57,7 +58,7 @@
     </bean>
 
     <bean id="UserManager" primary="true" parent="abstractService"
-          class="org.entando.entando.keycloak.adapter.UserManagerAdapter">
+            class="org.entando.entando.keycloak.adapter.UserManagerAdapter">
 
         <constructor-arg index="0" ref="AuthorizationManager" />
         <constructor-arg index="1" ref="keycloakService" />
@@ -80,7 +81,7 @@
     <bean id="keycloakOauth2Interceptor" class="org.entando.entando.keycloak.interceptor.KeycloakOauth2Interceptor"/>
 
     <bean id="entandoInterceptor" primary="true"
-          class="org.entando.entando.keycloak.adapter.EntandoOauth2InterceptorAdapter">
+            class="org.entando.entando.keycloak.adapter.EntandoOauth2InterceptorAdapter">
         <property name="keycloakEnabled" value="${keycloak.enabled:false}" />
     </bean>
 

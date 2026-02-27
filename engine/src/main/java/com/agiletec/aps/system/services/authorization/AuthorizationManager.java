@@ -763,7 +763,6 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
 		return this.getUsersByGroup(groupName, false);
 	}
 
-
     protected IAuthorizationDAO getAuthorizationDAO() {
         return _authorizationDAO;
     }
