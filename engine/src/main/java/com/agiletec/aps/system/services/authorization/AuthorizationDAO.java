@@ -22,7 +22,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
@@ -214,7 +216,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 	// Returns true if the user's external authentication synchronization is up to date
 	@Override
-	public boolean checkExternalAuthSync(final String username, final Long iat) {
+	public boolean externalAuthSyncCheck(final String username, final Long iat) {
 		Connection conn = null;
 		PreparedStatement stat = null;
 
@@ -382,7 +384,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 		if (hasGroups) {
 			final String placeholders = String.join(", ",
-					java.util.Collections.nCopies(groups.size(), "?"));
+					Collections.nCopies(groups.size(), "?"));
 
 			sb.append("groupname IN ( ");
 			sb.append(placeholders);
@@ -394,7 +396,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		}
 		if (hasRoles) {
 			final String placeholders = String.join(", ",
-					java.util.Collections.nCopies(roles.size(), "?"));
+					Collections.nCopies(roles.size(), "?"));
 			sb.append("rolename IN ( ");
 			sb.append(placeholders);
 			sb.append(") "); // chiusura rolename
@@ -402,6 +404,38 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		sb.append(")"); // chiusura AND
 		return sb.toString();
 	}
+
+	@Override
+	public int externalAuthSyncClean(Instant threshold, int batchSize) throws SQLException {
+		Connection conn = null;
+		final long epochSeconds = threshold.getEpochSecond();
+
+		try {
+			conn = this.getConnection();
+			conn.setAutoCommit(false);
+
+			String sql = DELETE_SYNC_STATUS;
+
+			try (PreparedStatement stat = conn.prepareStatement(sql)) {
+
+				stat.setLong(1, epochSeconds);
+				stat.setMaxRows(batchSize);
+
+				int deleted = stat.executeUpdate();
+				conn.commit();
+
+				return deleted;
+			}
+		} catch (Exception e) {
+			this.executeRollback(conn);
+			_logger.error("Error cleaning synchronization status for threshold '{}'", threshold, e);
+		} finally {
+			this.closeConnection(conn);
+		}
+		return 0;
+	}
+
+
 
 	@Override
 	protected String getTableFieldName(String metadataFieldKey) {
@@ -431,11 +465,14 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		"SELECT groupname, rolename FROM authusergrouprole WHERE username = ? ";
 
 	public static final String UPDATE_SYNC_STATUS =
-			"UPDATE ext_sync SET iat = ? WHERE username = ? AND iat < ?";
+			"UPDATE authusersextsync SET iat = ? WHERE username = ? AND iat < ?";
 
 	public static final String CREATE_SYNC_STATUS =
-			"INSERT INTO ext_sync (username, iat) VALUES (?, ?)";
+			"INSERT INTO authusersextsync (username, iat) VALUES (?, ?)";
 
 	public static final String QUERY_SYNC_STATUS =
-			"SELECT username, iat FROM ext_sync WHERE username = ? FOR UPDATE";
+			"SELECT username, iat FROM authusersextsync WHERE username = ? FOR UPDATE";
+
+	public static final String DELETE_SYNC_STATUS =
+			"DELETE FROM authusersextsync WHERE iat < ?";
 }

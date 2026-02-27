@@ -7,7 +7,7 @@
 
     <changeSet id="00000000000004_schemaServ" author="entando" failOnError="false">
 
-        <createTable tableName="ext_sync">
+        <createTable tableName="authusersextsync">
             <column name="username" type="VARCHAR(80)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -17,7 +17,7 @@
             </column>
         </createTable>
 
-        <createIndex indexName="idx_ext_sync_iat" tableName="ext_sync">
+        <createIndex indexName="idx_authusersextsync_iat" tableName="authusersextsync">
             <column name="iat"/>
         </createIndex>
 

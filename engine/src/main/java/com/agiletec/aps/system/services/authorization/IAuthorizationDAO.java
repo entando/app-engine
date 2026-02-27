@@ -15,6 +15,8 @@ package com.agiletec.aps.system.services.authorization;
 
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
+import java.sql.SQLException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +42,10 @@ public interface IAuthorizationDAO {
 	int deleteUserAuthorizationByGroupAndRole(String username, List<String> groups, List<String> roles);
 
     // Returns true if the user's external authentication synchronization is up to date
-    boolean checkExternalAuthSync(String username, Long iat);
+    boolean externalAuthSyncCheck(String username, Long iat);
 
 	void externalAuthSync(String username, Long iat,
 			List<Authorization> toAdd, List<Authorization> toRemove);
+
+	int externalAuthSyncClean(Instant threshold, int batchSize) throws SQLException;
 }

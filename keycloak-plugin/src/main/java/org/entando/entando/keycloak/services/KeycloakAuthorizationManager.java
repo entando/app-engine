@@ -199,7 +199,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
             }
 
             // abort if already synced
-            if (iat > 0 && authorizationManager.checkExternalAuthSync(user.getUsername(), iat)) {
+            if (iat > 0 && authorizationManager.externalAuthSyncCheck(user.getUsername(), iat)) {
                 log.debug("user {} already synced (iat: {})", user.getUsername(), iat);
                 return;
             }

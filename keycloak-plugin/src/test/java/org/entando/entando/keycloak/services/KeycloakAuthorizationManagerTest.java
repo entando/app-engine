@@ -51,7 +51,7 @@ class KeycloakAuthorizationManagerTest {
     @BeforeEach
     public void setUp() throws EntException {
         manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager);
-        lenient().when(authorizationManager.checkExternalAuthSync(anyString(), any(Long.class))).thenReturn(false);
+        lenient().when(authorizationManager.externalAuthSyncCheck(anyString(), any(Long.class))).thenReturn(false);
     }
 
     @Test
@@ -899,7 +899,7 @@ class KeycloakAuthorizationManagerTest {
         when(userDetails.getUsername()).thenReturn("testuser");
 
         // Override the lenient stub: checkExternalAuthSync returns true
-        when(authorizationManager.checkExternalAuthSync(eq("testuser"), anyLong())).thenReturn(true);
+        when(authorizationManager.externalAuthSyncCheck(eq("testuser"), anyLong())).thenReturn(true);
 
         manager.init();
         manager.processNewUser(userDetails, JWT, false);
@@ -932,7 +932,7 @@ class KeycloakAuthorizationManagerTest {
         manager.refreshConfiguration();
 
         // Reset the checkExternalAuthSync to allow re-processing
-        when(authorizationManager.checkExternalAuthSync(anyString(), anyLong())).thenReturn(false);
+        when(authorizationManager.externalAuthSyncCheck(anyString(), anyLong())).thenReturn(false);
 
         manager.processNewUser(userDetails, JWT, false);
 

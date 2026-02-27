@@ -465,11 +465,11 @@ class TestAuthorizationManager extends BaseTestCase {
 
             // Test checkExternalAuthSync
             // iat uguale all'ultimo (2000) -> deve ritornare true (sincronizzato)
-            assertTrue(this.authorizationManager.checkExternalAuthSync(username, higherIat));
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, higherIat));
             // iat minore (1500) -> deve ritornare true (già sincronizzato con un iat superiore)
-            assertTrue(this.authorizationManager.checkExternalAuthSync(username, 1500L));
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, 1500L));
             // iat maggiore (3000) -> deve ritornare false (necessita sincronizzazione)
-            assertFalse(this.authorizationManager.checkExternalAuthSync(username, 3000L));
+            assertFalse(this.authorizationManager.externalAuthSyncCheck(username, 3000L));
 
         } finally {
             UserDetails user = this.userManager.getUser(username);

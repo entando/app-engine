@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.keycloak.services.oidc.OidcMappingHelper;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.entando.entando.keycloak.services.oidc.model.UserRepresentation;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +62,7 @@ class KeycloakAuthorizationManagerComplexTest {
         manager = new KeycloakAuthorizationManager(configuration, authorizationManager, groupManager, roleManager, configManager);
         lenient().when(configuration.getDefaultAuthorizations()).thenReturn("");
         try {
-            lenient().when(authorizationManager.checkExternalAuthSync(anyString(), any(Long.class))).thenReturn(false);
+            lenient().when(authorizationManager.externalAuthSyncCheck(anyString(), any(Long.class))).thenReturn(false);
         } catch (EntException e) {
             // ignore
         }

@@ -13,6 +13,7 @@
  */
 package com.agiletec.aps.system.services.authorization;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -659,12 +660,22 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
     }
 
     @Override
-    public boolean checkExternalAuthSync(final String username, final Long iat) throws EntException {
+    public boolean externalAuthSyncCheck(final String username, final Long iat) throws EntException {
         try {
-            return this.getAuthorizationDAO().checkExternalAuthSync(username, iat);
+            return this.getAuthorizationDAO().externalAuthSyncCheck(username, iat);
         } catch (Exception t) {
             _logger.error("Error checking synchronization status for user '{}'", username, t);
             throw new EntException("Error checking synchronization status  for user " + username, t);
+        }
+    }
+
+    @Override
+    public int externalAuthSyncClean(final Instant threshold, final int batchSize) throws EntException {
+        try {
+            return this.getAuthorizationDAO().externalAuthSyncClean(threshold, batchSize);
+        } catch (Exception t) {
+            _logger.error("Error cleaning synchronization table", t);
+            throw new EntException("Error cleaning synchronization table", t);
         }
     }
 

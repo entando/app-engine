@@ -13,6 +13,7 @@
  */
 package com.agiletec.aps.system.services.authorization;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -181,11 +182,6 @@ public interface IAuthorizationManager {
     void deleteUserAuthorizationByGroupAndRole(String username, List<String> groups,
             List<String> roles) throws EntException;
 
-	void externalAuthSync(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove)
-			throws EntException;
-
-	boolean checkExternalAuthSync(String username, Long iat) throws EntException;
-
 	public List<String> getUsersByRole(IApsAuthority authority, boolean includeAdmin) throws EntException;
 	
 	public List<String> getUsersByRole(String roleName, boolean includeAdmin) throws EntException;
@@ -193,5 +189,36 @@ public interface IAuthorizationManager {
 	public List<String> getUsersByGroup(IApsAuthority authority, boolean includeAdmin) throws EntException;
 	
 	public List<String> getUsersByGroup(String groupName, boolean includeAdmin) throws EntException;
+
+	/**
+	 * Synchronizes the user's authorizations and tracks the change timestamp.
+	 *
+	 * @param username The username of the user to synchronize.
+	 * @param iat The timestamp of the current synchronization (as found in the JWT)
+	 * @param toAdd The authorizations to add.
+	 * @param toRemove The authorizations to remove.
+	 * @throws EntException If an error occurs during synchronization.
+	 */
+	void externalAuthSync(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove)
+			throws EntException;
+
+	/**
+	 * Checks if the user's last synchronization is within the threshold.
+	 * @param username The username of the user to check.
+	 * @param iat The timestamp of the current synchronization (as found in the JWT)
+	 * @return True if the user's last synchronization is within the threshold, false otherwise.
+	 * @throws EntException If an error occurs during the check.
+	 */
+	boolean externalAuthSyncCheck(String username, Long iat) throws EntException;
+
+	/**
+	 * Cleans up old synchronization records.
+	 *
+	 * @param threshold The timestamp threshold for records to be cleaned.
+	 * @param batchSize The number of records to process in each batch.
+	 * @return int the number of deleted records.
+	 * @throws EntException If an error occurs during cleanup.
+	 */
+	int externalAuthSyncClean(Instant threshold, int batchSize) throws EntException;
 
 }
