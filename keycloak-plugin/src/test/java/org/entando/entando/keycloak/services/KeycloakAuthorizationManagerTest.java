@@ -530,7 +530,7 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT_ROLEGROUP_EDGE, false);
 
-        verify(authorizationManager, times(1)).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
+        verify(authorizationManager, never()).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
     }
 
     @Test

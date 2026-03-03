@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <DynamicMapping>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <persist>FULL</persist>
     <mappings>
         <mapping>

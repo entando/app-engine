@@ -328,7 +328,7 @@ public class KeycloakAuthorizationManager extends AbstractService {
 
                 if (tokens.length < 2) {
                     // treat as a role
-                    result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
+//                    result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
                     continue;
                 }
 
