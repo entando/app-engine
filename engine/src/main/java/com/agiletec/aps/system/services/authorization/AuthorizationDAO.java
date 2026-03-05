@@ -313,6 +313,14 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 				_logger.debug("no need to sync {}", username);
 			}
 			conn.commit();
+		} catch (SQLException e) {
+			// questa eccezione è aspettata in partenza!
+			if (e.getSQLState() != null &&
+					e.getSQLState().startsWith("23")) {
+				_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
+			} else {
+				throw new RuntimeException("Unexpected SQL exception", e);
+			}
 		} catch (Exception e) {
 			this.executeRollback(conn);
 			throw new RuntimeException("Error detected while checking user synchronization", e);
