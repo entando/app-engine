@@ -317,9 +317,22 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			conn.commit();
 		} catch (SQLException e) {
 			// questa eccezione è aspettata in partenza!
-			if (e.getSQLState() != null &&
-					e.getSQLState().startsWith("23")) {
-				_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
+
+			String sqlState = e.getSQLState();
+			if (StringUtils.isNotBlank(sqlState)) {
+				// 23505: unique_violation (PostgreSQL, Derby)
+				// 23000: integrity constraint violation (MySQL, Oracle - need to check error code)
+				if ("23505".equals(sqlState)) {
+					_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
+				}
+				if ("23000".equals(sqlState)) {
+					int errorCode = e.getErrorCode();
+					// MySQL: 1062 (ER_DUP_ENTRY), 1586 (ER_DUP_ENTRY_WITH_KEY_NAME)
+					// Oracle: 1 (ORA-00001: unique constraint violated)
+					if (errorCode == 1062 || errorCode == 1586 || errorCode == 1) {
+						_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
+					}
+				}
 			} else {
 				throw new RuntimeException("Unexpected SQL exception", e);
 			}
@@ -416,35 +429,53 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	}
 
 	@Override
-	public int externalAuthSyncClean(Instant threshold, int batchSize) throws SQLException {
+	public int externalAuthSyncClean(Instant cutoff, int batchSize) throws SQLException {
+		int deleted = 0;
 		Connection conn = null;
-		final long epochSeconds = threshold.getEpochSecond();
+		final long epochSeconds = cutoff.getEpochSecond();
 
 		try {
 			conn = this.getConnection();
 			conn.setAutoCommit(false);
 
-			String sql = DELETE_SYNC_STATUS;
-
-			try (PreparedStatement stat = conn.prepareStatement(sql)) {
-
-				stat.setLong(1, epochSeconds);
-				stat.setMaxRows(batchSize);
-
-				int deleted = stat.executeUpdate();
-				conn.commit();
-
-				return deleted;
-			}
+			deleted = doBatchDeletion(conn, epochSeconds, batchSize);
+			conn.commit();
 		} catch (Exception e) {
 			this.executeRollback(conn);
-			_logger.error("Error cleaning synchronization status for threshold '{}'", threshold, e);
+			_logger.error("Error cleaning synchronization status for threshold '{}'", cutoff, e);
 		} finally {
 			this.closeConnection(conn);
 		}
-		return 0;
+		return deleted;
 	}
 
+	public int doBatchDeletion(Connection conn, long epochSeconds, int batchSize) throws SQLException {
+		final String selectQry = "SELECT username FROM authusersextsync WHERE iat < ?";
+		final String deleteQry = "DELETE FROM authusersextsync WHERE username = ?";
+
+		int deleted = 0;
+
+		try (PreparedStatement stat = conn.prepareStatement(selectQry)) {
+
+			stat.setLong(1, epochSeconds);
+			stat.setMaxRows(batchSize);
+
+			try (ResultSet rs = stat.executeQuery();
+					PreparedStatement deleteStmt = conn.prepareStatement(deleteQry)) {
+
+				while (rs.next()) {
+					String username = rs.getString(1);
+					System.out.println("cancello " + username);
+
+					deleteStmt.setString(1, username);
+					deleteStmt.addBatch();
+					deleted++;
+				}
+				deleteStmt.executeBatch();
+			}
+		}
+		return deleted;
+	}
 
 
 	@Override

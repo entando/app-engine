@@ -641,6 +641,10 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
     @Override
     public void deleteUserAuthorizationByGroupAndRole(String username, List<String> groups, List<String> roles) throws EntException {
         try {
+            if ((roles == null || roles.isEmpty()) && (groups == null || groups.isEmpty())) {
+                _logger.warn("Invalid parameters: roles and groups cannot both be null or empty");
+                return;
+            }
             this.getAuthorizationDAO().deleteUserAuthorizationByGroupAndRole(username, groups, roles);
         } catch (Exception t) {
             _logger.error("Error deleting user authorization by group and role for user '{}'", username, t);
