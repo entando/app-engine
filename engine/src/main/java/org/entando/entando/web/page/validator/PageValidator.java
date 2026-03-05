@@ -56,6 +56,7 @@ public class PageValidator extends AbstractPaginationValidator {
     public static final String ERRCODE_PAGE_WITH_PUBLIC_CHILD = "8";
     public static final String ERRCODE_PAGE_WITH_NO_PUBLIC_PARENT = "9";
     public static final String ERRCODE_PAGE_INVALID_TITLE = "12";
+    public static final String ERRCODE_ROOT_PAGE = "13";
 
     private final org.slf4j.Logger logger = EntLogFactory.getSanitizedLogger(getClass());
 
@@ -120,6 +121,13 @@ public class PageValidator extends AbstractPaginationValidator {
         IPage page = getDraftPage(pageCode);
         if (page != null && page.getChildrenCodes() != null && page.getChildrenCodes().length > 0) {
             errors.reject(ERRCODE_PAGE_HAS_CHILDREN, new String[]{pageCode}, "page.delete.children");
+        }
+    }
+
+    public void validateRootPage(String pageCode, Errors errors) {
+        IPage root = this.getPageManager().getDraftRoot();
+        if (root != null && root.getCode().equals(pageCode)) {
+            errors.reject(ERRCODE_ROOT_PAGE, new String[]{pageCode}, "page.delete.root");
         }
     }
 
