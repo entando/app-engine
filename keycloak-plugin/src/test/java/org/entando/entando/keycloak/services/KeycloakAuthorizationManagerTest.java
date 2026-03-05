@@ -2,6 +2,8 @@ package org.entando.entando.keycloak.services;
 
 import static com.agiletec.aps.system.SystemConstants.ADMIN_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -449,6 +451,20 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testDynamicConfigurationNoConfig() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(null);
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+        assertNotNull(manager.getImportConfiguration());
+        assertFalse(manager.getImportConfiguration().enabled);
+    }
+
+    @Test
     void testDynamicConfigurationMalformedMapping() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(configManager.getConfigItem(anyString())).thenReturn(XML_MALFORMED_MAPPING);
@@ -458,6 +474,7 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
+        assertFalse(manager.getImportConfiguration().enabled);
     }
 
     @Test

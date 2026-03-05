@@ -98,6 +98,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
         config.profileMappings = new ArrayList<>();
         config.jwtMappings = new ArrayList<>();
+        config.enabled = false;
 
         try {
             String xml = configManager.getConfigItem("dynamicAuthMapping");
