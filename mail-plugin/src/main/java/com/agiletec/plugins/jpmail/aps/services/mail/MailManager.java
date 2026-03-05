@@ -409,7 +409,7 @@ public class MailManager extends AbstractService implements IMailManager, Refres
 	}
 	
 	private Boolean _active;
-	private Map<String, MailConfig> tenantConfigs = new HashMap<>();
+	private Map<String, MailConfig> 	tenantConfigs = new HashMap<>();
 	private ConfigInterface _configManager;
 	
 	/*

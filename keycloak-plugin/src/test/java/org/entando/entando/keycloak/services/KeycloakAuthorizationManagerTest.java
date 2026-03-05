@@ -26,6 +26,7 @@ import com.agiletec.aps.system.services.role.RoleManager;
 import com.fasterxml.jackson.core.JsonParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.entando.entando.ent.exception.EntException;
@@ -521,7 +522,6 @@ class KeycloakAuthorizationManagerTest {
     @Test
     void testDynamicConfigurationRoleGroupOnLoginFromJwtEdgeCases() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
-        when(roleManager.getRole(anyString())).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
         when(userDetails.getUsername()).thenReturn("testuser");
         when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_CLAIM);
@@ -530,7 +530,8 @@ class KeycloakAuthorizationManagerTest {
 
         manager.processNewUser(userDetails, JWT_ROLEGROUP_EDGE, false);
 
-        verify(authorizationManager, never()).externalAuthSync(eq("testuser"), anyLong(), anyList(), anyList());
+        verify(authorizationManager, times(1))
+                .externalAuthSync(eq("testuser"), anyLong(), eq(Collections.emptyList()), eq(Collections.emptyList()));
     }
 
     @Test

@@ -23,4 +23,5 @@ public class DynamicMapping {
 
     public Boolean enabled;
     public PersistKind persist;
+
 }
