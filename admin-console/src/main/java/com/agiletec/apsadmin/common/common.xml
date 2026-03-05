@@ -26,7 +26,7 @@
 		
 		<action name="doLogin" class="dispatchAction" method="doLogin">
 			<result name="input">/WEB-INF/apsadmin/jsp/common/login.jsp</result>
-			<result type="redirectAction">main</result>
+			<result type="redirectActionXF">main</result>
 			<interceptor-ref name="entandoLoginStack" />
 		</action>
 		

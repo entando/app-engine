@@ -19,6 +19,7 @@
     	
 		<result-types>
 			<result-type name="redirectActionWithAnchor" class="com.agiletec.apsadmin.system.dispatcher.ServletActionRedirectResultWithAnchor" />
+			<result-type name="redirectActionXF" class="com.agiletec.apsadmin.system.dispatcher.ServletActionRedirectResultXF" />
 			<result-type name="json" class="org.apache.struts2.json.JSONResult"/>
 		</result-types>
     	
@@ -79,7 +80,7 @@
 			<result name="homepage">/index.jsp</result>
 			<result name="failure" type="tiles">admin.genericError</result>
 			<result name="userNotAllowed" type="tiles">admin.userNotAllowedMessage</result>
-			<result name="apslogin" type="redirectAction">
+			<result name="apslogin" type="redirectActionXF">
 				<param name="actionName">login</param>
 				<param name="namespace">/do</param>
 			</result>

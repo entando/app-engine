@@ -1,0 +1,119 @@
+/*
+ * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package com.agiletec.plugins.jpcontentworkflow.apsadmin.workflow;
+
+import java.util.List;
+
+import com.agiletec.apsadmin.ApsAdminBaseTestCase;
+import com.agiletec.plugins.jpcontentworkflow.util.WorkflowTestHelper;
+
+import com.agiletec.aps.system.SystemConstants;
+import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
+import com.agiletec.apsadmin.system.BaseAction;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.SmallContentType;
+import com.agiletec.plugins.jpcontentworkflow.aps.system.JpcontentworkflowSystemConstants;
+import com.agiletec.plugins.jpcontentworkflow.aps.system.services.workflow.ContentWorkflowManager;
+import org.apache.struts2.action.Action;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * @author E.Santoboni
+ */
+public class TestWorkflowListAction extends ApsAdminBaseTestCase {
+
+	@BeforeEach
+	protected void init() throws Exception {
+		super.setUp();
+		ContentWorkflowManager workflowManager = (ContentWorkflowManager) this.getService(JpcontentworkflowSystemConstants.CONTENT_WORKFLOW_MANAGER);
+		ConfigInterface configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
+		this._helper = new WorkflowTestHelper(workflowManager, configManager);
+		this._helper.setWorkflowConfig();
+	}
+
+	@AfterEach
+	protected void dispose() throws Exception {
+		this._helper.resetWorkflowConfig();
+		super.tearDown();
+	}
+
+	@Test
+	public void testSaveRoles() throws Throwable {
+		String result = this.executeList("admin");
+		assertEquals(Action.SUCCESS, result);
+		WorkflowListAction action = (WorkflowListAction) this.getAction();
+		assertNull(action.getRole("ART"));
+		String roleNameForEnv = action.getRole("EVN").getName();
+		assertEquals("pageManager", roleNameForEnv);
+
+		result = this.executeSaveRole("admin", "EVN", "supervisor");
+		assertEquals(Action.SUCCESS, result);
+		action = (WorkflowListAction) this.getAction();
+		assertEquals(1, action.getActionMessages().size());
+		String newRoleNameForEnv = action.getRole("EVN").getName();
+		assertEquals("supervisor", newRoleNameForEnv);
+
+		result = this.executeSaveRole("admin", "EVN", "pageManager");
+		assertEquals(Action.SUCCESS, result);
+		action = (WorkflowListAction) this.getAction();
+		assertEquals(1, action.getActionMessages().size());
+		String restoredRoleNameForEnv = action.getRole("EVN").getName();
+		assertEquals("pageManager", restoredRoleNameForEnv);
+	}
+
+	protected String executeSaveRole(String currentUserName, String typeCode, String role) throws Throwable {
+		this.setUserOnSession(currentUserName);
+		this.initAction("/do/jpcontentworkflow/Workflow", "saveRoles");
+		this.addParameter(typeCode + "_authority", role);
+		return this.executeAction();
+	}
+
+	@Test
+	public void testListForAdminUser() throws Throwable {
+		String result = this.executeList("admin");
+		assertEquals(Action.SUCCESS, result);
+		WorkflowListAction action = (WorkflowListAction) this.getAction();
+		List<SmallContentType> contentTypes = action.getContentTypes();
+		assertNotNull(contentTypes.get(0));
+		assertNull(action.getRole("ART"));
+		assertEquals("pageManager", action.getRole("EVN").getName());
+	}
+
+	@Test
+	public void testListForNotAllowedUser() throws Throwable {
+		String result = this.executeList("editorCustomers");
+		assertEquals(BaseAction.USER_NOT_ALLOWED, result);
+	}
+
+	protected String executeList(String currentUserName) throws Throwable {
+		this.initAction("/do/jpcontentworkflow/Workflow", "list");
+		this.setUserOnSession(currentUserName);
+		String result = this.executeAction();
+		return result;
+	}
+
+	private WorkflowTestHelper _helper;
+
+}

@@ -14,9 +14,9 @@ The application will be available at http://localhost:8080/entando-de-app/
 
 More information are available on [webapp README](webapp/README.md).
 
-## Content Scheduler Plugin
+## Optional CMS Plugins
 
-The Content Scheduler Plugin is disabled by default. It can be included in the webapp activating the `contentscheduler` Maven profile during the build.
+The Content Scheduler Plugin and the Content Workflow Plugin are disabled by default. They can be included in the webapp activating the `contentscheduler` and/or `contentworkflow` Maven profiles during the build.
 
 ## Testing
 

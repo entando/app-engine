@@ -59,7 +59,7 @@
 
 		<action name="save" class="categoryAction" method="save">
 			<result name="input" type="tiles">admin.Category.entry</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="actionName">viewTree</param>
 				<param name="selectedNode">${categoryCode}</param>
 			</result>
@@ -94,7 +94,7 @@
 		</action>
 
 		<action name="executeMoveTree" class="categoryAction" method="executeMoveTree">
-			<result type="redirectAction">viewTree</result>
+			<result type="redirectActionXF">viewTree</result>
 			<result name="categoryTree" type="chain">viewTree</result>
 			<interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">manageCategories</param></interceptor-ref>
 		</action>

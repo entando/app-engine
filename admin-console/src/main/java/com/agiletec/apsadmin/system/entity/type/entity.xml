@@ -35,7 +35,7 @@
 				<param name="actionName">viewEntityTypes</param>
 				<!-- <param name="entityManagerName">${entityManagerName}</param> -->
 			</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do${entityTypeManagementNamespacePrefix}/Entity</param>
 				<param name="actionName">viewEntityTypes</param>
 				<param name="entityManagerName">${entityManagerName}</param>
@@ -72,7 +72,7 @@
 		<action name="removeEntityType" class="entityTypesAction" method="removeEntityType" >
 			<result name="input" type="chain">initViewEntityTypes</result>
 			<result name="hasReferences" type="tiles">admin.entityManagement.removeEntityTypeWithReferences</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="actionName">initViewEntityTypes</param>
 				<param name="entityManagerName">${entityManagerName}</param>
 			</result>
@@ -107,7 +107,7 @@
 		<!-- you have to rewrite this action to manage custom entity types -->
 		<action name="addAttribute" class="entityTypeConfigAction" method="addAttribute">
 			<result name="input" type="tiles">admin.entityManagement.entryEntityType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do/Entity/Attribute</param>
 				<param name="actionName">addAttribute</param>
 				<param name="attributeTypeCode">${attributeTypeCode}</param>
@@ -118,7 +118,7 @@
 		<!-- you have to rewrite this action to manage custom entity types -->
 		<action name="editAttribute*" class="entityTypeConfigAction" method="editAttribute">
 			<result name="input" type="tiles">admin.entityManagement.entryEntityType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do/Entity/Attribute</param>
 				<param name="actionName">editAttribute</param>
 				<param name="attributeName">${attributeName}</param>
@@ -149,7 +149,7 @@
 		<!-- you have to rewrite this action to manage custom entity types -->
 		<action name="saveEntityType" class="entityTypeConfigAction" method="saveEntityType">
 			<result name="input" type="tiles">admin.entityManagement.entryEntityType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="actionName">initViewEntityTypes</param>
 				<param name="entityManagerName">${entityManagerName}</param>
 			</result>
@@ -192,15 +192,15 @@
     	
     	<action name="saveAttribute" class="entityAttributeConfigAction" method="saveAttribute">
 			<result name="input" type="tiles">admin.entityManagement.entryEntityAttributeType</result>
-			<result name="configureListElementAttribute" type="redirectAction">
+			<result name="configureListElementAttribute" type="redirectActionXF">
 				<param name="namespace">/do/Entity/ListAttribute</param>
 				<param name="actionName">configureListElement</param>
 			</result>
-			<result name="configureCompositeAttribute" type="redirectAction">
+			<result name="configureCompositeAttribute" type="redirectActionXF">
 				<param name="namespace">/do/Entity/CompositeAttribute</param>
 				<param name="actionName">entryCompositeAttribute</param>
 			</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do${entityTypeManagementNamespacePrefix}/Entity</param>
 				<param name="actionName">entryEntityType</param>
 			</result>
@@ -218,7 +218,7 @@
     	
     	<action name="saveListElement" class="listElementAttributeConfigAction" method="saveListElement">
 			<result name="input" type="tiles">admin.entityManagement.textListElement.entryEntityAttributeType</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do${entityTypeManagementNamespacePrefix}/Entity</param>
 				<param name="actionName">entryEntityType</param>
 			</result>
@@ -251,7 +251,7 @@
 		</action>
 		
 		<action name="saveCompositeAttribute" class="entityCompositeAttributeConfigAction" method="saveCompositeAttribute">
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="namespace">/do${entityTypeManagementNamespacePrefix}/Entity</param>
 				<param name="actionName">entryEntityType</param>
 			</result>
@@ -266,7 +266,7 @@
 		
 		<action name="saveAttributeElement" class="entityCompositeAttributeConfigAction" method="saveAttributeElement">
 			<result name="input" type="tiles">admin.entityManagement.compositeAttribute.entryAttributeElementType</result>
-			<result type="redirectAction">entryCompositeAttribute</result>
+			<result type="redirectActionXF">entryCompositeAttribute</result>
 			<interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
 		</action>
 		

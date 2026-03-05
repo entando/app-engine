@@ -17,7 +17,7 @@
         
     	<action name="add" class="langAction" method="add">
         	<result name="input" type="chain">list</result>
-        	<result type="redirectAction">list</result>
+        	<result type="redirectActionXF">list</result>
         	<interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
     	

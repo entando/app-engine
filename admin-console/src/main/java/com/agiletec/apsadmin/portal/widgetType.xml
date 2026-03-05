@@ -90,7 +90,7 @@
         </action>
 		
         <action name="deleteWidgetFromPage" class="pageConfigAction" method="deleteWidget">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">viewWidgetUtilizers</param>
                 <param name="showletTypeCode">${showletTypeCode}</param>
             </result>
@@ -131,12 +131,12 @@
 		
         <action name="save*" class="widgetTypeAction" method="save">
             <result name="input" type="tiles">admin.Portal.showletType.entry</result>
-            <result name="replaceOnPage" type="redirectAction">
+            <result name="replaceOnPage" type="redirectActionXF">
                 <param name="namespace">/do/Page</param>
                 <param name="actionName">configure</param>
                 <param name="pageCode">${pageCode}</param>
             </result>
-            <result type="redirectAction">viewWidgets</result>
+            <result type="redirectActionXF">viewWidgets</result>
             <interceptor-ref name="entandoValidationStack">
                 <param name="requestAuth.requiredPermission">managePages</param>
             </interceptor-ref>
@@ -150,7 +150,7 @@
         </action>
 		
         <action name="delete" class="widgetTypeAction" method="delete">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">viewWidgets</param>
             </result>
             <interceptor-ref name="entandoDefaultStack">

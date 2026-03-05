@@ -250,7 +250,7 @@
 
         <action name="delete" class="pageAction" method="delete">
             <result name="references" type="tiles">admin.Page.references</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">viewTree</param>
                 <param name="selectedNode">${selectedNode}</param>
             </result>
@@ -262,7 +262,7 @@
 
         <action name="save" class="pageAction" method="save">
             <result name="input" type="tiles">admin.Page.entry</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">viewTree</param>
                 <param name="selectedNode">${pageCode}</param>
             </result>
@@ -274,7 +274,7 @@
 
         <action name="saveConfigure" class="pageAction" method="saveAndConfigure">
             <result name="input" type="tiles">admin.Page.entry</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="pageCode">${selectedNode}</param>
             </result>
@@ -311,7 +311,7 @@
         <action name="doSetOffline" class="pageAction" method="doSetOffline">
             <result name="references" type="tiles">admin.Page.references</result>
             <result name="input" type="chain">viewTree</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">viewTree</param>
                 <param name="selectedNode">${pageCode}</param>
             </result>
@@ -331,7 +331,7 @@
 
         <action name="doSetOnline" class="pageAction" method="doSetOnline">
             <result name="input" type="chain">viewTree</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">viewTree</param>
                 <param name="selectedNode">${pageCode}</param>
             </result>
@@ -342,7 +342,7 @@
         </action>
 
         <action name="doConfigure" class="pageConfigAction" >
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="pageCode">${selectedNode}</param>
             </result>
@@ -364,7 +364,7 @@
 
         <action name="setDefaultWidgets" class="pageAction" method="setDefaultWidgets">
             <result type="tiles">admin.Page.viewTreeMenu</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="pageCode">${pageCode}</param>
             </result>
@@ -376,7 +376,7 @@
 
         <action name="setViewerPage" class="pageAction" method="setViewerPageAPI">
             <result type="tiles">admin.Page.viewTreeMenu</result>
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="pageCode">${pageCode}</param>
             </result>
@@ -391,7 +391,7 @@
     <package name="core_do/Page/Console" namespace="/do/Page/Console" extends="core_do/ABSTRACT/Page">
 
         <action name="viewTree" class="pageConfigAction" >
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="pageCode">${selectedNode}</param>
             </result>
@@ -403,7 +403,7 @@
 
         <action name="viewTreeMenu" class="pageTreeMenuAction" method="intro">
             <result type="tiles">admin.Page.viewTreeMenu</result>
-            <result name="noRoot" type="redirectAction">
+            <result name="noRoot" type="redirectActionXF">
             	<param name="namespace">/do/Page</param>
                 <param name="actionName">viewTree</param>
             </result>
@@ -423,7 +423,7 @@
 
         <action name="configure" class="pageTreeMenuAction" method="intro">
             <result type="tiles">admin.Page.viewTreeMenu</result>
-            <result name="noRoot" type="redirectAction">
+            <result name="noRoot" type="redirectActionXF">
             	<param name="namespace">/do/Page</param>
                 <param name="actionName">viewTree</param>
             </result>
@@ -456,7 +456,7 @@
         </action>
 
         <action name="updateSystemParams" class="pageSettingsAction" method="updateSystemParams">
-            <result type="redirectAction">systemParams</result>
+            <result type="redirectActionXF">systemParams</result>
             <interceptor-ref name="entandoDefaultStack">
                 <param name="requestAuth.requiredPermission">superuser</param>
             </interceptor-ref>
@@ -515,7 +515,7 @@
         </action>
 
         <action name="search" class="pageFinderAction" method="search">
-            <result name="pageTree" type="redirectAction">viewTree</result>
+            <result name="pageTree" type="redirectActionXF">viewTree</result>
             <result name="input" type="tiles">admin.Page.searchResult</result>
             <result type="tiles">admin.Page.searchResult</result>
             <interceptor-ref name="entandoValidationStack">
@@ -557,7 +557,7 @@
         </action>
 
         <action name="deleteWidgetFromPage" class="pageConfigAction" method="deleteWidget">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="pageCode">${pageCode}</param>
             </result>
@@ -568,7 +568,7 @@
         </action>
 
         <action name="moveWidgetUp" class="pageTreeAction" method="moveWidgetUp">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="selectedNode">${selectedNode}</param>
             </result>
@@ -578,7 +578,7 @@
         </action>
 
         <action name="moveWidgetDown" class="pageTreeAction" method="moveWidgetDown">
-            <result type="redirectAction">
+            <result type="redirectActionXF">
                 <param name="actionName">configure</param>
                 <param name="selectedNode">${selectedNode}</param>
             </result>

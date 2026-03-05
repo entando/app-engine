@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contenttypes>
+    <contenttype typecode="RAH" role="contentType_RAH" />
+    <contenttype typecode="ART" role="contentType_ART" />
+    <contenttype typecode="EVN" role="contentType_EVN" />
+</contenttypes>

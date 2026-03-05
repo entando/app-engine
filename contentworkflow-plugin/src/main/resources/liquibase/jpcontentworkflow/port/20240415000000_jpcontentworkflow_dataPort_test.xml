@@ -1,0 +1,26 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="20240415000000_jpcontentworkflow_dataPort_production" author="entando" context="test">
+        
+        <insert tableName="sysconfig">
+            <column name="version" value="test" />
+            <column name="item" value="jpcontentworkflow_config" />
+            <column name="descr" value="Content Workflow Config" />
+            <column name="config" valueClobFile="clob/test/config.xml" />
+        </insert>
+        
+        <insert tableName="sysconfig">
+            <column name="version" value="test" />
+            <column name="item" value="jpcontentworkflow_notifierConfig" />
+            <column name="descr" value="Content Workflow Config - Notifier" />
+            <column name="config" valueClobFile="clob/test/notifier_config.xml" />
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

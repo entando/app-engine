@@ -51,7 +51,7 @@
 		
     	<action name="save" class="jacmsContentModelAction" method="save">
             <result type="tiles" name="input">admin.jacms.contentModel.entry</result>
-        	<result type="redirectAction">list</result>
+        	<result type="redirectActionXF">list</result>
 			<interceptor-ref name="entandoValidationStack">
 				<param name="requestAuth.requiredPermission">validateContents</param>
 			</interceptor-ref>
@@ -60,7 +60,7 @@
     	<action name="trash" class="jacmsContentModelAction" method="trash">
             <result type="tiles" name="references">admin.jacms.contentModel.reference</result>
             <result type="tiles">admin.jacms.contentModel.trash</result>
-        	<result type="redirectAction" name="noModel">list</result>
+        	<result type="redirectActionXF" name="noModel">list</result>
 			<interceptor-ref name="entandoDefaultStack">
 				<param name="requestAuth.requiredPermission">validateContents</param>
 			</interceptor-ref>

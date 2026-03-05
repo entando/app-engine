@@ -1,0 +1,142 @@
+/*
+ * Copyright 2015-Present Entando Inc. (http://www.entando.com) All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package com.agiletec.plugins.jpcontentworkflow.apsadmin.content;
+
+import com.agiletec.aps.system.SystemConstants;
+import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
+import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
+import com.agiletec.apsadmin.ApsAdminBaseTestCase;
+import com.agiletec.plugins.jpcontentworkflow.aps.system.JpcontentworkflowSystemConstants;
+import com.agiletec.plugins.jpcontentworkflow.aps.system.services.workflow.ContentWorkflowManager;
+import com.agiletec.plugins.jpcontentworkflow.util.WorkflowTestHelper;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.sql.DataSource;
+import org.apache.struts2.action.Action;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * @author E.Santoboni
+ */
+public class TestContentFinderAction extends ApsAdminBaseTestCase {
+
+	@BeforeEach
+	protected void init() throws Exception {
+		super.setUp();
+		ContentWorkflowManager workflowManager = (ContentWorkflowManager) this.getService(JpcontentworkflowSystemConstants.CONTENT_WORKFLOW_MANAGER);
+		ConfigInterface configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
+		DataSource dataSource = (DataSource) this.getApplicationContext().getBean("portDataSource");
+		this._helper = new WorkflowTestHelper(workflowManager, configManager, dataSource);
+	}
+
+	@Test
+	public void testSearch_1() throws Throwable {
+		try {
+			this._helper.setWorkflowConfig();
+			this._helper.setContentStates();
+			Map<String, String> params = new HashMap<>();
+			this.executeSearch("admin", params);
+			ContentFinderAction action = (ContentFinderAction) this.getAction();
+            SearcherDaoPaginatedResult<String> result = action.getPaginatedContentsId(10);
+			assertEquals(25, result.getCount().intValue());
+			assertEquals(10, result.getList().size());
+			this.executeSearch("editorCoach", params);
+			action = (ContentFinderAction) this.getAction();
+            result = action.getPaginatedContentsId(10);
+			List<String> contents = result.getList();
+			assertEquals(2, result.getList().size());
+			String[] contentsId = {"ART102", "ART112"};
+			assertEquals(contentsId.length, contents.size());
+			for (int i = 0; i < contentsId.length; i++) {
+				String contentId = contentsId[i];
+				assertTrue(contents.contains(contentId));
+			}
+			this.executeSearch("supervisorCoach", params);
+			action = (ContentFinderAction) this.getAction();
+			result = action.getPaginatedContentsId(10);
+			assertEquals(4, result.getList().size());
+			contents = result.getList();
+			contentsId = new String[]{"ART102", "ART111", "ART112", "RAH101"};
+			assertEquals(contentsId.length, contents.size());
+			for (int i = 0; i < contentsId.length; i++) {
+				String contentId = contentsId[i];
+				assertTrue(contents.contains(contentId));
+			}
+		} catch (Throwable t) {
+			throw t;
+		} finally {
+			this._helper.resetWorkflowConfig();
+			this._helper.resetContentStates();
+		}
+	}
+
+	@Test
+	public void testSearch_2() throws Throwable {
+		try {
+			this._helper.setWorkflowConfig();
+			this._helper.setContentStates();
+			Map<String, String> params = new HashMap<>();
+			this.executeSearch("admin", params);
+			ContentFinderAction action = (ContentFinderAction) this.getAction();
+			List<String> contents = action.getContents();
+			assertEquals(25, contents.size());
+			this.executeSearch("editorCoach", params);
+			action = (ContentFinderAction) this.getAction();
+			contents = action.getContents();
+			String[] contentsId = {"ART102", "ART112"};
+			assertEquals(contentsId.length, contents.size());
+			for (int i = 0; i < contentsId.length; i++) {
+				String contentId = contentsId[i];
+				assertTrue(contents.contains(contentId));
+			}
+			this.executeSearch("supervisorCoach", params);
+			action = (ContentFinderAction) this.getAction();
+			contents = action.getContents();
+			contentsId = new String[]{"ART102", "ART111", "ART112", "RAH101"};
+			assertEquals(contentsId.length, contents.size());
+			for (int i = 0; i < contentsId.length; i++) {
+				String contentId = contentsId[i];
+				assertTrue(contents.contains(contentId));
+			}
+		} catch (Throwable t) {
+			throw t;
+		} finally {
+			this._helper.resetWorkflowConfig();
+			this._helper.resetContentStates();
+		}
+	}
+
+	private void executeSearch(String currentUserName, Map<String, String> params) throws Throwable {
+		this.initAction("/do/jacms/Content", "search");
+		this.setUserOnSession(currentUserName);
+		this.addParameters(params);
+		String result = this.executeAction();
+		assertEquals(Action.SUCCESS, result);
+	}
+
+	private WorkflowTestHelper _helper;
+
+}

@@ -17,7 +17,7 @@
 		
 		<action name="reloadEntityManagerReferences" class="entityManagersAction" method="reloadEntityManagerReferences">
 			<result name="input" type="tiles">admin.entityManagement.viewManagers</result>
-			<result type="redirectAction">
+			<result type="redirectActionXF">
 				<param name="actionName">viewManagers</param>
 				<param name="entityManagerName">${entityManagerName}</param>
 			</result>
@@ -32,7 +32,7 @@
 		</action>
 		
 		<action name="changeEntityType" class="defaultEntityFinderAction" >
-			<result type="redirectAction">search</result>
+			<result type="redirectActionXF">search</result>
 			<interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
 		</action>
 		

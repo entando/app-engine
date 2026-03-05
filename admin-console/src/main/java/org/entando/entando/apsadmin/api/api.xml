@@ -110,7 +110,7 @@
 		
         <action name="save" class="apiServiceAction" method="save">
             <result name="input" type="tiles">admin.api.service.entry</result>
-            <result type="redirectAction">list</result>
+            <result type="redirectActionXF">list</result>
             <interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action> 
 		
@@ -159,7 +159,7 @@
         
         <action name="save" class="apiConsumerAction" method="save">
             <result name="input" type="tiles">admin.api.consumer.entry</result>
-            <result type="redirectAction">list</result>
+            <result type="redirectActionXF">list</result>
             <interceptor-ref name="entandoValidationStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
         
@@ -171,7 +171,7 @@
         
         <action name="delete" class="apiConsumerAction" method="delete">
             <result name="list" type="chain">list</result>
-            <result type="redirectAction">list</result>
+            <result type="redirectActionXF">list</result>
             <interceptor-ref name="entandoDefaultStack"><param name="requestAuth.requiredPermission">superuser</param></interceptor-ref>
         </action>
     	

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+	<code>jpcontentworkflow</code>
+	<description>Content Workflow</description>
+	<artifact>
+		<artifactId>${project.artifactId}</artifactId>
+		<groupId>${project.groupId}</groupId>
+		<version>${project.version}</version>
+	</artifact>
+	<dependencies>
+		<code>jacms</code>
+		<code>jpmail</code>
+	</dependencies>
+	<installation>
+        <tableMapping>
+            <datasource name="servDataSource">
+                <table>jpcontentworkflow_events</table>
+            </datasource>
+        </tableMapping>
+        <liquibase>
+            <changeSet datasource="portDataSource" changeLogFile="classpath:liquibase/jpcontentworkflow/changeSetPort.xml" />
+            <changeSet datasource="servDataSource" changeLogFile="classpath:liquibase/jpcontentworkflow/changeSetServ.xml" />
+        </liquibase>
+    </installation>
+</component>

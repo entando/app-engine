@@ -1,0 +1,52 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="20240415000000_jpcontentworkflow_dataServ_test" author="entando" context="test">
+
+        <insert tableName="authroles">
+            <column name="rolename" value="contentType_ART" />
+            <column name="descr" value="ART Content Type Management" />
+        </insert>
+        <insert tableName="authroles">
+            <column name="rolename" value="contentType_EVN" />
+            <column name="descr" value="EVN Content Type Management" />
+        </insert>
+        <insert tableName="authroles">
+            <column name="rolename" value="contentType_RAH" />
+            <column name="descr" value="RAH Content Type Management" />
+        </insert>
+        
+        <insert tableName="authrolepermissions">
+            <column name="rolename" value="contentType_ART" />
+            <column name="permissionname" value="editContents" />
+        </insert>
+        <insert tableName="authrolepermissions">
+            <column name="rolename" value="contentType_ART" />
+            <column name="permissionname" value="enterBackend" />
+        </insert>
+        <insert tableName="authrolepermissions">
+            <column name="rolename" value="contentType_EVN" />
+            <column name="permissionname" value="editContents" />
+        </insert>
+        <insert tableName="authrolepermissions">
+            <column name="rolename" value="contentType_EVN" />
+            <column name="permissionname" value="enterBackend" />
+        </insert>
+        
+        <insert tableName="authusergrouprole">
+            <column name="username" value="editorCoach" />
+            <column name="groupname" value="coach" />
+            <column name="rolename" value="contentType_RAH" />
+        </insert>
+        <insert tableName="authusergrouprole">
+            <column name="username" value="editorCoach" />
+            <column name="groupname" value="coach" />
+            <column name="rolename" value="contentType_ART" />
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>

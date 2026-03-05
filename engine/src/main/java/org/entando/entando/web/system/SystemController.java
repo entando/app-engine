@@ -27,12 +27,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/system")
 public class SystemController {
 
-    static final String CONTENT_SCHEDULER_CODE="jpcontentscheduler";
+    static final HashMap<String, String> CMS_PLUGINS = new HashMap<>(Map.of(
+            "jpcontentscheduler", "contentSchedulerPluginInstalled",
+            "jpcontentworkflow", "contentWorkFlowPluginInstalled"
+    ));
+
 
     @Autowired
     private IComponentManager componentManager;
@@ -41,10 +46,10 @@ public class SystemController {
     @GetMapping(value = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<Map<String,Boolean>>> getReport() {
 
-        Map<String, Boolean> report = new HashMap<>();
-
-        boolean componentInstalled = componentManager.isComponentInstalled(CONTENT_SCHEDULER_CODE);
-        report.put("contentSchedulerPluginInstalled", componentInstalled);
+        Map<String, Boolean> report =
+                CMS_PLUGINS.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getValue,
+                                k -> componentManager.isComponentInstalled(k.getKey())));
 
         return new ResponseEntity<>(new SimpleRestResponse<>(report), HttpStatus.OK);
     }

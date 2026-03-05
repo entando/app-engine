@@ -13,9 +13,10 @@
  */
 package org.entando.entando.aps.util;
 
+import com.agiletec.aps.system.ApsSystemUtils.ApsDeepDebug;
 import com.google.common.net.HttpHeaders;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -24,9 +25,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.owasp.encoder.Encode;
@@ -43,6 +44,8 @@ public final class UrlUtils {
     public static final String HTTP_SCHEME = "http";
     public static final String HTTPS_SCHEME = "https";
     private static final String PATH_SEPARATOR = "/";
+
+    public static final String FF_RELATIVE_COMPOSE_URL = System.getenv("ENTANDO_FF_RELATIVE_COMPOSE_URL");
 
     private UrlUtils(){}
 
@@ -76,6 +79,55 @@ public final class UrlUtils {
         path = FilenameUtils.normalize(path, true);
         if (path == null) return null;
         return (path.endsWith(PATH_SEPARATOR)) ? path : path + PATH_SEPARATOR;
+    }
+
+    public static String determineFullFrontendURL(HttpServletRequest req) {
+        String base = determineFrontendURL(req);
+        String query = req.getQueryString();
+        return base + ((query != null) ? "?" + query : "");
+            }
+
+    /**
+     * Returns the actual URL fetched by the browser, without the query part.
+     * <pre>
+     * The term "FrontendURL" refers to the URL fetched by the browser,
+     * which may or may not be aligned with the data (e.g. HOST header)
+     * received the server when reverse proxies are in the way.
+     * This function in fact assists in the proper generation of links
+     * and redirect locations.
+     * </pre>
+     */
+
+    public static String determineFrontendURL(HttpServletRequest req) {
+        URL url = determineFrontendUrlObject(req);
+        String path = req.getRequestURI();
+        return url.getProtocol() + "://" +
+                url.getHost()
+                + ((url.getPort() != -1) ? ":" + url.getPort() : "")
+                + ((path != null) ? path : "");
+        }
+
+    public static String determineFrontendServerName(HttpServletRequest request) {
+        return determineFrontendUrlObject(request).getHost();
+    }
+
+    /**
+     * Returns a URL object that stores information about the frontendURL
+     * (see determineFrontendURL)
+     */
+    public static URL determineFrontendUrlObject(HttpServletRequest request) {
+        String host, scheme = request.getScheme();
+        Optional<Integer> port;
+
+        host = getHostFromXHeader(request).orElse(request.getServerName());
+        scheme = getProtoFromXHeader(request).orElse(scheme);
+        port = Optional.of(getPortFromXHeader(request).orElse(request.getServerPort()));
+
+        if (Boolean.parseBoolean(System.getenv(ENTANDO_APP_USE_TLS))) {
+            scheme = HTTPS_SCHEME;
+        }
+
+        return generateUrl(scheme, host, port, request);
     }
 
     public static String fetchScheme(HttpServletRequest request){
@@ -203,7 +255,11 @@ public final class UrlUtils {
 
     public static URL composeBaseUrl(HttpServletRequest request){
         String reqScheme = UrlUtils.fetchScheme(request);
-        String serverName = UrlUtils.fetchServer(request);
+
+        String serverName = (StringUtils.isBlank(FF_RELATIVE_COMPOSE_URL) || !FF_RELATIVE_COMPOSE_URL.equalsIgnoreCase("false"))
+                ? UrlUtils.determineFrontendServerName(request)
+                : UrlUtils.fetchServer(request);
+
         Optional<Integer> port = UrlUtils.fetchPort(request);
 
         return generateUrl(reqScheme, serverName, port, request);
@@ -286,4 +342,9 @@ public final class UrlUtils {
         }
     }
 
+    public static void sendRedirect(HttpServletResponse response, String url) throws IOException {
+        ApsDeepDebug.print("ALL-REDIRECTS:SEND", "", url);
+        //response.sendRedirect(url);
+        response.sendRedirect(response.encodeRedirectURL(url));
+    }
 }
