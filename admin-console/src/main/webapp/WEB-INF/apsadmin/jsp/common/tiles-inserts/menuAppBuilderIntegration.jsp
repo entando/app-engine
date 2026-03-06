@@ -14,6 +14,9 @@
         $().setupVerticalNavigation(true);
         $('[data-toggle=popover]').popovers();
 //        $(".bootstrap-switch").bootstrapSwitch();
+        //set rootPage link
+        document.getElementById('link-page-config').href =
+            '<c:out value="${appBuilderBaseURL}"/>page/configuration/' + rootPageCode;
     });
 </script>
 
@@ -24,7 +27,6 @@
     var reduxStore = JSON.parse(localStorage.getItem('redux'));
     var activeLocale = '<c:out value="${current_languague.language}" />'
     var reduxLocale = reduxStore && reduxStore.locale ? reduxStore.locale : activeLocale;
-
     // update redux store with activeLocale if `redux` doesn't exists in the localStorage
     if (!reduxStore) {
         updateLocalStorageWithLocale(activeLocale);
@@ -53,6 +55,8 @@
         store.locale = locale;
         localStorage.setItem('redux', JSON.stringify(store));
     }
+    //set rootPage
+    var rootPageCode = (reduxStore && reduxStore.pages && reduxStore.pages.rootPage) || 'homepage';
 </script>
 
 <wp:ifauthorized permission="superuser" var="isSuperUser" />
@@ -88,7 +92,7 @@
                         </a>
                     </li>
                     <li class="list-group-item">
-                        <a id="" href='<c:out value="${appBuilderBaseURL}"/>page/configuration/homepage'>
+                        <a id="link-page-config" href='<c:out value="${appBuilderBaseURL}"/>page/configuration/homepage'>
                             <span class="list-group-item-value"><s:text name="menu.pageDesigner.pageConfiguration" /></span>
                         </a>
                     </li>
