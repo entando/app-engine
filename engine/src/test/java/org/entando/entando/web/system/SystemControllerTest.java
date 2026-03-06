@@ -37,7 +37,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @ExtendWith(MockitoExtension.class)
 class SystemControllerTest extends AbstractControllerTest {
 
-    final String CONTENT_SCHEDULER_CODE="jpcontentscheduler";
+    static final String CONTENT_SCHEDULER_CODE = "jpcontentscheduler";
+    static final String CONTENT_WORKFLOW_CODE = "jpcontentworkflow";
 
     @Mock
     private ComponentManager componentManager;
@@ -57,23 +58,35 @@ class SystemControllerTest extends AbstractControllerTest {
 
     @Test
     void testWithContentSchedulerInstalled() throws Exception {
-        testWithContentSchedulerInstalled(true);
+        testWithPlugins(true, false);
     }
 
     @Test
     void testWithContentSchedulerNotInstalled() throws Exception {
-        testWithContentSchedulerInstalled(false);
+        testWithPlugins(false, false);
     }
 
-    private void testWithContentSchedulerInstalled(boolean installed) throws Exception {
+    @Test
+    void testWithContentWorkflowInstalled() throws Exception {
+        testWithPlugins(false, true);
+    }
+
+    @Test
+    void testWithAllPluginsInstalled() throws Exception {
+        testWithPlugins(true, true);
+    }
+
+    private void testWithPlugins(boolean schedulerInstalled, boolean workflowInstalled) throws Exception {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        when(componentManager.isComponentInstalled(CONTENT_SCHEDULER_CODE)).thenReturn(installed);
+        when(componentManager.isComponentInstalled(CONTENT_SCHEDULER_CODE)).thenReturn(schedulerInstalled);
+        when(componentManager.isComponentInstalled(CONTENT_WORKFLOW_CODE)).thenReturn(workflowInstalled);
         ResultActions result = mockMvc.perform(
                 get("/system/report")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.contentSchedulerPluginInstalled", is(installed)));
+                .andExpect(jsonPath("$.payload.contentSchedulerPluginInstalled", is(schedulerInstalled)))
+                .andExpect(jsonPath("$.payload.contentWorkFlowPluginInstalled", is(workflowInstalled)));
     }
 }
