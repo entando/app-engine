@@ -5,6 +5,13 @@
 	<dependencies>
 		<code>jpmail</code>
 	</dependencies>
+    <properties>
+        <property key="appBuilderMenu.id" value="menu-scheduler" />
+        <property key="appBuilderMenu.labelId" value="cms.menu.scheduler" />
+        <property key="appBuilderMenu.defaultLabel" value="Scheduler" />
+        <property key="appBuilderMenu.href" value="do/jpcontentscheduler/config/viewItem.action" />
+        <property key="appBuilderMenu.requiredPermission" value="superuser" />
+    </properties>
     <installation>
         <liquibase>
             <changeSet datasource="portDataSource" changeLogFile="classpath:liquibase/jpcontentscheduler/changeSetPort.xml" />

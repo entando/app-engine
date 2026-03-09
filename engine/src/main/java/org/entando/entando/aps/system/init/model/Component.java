@@ -39,6 +39,8 @@ public class Component {
 
     private Map<String, String> liquibaseChangeSets;
 
+    private Map<String, String> properties;
+
     public Component(Element rootElement, Map<String, String> postProcessClasses) throws Throwable {
         try {
             code = rootElement.getChildText("code");
@@ -82,6 +84,17 @@ public class Component {
                         this.getLiquibaseChangeSets().put(dataSource, changeSet);
                     }
 
+                }
+            }
+            Element propertiesElement = rootElement.getChild("properties");
+            if (null != propertiesElement) {
+                properties = new HashMap<>();
+                List<Element> propertyElements = propertiesElement.getChildren("property");
+                for (int i = 0; i < propertyElements.size(); i++) {
+                    Element propertyElement = propertyElements.get(i);
+                    String key = propertyElement.getAttributeValue("key");
+                    String value = propertyElement.getAttributeValue("value");
+                    properties.put(key, value);
                 }
             }
         } catch (Throwable t) {
@@ -194,6 +207,14 @@ public class Component {
     }
     protected void setLiquibaseChangeSets(Map<String, String> liquibaseChangeSets) {
         this.liquibaseChangeSets = liquibaseChangeSets;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    protected void setProperties(Map<String, String> properties) {
+        this.properties = properties;
     }
 
 }

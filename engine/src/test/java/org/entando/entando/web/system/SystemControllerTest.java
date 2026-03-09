@@ -14,6 +14,7 @@
 package org.entando.entando.web.system;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.agiletec.aps.system.services.user.UserDetails;
 import org.entando.entando.aps.system.init.ComponentManager;
+import org.entando.entando.aps.system.init.model.Component;
 import org.entando.entando.web.AbstractControllerTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +35,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 class SystemControllerTest extends AbstractControllerTest {
@@ -57,36 +61,83 @@ class SystemControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void testWithContentSchedulerInstalled() throws Exception {
+    void testWithContentSchedulerInstalled() throws Throwable {
         testWithPlugins(true, false);
     }
 
     @Test
-    void testWithContentSchedulerNotInstalled() throws Exception {
+    void testWithContentSchedulerNotInstalled() throws Throwable {
         testWithPlugins(false, false);
     }
 
     @Test
-    void testWithContentWorkflowInstalled() throws Exception {
+    void testWithContentWorkflowInstalled() throws Throwable {
         testWithPlugins(false, true);
     }
 
     @Test
-    void testWithAllPluginsInstalled() throws Exception {
+    void testWithAllPluginsInstalled() throws Throwable {
         testWithPlugins(true, true);
     }
 
-    private void testWithPlugins(boolean schedulerInstalled, boolean workflowInstalled) throws Exception {
+    private void testWithPlugins(boolean schedulerInstalled, boolean workflowInstalled) throws Throwable {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
-        when(componentManager.isComponentInstalled(CONTENT_SCHEDULER_CODE)).thenReturn(schedulerInstalled);
-        when(componentManager.isComponentInstalled(CONTENT_WORKFLOW_CODE)).thenReturn(workflowInstalled);
+
+        Component schedulerComponent = new Component(
+                buildComponentElement(CONTENT_SCHEDULER_CODE, Map.of(
+                        "appBuilderMenu.id", "menu-scheduler",
+                        "appBuilderMenu.href", "do/jpcontentscheduler/config/viewItem.action"
+                )), Collections.emptyMap());
+
+        Component workflowComponent = new Component(
+                buildComponentElement(CONTENT_WORKFLOW_CODE, Map.of(
+                        "appBuilderMenu.id", "menu-workflow",
+                        "appBuilderMenu.href", "do/jpcontentworkflow/Workflow/list.action"
+                )), Collections.emptyMap());
+
+        List<Component> listComponents = new ArrayList<>();
+        if (schedulerInstalled) {
+            listComponents.add(schedulerComponent);
+        }
+        if (workflowInstalled) {
+            listComponents.add(workflowComponent);
+        }
+        when(componentManager.getCurrentComponents()).thenReturn(listComponents);
+
         ResultActions result = mockMvc.perform(
                 get("/system/report")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .header("Authorization", "Bearer " + accessToken));
         result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload.contentSchedulerPluginInstalled", is(schedulerInstalled)))
-                .andExpect(jsonPath("$.payload.contentWorkFlowPluginInstalled", is(workflowInstalled)));
+                .andExpect(jsonPath("$.payload", hasSize(listComponents.size())));
+
+        int index = 0;
+        if (schedulerInstalled) {
+            result.andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.id']", is("menu-scheduler")))
+                    .andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.href']", is("do/jpcontentscheduler/config/viewItem.action")));
+            index++;
+        }
+        if (workflowInstalled) {
+            result.andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.id']", is("menu-workflow")))
+                    .andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.href']", is("do/jpcontentworkflow/Workflow/list.action")));
+        }
+    }
+
+    private static org.jdom2.Element buildComponentElement(String code, Map<String, String> properties) {
+        org.jdom2.Element root = new org.jdom2.Element("component");
+        root.addContent(new org.jdom2.Element("code").setText(code));
+        root.addContent(new org.jdom2.Element("description").setText(code));
+        if (properties != null && !properties.isEmpty()) {
+            org.jdom2.Element propsElement = new org.jdom2.Element("properties");
+            properties.forEach((key, value) -> {
+                org.jdom2.Element prop = new org.jdom2.Element("property");
+                prop.setAttribute("key", key);
+                prop.setAttribute("value", value);
+                propsElement.addContent(prop);
+            });
+            root.addContent(propsElement);
+        }
+        return root;
     }
 }

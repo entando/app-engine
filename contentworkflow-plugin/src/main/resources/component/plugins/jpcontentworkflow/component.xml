@@ -11,6 +11,13 @@
 		<code>jacms</code>
 		<code>jpmail</code>
 	</dependencies>
+	<properties>
+		<property key="appBuilderMenu.id" value="menu-workflow" />
+		<property key="appBuilderMenu.labelId" value="cms.menu.workflow" />
+		<property key="appBuilderMenu.defaultLabel" value="Workflow" />
+		<property key="appBuilderMenu.href" value="do/jpcontentworkflow/Workflow/list.action" />
+		<property key="appBuilderMenu.requiredPermission" value="superuser" />
+	</properties>
 	<installation>
         <tableMapping>
             <datasource name="servDataSource">
