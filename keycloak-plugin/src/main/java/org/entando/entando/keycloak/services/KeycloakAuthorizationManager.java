@@ -50,7 +50,9 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
     private static final String DEFAULT_SEPARATOR = "_SEP_";
 
-    private final KeycloakConfiguration KeycloackConfiguration;
+    // This is a fallback for the non-multitenant instance
+    private transient final KeycloakConfiguration KeycloackConfiguration;
+
     private final AuthorizationManager authorizationManager;
     private final GroupManager groupManager;
     private final RoleManager roleManager;
@@ -85,7 +87,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
      * either by reloading the global configuration or after a certain amount of time (by default,
      * one minute)
      */
-    private transient Map<String, KeycloakImportConfig> config = new ConcurrentHashMap<>();
+    private final transient Map<String, KeycloakImportConfig> config = new ConcurrentHashMap<>();
 
     @Override
     public void init() throws Exception {
@@ -264,7 +266,6 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                     final String groupName = a.getGroup() != null ? a.getGroup().getName() : null;
                     final String roleName = a.getRole() != null ? a.getRole().getName() : null;
 
-                    assert user instanceof KeycloakUser;
                     return !isAlreadyAssigned((KeycloakUser) user, groupName, roleName);
                 })
                 .collect(Collectors.toList());
@@ -468,7 +469,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 }
             }
         } catch (Exception e) {
-            log.error("error processing dynamic GRUOPROLE association", e);
+            log.error("error processing dynamic ROLEGROUP association", e);
         }
         return result;
     }

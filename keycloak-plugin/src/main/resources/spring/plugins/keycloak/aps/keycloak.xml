@@ -16,7 +16,7 @@
                 method="refreshConfiguration"
                 cron="${KC_CONFIG_REFRESH:0 * * * * *}" />
 
-        <!-- Clean sync data every 4 hours -->
+        <!-- Disabled by default -->
         <task:scheduled
                 ref="keycloakAuthorizationManager"
                 method="cleanSyncData"
