@@ -171,15 +171,18 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
     }
 
     public void cleanSyncData() {
+        Instant tenMinutesAgo = null;
         try {
-            if (!this.getImportConfiguration().getEnabled()) return;
-            final Instant tenMinutesAgo = Instant.now().minusSeconds(600);
+            if (!this.getImportConfiguration().getEnabled()) {
+                return;
+            }
+            tenMinutesAgo = Instant.now().minusSeconds(600);
 
             log.info("Cleaning sync data older than {} with a batch size of {}", tenMinutesAgo, cleanBatchSize);
             authorizationManager.externalAuthSyncClean(tenMinutesAgo, cleanBatchSize);
             log.info("Cleaning completed successfully");
         } catch (Exception e) {
-            log.error("Error refreshing dynamic mapping configuration", e);
+            log.error("Error cleaning sync data older than {}", tenMinutesAgo, e);
         }
     }
 

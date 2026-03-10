@@ -250,7 +250,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		} catch (Exception e) {
 			throw new RuntimeException("Error detected while checking user synchronization", e);
 		} finally {
-			this.closeDaoResources(null, stat, conn);
+			this.closeConnection(conn);
 		}
 		return true;
 	}
@@ -340,7 +340,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 			this.executeRollback(conn);
 			throw new RuntimeException("Error detected while checking user synchronization", e);
 		} finally {
-			this.closeDaoResources(null, stat, conn);
+			this.closeConnection(conn);
 		}
 	}
 
