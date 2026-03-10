@@ -212,9 +212,11 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         processNewUser(user);
         // safety net! Admin is exempted from group and roles assignment
         if (ADMIN_USER_NAME.equals(user.getUsername())) return;
+
         readLock.lock();
-        if (!getImportConfiguration().getEnabled()) return;
         try {
+            if (!getImportConfiguration().getEnabled()) return;
+
             // Authorizations coming from dynamic mapping (that is, external sources)
             final List<Authorization> dynamicAuthorizations = new ArrayList<>();
             final Long iat;
