@@ -461,7 +461,7 @@ class KeycloakAuthorizationManagerTest {
 
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
         assertNotNull(manager.getImportConfiguration());
-        assertFalse(manager.getImportConfiguration().enabled);
+        assertFalse(manager.getImportConfiguration().getEnabled());
     }
 
     @Test
@@ -474,7 +474,7 @@ class KeycloakAuthorizationManagerTest {
         manager.processNewUser(userDetails, JWT, false);
 
         verify(authorizationManager, never()).addUserAuthorization(anyString(), any());
-        assertFalse(manager.getImportConfiguration().enabled);
+        assertFalse(manager.getImportConfiguration().getEnabled());
     }
 
     @Test

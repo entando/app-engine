@@ -96,11 +96,14 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
     public void initTenantAware() throws Exception {
         writeLock.lock();
-        KeycloakImportConfig config = new KeycloakImportConfig();
 
-        config.profileMappings = new ArrayList<>();
-        config.jwtMappings = new ArrayList<>();
-        config.enabled = false;
+        List<DynamicMappingElement> profileMappings = new ArrayList<>();
+        List<DynamicMappingElement> jwtMappings = new ArrayList<>();
+        List<String> ignore = new ArrayList<>();
+        List<String> roles = new ArrayList<>();
+        List<String> groups = new ArrayList<>();
+        Boolean enabled = false;
+        PersistKind persist = PersistKind.FULL;
 
         try {
             String xml = configManager.getConfigItem("dynamicAuthMapping");
@@ -116,37 +119,39 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                                         .collect(Collectors.partitioningBy(
                                                 item -> item.kind.isJwtMapping()
                                         ));
-                        config.profileMappings = List.copyOf(partitioned.get(false));
-                        config.jwtMappings = List.copyOf(partitioned.get(true));
+                        profileMappings = List.copyOf(partitioned.get(false));
+                        jwtMappings = List.copyOf(partitioned.get(true));
                         log.debug("{} dynamic auth mapping found, {} getConfig().profileMappings",
-                                config.jwtMappings.size(), config.profileMappings.size());
+                                jwtMappings.size(), profileMappings.size());
                     }
-                    config.ignore = ofNullable(dynConf.exclusions)
+                    ignore = ofNullable(dynConf.exclusions)
                             .orElse(List.of());
-                    config.roles = ofNullable(dynConf.roles)
+                    roles = ofNullable(dynConf.roles)
                             .orElseGet(List::of);
-                    config.groups = ofNullable(dynConf.groups)
+                    groups = ofNullable(dynConf.groups)
                             .orElse(List.of());
-                    config.enabled = ofNullable(dynConf.enabled)
+                    enabled = ofNullable(dynConf.enabled)
                             .orElse(false);
-                    config.persist = ofNullable(dynConf.persist)
+                    persist = ofNullable(dynConf.persist)
                             .orElse(PersistKind.FULL);
                 }
             }
-            if (config.profileMappings != null) {
-                config.profileMappings.forEach(m -> log.debug("profile mapping active: {}", m.toString()));
+            if (profileMappings != null) {
+                profileMappings.forEach(m -> log.debug("profile mapping active: {}", m.toString()));
             }
-            if (config.jwtMappings != null) {
-                config.jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
+            if (jwtMappings != null) {
+                jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
             // finally
+            KeycloakImportConfig config = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
             setImportConfiguration(config);
         } catch (Exception e) {
             // defaults
-            config.enabled = false;
-            config.roles = new ArrayList<>();
-            config.groups = new ArrayList<>();
+            enabled = false;
+            roles = new ArrayList<>();
+            groups = new ArrayList<>();
             log.error("Error initializing KeycloakAuthorizationManager", e);
+            KeycloakImportConfig config = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
             setImportConfiguration(config);
             throw e;
         } finally {
@@ -167,7 +172,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
     public void cleanSyncData() {
         try {
-            if (!this.getImportConfiguration().enabled) return;
+            if (!this.getImportConfiguration().getEnabled()) return;
             final Instant tenMinutesAgo = Instant.now().minusSeconds(600);
 
             log.info("Cleaning sync data older than {} with a batch size of {}", tenMinutesAgo, cleanBatchSize);
@@ -208,7 +213,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         // safety net! Admin is exempted from group and roles assignment
         if (ADMIN_USER_NAME.equals(user.getUsername())) return;
         readLock.lock();
-        if (!getImportConfiguration().enabled) return;
+        if (!getImportConfiguration().getEnabled()) return;
         try {
             // Authorizations coming from dynamic mapping (that is, external sources)
             final List<Authorization> dynamicAuthorizations = new ArrayList<>();
@@ -231,15 +236,15 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             }
 
             // process path role claims, if any...
-            if (StringUtils.isNotBlank(token) && !getImportConfiguration().jwtMappings.isEmpty()) {
-                for (DynamicMappingElement cur: getImportConfiguration().jwtMappings) {
+            if (StringUtils.isNotBlank(token) && !getImportConfiguration().getJwtMappings().isEmpty()) {
+                for (DynamicMappingElement cur: getImportConfiguration().getJwtMappings()) {
                     dynamicAuthorizations.addAll(processJwtClaimAttributes(user, token, decode, cur));
                 }
             }
             // ...then process attributes coming from the user profile, if needed
             if (user instanceof KeycloakUser
-                    && getImportConfiguration().profileMappings != null
-                    && !getImportConfiguration().profileMappings.isEmpty()) {
+                    && getImportConfiguration().getProfileMappings() != null
+                    && !getImportConfiguration().getProfileMappings().isEmpty()) {
                 dynamicAuthorizations.addAll(processProfileAttributes((KeycloakUser) user));
             }
             syncAuthorizations(user, dynamicAuthorizations, iat);
@@ -273,8 +278,8 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         List<Authorization> existingAuths = ofNullable(user.getAuthorizations())
                 .orElse(List.of())
                 .stream()
-                .filter(a -> (a.getGroup() != null && getImportConfiguration().groups.contains(a.getGroup().getName())
-                        || (a.getRole() != null && getImportConfiguration().roles.contains(a.getRole().getName())))
+                .filter(a -> (a.getGroup() != null && getImportConfiguration().getGroups().contains(a.getGroup().getName())
+                        || (a.getRole() != null && getImportConfiguration().getRoles().contains(a.getRole().getName())))
                 )
                 .collect(Collectors.toList());
         // If the existing authorization is not included in the dynamic authorizations, it must be removed
@@ -285,7 +290,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 .collect(Collectors.toList());
 
         // update authorizations
-        if (getImportConfiguration().persist == PersistKind.FULL) {
+        if (getImportConfiguration().getPersist() == PersistKind.FULL) {
             this.authorizationManager.externalAuthSync(user.getUsername(), iat, toAdd, toDelete);
         }
         user.getAuthorizations().removeAll(toDelete);
@@ -437,7 +442,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
      */
     private List<Authorization> processProfileAttributes(final KeycloakUser user) {
         List<Authorization> result = new ArrayList<>();
-        getImportConfiguration().profileMappings.forEach(m -> {
+        getImportConfiguration().getProfileMappings().forEach(m -> {
             if (m.kind == ROLE) {
                 result.addAll(doProcessRole(user, m));
             }
@@ -530,10 +535,10 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
     }
 
     private boolean isIgnored(String name) {
-        if (getImportConfiguration().ignore == null || StringUtils.isBlank(name)) {
+        if (getImportConfiguration().getIgnore() == null || StringUtils.isBlank(name)) {
             return false;
         }
-        return getImportConfiguration().ignore.contains(name.trim());
+        return getImportConfiguration().getIgnore().contains(name.trim());
     }
 
     private Authorization finalizeAssociation(KeycloakUser user, String roleName, String groupName,
@@ -544,11 +549,11 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             return null;
         }
         // are they managed?
-        if (StringUtils.isNotBlank(roleName) && !getImportConfiguration().roles.contains(roleName)) {
+        if (StringUtils.isNotBlank(roleName) && !getImportConfiguration().getRoles().contains(roleName)) {
             log.info("Role {} is not managed. Skipping assignment for user {}", roleName, user.getUsername());
             return null;
         }
-        if (StringUtils.isNotBlank(groupName) && !getImportConfiguration().groups.contains(groupName)) {
+        if (StringUtils.isNotBlank(groupName) && !getImportConfiguration().getGroups().contains(groupName)) {
             log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
             return null;
         }
@@ -563,7 +568,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
     }
 
     private boolean shouldPersistAuthorization() {
-        return this.getImportConfiguration().persist == PersistKind.AUTH || this.getImportConfiguration().persist == PersistKind.FULL;
+        return this.getImportConfiguration().getPersist() == PersistKind.AUTH || this.getImportConfiguration().getPersist() == PersistKind.FULL;
     }
 
     private Authorization createPersistedAuthorization(String roleName, String groupName) {
