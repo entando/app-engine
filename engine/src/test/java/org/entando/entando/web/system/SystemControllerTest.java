@@ -43,6 +43,7 @@ class SystemControllerTest extends AbstractControllerTest {
 
     static final String CONTENT_SCHEDULER_CODE = "jpcontentscheduler";
     static final String CONTENT_WORKFLOW_CODE = "jpcontentworkflow";
+    static final String WEBDYNAMICFORM_CODE = "jpwebdynamicform";
 
     @Mock
     private ComponentManager componentManager;
@@ -61,81 +62,175 @@ class SystemControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void testWithContentSchedulerInstalled() throws Throwable {
-        testWithPlugins(true, false);
+    void testNoPluginsInstalled() throws Throwable {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+        when(componentManager.getCurrentComponents()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/system/legacy-components-menu")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload", hasSize(0)));
     }
 
     @Test
-    void testWithContentSchedulerNotInstalled() throws Throwable {
-        testWithPlugins(false, false);
-    }
-
-    @Test
-    void testWithContentWorkflowInstalled() throws Throwable {
-        testWithPlugins(false, true);
-    }
-
-    @Test
-    void testWithAllPluginsInstalled() throws Throwable {
-        testWithPlugins(true, true);
-    }
-
-    private void testWithPlugins(boolean schedulerInstalled, boolean workflowInstalled) throws Throwable {
+    void testCmsPluginsAggregatedIntoOneEntry() throws Throwable {
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
         String accessToken = mockOAuthInterceptor(user);
 
         Component schedulerComponent = new Component(
-                buildComponentElement(CONTENT_SCHEDULER_CODE, Map.of(
-                        "appBuilderMenu.id", "menu-scheduler",
-                        "appBuilderMenu.href", "do/jpcontentscheduler/config/viewItem.action"
-                )), Collections.emptyMap());
+                buildComponentElementWithMenuItems(CONTENT_SCHEDULER_CODE,
+                        Map.of("appBuilderMenu.hook", "cms"),
+                        List.of(Map.of("id", "menu-scheduler", "defaultLabel", "Scheduler",
+                                "href", "do/jpcontentscheduler/config/viewItem.action",
+                                "requiredPermission", "editContents|validateContents"))
+                ), Collections.emptyMap());
 
         Component workflowComponent = new Component(
-                buildComponentElement(CONTENT_WORKFLOW_CODE, Map.of(
-                        "appBuilderMenu.id", "menu-workflow",
-                        "appBuilderMenu.href", "do/jpcontentworkflow/Workflow/list.action"
-                )), Collections.emptyMap());
+                buildComponentElementWithMenuItems(CONTENT_WORKFLOW_CODE,
+                        Map.of("appBuilderMenu.hook", "cms"),
+                        List.of(Map.of("id", "menu-workflow", "defaultLabel", "Workflow",
+                                "href", "do/jpcontentworkflow/Workflow/list.action",
+                                "requiredPermission", "editContents|validateContents"))
+                ), Collections.emptyMap());
 
-        List<Component> listComponents = new ArrayList<>();
-        if (schedulerInstalled) {
-            listComponents.add(schedulerComponent);
-        }
-        if (workflowInstalled) {
-            listComponents.add(workflowComponent);
-        }
-        when(componentManager.getCurrentComponents()).thenReturn(listComponents);
+        when(componentManager.getCurrentComponents()).thenReturn(List.of(schedulerComponent, workflowComponent));
 
-        ResultActions result = mockMvc.perform(
-                get("/system/report")
+        mockMvc.perform(get("/system/legacy-components-menu")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .header("Authorization", "Bearer " + accessToken));
-        result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.payload", hasSize(listComponents.size())));
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.hook']", is("cms")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items']", hasSize(2)))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].id", is("menu-scheduler")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].id", is("menu-workflow")));
+    }
 
-        int index = 0;
-        if (schedulerInstalled) {
-            result.andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.id']", is("menu-scheduler")))
-                    .andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.href']", is("do/jpcontentscheduler/config/viewItem.action")));
-            index++;
-        }
-        if (workflowInstalled) {
-            result.andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.id']", is("menu-workflow")))
-                    .andExpect(jsonPath("$.payload[" + index + "]['appBuilderMenu.href']", is("do/jpcontentworkflow/Workflow/list.action")));
-        }
+    @Test
+    void testLegacyPluginsKeptSeparate() throws Throwable {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        Component wdf1 = new Component(
+                buildComponentElementWithMenuItems(WEBDYNAMICFORM_CODE,
+                        Map.of("appBuilderMenu.hook", "legacyPlugins",
+                                "appBuilderMenu.pluginId", "jpwebdynamicform",
+                                "appBuilderMenu.pluginLabel", "Web Dynamic Forms"),
+                        List.of(Map.of("id", "wdf-messages", "defaultLabel", "Message List",
+                                "href", "do/jpwebdynamicform/Message/Operator/list.action",
+                                "requiredPermission", "superuser"))
+                ), Collections.emptyMap());
+
+        Component wdf2 = new Component(
+                buildComponentElementWithMenuItems("jpotherplugin",
+                        Map.of("appBuilderMenu.hook", "legacyPlugins",
+                                "appBuilderMenu.pluginId", "jpotherplugin",
+                                "appBuilderMenu.pluginLabel", "Other Plugin"),
+                        List.of(Map.of("id", "other-config", "defaultLabel", "Config",
+                                "href", "do/jpotherplugin/config.action",
+                                "requiredPermission", "superuser"))
+                ), Collections.emptyMap());
+
+        when(componentManager.getCurrentComponents()).thenReturn(List.of(wdf1, wdf2));
+
+        mockMvc.perform(get("/system/legacy-components-menu")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload", hasSize(2)))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.pluginId']", is("jpwebdynamicform")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items']", hasSize(1)))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].id", is("wdf-messages")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.pluginId']", is("jpotherplugin")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items']", hasSize(1)))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].id", is("other-config")));
+    }
+
+    @Test
+    void testMixedCmsAndLegacyPlugins() throws Throwable {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        Component schedulerComponent = new Component(
+                buildComponentElementWithMenuItems(CONTENT_SCHEDULER_CODE,
+                        Map.of("appBuilderMenu.hook", "cms"),
+                        List.of(Map.of("id", "menu-scheduler", "defaultLabel", "Scheduler",
+                                "href", "do/jpcontentscheduler/config/viewItem.action",
+                                "requiredPermission", "editContents|validateContents"))
+                ), Collections.emptyMap());
+
+        Component workflowComponent = new Component(
+                buildComponentElementWithMenuItems(CONTENT_WORKFLOW_CODE,
+                        Map.of("appBuilderMenu.hook", "cms"),
+                        List.of(Map.of("id", "menu-workflow", "defaultLabel", "Workflow",
+                                "href", "do/jpcontentworkflow/Workflow/list.action",
+                                "requiredPermission", "editContents|validateContents"))
+                ), Collections.emptyMap());
+
+        Component wdfComponent = new Component(
+                buildComponentElementWithMenuItems(WEBDYNAMICFORM_CODE,
+                        Map.of("appBuilderMenu.hook", "legacyPlugins",
+                                "appBuilderMenu.pluginId", "jpwebdynamicform",
+                                "appBuilderMenu.pluginLabel", "Web Dynamic Forms"),
+                        List.of(
+                                Map.of("id", "wdf-messages", "defaultLabel", "Message List",
+                                        "href", "do/jpwebdynamicform/Message/Operator/list.action",
+                                        "requiredPermission", "superuser"),
+                                Map.of("id", "wdf-config", "defaultLabel", "Configuration",
+                                        "href", "do/jpwebdynamicform/Message/Config/list.action",
+                                        "requiredPermission", "superuser")
+                        )
+                ), Collections.emptyMap());
+
+        when(componentManager.getCurrentComponents()).thenReturn(
+                List.of(schedulerComponent, workflowComponent, wdfComponent));
+
+        mockMvc.perform(get("/system/legacy-components-menu")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payload", hasSize(2)))
+                // cms aggregated
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.hook']", is("cms")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items']", hasSize(2)))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].id", is("menu-scheduler")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].id", is("menu-workflow")))
+                // legacy plugin separate
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.hook']", is("legacyPlugins")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.pluginId']", is("jpwebdynamicform")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items']", hasSize(2)));
     }
 
     private static org.jdom2.Element buildComponentElement(String code, Map<String, String> properties) {
+        return buildComponentElementWithMenuItems(code, properties, null);
+    }
+
+    private static org.jdom2.Element buildComponentElementWithMenuItems(
+            String code, Map<String, String> properties, List<Map<String, String>> menuItems) {
         org.jdom2.Element root = new org.jdom2.Element("component");
         root.addContent(new org.jdom2.Element("code").setText(code));
         root.addContent(new org.jdom2.Element("description").setText(code));
-        if (properties != null && !properties.isEmpty()) {
+        boolean hasProperties = properties != null && !properties.isEmpty();
+        boolean hasMenuItems = menuItems != null && !menuItems.isEmpty();
+        if (hasProperties || hasMenuItems) {
             org.jdom2.Element propsElement = new org.jdom2.Element("properties");
-            properties.forEach((key, value) -> {
-                org.jdom2.Element prop = new org.jdom2.Element("property");
-                prop.setAttribute("key", key);
-                prop.setAttribute("value", value);
-                propsElement.addContent(prop);
-            });
+            if (hasProperties) {
+                properties.forEach((key, value) -> {
+                    org.jdom2.Element prop = new org.jdom2.Element("property");
+                    prop.setAttribute("key", key);
+                    prop.setAttribute("value", value);
+                    propsElement.addContent(prop);
+                });
+            }
+            if (hasMenuItems) {
+                menuItems.forEach(item -> {
+                    org.jdom2.Element menuItemEl = new org.jdom2.Element("menuItem");
+                    item.forEach(menuItemEl::setAttribute);
+                    propsElement.addContent(menuItemEl);
+                });
+            }
             root.addContent(propsElement);
         }
         return root;

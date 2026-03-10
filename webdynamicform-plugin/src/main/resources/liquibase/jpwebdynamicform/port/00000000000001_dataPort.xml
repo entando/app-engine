@@ -1,0 +1,453 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_config" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM SYSCONFIG
+                WHERE item = 'jpwebdynamicform_messageTypes'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="sysconfig">
+            <column name="version" value="production"/>
+            <column name="item" value="jpwebdynamicform_messageTypes"/>
+            <column name="descr" value="Web Dynamic Form - Message type definition"/>
+            <column name="config"><![CDATA[<messagetypes/>]]></column>
+        </insert>
+
+        <insert tableName="sysconfig">
+            <column name="version" value="production"/>
+            <column name="item" value="jpwebdynamicform_messageNotifierConfig"/>
+            <column name="descr" value="Web Dynamic Form - Configuration of notify service"/>
+            <column name="config"><![CDATA[<messagetypes/>]]></column>
+        </insert>
+
+    </changeSet>
+
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_widgetcatalog" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM WIDGETCATALOG
+                WHERE code = 'jpwebdynamicform_message_form'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="widgetcatalog">
+            <column name="code" value="jpwebdynamicform_message_form"/>
+            <column name="titles" valueClobFile="clob/production/widgetcatalog/message_form_title.xml"/>
+            <column name="parameters" valueClobFile="clob/production/widgetcatalog/message_form_parameters.xml"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="widgetcatalog">
+            <column name="code" value="jpwebdynamicform_message_choice"/>
+            <column name="titles" valueClobFile="clob/production/widgetcatalog/message_choice_title.xml"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="parenttypecode" value="formAction"/>
+            <column name="defaultconfig"
+                    valueClobFile="clob/production/widgetcatalog/message_choice_defaultconfig.xml"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_labels" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM LOCALSTRINGS
+                WHERE keycode LIKE 'jpwebdynamicform_%'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_INFO"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="The fields marked with * are required."/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_INFO"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="I campi contrassegnati dal simbolo * sono obbligatori."/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MANDATORY_FULL"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Mandatory"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MANDATORY_FULL"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Obbligatorio"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MANDATORY_SHORT"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="*"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MANDATORY_SHORT"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="*"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MAXLENGTH_FULL"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Max Length"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MAXLENGTH_FULL"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Lunghezza massima"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MAXLENGTH_SHORT"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="max"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MAXLENGTH_SHORT"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="max"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MINLENGTH_FULL"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Min Length"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MINLENGTH_FULL"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Lunghezza minima"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MINLENGTH_SHORT"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="min"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ENTITY_ATTR_FLAG_MINLENGTH_SHORT"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="min"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_INVIA"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Send"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_INVIA"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Invia"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_MESSAGE_SAVE_CONFIRMATION"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Il messaggio è stato inviato correttamente. Se vuoi inviaci un'altra"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_MESSAGE_SAVE_CONFIRMATION"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="The message has been sent successfully. If you need, send us another"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_MESSAGE_REQUEST_LINK"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="request"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_MESSAGE_REQUEST_LINK"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="richiesta"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_SELECT"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Select"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_SELECT"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Seleziona"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_MESSAGETYPE"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Scegliere un tipo di messaggio"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_MESSAGETYPE"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Choose a message type"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_CHOOSE_TYPE"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Scegli e continua"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_CHOOSE_TYPE"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Select and continue"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ERRORS"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Errori durante la compilazione del modulo"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ERRORS"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Errors occured"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_YES"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Si"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_YES"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Yes"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_NO"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="No"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_NO"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="No"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_NONE"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="Indifferente"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_NONE"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="None"/>
+        </insert>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ERRORS_HAPPENED"/>
+            <column name="langcode" value="en"/>
+            <column name="stringvalue" value="An error has happened!"/>
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="jpwebdynamicform_ERRORS_HAPPENED"/>
+            <column name="langcode" value="it"/>
+            <column name="stringvalue" value="Si sono verificati degli errori!"/>
+        </insert>
+
+    </changeSet>
+
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_guifragments" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM GUIFRAGMENT
+                WHERE code LIKE 'jpwebdynform_%'
+                   OR code LIKE 'jpwebdynamicform_%'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynamicform_is_messageTypeFinding"/>
+            <column name="widgettypecode" value="jpwebdynamicform_message_choice"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynamicform_is_messageTypeFinding.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynamicform_message_form"/>
+            <column name="widgettypecode" value="jpwebdynamicform_message_form"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui" valueClobFile="clob/production/guifragment/jpwebdynamicform_message_form.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front_attributeInfo-help-block"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front_attributeInfo-help-block.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front_AttributeInfo"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front_AttributeInfo.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-BooleanAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-BooleanAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-CheckboxAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-CheckboxAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_IteratorAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_IteratorAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-CompositeAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-CompositeAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-DateAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-DateAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-EnumeratorAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-EnumeratorAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-EnumeratorMapAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-EnumeratorMapAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-LongtextAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-LongtextAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-MonotextAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-MonotextAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-NumberAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-NumberAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-ThreeStateAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-ThreeStateAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynamicform_is_entryMessage"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui" valueClobFile="clob/production/guifragment/jpwebdynamicform_is_entryMessage.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynamicform_is_captchaPage"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui" valueClobFile="clob/production/guifragment/jpwebdynamicform_is_captchaPage.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynamicform_is_messageSaveConfirmed"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynamicform_is_messageSaveConfirmed.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_guifragments_email" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM GUIFRAGMENT
+                WHERE code = 'jpwebdynform_is_front-EmailAttribute'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-EmailAttribute"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-EmailAttribute.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

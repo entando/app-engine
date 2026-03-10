@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="jpwebdynamicformAppsMenuMenuHookPoint" class="com.agiletec.apsadmin.system.plugin.HookPointElementContainer" >
+		<property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenu.jsp</value></property>
+		<property name="hookPointKey"><value>core.menu.apps.ext</value></property>
+	</bean>
+
+	<bean id="jpwebdynamicformLegacyPluginsMenuHookPoint" class="com.agiletec.apsadmin.system.plugin.HookPointElementContainer" >
+		<property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenuAppBuilder.jsp</value></property>
+		<property name="hookPointKey"><value>core.menu.legacyplugins.appbuilder</value></property>
+	</bean>
+	<bean id="jpwebdynamicformLegacyPluginsMenuHookPoint1" class="com.agiletec.apsadmin.system.plugin.HookPointElementContainer" >
+		<property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenuAppBuilder1.jsp</value></property>
+		<property name="hookPointKey"><value>core.menu.legacyplugins.appbuilder</value></property>
+	</bean>
+
+	<!--
+	<bean id="jpwebdynamicformSubMenu" class="com.agiletec.apsadmin.system.plugin.PluginSubMenuContainer" >
+		<property name="pluginCode" value="jpwebdynamicform" />
+		<property name="subMenuFilePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenu.jsp</value></property>
+	</bean>
+    <bean id="jpwebdynamicformConfigSystemParamsHookPoint" class="com.agiletec.apsadmin.system.plugin.HookPointElementContainer" >
+        <property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/admin/configSystemParams-jack.jsp</value></property>
+        <property name="hookPointKey"><value>core.configSystemParams</value></property>
+    </bean>
+	-->
+
+	<bean id="jpwebdynamicformMessageFinderAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.apsadmin.message.MessageFinderAction"
+			parent="defaultEntityFinderAction" >
+		<property name="messageManager" ref="jpwebdynamicformMessageManager" />
+	</bean>
+
+	<bean id="jpwebdynamicformOperatorMessageAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.apsadmin.message.OperatorMessageAction"
+			parent="abstractBaseAction" >
+		<property name="messageManager" ref="jpwebdynamicformMessageManager" />
+	</bean>
+
+	<bean id="jpwebdynamicformNotifierConfigAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.apsadmin.message.config.NotifierConfigAction"
+			parent="abstractBaseAction" >
+		<property name="messageManager" ref="jpwebdynamicformMessageManager" />
+		<property name="mailManager" ref="jpmailMailManager" />
+	</bean>
+
+</beans>

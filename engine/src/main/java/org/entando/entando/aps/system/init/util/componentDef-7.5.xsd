@@ -110,7 +110,8 @@
     <xs:element name="properties">
         <xs:complexType>
             <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="property"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="property"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="menuItem"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -118,6 +119,15 @@
         <xs:complexType>
             <xs:attribute name="key" use="required" type="xs:string"/>
             <xs:attribute name="value" use="required" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="menuItem">
+        <xs:complexType>
+            <xs:attribute name="id" use="required" type="xs:string"/>
+            <xs:attribute name="defaultLabel" use="required" type="xs:string"/>
+            <xs:attribute name="labelId" type="xs:string"/>
+            <xs:attribute name="href" use="required" type="xs:string"/>
+            <xs:attribute name="requiredPermission" type="xs:string"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="code" type="xs:NCName"/>

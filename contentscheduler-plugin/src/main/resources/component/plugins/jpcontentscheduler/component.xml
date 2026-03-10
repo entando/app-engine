@@ -6,11 +6,12 @@
 		<code>jpmail</code>
 	</dependencies>
     <properties>
-        <property key="appBuilderMenu.id" value="menu-scheduler" />
-        <property key="appBuilderMenu.labelId" value="cms.menu.scheduler" />
-        <property key="appBuilderMenu.defaultLabel" value="Scheduler" />
-        <property key="appBuilderMenu.href" value="do/jpcontentscheduler/config/viewItem.action" />
-        <property key="appBuilderMenu.requiredPermission" value="superuser" />
+        <property key="appBuilderMenu.hook" value="cms" />
+        <menuItem id="menu-scheduler"
+                  labelId="cms.menu.scheduler"
+                  defaultLabel="Scheduler"
+                  href="do/jpcontentscheduler/config/viewItem.action"
+                  requiredPermission="editContents|validateContents" />
     </properties>
     <installation>
         <liquibase>

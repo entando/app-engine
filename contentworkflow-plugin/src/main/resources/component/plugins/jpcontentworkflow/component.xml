@@ -12,11 +12,12 @@
 		<code>jpmail</code>
 	</dependencies>
 	<properties>
-		<property key="appBuilderMenu.id" value="menu-workflow" />
-		<property key="appBuilderMenu.labelId" value="cms.menu.workflow" />
-		<property key="appBuilderMenu.defaultLabel" value="Workflow" />
-		<property key="appBuilderMenu.href" value="do/jpcontentworkflow/Workflow/list.action" />
-		<property key="appBuilderMenu.requiredPermission" value="superuser" />
+		<property key="appBuilderMenu.hook" value="cms" />
+		<menuItem id="menu-workflow"
+				  labelId="cms.menu.workflow"
+				  defaultLabel="Workflow"
+				  href="do/jpcontentworkflow/Workflow/list.action"
+				  requiredPermission="editContents|validateContents" />
 	</properties>
 	<installation>
         <tableMapping>

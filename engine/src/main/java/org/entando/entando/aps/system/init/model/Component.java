@@ -39,7 +39,7 @@ public class Component {
 
     private Map<String, String> liquibaseChangeSets;
 
-    private Map<String, String> properties;
+    private Map<String, Object> properties;
 
     public Component(Element rootElement, Map<String, String> postProcessClasses) throws Throwable {
         try {
@@ -95,6 +95,27 @@ public class Component {
                     String key = propertyElement.getAttributeValue("key");
                     String value = propertyElement.getAttributeValue("value");
                     properties.put(key, value);
+                }
+                List<Element> menuItemElements = propertiesElement.getChildren("menuItem");
+                if (!menuItemElements.isEmpty()) {
+                    List<Map<String, String>> items = new ArrayList<>();
+                    for (int i = 0; i < menuItemElements.size(); i++) {
+                        Element menuItemElement = menuItemElements.get(i);
+                        Map<String, String> item = new HashMap<>();
+                        item.put("id", menuItemElement.getAttributeValue("id"));
+                        item.put("defaultLabel", menuItemElement.getAttributeValue("defaultLabel"));
+                        String labelId = menuItemElement.getAttributeValue("labelId");
+                        if (null != labelId) {
+                            item.put("labelId", labelId);
+                        }
+                        item.put("href", menuItemElement.getAttributeValue("href"));
+                        String requiredPermission = menuItemElement.getAttributeValue("requiredPermission");
+                        if (null != requiredPermission) {
+                            item.put("requiredPermission", requiredPermission);
+                        }
+                        items.add(item);
+                    }
+                    properties.put("appBuilderMenu.items", items);
                 }
             }
         } catch (Throwable t) {
@@ -209,11 +230,11 @@ public class Component {
         this.liquibaseChangeSets = liquibaseChangeSets;
     }
 
-    public Map<String, String> getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
-    protected void setProperties(Map<String, String> properties) {
+    protected void setProperties(Map<String, Object> properties) {
         this.properties = properties;
     }
 

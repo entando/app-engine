@@ -26,18 +26,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * REST controller that exposes system-level information for app-builder integration.
+ * REST controller that exposes menu configuration for app-builder integration.
  * <p>
- * Provides a report endpoint that returns the properties declared in each installed
- * component's {@code component.xml} (via the {@code <properties>} element).
- * This allows app-builder to dynamically discover plugin capabilities such as
- * menu entries, labels, and required permissions, instead of relying on
- * hardcoded configuration.
+ * Provides a {@code /legacy-components-menu} endpoint that returns menu entries
+ * declared in each installed component's {@code component.xml} via
+ * {@code <properties>} and {@code <menuItem>} elements.
+ * This allows app-builder to dynamically discover plugin menu entries,
+ * labels, and required permissions without hardcoded configuration.
  * </p>
  */
 @RestController
@@ -47,53 +49,99 @@ public class SystemController {
     @Autowired
     private IComponentManager componentManager;
 
+    private static final String HOOK_CMS = "cms";
+
     /**
-     * Returns the properties of all installed components that declare a
-     * {@code <properties>} section in their {@code component.xml}.
+     * Returns menu entries from installed components that declare an
+     * {@code appBuilderMenu.hook} property in their {@code component.xml}.
      *
-     * <p>Example response payload:</p>
+     * <p>Aggregation rules:</p>
+     * <ul>
+     *   <li>{@code hook = "cms"} - items from all components are merged into a single entry
+     *       (e.g. content-scheduler and content-workflow items appear together)</li>
+     *   <li>Any other hook (e.g. {@code "legacyPlugins"}) - each component keeps its own
+     *       separate entry with its {@code pluginId}, {@code pluginLabel}, and {@code items}</li>
+     * </ul>
+     *
+     * <p>Each {@code <menuItem>} in {@code component.xml} maps to an item object with:</p>
+     * <ul>
+     *   <li>{@code id} - unique menu item identifier</li>
+     *   <li>{@code defaultLabel} - fallback label when i18n key is not available</li>
+     *   <li>{@code labelId} - (optional) i18n message key</li>
+     *   <li>{@code href} - relative URL for the admin console action</li>
+     *   <li>{@code requiredPermission} - (optional) permission expression;
+     *       supports {@code |} (OR) and {@code &} (AND)</li>
+     * </ul>
+     *
+     * <p>Example response:</p>
      * <pre>{@code
      * {
      *   "payload": [
      *     {
-     *       "appBuilderMenu.id": "menu-scheduler",
-     *       "appBuilderMenu.labelId": "cms.menu.scheduler",
-     *       "appBuilderMenu.defaultLabel": "Scheduler",
-     *       "appBuilderMenu.href": "do/jpcontentscheduler/config/viewItem.action",
-     *       "appBuilderMenu.requiredPermission": "superuser"
+     *       "appBuilderMenu.hook": "cms",
+     *       "appBuilderMenu.items": [
+     *         { "id": "menu-scheduler", "defaultLabel": "Scheduler", "href": "..." },
+     *         { "id": "menu-workflow", "defaultLabel": "Workflow", "href": "..." }
+     *       ]
+     *     },
+     *     {
+     *       "appBuilderMenu.hook": "legacyPlugins",
+     *       "appBuilderMenu.pluginId": "jpwebdynamicform",
+     *       "appBuilderMenu.pluginLabel": "Web Dynamic Forms",
+     *       "appBuilderMenu.items": [
+     *         { "id": "wdf-messages", "defaultLabel": "Message List", "href": "..." },
+     *         { "id": "wdf-config", "defaultLabel": "Configuration", "href": "..." }
+     *       ]
+     *     },
+     *     {
+     *       "appBuilderMenu.hook": "legacyPlugins",
+     *       "appBuilderMenu.pluginId": "jpotherplugin",
+     *       "appBuilderMenu.pluginLabel": "Other Plugin",
+     *       "appBuilderMenu.items": [
+     *         { "id": "other-config", "defaultLabel": "Config", "href": "..." }
+     *       ]
      *     }
      *   ]
      * }
      * }</pre>
      *
-     * <p>Supported property keys:</p>
-     * <ul>
-     *   <li>{@code appBuilderMenu.id} - unique menu item identifier</li>
-     *   <li>{@code appBuilderMenu.labelId} - i18n message key for the menu label</li>
-     *   <li>{@code appBuilderMenu.defaultLabel} - fallback label when i18n key is missing</li>
-     *   <li>{@code appBuilderMenu.href} - relative URL for the admin console action</li>
-     *   <li>{@code appBuilderMenu.requiredPermission} - boolean permission expression evaluated by
-     *       app-builder's {@code checkPermission} helper. Supports {@code &} (AND), {@code |} (OR),
-     *       and parentheses for grouping.
-     *       <br>Examples:
-     *       <ul>
-     *         <li>{@code "superuser"} - single permission</li>
-     *         <li>{@code "editContents|validateContents"} - either permission</li>
-     *         <li>{@code "(editContents|validateContents)&superuser"} - either editor or supervisor, AND superuser</li>
-     *       </ul>
-     *   </li>
-     * </ul>
-     *
-     * @return a list of property maps, one per component with properties defined
+     * @return a list of menu entry maps grouped according to the aggregation rules
      */
-    @RestAccessControl(permission = Permission.ENTER_BACKEND)
-    @GetMapping(value = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SimpleRestResponse<List<Map<String, String>>>> getReport() {
 
-        List<Map<String, String>> report = componentManager.getCurrentComponents().stream()
+    @RestAccessControl(permission = Permission.ENTER_BACKEND)
+    @GetMapping(value = "/legacy-components-menu", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<SimpleRestResponse<List<Map<String, Object>>>> getLegacyComponentsMenu() {
+
+        List<Map<String, Object>> allProperties = componentManager.getCurrentComponents().stream()
                 .filter(c -> c.getProperties() != null && !c.getProperties().isEmpty())
+                .filter(c -> c.getProperties().containsKey("appBuilderMenu.hook"))
                 .map(Component::getProperties)
                 .collect(Collectors.toList());
+
+        List<Map<String, Object>> report = new ArrayList<>();
+        Map<String, Object> cmsEntry = null;
+
+        for (Map<String, Object> props : allProperties) {
+            String hook = String.valueOf(props.get("appBuilderMenu.hook"));
+            if (HOOK_CMS.equals(hook)) {
+                // Aggregate cms items into a single entry
+                if (cmsEntry == null) {
+                    cmsEntry = new HashMap<>();
+                    cmsEntry.put("appBuilderMenu.hook", HOOK_CMS);
+                    cmsEntry.put("appBuilderMenu.items", new ArrayList<Map<String, String>>());
+                    report.add(cmsEntry);
+                }
+                Object items = props.get("appBuilderMenu.items");
+                if (items instanceof List) {
+                    ((List<Map<String, String>>) cmsEntry.get("appBuilderMenu.items"))
+                            .addAll((List<Map<String, String>>) items);
+                }
+            } else {
+                // Each plugin keeps its own entry
+                report.add(props);
+            }
+        }
 
         return new ResponseEntity<>(new SimpleRestResponse<>(report), HttpStatus.OK);
     }

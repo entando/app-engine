@@ -1,0 +1,12 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <include file="port/00000000000001_dataPort.xml" relativeToChangelogFile="true"/>
+
+    <include file="port/00000000000001_dataPort_test.xml" relativeToChangelogFile="true"/>
+
+    <include file="port/20260212100000_dataPort_captcha.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

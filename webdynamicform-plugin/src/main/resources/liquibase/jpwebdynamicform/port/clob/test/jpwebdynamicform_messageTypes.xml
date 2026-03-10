@@ -1,0 +1,52 @@
+<messagetypes>
+    <messagetype typecode="PER" typedescr="Person Form" >
+        <attributes>
+            <attribute name="Name" attributetype="Monotext" searcheable="true" >
+                <validations>
+                    <required>true</required>
+                </validations>
+            </attribute>
+            <attribute name="Surname" attributetype="Monotext" searcheable="true" >
+                <validations>
+                    <required>true</required>
+                </validations>
+            </attribute>
+            <attribute name="Address" attributetype="Monotext" searcheable="false" />
+            <attribute name="eMail" attributetype="Monotext" searcheable="false" >
+                <validations>
+                    <required>true</required>
+                    <regexp><![CDATA[(.*<.+@.+.[a-z]+>)|(.+@.+.[a-z]+)]]></regexp>
+                </validations>
+            </attribute>
+            <attribute name="Note" attributetype="Monotext" searcheable="false" >
+                <validations>
+                    <required>true</required>
+                </validations>
+            </attribute>
+        </attributes>
+    </messagetype>
+    <messagetype typecode="COM" typedescr="Company Form" >
+        <attributes>
+            <attribute name="Company" attributetype="Monotext" searcheable="true" >
+                <validations>
+                    <required>true</required>
+                </validations>
+            </attribute>
+            <attribute name="Address" attributetype="Monotext" searcheable="false" required="false" />
+            <attribute name="eMail" attributetype="Monotext" searcheable="false" >
+                <validations>
+                    <required>true</required>
+                    <regexp><![CDATA[(.*<.+@.+.[a-z]+>)|(.+@.+.[a-z]+)]]></regexp>
+                </validations>
+                <roles>
+                    <role>jpwebdynamicform:email</role>
+                </roles>
+            </attribute>
+            <attribute name="Note" attributetype="Monotext" searcheable="false" >
+                <validations>
+                    <required>true</required>
+                </validations>
+            </attribute>
+        </attributes>
+    </messagetype>
+</messagetypes>

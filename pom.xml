@@ -27,6 +27,7 @@
         <module>contentscheduler-plugin</module>
         <module>contentworkflow-plugin</module>
         <module>solr-plugin</module>
+        <module>webdynamicform-plugin</module>
         <module>webapp</module>
     </modules>
 

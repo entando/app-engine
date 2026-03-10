@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+    <code>jpwebdynamicform</code>
+    <description>Web Dynamic Forms</description>
+    <artifact>
+        <artifactId>${project.artifactId}</artifactId>
+        <groupId>${project.groupId}</groupId>
+        <version>${project.version}</version>
+    </artifact>
+    <properties>
+        <property key="appBuilderMenu.hook" value="legacyPlugins" />
+        <property key="appBuilderMenu.pluginId" value="jpwebdynamicform" />
+        <property key="appBuilderMenu.pluginLabel" value="Web Dynamic Forms" />
+        <menuItem id="wdf-messages"
+                  defaultLabel="Message List"
+                  labelId="jpwebdynamicform.menu.messages"
+                  href="do/jpwebdynamicform/Message/Operator/list.action"
+                  requiredPermission="superuser|jpwebdynamicform_manageForms" />
+        <menuItem id="wdf-config"
+                  defaultLabel="Configuration"
+                  labelId="jpwebdynamicform.menu.config"
+                  href="do/jpwebdynamicform/Message/Config/list.action"
+                  requiredPermission="superuser" />
+        <menuItem id="wdf-types"
+                  defaultLabel="Message Types"
+                  labelId="title.jpwebdynamicformMessageManager.management"
+                  href="do/jpwebdynamicform/Entity/viewEntityTypes.action?entityManagerName=jpwebdynamicformMessageManager"
+                  requiredPermission="superuser" />
+        <menuItem id="wdf-captcha"
+                  defaultLabel="Captcha Configuration"
+                  labelId="breadcrumb.capcha"
+                  href="do/jpwebdynamicform/Config/systemParams.action"
+                  requiredPermission="superuser" />
+    </properties>
+    <installation>
+        <tableMapping>
+            <datasource name="servDataSource">
+                <table>jpwebdynamicform_messages</table>
+                <table>jpwebdynamicform_search</table>
+                <table>jpwebdynamicform_attroles</table>
+                <table>jpwebdynamicform_answers</table>
+            </datasource>
+        </tableMapping>
+        <liquibase>
+            <changeSet datasource="portDataSource"
+                       changeLogFile="classpath:liquibase/jpwebdynamicform/changeSetPort.xml"/>
+            <changeSet datasource="servDataSource"
+                       changeLogFile="classpath:liquibase/jpwebdynamicform/changeSetServ.xml"/>
+        </liquibase>
+    </installation>
+</component>

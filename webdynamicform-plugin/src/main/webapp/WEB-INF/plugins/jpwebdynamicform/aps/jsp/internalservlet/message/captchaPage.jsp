@@ -1,0 +1,46 @@
+<%@ taglib prefix="s" uri="/struts-tags" %>
+<%@ taglib uri="/aps-core" prefix="wp" %>
+<%@ taglib uri="/apsadmin-core" prefix="wpsa" %>
+<%@ taglib uri="/apsadmin-form" prefix="wpsf" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<s:set var="titleKey">jpwebdynamicform_TITLE_<s:property value="typeCode"/></s:set>
+<s:set var="subtitleKey">jpwebdynamicform_SUBTITLE_<s:property value="typeCode"/></s:set>
+<s:set var="typeCodeKey" value="typeCode" />
+
+<s:set var="myCurrentPage"><wp:currentPage param="code"/></s:set>
+
+<h2 class="title-divider"><span><wp:i18n key="${titleKey}" /></span>
+<small><wp:i18n key="${subtitleKey}" /></small></h2>
+
+<form action="<wp:action path="/ExtStr2/do/jpwebdynamicform/Message/User/captchaConfirm.action"/>" method="post" id="formContact" >
+	<s:if test="hasFieldErrors()">
+	<div class="alert alert-error">
+		<ul>
+		<s:iterator value="fieldErrors">
+			<s:iterator value="value">
+				<li><s:property escapeHtml="false" /></li>
+			</s:iterator>
+		</s:iterator>
+		</ul>
+	</div>
+	</s:if>
+	<s:if test="hasActionErrors()">
+	<div class="alert alert-error">
+		<ul>
+			<s:iterator value="actionErrors">
+				<li><s:property escapeHtml="false" /></li>
+			</s:iterator>
+		</ul>
+	</div>
+	</s:if>
+	
+<s:if test="recaptchaAfterEnabled">
+	<s:include value="/WEB-INF/plugins/jpwebdynamicform/aps/jsp/internalservlet/message/inc/include_captcha.jsp" />
+</s:if>
+
+<p>
+	<s:set var="labelSubmit"><wp:i18n key="jpwebdynamicform_INVIA" /></s:set>
+	<wpsf:submit useTabindexAutoIncrement="true" value="%{#labelSubmit}" cssClass="btn btn-inverse"/>
+</p>
+</form>
