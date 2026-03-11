@@ -34,6 +34,18 @@ mvn clean package jetty:run-war -Pjetty-local -Ppostgresql -DskipDatabaseImage=t
 In order to build the JS OOTB widgets using node and copy the built files (css and js) to the webapp resources ootb-widgets folder, 
 you can also add the flag`-P build-ootb-widgets` to enable the related maven profile.
 
+## Headless Widget Configuration (app-builder iframe embedding)
+
+Requires app-builder 7.5+. When the `HEADLESS_WIDGET_CONFIG` feature flag is enabled, widget configuration pages can be rendered in headless mode (without admin-console header/navigation) for embedding inside app-builder via iframe. The headless mode is activated when the widget declares `{"customElement":"LEGACY_CONFIG","resources":[]}` in its `configUi` column, the request parameter `entandoHeadless=true` is present, and the `appBuilderIntegrationEnabled` system param is `true`.
+
+### Local development with app-builder
+
+To allow `localhost:3000` (app-builder dev server) to embed admin-console pages in iframes, activate the `app-builder-dev` Maven profile which disables X-Frame-Options headers:
+
+```
+mvn package jetty:run-war -Pjetty-local,app-builder-dev -Dspring.profiles.active=swagger -DskipTests -DskipLicenseDownload -Pderby -Pkeycloak
+```
+
 ## Using swagger
 
 In order to enable swagger, it's enough to pass `-Dspring.profiles.active=swagger` parameter. Swagger UI will be

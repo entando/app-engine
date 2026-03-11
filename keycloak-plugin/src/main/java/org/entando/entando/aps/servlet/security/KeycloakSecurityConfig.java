@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging;
 import org.entando.entando.keycloak.services.KeycloakConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -31,6 +32,9 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
     private final KeycloakConfiguration configuration;
     private final IUserManager userManager;
     private final IAuthenticationProviderManager authenticationProviderManager;
+
+    @Value("${iframe.disabled:false}")
+    private boolean iframeDisabled;
 
     @Autowired
     public KeycloakSecurityConfig(final KeycloakAuthenticationFilter keycloakAuthenticationFilter,
@@ -73,7 +77,9 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
             });
 
             http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
-                    .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                    .headers(headers -> headers.frameOptions(iframeDisabled
+                            ? HeadersConfigurer.FrameOptionsConfig::disable
+                            : HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                     .addFilterBefore(keycloakAuthenticationFilter, BasicAuthenticationFilter.class)
                     .anonymous(AbstractHttpConfigurer::disable)
                     .csrf(AbstractHttpConfigurer::disable) //NOSONAR
@@ -100,7 +106,9 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
             });
 
             http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
-                    .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                    .headers(headers -> headers.frameOptions(iframeDisabled
+                            ? HeadersConfigurer.FrameOptionsConfig::disable
+                            : HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                     .addFilterBefore(basicAuthFilter, BasicAuthenticationFilter.class)
                     .anonymous(AbstractHttpConfigurer::disable)
                     .csrf(AbstractHttpConfigurer::disable) //NOSONAR

@@ -55,6 +55,9 @@
         <keycloak.client.secret>b4b34472-9926-4753-9db8-a50f152df3da</keycloak.client.secret>
         <keycloak.public.client.id>entando-web</keycloak.public.client.id>
 
+        <!-- Iframe Configuration -->
+        <iframe.disabled>false</iframe.disabled>
+
         <!-- CORS Configuration -->
         <cors.enabled>true</cors.enabled>
         <cors.access.control.allow.origin>http://localhost:${appbuilder.port}</cors.access.control.allow.origin>
@@ -348,6 +351,12 @@
             <id>keycloak</id>
             <properties>
                 <keycloak.enabled>true</keycloak.enabled>
+            </properties>
+        </profile>
+        <profile>
+            <id>app-builder-dev</id>
+            <properties>
+                <iframe.disabled>true</iframe.disabled>
             </properties>
         </profile>
         <profile>
@@ -1068,6 +1077,7 @@
                         <servdb.username>${servdb.username}</servdb.username>
                         <servdb.password>${servdb.password}</servdb.password>
                         <keycloak.enabled>${keycloak.enabled}</keycloak.enabled>
+                        <iframe.disabled>${iframe.disabled}</iframe.disabled>
                         <keycloak.realm>${keycloak.realm}</keycloak.realm>
                         <keycloak.auth.url>${keycloak.auth.url}</keycloak.auth.url>
                         <keycloak.client.id>${keycloak.client.id}</keycloak.client.id>

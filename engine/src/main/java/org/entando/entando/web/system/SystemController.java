@@ -55,33 +55,48 @@ public class SystemController {
      * Returns menu entries from installed components that declare an
      * {@code appBuilderMenu.hook} property in their {@code component.xml}.
      *
-     * <p>Aggregation rules:</p>
+     * <p><b>Supported hooks:</b></p>
      * <ul>
-     *   <li>{@code hook = "cms"} - items from all components are merged into a single entry
-     *       (e.g. content-scheduler and content-workflow items appear together)</li>
-     *   <li>Any other hook (e.g. {@code "legacyPlugins"}) - each component keeps its own
-     *       separate entry with its {@code pluginId}, {@code pluginLabel}, and {@code items}</li>
+     *   <li>{@code "cms"} — items from all components are merged into a single entry
+     *       (e.g. content-scheduler and content-workflow items appear together under the CMS menu)</li>
+     *   <li>{@code "legacyPlugins"} — each component keeps its own separate entry with
+     *       {@code pluginId} and {@code pluginLabel}, rendered under the "Legacy Plugins" sidebar menu</li>
      * </ul>
      *
-     * <p>Each {@code <menuItem>} in {@code component.xml} maps to an item object with:</p>
+     * <p><b>Menu item fields</b> (from {@code <menuItem>} in {@code component.xml}):</p>
      * <ul>
-     *   <li>{@code id} - unique menu item identifier</li>
-     *   <li>{@code defaultLabel} - fallback label when i18n key is not available</li>
-     *   <li>{@code labelId} - (optional) i18n message key</li>
-     *   <li>{@code href} - relative URL for the admin console action</li>
-     *   <li>{@code requiredPermission} - (optional) permission expression;
-     *       supports {@code |} (OR) and {@code &} (AND)</li>
+     *   <li>{@code id} — unique menu item identifier (required)</li>
+     *   <li>{@code defaultLabel} — display label shown in the app-builder menu (required)</li>
+     *   <li>{@code labelId} — i18n message key for the app-builder front-end (optional);
+     *       when present, app-builder uses
+     *       {@code intl.formatMessage({id: labelId, defaultMessage: defaultLabel})};
+     *       when absent, falls back to {@code id} as the i18n key</li>
+     *   <li>{@code href} — relative URL for the admin-console action (required)</li>
+     *   <li>{@code requiredPermission} — permission expression checked by app-builder
+     *       before rendering the item; supports {@code |} (OR) and {@code &} (AND)
+     *       (required)</li>
      * </ul>
      *
-     * <p>Example response:</p>
+     * <p><b>Plugin-level fields</b> (from {@code <property>} in {@code component.xml},
+     * only for non-cms hooks):</p>
+     * <ul>
+     *   <li>{@code appBuilderMenu.pluginId} — unique plugin identifier (optional);
+     *       when present, items are grouped under a plugin header;
+     *       when absent, items render without a header</li>
+     *   <li>{@code appBuilderMenu.pluginLabel} — display name for the plugin group header
+     *       (optional, defaults to {@code pluginId})</li>
+     * </ul>
+     *
+     * <p><b>Example response:</b></p>
      * <pre>{@code
      * {
      *   "payload": [
      *     {
      *       "appBuilderMenu.hook": "cms",
      *       "appBuilderMenu.items": [
-     *         { "id": "menu-scheduler", "defaultLabel": "Scheduler", "href": "..." },
-     *         { "id": "menu-workflow", "defaultLabel": "Workflow", "href": "..." }
+     *         { "id": "menu-scheduler", "labelId": "cms.menu.scheduler",
+     *           "defaultLabel": "Scheduler", "href": "do/...",
+     *           "requiredPermission": "editContents|validateContents" }
      *       ]
      *     },
      *     {
@@ -89,16 +104,8 @@ public class SystemController {
      *       "appBuilderMenu.pluginId": "jpwebdynamicform",
      *       "appBuilderMenu.pluginLabel": "Web Dynamic Forms",
      *       "appBuilderMenu.items": [
-     *         { "id": "wdf-messages", "defaultLabel": "Message List", "href": "..." },
-     *         { "id": "wdf-config", "defaultLabel": "Configuration", "href": "..." }
-     *       ]
-     *     },
-     *     {
-     *       "appBuilderMenu.hook": "legacyPlugins",
-     *       "appBuilderMenu.pluginId": "jpotherplugin",
-     *       "appBuilderMenu.pluginLabel": "Other Plugin",
-     *       "appBuilderMenu.items": [
-     *         { "id": "other-config", "defaultLabel": "Config", "href": "..." }
+     *         { "id": "wdf-messages", "defaultLabel": "Message List",
+     *           "href": "do/...", "requiredPermission": "superuser" }
      *       ]
      *     }
      *   ]

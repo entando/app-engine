@@ -56,6 +56,7 @@
             <column name="parenttypecode" value="formAction"/>
             <column name="defaultconfig"
                     valueClobFile="clob/production/widgetcatalog/message_choice_defaultconfig.xml"/>
+            <column name="configui" value='{"customElement":"LEGACY_CONFIG","resources":[]}'/>
             <column name="locked" valueNumeric="1"/>
         </insert>
 

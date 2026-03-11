@@ -82,7 +82,8 @@ class SystemControllerTest extends AbstractControllerTest {
         Component schedulerComponent = new Component(
                 buildComponentElementWithMenuItems(CONTENT_SCHEDULER_CODE,
                         Map.of("appBuilderMenu.hook", "cms"),
-                        List.of(Map.of("id", "menu-scheduler", "defaultLabel", "Scheduler",
+                        List.of(Map.of("id", "menu-scheduler", "labelId", "cms.menu.scheduler",
+                                "defaultLabel", "Scheduler",
                                 "href", "do/jpcontentscheduler/config/viewItem.action",
                                 "requiredPermission", "editContents|validateContents"))
                 ), Collections.emptyMap());
@@ -104,8 +105,17 @@ class SystemControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.payload", hasSize(1)))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.hook']", is("cms")))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items']", hasSize(2)))
+                // scheduler item - with optional labelId
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].id", is("menu-scheduler")))
-                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].id", is("menu-workflow")));
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].labelId", is("cms.menu.scheduler")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].defaultLabel", is("Scheduler")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].href", is("do/jpcontentscheduler/config/viewItem.action")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].requiredPermission", is("editContents|validateContents")))
+                // workflow item - without labelId (app-builder falls back to id)
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].id", is("menu-workflow")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].defaultLabel", is("Workflow")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].href", is("do/jpcontentworkflow/Workflow/list.action")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].requiredPermission", is("editContents|validateContents")));
     }
 
     @Test
@@ -140,12 +150,22 @@ class SystemControllerTest extends AbstractControllerTest {
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload", hasSize(2)))
+                // first legacy plugin
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.pluginId']", is("jpwebdynamicform")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.pluginLabel']", is("Web Dynamic Forms")))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items']", hasSize(1)))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].id", is("wdf-messages")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].defaultLabel", is("Message List")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].href", is("do/jpwebdynamicform/Message/Operator/list.action")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].requiredPermission", is("superuser")))
+                // second legacy plugin
                 .andExpect(jsonPath("$.payload[1]['appBuilderMenu.pluginId']", is("jpotherplugin")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.pluginLabel']", is("Other Plugin")))
                 .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items']", hasSize(1)))
-                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].id", is("other-config")));
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].id", is("other-config")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].defaultLabel", is("Config")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].href", is("do/jpotherplugin/config.action")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].requiredPermission", is("superuser")));
     }
 
     @Test
@@ -196,11 +216,22 @@ class SystemControllerTest extends AbstractControllerTest {
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.hook']", is("cms")))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items']", hasSize(2)))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].id", is("menu-scheduler")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].defaultLabel", is("Scheduler")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][0].requiredPermission", is("editContents|validateContents")))
                 .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].id", is("menu-workflow")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].defaultLabel", is("Workflow")))
+                .andExpect(jsonPath("$.payload[0]['appBuilderMenu.items'][1].requiredPermission", is("editContents|validateContents")))
                 // legacy plugin separate
                 .andExpect(jsonPath("$.payload[1]['appBuilderMenu.hook']", is("legacyPlugins")))
                 .andExpect(jsonPath("$.payload[1]['appBuilderMenu.pluginId']", is("jpwebdynamicform")))
-                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items']", hasSize(2)));
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.pluginLabel']", is("Web Dynamic Forms")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items']", hasSize(2)))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].id", is("wdf-messages")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].defaultLabel", is("Message List")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][0].requiredPermission", is("superuser")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][1].id", is("wdf-config")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][1].defaultLabel", is("Configuration")))
+                .andExpect(jsonPath("$.payload[1]['appBuilderMenu.items'][1].requiredPermission", is("superuser")));
     }
 
     private static org.jdom2.Element buildComponentElement(String code, Map<String, String> properties) {

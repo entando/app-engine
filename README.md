@@ -14,9 +14,9 @@ The application will be available at http://localhost:8080/entando-de-app/
 
 More information are available on [webapp README](webapp/README.md).
 
-## Optional CMS Plugins
+## Optional Plugins
 
-The Content Scheduler Plugin and the Content Workflow Plugin are disabled by default. They can be included in the webapp activating the `contentscheduler` and/or `contentworkflow` Maven profiles during the build.
+The Content Scheduler, Content Workflow, and Web Dynamic Form plugins are disabled by default. They can be included in the webapp by activating the corresponding Maven profiles during the build: `contentscheduler`, `contentworkflow`, `webdynamicform`.
 
 ## Testing
 
@@ -67,5 +67,6 @@ The general log level is controlled by the variable `ROOT_LOG_LEVEL`, that in te
 || ENTANDO_APP_ENGINE_HEALTH_CHECK_TYPE | db.migration.strategy | [auto], skip, disabled, generate_sql | Liquibase strategy 			
 || LOG_CONFIG_FILE_PATH | | to use the logback composable feature | 			
 || ENTANDO_DOCKER_REGISTRY_OVERRIDE |  | Deprecated-for v1 bundles, to propagate to CM for plugins |
-| Feature Flags | ENTANDO_FEATURE_FLAGS | comma-separated list of tags | Enable experimental features. Example: `CACHE_PIPELINE` |
-|| ENTANDO_FF_DEEP_DEBUG | comma-separated list of tags | Enable deep debug logging for specific components. Example: `service-reload` | 
+| Feature Flags | ENTANDO_FEATURE_FLAGS | comma-separated list of tags | Enable experimental features. Example: `CACHE_PIPELINE,HEADLESS_WIDGET_CONFIG` |
+|| | | Available flags: `CACHE_PIPELINE`, `HEADLESS_WIDGET_CONFIG` |
+|| ENTANDO_FF_DEEP_DEBUG | comma-separated list of tags | Enable deep debug logging for specific components. Example: `service-reload` |
