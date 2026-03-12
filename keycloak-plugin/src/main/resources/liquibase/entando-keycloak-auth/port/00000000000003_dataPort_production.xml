@@ -1,0 +1,27 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="00000000000001_dataPort_production_v3" author="entando" context="production">
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '00000000000003_dataPort_production'</sqlCheck>
+            <!-- This changeSet contains the same logic (in XML) of the old 00000000000001_dataPort_production.sql file, that was included by changeSetPort.xml
+                 Execution of this changeSet must be skipped if tables had already been filled using that file -->
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM DATABASECHANGELOG WHERE id = '00000000000003_dataPort_production' AND filename = 'liquibase/changeSetPort.xml'</sqlCheck>
+        </preConditions>
+
+
+        <insert tableName="sysconfig">
+            <column name="version" value="production" />
+            <column name="item" value="dynamicAuthMapping" />
+            <column name="descr" value="Configuration for the on-the-fly authorizations mapping during login" />
+            <column name="config" valueClobFile="clob/production/sysconfig_kc.xml" />
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

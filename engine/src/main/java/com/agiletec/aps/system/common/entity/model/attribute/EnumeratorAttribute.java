@@ -28,6 +28,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * This class describes an "Enumerator" Attribute.
@@ -212,11 +213,13 @@ public class EnumeratorAttribute extends MonoTextAttribute implements BeanFactor
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        ConfigurableApplicationContext ctx = (ConfigurableApplicationContext) ContextLoader.getCurrentWebApplicationContext();
-        if (ctx == null) {
-            _logger.warn("Null WebApplicationContext during deserialization");
-            return;
+        WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
+        if (ctx instanceof ConfigurableApplicationContext configurableApplicationContext) {
+            this.setBeanFactory(configurableApplicationContext.getBeanFactory());
+        } else if (ctx != null) {
+            this.setBeanFactory(ctx);
+        } else {
+            _logger.warn("Null WebApplicationContext during deserialization of Attribute '{}'", this.getName());
         }
-        this.setBeanFactory(ctx.getBeanFactory());
     }
 }

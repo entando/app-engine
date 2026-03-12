@@ -20,6 +20,7 @@ import java.io.Serializable;
 
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
@@ -67,6 +68,8 @@ public class Authorization implements GrantedAuthority, Serializable {
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
         Authorization other = (Authorization) obj;
         boolean isGroupsEquals = (null == this.getGroup() && null == other.getGroup())
                 || (null != this.getGroup() && null != other.getGroup() && other.getGroup().equals(this.getGroup()));
@@ -75,4 +78,8 @@ public class Authorization implements GrantedAuthority, Serializable {
         return (isRolesEquals && isGroupsEquals);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(getGroup(), getRole());
+    }
 }

@@ -1,14 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-                http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd">
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:task="http://www.springframework.org/schema/task"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
     <context:component-scan base-package="org.entando.entando.keycloak.services"/>
 
+    <task:scheduled-tasks>
+        <!-- Refresh configuration every minute -->
+        <task:scheduled
+                ref="keycloakAuthorizationManager"
+                method="refreshConfiguration"
+                cron="${KC_CONFIG_REFRESH:0 * * * * *}" />
+
+        <!-- Disabled by default -->
+        <task:scheduled
+                ref="keycloakAuthorizationManager"
+                method="cleanSyncData"
+                cron="${KC_SYNC_CLEAN:0 0 0 31 2 *}" />
+    </task:scheduled-tasks>
+
+    <bean id="keycloakAuthorizationManager" class="org.entando.entando.keycloak.services.KeycloakAuthorizationManager"
+            parent="abstractService" >
+        <constructor-arg index="0" ref="keycloakConfiguration"/>
+        <constructor-arg index="1" ref="AuthorizationManager"/>
+        <constructor-arg index="2" ref="GroupManager"/>
+        <constructor-arg index="3" ref="RoleManager"/>
+        <constructor-arg index="4" ref="BaseConfigManager"/>
+        <property name="cleanBatchSize" value="${KC_SYNC_BATCH_SIZE:100}" />
+    </bean>
+
+
     <bean id="keycloakConfiguration"
-          class="org.entando.entando.keycloak.services.KeycloakConfiguration">
+            class="org.entando.entando.keycloak.services.KeycloakConfiguration">
         <property name="enabled" value="${keycloak.enabled:false}" />
         <property name="authUrl" value="${keycloak.auth.url:http://localhost:8081/auth}" />
         <property name="realm" value="${keycloak.realm:entando}" />
@@ -20,7 +47,7 @@
     </bean>
 
     <bean id="AuthenticationProviderManager" primary="true" parent="abstractService"
-          class="org.entando.entando.keycloak.adapter.AuthenticationProviderManagerAdapter">
+            class="org.entando.entando.keycloak.adapter.AuthenticationProviderManagerAdapter">
 
         <constructor-arg index="0" ref="UserManager" />
 
@@ -31,7 +58,7 @@
     </bean>
 
     <bean id="UserManager" primary="true" parent="abstractService"
-          class="org.entando.entando.keycloak.adapter.UserManagerAdapter">
+            class="org.entando.entando.keycloak.adapter.UserManagerAdapter">
 
         <constructor-arg index="0" ref="AuthorizationManager" />
         <constructor-arg index="1" ref="keycloakService" />
@@ -54,7 +81,7 @@
     <bean id="keycloakOauth2Interceptor" class="org.entando.entando.keycloak.interceptor.KeycloakOauth2Interceptor"/>
 
     <bean id="entandoInterceptor" primary="true"
-          class="org.entando.entando.keycloak.adapter.EntandoOauth2InterceptorAdapter">
+            class="org.entando.entando.keycloak.adapter.EntandoOauth2InterceptorAdapter">
         <property name="keycloakEnabled" value="${keycloak.enabled:false}" />
     </bean>
 

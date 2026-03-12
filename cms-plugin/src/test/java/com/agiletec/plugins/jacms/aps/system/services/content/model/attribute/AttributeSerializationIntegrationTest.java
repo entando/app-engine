@@ -44,6 +44,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeAttachAttribute() throws Exception {
         AttachAttribute attribute = new AttachAttribute();
+        attribute.setName("testAttach");
         attribute.setResourceManager(resourceManager);
         attribute = testSerializeAndDeserialize(attribute);
         Assertions.assertNotNull(attribute.getResourceManager());
@@ -54,6 +55,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeCmsHypertextAttribute() throws Exception {
         CmsHypertextAttribute attribute = new CmsHypertextAttribute();
+        attribute.setName("testCmsHypertext");
         attribute.setContentManager(contentManager);
         attribute.setPageManager(pageManager);
         attribute.setResourceManager(resourceManager);
@@ -72,6 +74,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeLinkAttributeAttribute() throws Exception {
         LinkAttribute attribute = new LinkAttribute();
+        attribute.setName("testLink");
         attribute.setContentManager(contentManager);
         attribute.setPageManager(pageManager);
         attribute.setResourceManager(resourceManager);

@@ -251,12 +251,13 @@ public class KeycloakFilter implements Filter {
                         || tokenResponse.getBody() == null || !tokenResponse.getBody().isActive()) {
                     throw new EntandoTokenException("invalid or expired token", request, "guest");
                 }
+
                 final UserDetails user = providerManager.getUser(tokenResponse.getBody().getUsername());
                 session.setAttribute(SESSION_PARAM_ACCESS_TOKEN, responseEntity.getBody().getAccessToken());
                 session.setAttribute(SESSION_PARAM_ID_TOKEN, responseEntity.getBody().getIdToken());
                 session.setAttribute(SESSION_PARAM_REFRESH_TOKEN, responseEntity.getBody().getRefreshToken());
 
-                keycloakGroupManager.processNewUser(user);
+                keycloakGroupManager.processNewUser(user, responseEntity.getBody().getAccessToken(), true);
                 saveUserOnSession(request, user);
                 log.info("Successfully authenticated user {}", user.getUsername());
             } catch (HttpClientErrorException e) {

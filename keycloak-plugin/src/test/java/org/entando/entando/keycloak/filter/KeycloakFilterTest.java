@@ -18,8 +18,6 @@ import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.jayway.jsonpath.JsonPath;
-import java.io.IOException;
-import java.io.StringWriter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -28,7 +26,8 @@ import jakarta.servlet.WriteListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.apache.commons.lang3.StringUtils;
+import java.io.IOException;
+import java.io.StringWriter;
 import org.assertj.core.api.AbstractBooleanAssert;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
@@ -160,7 +159,7 @@ class KeycloakFilterTest {
 
         verify(oidcService, times(1)).requestToken(eq(authorizationCode), eq(loginEndpoint));
         verify(oidcService, times(1)).validateToken(eq("access-token-over-here"));
-        verify(keycloakGroupManager, times(1)).processNewUser(same(userDetails));
+        verify(keycloakGroupManager, times(1)).processNewUser(same(userDetails), null, false);
 
         verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
         verify(session, times(1)).setAttribute(eq(SystemConstants.SESSIONPARAM_CURRENT_USER), same(userDetails));
@@ -169,7 +168,7 @@ class KeycloakFilterTest {
     }
 
     @Test
-    void testAuthenticationFlowWithError() throws IOException, ServletException {
+    void testAuthenticationFlowWithError() {
         final String loginEndpoint = "https://dev.entando.org/entando-app/do/login";
         final String state = "0ca97afd-f0b0-4860-820a-b7cd1414f69c";
         final String authorizationCode = "the-authorization-code-from-keycloak";

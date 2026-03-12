@@ -26,6 +26,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeTextAttribute() throws Exception {
         TextAttribute attribute = new TextAttribute();
+        attribute.setName("testAttribute");
         attribute.setLangManager(langManager);
         attribute = testSerializeAndDeserialize(attribute);
         Assertions.assertNotNull(attribute.getLangManager());
@@ -36,6 +37,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeEnumeratorAttribute() throws Exception {
         EnumeratorAttribute attribute = new EnumeratorAttribute();
+        attribute.setName("testEnumerator");
         attribute.setBeanFactory(this.getApplicationContext());
         attribute.setLangManager(langManager);
         attribute = testSerializeAndDeserialize(attribute);

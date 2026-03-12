@@ -31,6 +31,7 @@ import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
@@ -49,7 +50,7 @@ class TestAuthorizationManager extends BaseTestCase {
     private GroupManager groupManager;
 
     @BeforeEach
-    private void init() {
+    public void init() {
         this.authenticationProvider = (IAuthenticationProviderManager) this.getService(SystemConstants.AUTHENTICATION_PROVIDER_MANAGER);
         this.authorizationManager = (IAuthorizationManager) this.getService(SystemConstants.AUTHORIZATION_SERVICE);
         this.userManager = (IUserManager) this.getService(SystemConstants.USER_MANAGER);
@@ -404,6 +405,104 @@ class TestAuthorizationManager extends BaseTestCase {
             }
             extractedUser = this.userManager.getUser(username);
             assertNull(extractedUser);
+        }
+    }
+
+    @Test
+    void testExternalAuthSync() throws Throwable {
+        String username = "UserForSyncTest";
+        String password = "PasswordForSyncTest";
+        this.addUserForTest(username, password);
+        try {
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(1, authorizations.size());
+            Authorization initialAuth = authorizations.get(0);
+
+            long firstIat = 1000L;
+            List<Authorization> toAdd = new ArrayList<>();
+            toAdd.add(new Authorization(this.groupManager.getGroup(Group.FREE_GROUP_NAME), this.roleManager.getRole("admin")));
+            toAdd.add(new Authorization(this.groupManager.getGroup("coach"), null));
+
+            List<Authorization> toRemove = new ArrayList<>();
+            // toRemove è vuoto inizialmente
+
+            // Primo sync (iat = 1000)
+            this.authorizationManager.externalAuthSync(username, firstIat, toAdd, toRemove);
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Dovrebbe avere initialAuth (editor/free) + admin/free + null/coach = 3
+            assertEquals(3, authorizations.size());
+            assertTrue(authorizations.contains(initialAuth));
+            assertTrue(authorizations.contains(toAdd.get(0)));
+            assertTrue(authorizations.contains(toAdd.get(1)));
+
+            // Secondo sync con iat inferiore (iat = 500) - Non dovrebbe cambiare nulla
+            long lowerIat = 500L;
+            List<Authorization> toAdd2 = new ArrayList<>();
+            toAdd2.add(new Authorization(this.groupManager.getGroup("customers"), null));
+            this.authorizationManager.externalAuthSync(username, lowerIat, toAdd2, new ArrayList<>());
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(3, authorizations.size());
+            assertFalse(authorizations.contains(toAdd2.get(0)));
+
+            // Terzo sync con lo stesso iat (iat = 1000) - Non dovrebbe cambiare nulla
+            this.authorizationManager.externalAuthSync(username, firstIat, toAdd2, new ArrayList<>());
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(3, authorizations.size());
+
+            // Quarto sync con iat superiore (iat = 2000) - Dovrebbe aggiungere e rimuovere
+            long higherIat = 2000L;
+            List<Authorization> toRemoveFinal = new ArrayList<>();
+            toRemoveFinal.add(new Authorization(null, this.roleManager.getRole("admin"))); // rimuovo admin/free
+            toRemoveFinal.add(initialAuth); // rimuovo editor/free
+            
+            this.authorizationManager.externalAuthSync(username, higherIat, toAdd2, toRemoveFinal);
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Rimangono: null/coach (da toAdd) + null/customers (da toAdd2)
+            assertEquals(2, authorizations.size());
+            assertTrue(authorizations.contains(toAdd.get(1)));
+            assertTrue(authorizations.contains(toAdd2.get(0)));
+            assertFalse(authorizations.contains(toAdd.get(0)));
+            assertFalse(authorizations.contains(initialAuth));
+
+            // Test checkExternalAuthSync
+            // iat uguale all'ultimo (2000) -> deve ritornare true (sincronizzato)
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, higherIat));
+            // iat minore (1500) -> deve ritornare true (già sincronizzato con un iat superiore)
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, 1500L));
+            // iat maggiore (3000) -> deve ritornare false (necessita sincronizzazione)
+            assertFalse(this.authorizationManager.externalAuthSyncCheck(username, 3000L));
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
+        }
+    }
+
+    @Test
+    void testExternalAuthSyncClean() throws Throwable {
+        String username = "UserForSyncCleanTest";
+        String password = "PasswordForSyncCleanTest";
+        this.addUserForTest(username, password);
+        try {
+            long iat = 1000L;
+            this.authorizationManager.externalAuthSync(username, iat, new ArrayList<>(), new ArrayList<>());
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, iat));
+
+            // Pulizia con soglia superiore a 1000
+            Instant threshold = Instant.ofEpochSecond(2000);
+            int deleted = this.authorizationManager.externalAuthSyncClean(threshold, 100);
+            assertTrue(deleted >= 1);
+
+            // Adesso l'utente non dovrebbe più essere sincronizzato (record cancellato)
+            assertFalse(this.authorizationManager.externalAuthSyncCheck(username, iat));
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
         }
     }
 

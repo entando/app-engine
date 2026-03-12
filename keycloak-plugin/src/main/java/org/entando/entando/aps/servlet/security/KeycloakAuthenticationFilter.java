@@ -13,12 +13,12 @@ import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.util.List;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.keycloak.services.KeycloakAuthorizationManager;
@@ -110,9 +110,7 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
 
             setUserOnContext(request, user, userAuthentication);
 
-            // TODO optimise to not check on every request
-            keycloakGroupManager.processNewUser(user);
-
+            keycloakGroupManager.processNewUser(user, bearerToken, true);
             return userAuthentication;
         } catch (EntException e) {
             log.error("System exception", e);

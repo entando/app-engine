@@ -10,6 +10,7 @@ Information below is for building from source or running locally as a contributo
 ### What this plugin does
 * Enables SSO capabilities to an Entando Instance by using Keycloak.
 * Moves User Management to Keycloak.
+* Assigns on-the-fly authorizations to the logging-in users; such authorizations might come from keycloak itself or external sources   
 
 ### What this plugin does not
 This plugin doesn't come with Role and Group management, because Entando Core roles/groups model isn't compatible with Keycloak. That means that even with the same users across multiple Entando Instances, the role and group mappings have to be configured on each instance.
@@ -24,6 +25,12 @@ This plugin doesn't come with Role and Group management, because Entando Core ro
 >- `keycloak.public.client.id`: The second keycloak client, this one must be public. (The default is `entando-web`)
 >- `keycloak.secure.uris`: **[OPTIONAL]** Use if you want to secure an endpoint. Works with wildcards, comma separated.
 >- `keycloak.authenticated.user.default.authorizations`: **[OPTIONAL]** Use if you want to automatically assign `group:role` to any user that logs in, comma separated. Example: `administrators:admin,readers`
+
+## Environment variables
+>- `KC_CONFIG_REFRESH`: specifies the refresh period -in cron style!- of the dynamic configuration used to assign authorizations to the loggin-in users. The default is `0 * * * * *`
+>- `KC_SYNC_CLEAN`: Specify the periodicity of the internal synchronization table cleanup. The default is `0 0 0/4 * * *`
+>- `KC_SYNC_BATCH_SIZE`: Specify the batch size for the internal synchronization table cleanup. The default is `100`
+
 
 ## Installing
 
