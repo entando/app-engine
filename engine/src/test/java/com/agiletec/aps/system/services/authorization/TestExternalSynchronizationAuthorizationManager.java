@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.SystemConstants;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.Instant;
@@ -12,15 +13,13 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
-
-    private AuthorizationDAO authorizationDAO;
+class TestExternalSynchronizationAuthorizationManager extends BaseTestCase {
+    
+    private IAuthorizationManager authorizationManager;
 
     @BeforeEach
     void setUpMethod() throws Exception {
-        DataSource dataSource = (DataSource) getApplicationContext().getBean("servDataSource");
-        authorizationDAO = new AuthorizationDAO();
-        authorizationDAO.setDataSource(dataSource);
+        authorizationManager = (IAuthorizationManager) getApplicationContext().getBean(SystemConstants.AUTHORIZATION_SERVICE);
         this.cleanSyncTable();
     }
 
@@ -62,7 +61,7 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
 
         // Soglia a 2500 (in secondi)
         Instant threshold = Instant.ofEpochSecond(2500);
-        int deleted = authorizationDAO.externalAuthSyncClean(threshold, 100);
+        int deleted = authorizationManager.externalAuthSyncClean(threshold, 100);
 
         // Dovrebbe aver eliminato user1 (1000) e user2 (2000)
         assertEquals(2, deleted);
@@ -80,11 +79,11 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
     }
 
     @Test
-    void testExternalAuthSync_Check_NoUser() {
+    void testExternalAuthSync_Check_NoUser() throws Exception {
         String username = "testUser";
         Long iat = 1000L;
         // Se l'utente non esiste, deve restituire false
-        assertFalse(authorizationDAO.externalAuthSyncCheck(username, iat));
+        assertFalse(authorizationManager.externalAuthSyncCheck(username, iat));
     }
 
     @Test
@@ -104,7 +103,7 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
         }
 
         // Se l'IAT fornito è maggiore di quello salvato, deve restituire false
-        assertFalse(authorizationDAO.externalAuthSyncCheck(username, newIat));
+        assertFalse(authorizationManager.externalAuthSyncCheck(username, newIat));
     }
 
     @Test
@@ -123,7 +122,7 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
         }
 
         // Se l'IAT è uguale, deve restituire true (sincronizzato)
-        assertTrue(authorizationDAO.externalAuthSyncCheck(username, currentIat));
+        assertTrue(authorizationManager.externalAuthSyncCheck(username, currentIat));
     }
     
     @Test
@@ -143,7 +142,7 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
         }
 
         // Se l'IAT fornito è minore di quello salvato, deve restituire true (abbiamo già dati più recenti)
-        assertTrue(authorizationDAO.externalAuthSyncCheck(username, oldIat));
+        assertTrue(authorizationManager.externalAuthSyncCheck(username, oldIat));
     }
 
     @Test
@@ -151,7 +150,7 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
         String username = "testSync";
         Long iat = 3000L;
 
-        authorizationDAO.externalAuthSync(username, iat, null, null);
+        authorizationManager.externalAuthSync(username, iat, null, null);
 
         // Verifico che sia stato inserito
         DataSource dataSource = (DataSource) getApplicationContext().getBean("servDataSource");
@@ -173,10 +172,10 @@ class TestExternalSynchronizationAuthorizationDAO extends BaseTestCase {
         Long updatedIat = 4000L;
 
         // Inserimento iniziale
-        authorizationDAO.externalAuthSync(username, initialIat, null, null);
+        authorizationManager.externalAuthSync(username, initialIat, null, null);
 
         // Aggiornamento
-        authorizationDAO.externalAuthSync(username, updatedIat, null, null);
+        authorizationManager.externalAuthSync(username, updatedIat, null, null);
 
         // Verifico che sia stato aggiornato
         DataSource dataSource = (DataSource) getApplicationContext().getBean("servDataSource");

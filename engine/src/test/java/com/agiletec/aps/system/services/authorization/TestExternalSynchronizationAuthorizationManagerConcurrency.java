@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.agiletec.aps.BaseTestCase;
+import com.agiletec.aps.system.SystemConstants;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,17 +22,16 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TestExternalSynchronizationAuthorizationDAOConcurrency extends BaseTestCase {
+class TestExternalSynchronizationAuthorizationManagerConcurrency extends BaseTestCase {
 
-    private static final Logger logger = LoggerFactory.getLogger(TestExternalSynchronizationAuthorizationDAOConcurrency.class);
+    private static final Logger logger = LoggerFactory.getLogger(
+            TestExternalSynchronizationAuthorizationManagerConcurrency.class);
 
-    private AuthorizationDAO authorizationDAO;
+    private IAuthorizationManager authorizationManager;
 
     @BeforeEach
     void setUpMethod() throws Exception {
-        DataSource dataSource = (DataSource) getApplicationContext().getBean("servDataSource");
-        authorizationDAO = new AuthorizationDAO();
-        authorizationDAO.setDataSource(dataSource);
+        authorizationManager = (IAuthorizationManager) getApplicationContext().getBean(SystemConstants.AUTHORIZATION_SERVICE);
         this.cleanSyncTable();
     }
 
@@ -58,7 +58,7 @@ class TestExternalSynchronizationAuthorizationDAOConcurrency extends BaseTestCas
             tasks.add(() -> {
                 try {
                     // force a race condition
-                    authorizationDAO.externalAuthSync(username, iat, null, null);
+                    authorizationManager.externalAuthSync(username, iat, null, null);
                 } catch (Exception e) {
                     logger.error("Error during concurrent sync for iat {}", iat, e);
                     throw e;
@@ -109,7 +109,7 @@ class TestExternalSynchronizationAuthorizationDAOConcurrency extends BaseTestCas
 
         for (Long iat : iats) {
             tasks.add(() -> {
-                authorizationDAO.externalAuthSync(username, iat, null, null);
+                authorizationManager.externalAuthSync(username, iat, null, null);
                 return null;
             });
         }
@@ -141,7 +141,7 @@ class TestExternalSynchronizationAuthorizationDAOConcurrency extends BaseTestCas
 
         for (int i = 0; i < numThreads; i++) {
             tasks.add(() -> {
-                authorizationDAO.externalAuthSync(username, iat, null, null);
+                authorizationManager.externalAuthSync(username, iat, null, null);
                 return null;
             });
         }

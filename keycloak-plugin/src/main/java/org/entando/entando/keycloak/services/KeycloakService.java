@@ -54,7 +54,6 @@ public class KeycloakService {
     }
 
     // Handle invocations such as http://localhost:8081/auth/admin/realms/entando-development/users?briefRepresentation=true&first=0&max=20&search=testutentemariorossi%2B4375@gmail.com
-    // Handle invocations such as http://localhost:8081/auth/admin/realms/entando-development/users?briefRepresentation=true&first=0&max=20&search=testutentemariorossi%2B4375@gmail.com
     public List<UserRepresentation> listUsers(final String text) {
         final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
         final String searchString = StringUtils.isNotBlank(text) ? encodeForKeycloakSearchAPI(text) : text;

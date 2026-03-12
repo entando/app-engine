@@ -135,10 +135,10 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                             .orElse(PersistKind.FULL);
                 }
             }
-            if (profileMappings != null) {
+            if (!profileMappings.isEmpty()) {
                 profileMappings.forEach(m -> log.debug("profile mapping active: {}", m.toString()));
             }
-            if (jwtMappings != null) {
+            if (!jwtMappings.isEmpty()) {
                 jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
             // finally
