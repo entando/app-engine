@@ -14,6 +14,7 @@
 package com.agiletec.aps.system.services.authorization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -515,11 +516,11 @@ class TestAuthorizationManager extends BaseTestCase {
         try {
             // Aggiungiamo altre autorizzazioni per il test
             // 1. Già presente: free / editor (da addUserForTest)
-            // 2. Aggiungiamo: free / admin
+            // 2. Aggiungi: free / admin
             this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "admin");
-            // 3. Aggiungiamo: coach / null
+            // 3. Aggiungi: coach / null
             this.authorizationManager.addUserAuthorization(username, "coach", null);
-            // 4. Aggiungiamo: coach / supervisor
+            // 4. Aggiungi: coach / supervisor
             this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
 
             List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
@@ -551,7 +552,7 @@ class TestAuthorizationManager extends BaseTestCase {
             assertEquals(3, authorizations.size());
             for (Authorization auth : authorizations) {
                 if (auth.getRole() != null) {
-                    assertFalse(auth.getRole().getName().equals("admin"));
+                    assertNotEquals("admin", auth.getRole().getName());
                 }
             }
 

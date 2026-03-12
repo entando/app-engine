@@ -68,7 +68,7 @@ public class KeycloakService {
                     .filter(e ->  (e.getUsername() != null && e.getUsername().equals(text))
                             || (e.getEmail() != null && e.getEmail().equals(text)))
                     .findFirst();
-            return userOpt.stream().collect(Collectors.toList());
+            return userOpt.stream().toList();
         }
         return retval;
     }

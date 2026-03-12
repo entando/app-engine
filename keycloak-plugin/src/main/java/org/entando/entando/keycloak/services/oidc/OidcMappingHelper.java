@@ -153,11 +153,11 @@ public class OidcMappingHelper {
                     .map(String.class::cast)
                     .flatMap(s -> Arrays.stream(s.split("\\s+")))
                     .filter(token -> !token.isBlank())
-                    .collect(Collectors.toUnmodifiableList());
+                    .toList();
         } else if (attribute instanceof String) {
             return Arrays.stream(((String) attribute).split("\\s+"))
                     .filter(token -> !token.isBlank())
-                    .collect(Collectors.toUnmodifiableList());
+                    .toList();
         }
         return Collections.emptyList();
     }

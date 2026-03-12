@@ -282,57 +282,19 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 			if (usernameTracked == null) {
 				_logger.debug("creating entry for user {}", username);
-				try (PreparedStatement insertStmt = conn.prepareStatement(
-						CREATE_SYNC_STATUS)) {
-					insertStmt.setString(1, username);
-					insertStmt.setLong(2, iat);
-					insertStmt.executeUpdate();
-				}
-
-				// update authorizations
-				deleteAuthorities(conn, username, toRemove);
-				addAuthorities(conn, username, toAdd);
+				trackUserAndAuthorizations(username, iat, toAdd, toRemove, conn);
 
 			} else if (iat > oldIat) {
 				_logger.debug("updating entry for user {}", username);
-				// Aggiorna iat
-				try (PreparedStatement updateIat = conn.prepareStatement(
-						UPDATE_SYNC_STATUS
-				)) {
-					updateIat.setLong(1, iat);
-					updateIat.setString(2, username);
-					updateIat.setLong(3, iat);
-
-					int rows = updateIat.executeUpdate();
-					if (rows > 0) {
-						// update authorizations
-						deleteAuthorities(conn, username, toRemove);
-						addAuthorities(conn, username, toAdd);
-						_logger.debug("updated {} row with iat {} for username {}", rows, iat, username);
-					}
-				}
+				updateIatAndAuthorizations(username, iat, toAdd, toRemove, conn);
 			} else {
 				_logger.debug("no need to sync {}", username);
 			}
 			conn.commit();
 		} catch (SQLException e) {
 			// questa eccezione è aspettata in partenza!
-
-			String sqlState = e.getSQLState();
-			if (StringUtils.isNotBlank(sqlState)) {
-				// 23505: unique_violation (PostgreSQL, Derby)
-				// 23000: integrity constraint violation (MySQL, Oracle - need to check error code)
-				if ("23505".equals(sqlState)) {
-					_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
-				}
-				if ("23000".equals(sqlState)) {
-					int errorCode = e.getErrorCode();
-					// MySQL: 1062 (ER_DUP_ENTRY), 1586 (ER_DUP_ENTRY_WITH_KEY_NAME)
-					// Oracle: 1 (ORA-00001: unique constraint violated)
-					if (errorCode == 1062 || errorCode == 1586 || errorCode == 1) {
-						_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
-					}
-				}
+			if (isDuplicateKey(e)) {
+				_logger.debug("Integrity constraint violation detected, can be ignored (unless systemic!)");
 			} else {
 				throw new RuntimeException("Unexpected SQL exception", e);
 			}
@@ -342,6 +304,60 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 		} finally {
 			this.closeConnection(conn);
 		}
+	}
+
+	private void trackUserAndAuthorizations(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove,
+			Connection conn) throws SQLException {
+		try (PreparedStatement insertStmt = conn.prepareStatement(
+				CREATE_SYNC_STATUS)) {
+			insertStmt.setString(1, username);
+			insertStmt.setLong(2, iat);
+			insertStmt.executeUpdate();
+		}
+		// update authorizations
+		deleteAuthorities(conn, username, toRemove);
+		addAuthorities(conn, username, toAdd);
+	}
+
+	private void updateIatAndAuthorizations(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove,
+			Connection conn) throws SQLException {
+		// Aggiorna iat
+		try (PreparedStatement updateIat = conn.prepareStatement(
+				UPDATE_SYNC_STATUS
+		)) {
+			updateIat.setLong(1, iat);
+			updateIat.setString(2, username);
+			updateIat.setLong(3, iat);
+
+			int rows = updateIat.executeUpdate();
+			if (rows > 0) {
+				// update authorizations
+				deleteAuthorities(conn, username, toRemove);
+				addAuthorities(conn, username, toAdd);
+				_logger.debug("updated {} row with iat {} for username {}", rows, iat, username);
+			}
+		}
+	}
+
+	private boolean isDuplicateKey(SQLException e) {
+		final String sqlState = e.getSQLState();
+
+		if (StringUtils.isNotBlank(sqlState)) {
+			// 23505: unique_violation (PostgreSQL, Derby)
+			// 23000: integrity constraint violation (MySQL, Oracle - need to check error code)
+			if ("23505".equals(sqlState)) {
+				return true;
+			}
+			if ("23000".equals(sqlState)) {
+				int errorCode = e.getErrorCode();
+				// MySQL: 1062 (ER_DUP_ENTRY), 1586 (ER_DUP_ENTRY_WITH_KEY_NAME)
+				// Oracle: 1 (ORA-00001: unique constraint violated)
+				if (errorCode == 1062 || errorCode == 1586 || errorCode == 1) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private void deleteAuthorities(final Connection conn, final String username, final List<Authorization> list) {

@@ -1,7 +1,10 @@
 package org.entando.entando.keycloak.services.oidc.model;
 
 import com.agiletec.aps.system.services.user.User;
+import java.util.ArrayList;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class KeycloakUser extends User {
 
     private UserRepresentation userRepresentation;
@@ -18,6 +21,7 @@ public class KeycloakUser extends User {
     }
 
     @Override
+    @Deprecated
     public Object clone() {
         KeycloakUser cl = new KeycloakUser();
         cl.setUsername(this.getUsername());

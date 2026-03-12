@@ -93,6 +93,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
        initTenantAware();
     }
 
+    @Override
     public void initTenantAware() throws Exception {
         writeLock.lock();
 
@@ -135,23 +136,21 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                             .orElse(PersistKind.FULL);
                 }
             }
-            if (profileMappings != null) {
+            if (!profileMappings.isEmpty()) {
                 profileMappings.forEach(m -> log.debug("profile mapping active: {}", m.toString()));
             }
-            if (jwtMappings != null) {
+            if (!jwtMappings.isEmpty()) {
                 jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
             // finally
-            KeycloakImportConfig config = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
-            setImportConfiguration(config);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
+
+            setImportConfiguration(cfg);
         } catch (Exception e) {
-            // defaults
-            enabled = false;
-            roles = new ArrayList<>();
-            groups = new ArrayList<>();
             log.error("Error initializing KeycloakAuthorizationManager", e);
-            KeycloakImportConfig config = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
-            setImportConfiguration(config);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE);
+
+            setImportConfiguration(cfg);
             throw e;
         } finally {
             writeLock.unlock();
@@ -277,7 +276,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
                     return !isAlreadyAssigned((KeycloakUser) user, groupName, roleName);
                 })
-                .collect(Collectors.toList());
+                .toList();
         // list of the _managed_ authorizations currently assigned to the user
         List<Authorization> existingAuths = ofNullable(user.getAuthorizations())
                 .orElse(List.of())
@@ -285,13 +284,13 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 .filter(a -> (a.getGroup() != null && getImportConfiguration().getGroups().contains(a.getGroup().getName())
                         || (a.getRole() != null && getImportConfiguration().getRoles().contains(a.getRole().getName())))
                 )
-                .collect(Collectors.toList());
+                .toList();
         // If the existing authorization is not included in the dynamic authorizations, it must be removed
         List<Authorization> toDelete = existingAuths
                 .stream()
                 .filter(a -> dynamicAuthorizations.stream()
                         .noneMatch(d -> d.equals(a)))
-                .collect(Collectors.toList());
+                .toList();
 
         // update authorizations
         if (getImportConfiguration().getPersist() == PersistKind.FULL) {
@@ -472,7 +471,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 return result;
             }
             for (String groupRoleToken : authorizations) {
-                Authorization auth = parseAuthForRoleGroup(user, elem, groupRoleToken, separator);
+                Authorization auth = parseAuthForRoleGroup(user, groupRoleToken, separator);
                 if (auth != null) {
                     result.add(auth);
                 }
@@ -483,7 +482,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         return result;
     }
 
-    private Authorization parseAuthForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String groupRoleToken, String separator) {
+    private Authorization parseAuthForRoleGroup(KeycloakUser user, String groupRoleToken, String separator) {
         final String[] tokens = groupRoleToken.split(separator);
 
         if (tokens.length != 2
