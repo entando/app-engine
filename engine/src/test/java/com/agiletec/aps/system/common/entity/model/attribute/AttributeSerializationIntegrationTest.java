@@ -10,10 +10,12 @@ import java.io.ObjectOutputStream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.web.context.ContextLoader;
 
+@Isolated
 class AttributeSerializationIntegrationTest extends BaseTestCase {
 
     private ILangManager langManager;
