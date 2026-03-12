@@ -41,7 +41,6 @@ import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.mapping.PersistKind;
 import org.entando.entando.keycloak.services.oidc.OidcMappingHelper;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeycloakAuthorizationManager extends AbstractService implements RefreshableBeanTenantAware {
@@ -146,12 +145,9 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             KeycloakImportConfig config = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
             setImportConfiguration(config);
         } catch (Exception e) {
-            // defaults
-            enabled = false;
-            roles = new ArrayList<>();
-            groups = new ArrayList<>();
             log.error("Error initializing KeycloakAuthorizationManager", e);
-            KeycloakImportConfig config = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
+            KeycloakImportConfig config = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE);
+
             setImportConfiguration(config);
             throw e;
         } finally {
@@ -606,7 +602,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 });
     }
 
-    private @NonNull Role createTransientRole(String roleName) {
+    private Role createTransientRole(String roleName) {
         Role role = roleManager.getRole(roleName);
         if (role == null) {
             role = new Role();
