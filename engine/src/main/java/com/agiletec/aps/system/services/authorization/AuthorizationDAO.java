@@ -465,7 +465,6 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 				while (rs.next()) {
 					String username = rs.getString(1);
-					System.out.println("cancello " + username);
 
 					deleteStmt.setString(1, username);
 					deleteStmt.addBatch();

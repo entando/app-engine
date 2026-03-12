@@ -33,6 +33,7 @@ import com.agiletec.aps.system.services.user.UserDetails;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -504,6 +505,223 @@ class TestAuthorizationManager extends BaseTestCase {
                 this.userManager.removeUser(user);
             }
         }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRole() throws Throwable {
+        String username = "UserForDeleteTest";
+        String password = "PasswordForDeleteTest";
+        this.addUserForTest(username, password);
+        try {
+            // Aggiungiamo altre autorizzazioni per il test
+            // 1. Già presente: free / editor (da addUserForTest)
+            // 2. Aggiungiamo: free / admin
+            this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "admin");
+            // 3. Aggiungiamo: coach / null
+            this.authorizationManager.addUserAuthorization(username, "coach", null);
+            // 4. Aggiungiamo: coach / supervisor
+            this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(4, authorizations.size());
+
+            // CASO 1: Cancella per gruppo (coach)
+            List<String> groups = new ArrayList<>();
+            groups.add("coach");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, null);
+            
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Rimangono i 2 del gruppo free
+            assertEquals(2, authorizations.size());
+            for (Authorization auth : authorizations) {
+                assertEquals(Group.FREE_GROUP_NAME, auth.getGroup().getName());
+            }
+
+            // Ripristiniamo
+            this.authorizationManager.addUserAuthorization(username, "coach", null);
+            this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
+            assertEquals(4, this.authorizationManager.getUserAuthorizations(username).size());
+
+            // CASO 2: Cancella per ruolo (admin)
+            List<String> roles = new ArrayList<>();
+            roles.add("admin");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, null, roles);
+            
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(3, authorizations.size());
+            for (Authorization auth : authorizations) {
+                if (auth.getRole() != null) {
+                    assertFalse(auth.getRole().getName().equals("admin"));
+                }
+            }
+
+            // CASO 3: Cancella per gruppo E ruolo (coach + editor)
+            // coach / null, coach / supervisor, free / editor
+            groups = new ArrayList<>();
+            groups.add("coach");
+            roles = new ArrayList<>();
+            roles.add("editor");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, roles);
+            
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Dovrebbe aver cancellato tutto tranne free/admin (che non c'è più dal test sopra)
+            // Aspetta, ripristiniamo correttamente per non fare confusione
+            this.authorizationManager.deleteUserAuthorizations(username);
+            this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "editor");
+            this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "admin");
+            this.authorizationManager.addUserAuthorization(username, "coach", null);
+            this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
+            
+            groups = new ArrayList<>();
+            groups.add("coach");
+            roles = new ArrayList<>();
+            roles.add("editor");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, roles);
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Cancellati i 2 coach e il free/editor. Rimane solo free/admin
+            assertEquals(1, authorizations.size());
+            assertEquals(Group.FREE_GROUP_NAME, authorizations.get(0).getGroup().getName());
+            assertEquals("admin", authorizations.get(0).getRole().getName());
+
+            // CORNER CASES
+            // Username null
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(null, groups, roles);
+            // Gruppi e ruoli null/vuoti
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, null, null);
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, new ArrayList<>(), new ArrayList<>());
+            
+            assertEquals(1, this.authorizationManager.getUserAuthorizations(username).size());
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRoleDAO() throws Throwable {
+        String username = "admin";
+        List<Authorization> originalAuthorizations = this.authorizationManager.getUserAuthorizations(username);
+        try {
+            this.authorizationManager.deleteUserAuthorizations(username);
+
+            // Setup with multiple authorizations
+            Group freeGroup = this.groupManager.getGroup("free");
+            Role editorRole = this.roleManager.getRole("editor");
+            Authorization auth1 = new Authorization(freeGroup, editorRole);
+
+            Group coachGroup = this.groupManager.getGroup("coach");
+            Role pageManagerRole = this.roleManager.getRole("pageManager");
+            Authorization auth2 = new Authorization(coachGroup, pageManagerRole);
+
+            Group customersGroup = this.groupManager.getGroup("customers");
+            Role supervisorRole = this.roleManager.getRole("supervisor");
+            Authorization auth3 = new Authorization(customersGroup, supervisorRole);
+
+            this.authorizationManager.addUserAuthorizations(username, Arrays.asList(auth1, auth2, auth3));
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertTrue(containsAuth(authorizations, "free", "editor"));
+            assertTrue(containsAuth(authorizations, "coach", "pageManager"));
+            assertTrue(containsAuth(authorizations, "customers", "supervisor"));
+
+            //Test deleteUserAuthorizationByGroupAndRole with specific groups and roles
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(
+                    username,
+                    Arrays.asList("free", "coach"),
+                    Arrays.asList("editor")
+            );
+
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertFalse(containsAuth(authorizations, "free", "editor"));
+            assertFalse(containsAuth(authorizations, "coach", "pageManager"));
+            assertTrue(containsAuth(authorizations, "customers", "supervisor"));
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            if (null != originalAuthorizations && !originalAuthorizations.isEmpty()) {
+                this.authorizationManager.addUserAuthorizations(username, originalAuthorizations);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRoleWithOnlyGroupsDAO() throws Throwable {
+        String username = "admin";
+        List<Authorization> originalAuthorizations = this.authorizationManager.getUserAuthorizations(username);
+        try {
+            this.authorizationManager.deleteUserAuthorizations(username);
+
+            // Setup
+            Group freeGroup = this.groupManager.getGroup("free");
+            Role editorRole = this.roleManager.getRole("editor");
+            Authorization auth1 = new Authorization(freeGroup, editorRole);
+
+            Group coachGroup = this.groupManager.getGroup("coach");
+            Role pageManagerRole = this.roleManager.getRole("pageManager");
+            Authorization auth2 = new Authorization(coachGroup, pageManagerRole);
+
+            this.authorizationManager.addUserAuthorizations(username, Arrays.asList(auth1, auth2));
+
+            // Delete it by groups only
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(
+                    username,
+                    Arrays.asList("free"),
+                    null
+            );
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertFalse(containsAuth(authorizations, "free", "editor"));
+            assertTrue(containsAuth(authorizations, "coach", "pageManager"));
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            if (null != originalAuthorizations && !originalAuthorizations.isEmpty()) {
+                this.authorizationManager.addUserAuthorizations(username, originalAuthorizations);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRoleWithOnlyRolesDAO() throws Throwable {
+        String username = "admin";
+        List<Authorization> originalAuthorizations = this.authorizationManager.getUserAuthorizations(username);
+        try {
+            this.authorizationManager.deleteUserAuthorizations(username);
+
+            // Setup
+            Group freeGroup = this.groupManager.getGroup("free");
+            Role editorRole = this.roleManager.getRole("editor");
+            Authorization auth1 = new Authorization(freeGroup, editorRole);
+
+            Group coachGroup = this.groupManager.getGroup("coach");
+            Role pageManagerRole = this.roleManager.getRole("pageManager");
+            Authorization auth2 = new Authorization(coachGroup, pageManagerRole);
+
+            this.authorizationManager.addUserAuthorizations(username, Arrays.asList(auth1, auth2));
+
+            // Delete it by roles only
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(
+                    username,
+                    null,
+                    Arrays.asList("editor")
+            );
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertFalse(containsAuth(authorizations, "free", "editor"));
+            assertTrue(containsAuth(authorizations, "coach", "pageManager"));
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            if (null != originalAuthorizations && !originalAuthorizations.isEmpty()) {
+                this.authorizationManager.addUserAuthorizations(username, originalAuthorizations);
+            }
+        }
+    }
+
+    private boolean containsAuth(List<Authorization> authorizations, String group, String role) {
+        return authorizations.stream()
+                .anyMatch(a -> a.getGroup() != null && a.getGroup().getName().equals(group)
+                            && a.getRole() != null && a.getRole().getName().equals(role));
     }
 
     private void addUserForTest(String username, String password) throws Throwable {

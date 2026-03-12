@@ -72,6 +72,104 @@ class KeycloakServiceTest {
     }
 
     @Test
+    void shouldReturnEmptyListWithBlankText() throws Exception {
+        mockAuthenticateAPI();
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost/auth/admin/realms/my-realm/users").build().toUri();
+        Mockito.when(restTemplate.exchange(eq(uri), eq(HttpMethod.GET), any(), eq(UserRepresentation[].class)))
+                .thenReturn(
+                        ResponseEntity.ok(null)
+                );
+
+        List<UserRepresentation> users = keycloakService.listUsers("");
+        Assertions.assertTrue(users.isEmpty());
+    }
+
+    @Test
+    void shouldListUsersExactSearch() throws Exception {
+        mockAuthenticateAPI();
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost/auth/admin/realms/my-realm/users?username=testuser").build().toUri();
+        
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername("testuser");
+        
+        Mockito.when(restTemplate.exchange(eq(uri), eq(HttpMethod.GET), any(), eq(UserRepresentation[].class)))
+                .thenReturn(ResponseEntity.ok(new UserRepresentation[]{user}));
+
+        List<UserRepresentation> users = keycloakService.listUsers("testuser");
+        Assertions.assertEquals(1, users.size());
+        Assertions.assertEquals("testuser", users.get(0).getUsername());
+    }
+
+    @Test
+    void shouldListUsersExactSearchFilteringMultipleResults() throws Exception {
+        mockAuthenticateAPI();
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost/auth/admin/realms/my-realm/users?username=testuser").build().toUri();
+
+        UserRepresentation user1 = new UserRepresentation();
+        user1.setUsername("testuser");
+        user1.setEmail("testuser@example.com");
+
+        UserRepresentation user2 = new UserRepresentation();
+        user2.setUsername("testuser-other");
+        user2.setEmail("other@example.com");
+
+        Mockito.when(restTemplate.exchange(eq(uri), eq(HttpMethod.GET), any(), eq(UserRepresentation[].class)))
+                .thenReturn(ResponseEntity.ok(new UserRepresentation[]{user1, user2}));
+
+        List<UserRepresentation> users = keycloakService.listUsers("testuser");
+        Assertions.assertEquals(1, users.size());
+        Assertions.assertEquals("testuser", users.get(0).getUsername());
+    }
+
+    @Test
+    void shouldListUsersWithSpecialCharacters() throws Exception {
+        mockAuthenticateAPI();
+        // test+user -> test%2Buser (as per encodeForKeycloakSearchAPI)
+        // isExact will be false because searchString ("test%2Buser") != text ("test+user")
+        
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername("test+user");
+
+        Mockito.when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(UserRepresentation[].class)))
+                .thenAnswer(invocation -> {
+                    URI uri = invocation.getArgument(0);
+                    String urlString = uri.toString();
+                    Assertions.assertTrue(urlString.contains("search=test%2Buser"));
+                    Assertions.assertTrue(urlString.contains("briefRepresentation=true"));
+                    return ResponseEntity.ok(new UserRepresentation[]{user});
+                });
+
+        List<UserRepresentation> users = keycloakService.listUsers("test+user");
+        Assertions.assertEquals(1, users.size());
+        Assertions.assertEquals("test+user", users.get(0).getUsername());
+    }
+
+    @Test
+    void shouldListUsersExactSearchFilteringMultipleResultsByEmail() throws Exception {
+        mockAuthenticateAPI();
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost/auth/admin/realms/my-realm/users?username=testuser@example.com").build().toUri();
+
+        UserRepresentation user1 = new UserRepresentation();
+        user1.setUsername("testuser-id");
+        user1.setEmail("testuser@example.com");
+
+        UserRepresentation user2 = new UserRepresentation();
+        user2.setUsername("other");
+        user2.setEmail("other@example.com");
+
+        Mockito.when(restTemplate.exchange(eq(uri), eq(HttpMethod.GET), any(), eq(UserRepresentation[].class)))
+                .thenReturn(ResponseEntity.ok(new UserRepresentation[]{user1, user2}));
+
+        List<UserRepresentation> users = keycloakService.listUsers("testuser@example.com");
+        Assertions.assertEquals(1, users.size());
+        Assertions.assertEquals("testuser@example.com", users.get(0).getEmail());
+    }
+
+    @Test
     void shouldThrowException() throws Exception {
         Mockito.when(openIDConnectService.authenticateAPI())
                 .thenThrow(new OidcException(new Exception("test-message")));
