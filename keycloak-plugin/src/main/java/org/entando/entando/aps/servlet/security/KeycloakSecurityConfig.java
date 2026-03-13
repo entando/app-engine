@@ -72,8 +72,8 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
                     }
                 }
 
-                authorize.requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
-                        .anyRequest().permitAll();
+                authorize.anyRequest().permitAll();
+
             });
 
             http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
@@ -101,7 +101,6 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui.html")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/webjars/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         .anyRequest().permitAll();
             });
 
