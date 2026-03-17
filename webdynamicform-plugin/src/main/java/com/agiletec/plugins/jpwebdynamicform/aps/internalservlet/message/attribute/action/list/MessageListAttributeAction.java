@@ -27,6 +27,7 @@ import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.apsadmin.system.entity.IEntityActionHelper;
+import com.agiletec.apsadmin.system.entity.attribute.action.list.ListAttributeAction;
 import com.agiletec.plugins.jpwebdynamicform.aps.system.services.JpwebdynamicformSystemConstants;
 import com.agiletec.plugins.jpwebdynamicform.aps.system.services.message.model.Message;
 import com.agiletec.plugins.jpwebdynamicform.apsadmin.message.common.INewMessageAction;
@@ -36,7 +37,7 @@ import com.agiletec.plugins.jpwebdynamicform.apsadmin.message.common.INewMessage
  * This is an implementation for Message entities.
  * @author E.Santoboni, E.Mezzano
  */
-public class ListAttributeAction extends com.agiletec.apsadmin.system.entity.attribute.action.list.ListAttributeAction {
+public class MessageListAttributeAction extends ListAttributeAction {
 
 	@Override
 	protected IApsEntity getCurrentApsEntity() {
@@ -69,7 +70,7 @@ public class ListAttributeAction extends com.agiletec.apsadmin.system.entity.att
 				ApsProperties config = showlet.getConfig();
 				if (null!=config) {
 					String showletTypeCode = config.getProperty(JpwebdynamicformSystemConstants.TYPECODE_SHOWLET_PARAM);
-					if (showletTypeCode!=null && showletTypeCode.trim().length()>0) {
+					if (showletTypeCode!=null && !showletTypeCode.isBlank()) {
 						typeCode = showletTypeCode.trim();
 					}
 				}

@@ -57,7 +57,6 @@ public class JAXBMessage extends JAXBEntity {
     @Override
     public IApsEntity buildEntity(IApsEntity prototype, String langCode) {
         Message message = (Message) super.buildEntity(prototype, langCode);
-        //this.setCreationDate(message.getCreationDate());
         message.setLangCode(this.getLangCode());
         message.setUsername(this.getUsername());
         return message;

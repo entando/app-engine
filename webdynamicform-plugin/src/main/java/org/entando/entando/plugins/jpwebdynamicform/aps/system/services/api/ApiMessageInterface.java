@@ -69,7 +69,7 @@ public class ApiMessageInterface {
             usernames = this.getMessageManager().searchId(userMessageType, filters);
         } catch (ApiException ae) {
             throw ae;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error loading messages", t);
             throw new EntException("Error searching usernames", t);
         }
@@ -92,7 +92,7 @@ public class ApiMessageInterface {
             }
         } catch (ApiException ae) {
             throw ae;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error loading Jaxb message", t);
             throw new EntException("Error extracting Message", t);
         }
@@ -124,7 +124,7 @@ public class ApiMessageInterface {
         } catch (ApiException ae) {
             response.addErrors(ae.getErrors());
             response.setResult(IResponseBuilder.FAILURE, null);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error adding Jaxb message", t);
             throw new EntException("Error adding Message", t);
         }
@@ -148,7 +148,7 @@ public class ApiMessageInterface {
                     }
                 }
             }
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error validating message", t);
             throw new EntException("Error validating profile", t);
         }
@@ -169,7 +169,7 @@ public class ApiMessageInterface {
         } catch (ApiException ae) {
             response.addErrors(ae.getErrors());
             response.setResult(IResponseBuilder.FAILURE, null);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error removing message", t);
             throw new EntException("Error deleting Message", t);
         }

@@ -66,7 +66,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			this.loadNotifierConfig();
 			this.checkConfig();
 			logger.debug("{} : inizializated {} entity types", this.getName(), super.getEntityTypes().size());
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("{} Manager: Error on initialization", this.getClass().getName(), t);
 		}
 	}
@@ -96,7 +96,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			}
 			MessageNotifierConfigDOM configDOM = new MessageNotifierConfigDOM();
 			this.setNotifierConfigMap(configDOM.extractConfig(xml));
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error initializing the configuration", t);
 			throw new EntException("Error initializing the configuration", t);
 		}
@@ -122,7 +122,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 					break;
 				}
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error on updateFromEntityTypesChanging method", t);
 		}
 	}
@@ -149,7 +149,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			String xml = configDOM.createConfigXml(configMap);
 			ConfigInterface configManager = this.getConfigManager();
 			configManager.updateConfigItem(JpwebdynamicformSystemConstants.MESSAGE_NOTIFIER_CONFIG_ITEM, xml);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error updating notifier configuration", t);
 			this.loadNotifierConfig();
 			throw new EntException("Error updating notifier configuration");
@@ -178,7 +178,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			String xml = configDOM.createConfigXml(configMap);
 			ConfigInterface configManager = this.getConfigManager();
 			configManager.updateConfigItem(JpwebdynamicformSystemConstants.MESSAGE_NOTIFIER_CONFIG_ITEM, xml);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error updating notifier configuration", t);
 			this.loadNotifierConfig();
 			throw new EntException("Error updating notifier configuration");
@@ -245,7 +245,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 		List<String> contentsId = null;
 		try {
 			contentsId = this.getEntitySearcherDao().searchId(filters);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading message ids", t);
 			throw new EntException("Error loading message ids", t);
 		}
@@ -257,7 +257,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 		List<String> contentsId = null;
 		try {
 			contentsId = ((IMessageSearcherDAO) this.getEntitySearcherDao()).searchId(filters, answered);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading message ids", t);
 			throw new EntException("Error loading message ids", t);
 		}
@@ -274,7 +274,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 				message.setUsername(messageRecord.getUsername());
 				message.setCreationDate(messageRecord.getCreationDate());
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading message", t);
 			throw new EntException("Error loading message", t);
 		}
@@ -291,7 +291,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 				message.setId(id);
 				this.getMessageDAO().addEntity(message);
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error adding message", t);
 			throw new EntException("Error adding message", t);
 		}
@@ -302,7 +302,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 		try {
 			this.sendMessageNotification(message);
 			this.addMessage(message);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error sending message", t);
 			throw new EntException("Error sending message", t);
 		}
@@ -312,7 +312,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 	public void deleteMessage(String messageId) throws EntException {
 		try {
 			this.getMessageDAO().deleteEntity(messageId);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error deleting message", t);
 			throw new EntException("Error deleting message", t);
 		}
@@ -326,7 +326,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			this.getMessageDAO().addAnswer(answer);
 			boolean sent = this.sendAnswerNotification(answer);
 			return sent;
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error sending message answer", t);
 			throw new EntException("Error sending message answer", t);
 		}
@@ -336,7 +336,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 	public List<Answer> getAnswers(String messageId) throws EntException {
 		try {
 			return this.getMessageDAO().loadAnswers(messageId);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading message answer", t);
 			throw new EntException("Error loading message answer", t);
 		}
@@ -362,7 +362,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			} else {
 				logger.warn("Message notification not sent! Message lacking in notifier configuration.");
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error sending notification to message {}", message.getId(), t);
 			throw new EntException("Error sending notification to message " + message.getId(), t);
 		}
@@ -399,7 +399,7 @@ public class MessageManager extends ApsEntityManager implements IMessageManager,
 			} else {
 				logger.warn("Answer not sent! Message lacking in notifier configuration.");
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error sending notification for answer {}", answer.getAnswerId(), t);
 			// Do not launch any exception
 //			throw new EntException("Error sending notification for answer " + answer.getAnswerId(), t);

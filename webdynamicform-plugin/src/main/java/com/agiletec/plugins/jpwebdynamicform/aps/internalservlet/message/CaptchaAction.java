@@ -52,13 +52,13 @@ public class CaptchaAction extends UserNewMessageAction {
             message.setLangCode(this.getCurrentLang().getCode());
             try {
                 this.getMessageManager().sendMessage(message);
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 logger.error("Error saving message after captcha confirm", t);
                 this.addActionError(this.getText("Errors.webdynamicform.sendingError"));
                 return INPUT;
             }
             this.setMessageOnSession(null);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error saving message after captcha confirm", t);
             return FAILURE;
         }

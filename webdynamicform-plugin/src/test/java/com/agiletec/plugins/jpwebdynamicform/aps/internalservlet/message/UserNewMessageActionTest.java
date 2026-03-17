@@ -49,7 +49,7 @@ public class UserNewMessageActionTest extends ApsAdminPluginBaseTestCase {
     }
 
     @Override
-    protected void destroy() throws Exception {
+    protected void destroy() {
         super.destroy();
         this.activeMailManager(true);
     }

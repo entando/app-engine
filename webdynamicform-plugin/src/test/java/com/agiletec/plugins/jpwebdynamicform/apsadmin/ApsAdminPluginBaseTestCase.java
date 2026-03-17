@@ -56,7 +56,7 @@ public class ApsAdminPluginBaseTestCase extends ApsAdminBaseTestCase {
     }
 
 	@AfterEach
-	protected void destroy() throws Exception {
+	protected void destroy() {
 		this._helper.cleanMessages();
 	}
 

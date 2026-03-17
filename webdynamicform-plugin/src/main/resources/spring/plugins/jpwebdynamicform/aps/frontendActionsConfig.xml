@@ -30,7 +30,7 @@
 	</bean>
 
 	<bean id="jpwebdynamicformListAttributeAction" scope="prototype"
-			class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.attribute.action.list.ListAttributeAction"
+			class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.attribute.action.list.MessageListAttributeAction"
 			parent="abstractBaseAction" >
 		<property name="entityActionHelper" ref="entityActionHelper"/>
 	</bean>

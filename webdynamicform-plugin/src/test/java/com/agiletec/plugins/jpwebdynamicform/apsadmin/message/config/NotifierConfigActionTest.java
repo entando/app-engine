@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 
 	@Test
-	public void testList() throws Throwable {
+	void testList() throws Throwable {
 		String result = this.executeList("admin");
 		assertEquals(Action.SUCCESS, result);
 		List<SmallMessageType> messageTypes = ((INotifierConfigAction) this.getAction()).getMessageTypes();
@@ -49,7 +49,7 @@ public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 	}
 
 	@Test
-	public void testEdit() throws Throwable {
+	void testEdit() throws Throwable {
 		String result = this.executeEdit("admin", "PER");
 		assertEquals(Action.SUCCESS, result);
 		NotifierConfigAction action = (NotifierConfigAction) this.getAction();
@@ -80,7 +80,7 @@ public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 	}
 
 	@Test
-	public void testAddRemoveAddressFailure() throws Throwable {
+	void testAddRemoveAddressFailure() throws Throwable {
 		String[] recipientsTo = new String[] { "address1@dominioinesistente.it", "address2@dominioinesistente.it" };
 
 		String result = this.executeAddAddress("admin", "PER", recipientsTo, null, null, INotifierConfigAction.RECIPIENT_TO, "address");
@@ -111,7 +111,7 @@ public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 	}
 
 	@Test
-	public void testAddAddress() throws Throwable {
+	void testAddAddress() throws Throwable {
 		String result = this.executeAddAddress("admin", "PER", new String[] { "a1@aaa.it", "a2@aaa.it" },
 				null, null, INotifierConfigAction.RECIPIENT_TO, "a3@aaa.it");
 		assertEquals(Action.SUCCESS, result);
@@ -129,7 +129,7 @@ public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 	}
 
 	@Test
-	public void testRemoveAddress() throws Throwable {
+	void testRemoveAddress() throws Throwable {
 		String result = this.executeRemoveAddress("admin", "PER", new String[] { "a1@aaa.it", "a2@aaa.it" },
 				null, null, INotifierConfigAction.RECIPIENT_TO, "a3@aaa.it");
 		assertEquals(Action.SUCCESS, result);
@@ -152,7 +152,7 @@ public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 	}
 
 	@Test
-	public void testSaveFailure() throws Throwable {
+	void testSaveFailure() throws Throwable {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("typeCode", "PER");
 		params.put("mailAttrName", "AttributoInesistente");
@@ -196,7 +196,7 @@ public class NotifierConfigActionTest extends ApsAdminPluginBaseTestCase {
 	}
 
 	@Test
-	public void testSave() throws Throwable {
+	void testSave() throws Throwable {
 		ConfigInterface configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
 		String originaryConfig = configManager.getConfigItem(JpwebdynamicformSystemConstants.MESSAGE_NOTIFIER_CONFIG_ITEM);
 		MessageTypeNotifierConfig orginaryComConfig = this._messageManager.getNotifierConfig("COM");

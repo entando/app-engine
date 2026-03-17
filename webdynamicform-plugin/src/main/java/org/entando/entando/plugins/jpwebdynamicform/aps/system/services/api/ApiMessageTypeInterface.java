@@ -59,7 +59,7 @@ public class ApiMessageTypeInterface {
             jaxbMessageType = new JAXBMessageType(masterMessageType);
         } catch (ApiException ae) {
             throw ae;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error loading Jaxb message types", t);
             throw new EntException("Error extracting message type", t);
         }
@@ -86,7 +86,7 @@ public class ApiMessageTypeInterface {
         } catch (ApiException ae) {
             response.addErrors(ae.getErrors());
             response.setResult(IResponseBuilder.FAILURE, null);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error adding Jaxb message type", t);
             throw new EntException("Error adding message type", t);
         }
@@ -109,7 +109,7 @@ public class ApiMessageTypeInterface {
         } catch (ApiException ae) {
             response.addErrors(ae.getErrors());
             response.setResult(IResponseBuilder.FAILURE, null);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error updating Jaxb message type", t);
             throw new EntException("Error updating Message type", t);
         }
@@ -133,7 +133,7 @@ public class ApiMessageTypeInterface {
             ((IEntityTypesConfigurer) this.getMessageManager()).removeEntityPrototype(typeCode);
         } catch (ApiException ae) {
             throw ae;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error("Error removing Jaxb message type", t);
             throw new EntException("Error deleting message type", t);
         }

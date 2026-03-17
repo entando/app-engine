@@ -46,7 +46,7 @@ public class OperatorMessageActionTest extends ApsAdminPluginBaseTestCase {
     }
 
 	@Override
-	protected void destroy() throws Exception {
+	protected void destroy() {
 		super.destroy();
 		this.activeMailManager(true);
 	}

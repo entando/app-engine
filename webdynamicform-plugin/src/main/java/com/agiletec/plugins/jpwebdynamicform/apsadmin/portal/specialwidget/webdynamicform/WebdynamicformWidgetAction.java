@@ -52,7 +52,7 @@ public class WebdynamicformWidgetAction extends SimpleWidgetConfigAction {
 					}
 				}
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error during WebDynamicForm widget configuration", t);
 		}
 	}
@@ -68,7 +68,7 @@ public class WebdynamicformWidgetAction extends SimpleWidgetConfigAction {
 				String protectionType = config.getProperty(JpwebdynamicformSystemConstants.FORM_PROTECTION_TYPE_WIDGET_PARAM);
 				this.setFormProtectionType(protectionType);
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error initializing WebDynamicForm widget configuration", t);
 			return FAILURE;
 		}
@@ -78,7 +78,7 @@ public class WebdynamicformWidgetAction extends SimpleWidgetConfigAction {
 	public List<SmallMessageType> getMessageTypes() {
 		try {
 			return this.getMessageManager().getSmallMessageTypes();
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading message types", t);
 			throw new RuntimeException("Error searching message types", t);
 		}

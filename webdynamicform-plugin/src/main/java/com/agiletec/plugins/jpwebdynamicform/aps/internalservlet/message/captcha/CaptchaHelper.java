@@ -114,12 +114,12 @@ public class CaptchaHelper implements ICaptchaHelper {
 
 			// Optional: Log errors if verification fails
 			if (!success && jsonResponse.has("error-codes")) {
-				logger.error("reCAPTCHA errors: " + jsonResponse.get("error-codes"));
+				logger.error("reCAPTCHA errors: {}", jsonResponse.get("error-codes"));
 			}
 
 			return success;
 		} catch (Exception e) {
-			logger.error("reCAPTCHA errors: " + e.getMessage());
+			logger.error("exception on reCAPTCHA: {}",  e.getMessage());
 			return false;
 		}
 	}
@@ -137,7 +137,7 @@ public class CaptchaHelper implements ICaptchaHelper {
 		con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
 		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 
-		// add client result as post parameter
+		// add a client result as a post-parameter
 		String postParams = "secret=" + this.getSecretKey() + "&response=" + clientRecaptchaResponse;
 
 		// send post request to google recaptcha server
@@ -149,8 +149,8 @@ public class CaptchaHelper implements ICaptchaHelper {
 
 		int responseCode = con.getResponseCode();
 
-		logger.trace("Post parameters: " + postParams); // XXX
-		logger.trace("Response Code: " + responseCode);
+		logger.trace("Post parameters: {}", postParams); // XXX
+		logger.trace("Response Code: {}", responseCode);
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 		String inputLine;

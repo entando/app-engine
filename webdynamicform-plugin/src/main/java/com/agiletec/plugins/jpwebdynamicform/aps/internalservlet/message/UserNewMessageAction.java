@@ -35,6 +35,7 @@ import com.agiletec.plugins.jpwebdynamicform.aps.system.services.Jpwebdynamicfor
 import com.agiletec.plugins.jpwebdynamicform.aps.system.services.message.IMessageManager;
 import com.agiletec.plugins.jpwebdynamicform.aps.system.services.message.model.Message;
 import com.agiletec.plugins.jpwebdynamicform.apsadmin.message.common.INewMessageAction;
+import io.micrometer.common.util.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging;
@@ -215,7 +216,8 @@ public class UserNewMessageAction extends AbstractApsEntityAction implements INe
 				honeypotFieldName = this.getHoneypotParamName();
 				honeypotValue = this.getRequest().getParameter(honeypotFieldName);
 			}
-			if (!this.getHoneypotEnabled() || (null == honeypotValue || honeypotValue.length() == 0)) {
+			if ((honeypotValue == null || honeypotValue.isEmpty())
+					|| Boolean.FALSE.equals(this.getHoneypotEnabled())) {
 				String username = this.getCurrentUser().getUsername();
 				message.setUsername(username);
 				message.setCreationDate(new Date());

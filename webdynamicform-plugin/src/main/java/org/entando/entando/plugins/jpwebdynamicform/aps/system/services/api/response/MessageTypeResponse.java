@@ -31,7 +31,8 @@ import org.entando.entando.aps.system.services.api.model.AbstractApiResponse;
  */
 @XmlRootElement(name = "response")
 public class MessageTypeResponse extends AbstractApiResponse {
-    
+
+    @Override
     @XmlElement(name = "result", required = true)
     public MessageTypeResponseResult getResult() {
         return (MessageTypeResponseResult) super.getResult();

@@ -68,7 +68,7 @@ public class OperatorMessageAction extends AbstractMessageAction implements IOpe
 			if (result.equals(SUCCESS) && !this.checkEmailAddress()) {
 				result = INPUT;
 			}
-		} catch(Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading new answer", t);
 			return FAILURE;
 		}
@@ -91,7 +91,7 @@ public class OperatorMessageAction extends AbstractMessageAction implements IOpe
 				this.addActionError(this.getText("Errors.answer.sendingError"));
 				return INPUT;
 			}
-		} catch(Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error saving new answer", t);
 			return FAILURE;
 		}
@@ -106,7 +106,7 @@ public class OperatorMessageAction extends AbstractMessageAction implements IOpe
 				this.addActionError(this.getText("Message.message.notFound"));
 				return "messageNotFound";
 			}
-		} catch(Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error starting answer removal", t);
 			return FAILURE;
 		}
@@ -122,7 +122,7 @@ public class OperatorMessageAction extends AbstractMessageAction implements IOpe
 				return "messageNotFound";
 			}
 			this.getMessageManager().deleteMessage(message.getId());
-		} catch(Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error doing answer removal", t);
 			return FAILURE;
 		}

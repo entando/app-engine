@@ -41,7 +41,7 @@ public class MessageTypesAction extends BaseAction {
 		try {
 			types = this.getMessageManager().getSmallMessageTypes();
 			this.checkTypeLables(types);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error loading message types", t);
 			throw new RuntimeException("Error searching message types", t);
 		}
@@ -66,7 +66,7 @@ public class MessageTypesAction extends BaseAction {
 					this.addLabelGroups(labelSubTitleKey, smallMessageType.getDescr());
 				}
 			}
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error checking type labels", t);
 			throw new RuntimeException("Error checking label types", t);
 		}
@@ -78,7 +78,7 @@ public class MessageTypesAction extends BaseAction {
 			Lang defaultLang = super.getLangManager().getDefaultLang();
 			properties.put(defaultLang.getCode(), defaultValue);
 			this.getI18nManager().addLabelGroup(key, properties);
-		} catch (Throwable t) {
+		} catch (Exception t) {
 			logger.error("Error adding label groups", t);
 			throw new RuntimeException("Error adding label groups - key '" + key + "'", t);
 		}

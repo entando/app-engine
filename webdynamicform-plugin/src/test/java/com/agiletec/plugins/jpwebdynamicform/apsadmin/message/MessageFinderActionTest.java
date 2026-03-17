@@ -153,8 +153,7 @@ public class MessageFinderActionTest extends ApsAdminPluginBaseTestCase {
 		this.setUserOnSession(username);
 		this.initAction("/do/jpwebdynamicform/Message/Operator", "list");
 		this.addParameter("entityTypeCode", typeCode);
-		String result = this.executeAction();
-		return result;
+        return this.executeAction();
 	}
 
 	private String executeSearch(String username, Map<String, String> params) throws Throwable {

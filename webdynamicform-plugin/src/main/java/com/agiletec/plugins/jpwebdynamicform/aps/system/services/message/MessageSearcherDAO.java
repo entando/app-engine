@@ -83,8 +83,8 @@ public class MessageSearcherDAO extends AbstractEntitySearcherDAO implements IMe
 			stat = conn.prepareStatement(query);
 			int index = 0;
 			index = this.addAttributeFilterStatementBlock(filters, index, stat);
-			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
-		} catch (Throwable t) {
+            this.addMetadataFieldFilterStatementBlock(filters, index, stat);
+        } catch (Throwable t) {
 			processDaoException(t, "Errore in fase di creazione statement", "buildStatement");
 		}
 		return stat;
