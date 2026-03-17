@@ -87,7 +87,6 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
         }
 
         final String bearerToken = authorization.substring("Bearer ".length());
-
         final ResponseEntity<AccessToken> resp = oidcService.validateToken(bearerToken);
         final AccessToken accessToken = resp.getBody();
 
@@ -111,9 +110,7 @@ public class KeycloakAuthenticationFilter extends AbstractAuthenticationProcessi
 
             setUserOnContext(request, user, userAuthentication);
 
-            // TODO optimise to not check on every request
             keycloakGroupManager.processNewUser(user, bearerToken, true);
-
             return userAuthentication;
         } catch (EntException e) {
             log.error("System exception", e);

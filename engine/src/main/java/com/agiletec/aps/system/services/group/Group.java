@@ -54,6 +54,7 @@ public class Group extends AbstractAuthority implements Serializable {
 	
 	@Override
 	public boolean equals(Object obj) {
+		if (obj == this) return true;
 		if (null != obj && (obj instanceof Group)) {
 			return this.getName().equals(((Group) obj).getName());
 		} else {

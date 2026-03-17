@@ -14,10 +14,10 @@
 package com.agiletec.aps.system.services.authorization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.SystemConstants;
@@ -30,8 +30,9 @@ import com.agiletec.aps.system.services.user.IAuthenticationProviderManager;
 import com.agiletec.aps.system.services.user.IUserManager;
 import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
-
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,7 @@ class TestAuthorizationManager extends BaseTestCase {
     private GroupManager groupManager;
 
     @BeforeEach
-    private void init() {
+    public void init() {
         this.authenticationProvider = (IAuthenticationProviderManager) this.getService(SystemConstants.AUTHENTICATION_PROVIDER_MANAGER);
         this.authorizationManager = (IAuthorizationManager) this.getService(SystemConstants.AUTHORIZATION_SERVICE);
         this.userManager = (IUserManager) this.getService(SystemConstants.USER_MANAGER);
@@ -405,6 +406,321 @@ class TestAuthorizationManager extends BaseTestCase {
             extractedUser = this.userManager.getUser(username);
             assertNull(extractedUser);
         }
+    }
+
+    @Test
+    void testExternalAuthSync() throws Throwable {
+        String username = "UserForSyncTest";
+        String password = "PasswordForSyncTest";
+        this.addUserForTest(username, password);
+        try {
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(1, authorizations.size());
+            Authorization initialAuth = authorizations.get(0);
+
+            long firstIat = 1000L;
+            List<Authorization> toAdd = new ArrayList<>();
+            toAdd.add(new Authorization(this.groupManager.getGroup(Group.FREE_GROUP_NAME), this.roleManager.getRole("admin")));
+            toAdd.add(new Authorization(this.groupManager.getGroup("coach"), null));
+
+            List<Authorization> toRemove = new ArrayList<>();
+            // toRemove è vuoto inizialmente
+
+            // Primo sync (iat = 1000)
+            this.authorizationManager.externalAuthSync(username, firstIat, toAdd, toRemove);
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Dovrebbe avere initialAuth (editor/free) + admin/free + null/coach = 3
+            assertEquals(3, authorizations.size());
+            assertTrue(authorizations.contains(initialAuth));
+            assertTrue(authorizations.contains(toAdd.get(0)));
+            assertTrue(authorizations.contains(toAdd.get(1)));
+
+            // Secondo sync con iat inferiore (iat = 500) - Non dovrebbe cambiare nulla
+            long lowerIat = 500L;
+            List<Authorization> toAdd2 = new ArrayList<>();
+            toAdd2.add(new Authorization(this.groupManager.getGroup("customers"), null));
+            this.authorizationManager.externalAuthSync(username, lowerIat, toAdd2, new ArrayList<>());
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(3, authorizations.size());
+            assertFalse(authorizations.contains(toAdd2.get(0)));
+
+            // Terzo sync con lo stesso iat (iat = 1000) - Non dovrebbe cambiare nulla
+            this.authorizationManager.externalAuthSync(username, firstIat, toAdd2, new ArrayList<>());
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(3, authorizations.size());
+
+            // Quarto sync con iat superiore (iat = 2000) - Dovrebbe aggiungere e rimuovere
+            long higherIat = 2000L;
+            List<Authorization> toRemoveFinal = new ArrayList<>();
+            toRemoveFinal.add(new Authorization(null, this.roleManager.getRole("admin"))); // rimuovo admin/free
+            toRemoveFinal.add(initialAuth); // rimuovo editor/free
+            
+            this.authorizationManager.externalAuthSync(username, higherIat, toAdd2, toRemoveFinal);
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Rimangono: null/coach (da toAdd) + null/customers (da toAdd2)
+            assertEquals(2, authorizations.size());
+            assertTrue(authorizations.contains(toAdd.get(1)));
+            assertTrue(authorizations.contains(toAdd2.get(0)));
+            assertFalse(authorizations.contains(toAdd.get(0)));
+            assertFalse(authorizations.contains(initialAuth));
+
+            // Test checkExternalAuthSync
+            // iat uguale all'ultimo (2000) -> deve ritornare true (sincronizzato)
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, higherIat));
+            // iat minore (1500) -> deve ritornare true (già sincronizzato con un iat superiore)
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, 1500L));
+            // iat maggiore (3000) -> deve ritornare false (necessita sincronizzazione)
+            assertFalse(this.authorizationManager.externalAuthSyncCheck(username, 3000L));
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
+        }
+    }
+
+    @Test
+    void testExternalAuthSyncClean() throws Throwable {
+        String username = "UserForSyncCleanTest";
+        String password = "PasswordForSyncCleanTest";
+        this.addUserForTest(username, password);
+        try {
+            long iat = 1000L;
+            this.authorizationManager.externalAuthSync(username, iat, new ArrayList<>(), new ArrayList<>());
+            assertTrue(this.authorizationManager.externalAuthSyncCheck(username, iat));
+
+            // Pulizia con soglia superiore a 1000
+            Instant threshold = Instant.ofEpochSecond(2000);
+            int deleted = this.authorizationManager.externalAuthSyncClean(threshold, 100);
+            assertTrue(deleted >= 1);
+
+            // Adesso l'utente non dovrebbe più essere sincronizzato (record cancellato)
+            assertFalse(this.authorizationManager.externalAuthSyncCheck(username, iat));
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRole() throws Throwable {
+        String username = "UserForDeleteTest";
+        String password = "PasswordForDeleteTest";
+        this.addUserForTest(username, password);
+        try {
+            // Aggiungiamo altre autorizzazioni per il test
+            // 1. Già presente: free / editor (da addUserForTest)
+            // 2. Aggiungiamo: free / admin
+            this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "admin");
+            // 3. Aggiungiamo: coach / null
+            this.authorizationManager.addUserAuthorization(username, "coach", null);
+            // 4. Aggiungiamo: coach / supervisor
+            this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(4, authorizations.size());
+
+            // CASO 1: Cancella per gruppo (coach)
+            List<String> groups = new ArrayList<>();
+            groups.add("coach");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, null);
+            
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Rimangono i 2 del gruppo free
+            assertEquals(2, authorizations.size());
+            for (Authorization auth : authorizations) {
+                assertEquals(Group.FREE_GROUP_NAME, auth.getGroup().getName());
+            }
+
+            // Ripristiniamo
+            this.authorizationManager.addUserAuthorization(username, "coach", null);
+            this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
+            assertEquals(4, this.authorizationManager.getUserAuthorizations(username).size());
+
+            // CASO 2: Cancella per ruolo (admin)
+            List<String> roles = new ArrayList<>();
+            roles.add("admin");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, null, roles);
+            
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertEquals(3, authorizations.size());
+            for (Authorization auth : authorizations) {
+                if (auth.getRole() != null) {
+                    assertFalse(auth.getRole().getName().equals("admin"));
+                }
+            }
+
+            // CASO 3: Cancella per gruppo E ruolo (coach + editor)
+            // coach / null, coach / supervisor, free / editor
+            groups = new ArrayList<>();
+            groups.add("coach");
+            roles = new ArrayList<>();
+            roles.add("editor");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, roles);
+            
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Dovrebbe aver cancellato tutto tranne free/admin (che non c'è più dal test sopra)
+            // Aspetta, ripristiniamo correttamente per non fare confusione
+            this.authorizationManager.deleteUserAuthorizations(username);
+            this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "editor");
+            this.authorizationManager.addUserAuthorization(username, Group.FREE_GROUP_NAME, "admin");
+            this.authorizationManager.addUserAuthorization(username, "coach", null);
+            this.authorizationManager.addUserAuthorization(username, "coach", "supervisor");
+            
+            groups = new ArrayList<>();
+            groups.add("coach");
+            roles = new ArrayList<>();
+            roles.add("editor");
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, groups, roles);
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            // Cancellati i 2 coach e il free/editor. Rimane solo free/admin
+            assertEquals(1, authorizations.size());
+            assertEquals(Group.FREE_GROUP_NAME, authorizations.get(0).getGroup().getName());
+            assertEquals("admin", authorizations.get(0).getRole().getName());
+
+            // CORNER CASES
+            // Username null
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(null, groups, roles);
+            // Gruppi e ruoli null/vuoti
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, null, null);
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(username, new ArrayList<>(), new ArrayList<>());
+            
+            assertEquals(1, this.authorizationManager.getUserAuthorizations(username).size());
+
+        } finally {
+            UserDetails user = this.userManager.getUser(username);
+            if (null != user) {
+                this.userManager.removeUser(user);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRoleDAO() throws Throwable {
+        String username = "admin";
+        List<Authorization> originalAuthorizations = this.authorizationManager.getUserAuthorizations(username);
+        try {
+            this.authorizationManager.deleteUserAuthorizations(username);
+
+            // Setup with multiple authorizations
+            Group freeGroup = this.groupManager.getGroup("free");
+            Role editorRole = this.roleManager.getRole("editor");
+            Authorization auth1 = new Authorization(freeGroup, editorRole);
+
+            Group coachGroup = this.groupManager.getGroup("coach");
+            Role pageManagerRole = this.roleManager.getRole("pageManager");
+            Authorization auth2 = new Authorization(coachGroup, pageManagerRole);
+
+            Group customersGroup = this.groupManager.getGroup("customers");
+            Role supervisorRole = this.roleManager.getRole("supervisor");
+            Authorization auth3 = new Authorization(customersGroup, supervisorRole);
+
+            this.authorizationManager.addUserAuthorizations(username, Arrays.asList(auth1, auth2, auth3));
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertTrue(containsAuth(authorizations, "free", "editor"));
+            assertTrue(containsAuth(authorizations, "coach", "pageManager"));
+            assertTrue(containsAuth(authorizations, "customers", "supervisor"));
+
+            //Test deleteUserAuthorizationByGroupAndRole with specific groups and roles
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(
+                    username,
+                    Arrays.asList("free", "coach"),
+                    Arrays.asList("editor")
+            );
+
+            authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertFalse(containsAuth(authorizations, "free", "editor"));
+            assertFalse(containsAuth(authorizations, "coach", "pageManager"));
+            assertTrue(containsAuth(authorizations, "customers", "supervisor"));
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            if (null != originalAuthorizations && !originalAuthorizations.isEmpty()) {
+                this.authorizationManager.addUserAuthorizations(username, originalAuthorizations);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRoleWithOnlyGroupsDAO() throws Throwable {
+        String username = "admin";
+        List<Authorization> originalAuthorizations = this.authorizationManager.getUserAuthorizations(username);
+        try {
+            this.authorizationManager.deleteUserAuthorizations(username);
+
+            // Setup
+            Group freeGroup = this.groupManager.getGroup("free");
+            Role editorRole = this.roleManager.getRole("editor");
+            Authorization auth1 = new Authorization(freeGroup, editorRole);
+
+            Group coachGroup = this.groupManager.getGroup("coach");
+            Role pageManagerRole = this.roleManager.getRole("pageManager");
+            Authorization auth2 = new Authorization(coachGroup, pageManagerRole);
+
+            this.authorizationManager.addUserAuthorizations(username, Arrays.asList(auth1, auth2));
+
+            // Delete it by groups only
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(
+                    username,
+                    Arrays.asList("free"),
+                    null
+            );
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertFalse(containsAuth(authorizations, "free", "editor"));
+            assertTrue(containsAuth(authorizations, "coach", "pageManager"));
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            if (null != originalAuthorizations && !originalAuthorizations.isEmpty()) {
+                this.authorizationManager.addUserAuthorizations(username, originalAuthorizations);
+            }
+        }
+    }
+
+    @Test
+    void testDeleteUserAuthorizationByGroupAndRoleWithOnlyRolesDAO() throws Throwable {
+        String username = "admin";
+        List<Authorization> originalAuthorizations = this.authorizationManager.getUserAuthorizations(username);
+        try {
+            this.authorizationManager.deleteUserAuthorizations(username);
+
+            // Setup
+            Group freeGroup = this.groupManager.getGroup("free");
+            Role editorRole = this.roleManager.getRole("editor");
+            Authorization auth1 = new Authorization(freeGroup, editorRole);
+
+            Group coachGroup = this.groupManager.getGroup("coach");
+            Role pageManagerRole = this.roleManager.getRole("pageManager");
+            Authorization auth2 = new Authorization(coachGroup, pageManagerRole);
+
+            this.authorizationManager.addUserAuthorizations(username, Arrays.asList(auth1, auth2));
+
+            // Delete it by roles only
+            this.authorizationManager.deleteUserAuthorizationByGroupAndRole(
+                    username,
+                    null,
+                    Arrays.asList("editor")
+            );
+
+            List<Authorization> authorizations = this.authorizationManager.getUserAuthorizations(username);
+            assertFalse(containsAuth(authorizations, "free", "editor"));
+            assertTrue(containsAuth(authorizations, "coach", "pageManager"));
+        } finally {
+            this.authorizationManager.deleteUserAuthorizations(username);
+            if (null != originalAuthorizations && !originalAuthorizations.isEmpty()) {
+                this.authorizationManager.addUserAuthorizations(username, originalAuthorizations);
+            }
+        }
+    }
+
+    private boolean containsAuth(List<Authorization> authorizations, String group, String role) {
+        return authorizations.stream()
+                .anyMatch(a -> a.getGroup() != null && a.getGroup().getName().equals(group)
+                            && a.getRole() != null && a.getRole().getName().equals(role));
     }
 
     private void addUserForTest(String username, String password) throws Throwable {

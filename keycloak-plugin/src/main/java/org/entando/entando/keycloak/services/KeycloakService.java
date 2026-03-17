@@ -58,29 +58,15 @@ public class KeycloakService {
         final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
         final String searchString = StringUtils.isNotBlank(text) ? encodeForKeycloakSearchAPI(text) : text;
         final boolean isExact = StringUtils.isBlank(text) || (StringUtils.isNotBlank(text) && searchString.equals(text));
-        final Map<String, String> params = new HashMap<>();
+        final Map<String, String> params = this.buildParams(searchString, isExact);
 
-        if (StringUtils.isNotBlank(text)) {
-            params.put("username", searchString);
-        }
-
-        List<UserRepresentation> retval;
         final String token = this.extractToken();
-
-        if (!isExact && !params.isEmpty()) {
-            params.put("briefRepresentation", "true");
-            params.put("search", searchString);
-            // reference for paged request:
-            // params.put("first", "0");
-            // params.put("max", "20");
-            params.remove("username");
-        }
         final ResponseEntity<UserRepresentation[]> response = this.executeEscapedRequest(token, url,
                 HttpMethod.GET, createEntity(token, null), UserRepresentation[].class, params, 0);
-        retval = Optional.ofNullable(response.getBody())
+        List<UserRepresentation> retval = Optional.ofNullable(response.getBody())
                 .map(Arrays::asList)
                 .orElse(Collections.emptyList());
-        if (retval.size() > 1) {
+        if (StringUtils.isNotBlank(text) && isExact && retval.size() > 1) {
             // must match the exact element by USERNAME
             Optional<UserRepresentation> userOpt = retval.stream()
                     .filter(e ->  (e.getUsername() != null && e.getUsername().equals(text))
@@ -89,6 +75,23 @@ public class KeycloakService {
             return userOpt.stream().collect(Collectors.toList());
         }
         return retval;
+    }
+
+    private Map<String, String> buildParams(final String text, boolean isExact) {
+        final Map<String, String> params = new HashMap<>();
+        if (StringUtils.isNotBlank(text)) {
+            if (isExact) {
+                params.put("username", text);
+            } else {
+                params.put("briefRepresentation", "true");
+                params.put("search", text);
+                // reference for paged request:
+                // params.put("first", "0");
+                // params.put("max", "20");
+//                params.remove("username");
+            }
+        }
+        return params;
     }
 
     private String encodeForKeycloakSearchAPI(String text) {

@@ -13,6 +13,7 @@
  */
 package com.agiletec.aps.system.services.authorization;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,7 +66,7 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
         if (null == user || null == groupName || null == permissionName) {
             return false;
         }
-        List<Role> roles = new ArrayList<Role>();
+        List<Role> roles = new ArrayList<>();
         List<Role> rolesWithPermission = this.getRoleManager().getRolesWithPermission(permissionName);
         if (null != rolesWithPermission) {
             roles.addAll(rolesWithPermission);
@@ -634,6 +635,51 @@ public class AuthorizationManager extends AbstractService implements IAuthorizat
             } catch (Throwable t) {
                 _logger.error("Error deleting user authorizations. user: {}", username, t);
             }
+        }
+    }
+
+    @Override
+    public void deleteUserAuthorizationByGroupAndRole(String username, List<String> groups, List<String> roles) throws EntException {
+        try {
+            if ((roles == null || roles.isEmpty()) && (groups == null || groups.isEmpty())) {
+                _logger.warn("Invalid parameters: roles and groups cannot both be null or empty");
+                return;
+            }
+            this.getAuthorizationDAO().deleteUserAuthorizationByGroupAndRole(username, groups, roles);
+        } catch (Exception t) {
+            _logger.error("Error deleting user authorization by group and role for user '{}'", username, t);
+            throw new EntException("Error deleting user authorization by group and role for user " + username, t);
+        }
+    }
+
+    @Override
+    public void externalAuthSync(String username, Long iat, List<Authorization> toAdd, List<Authorization> toRemove)
+            throws EntException {
+        try {
+            this.getAuthorizationDAO().externalAuthSync(username, iat, toAdd, toRemove);
+        } catch (Exception t) {
+            _logger.error("Error syncing external authorization for user '{}'", username, t);
+            throw new EntException("Error syncing external authorization for user " + username, t);
+        }
+    }
+
+    @Override
+    public boolean externalAuthSyncCheck(final String username, final Long iat) throws EntException {
+        try {
+            return this.getAuthorizationDAO().externalAuthSyncCheck(username, iat);
+        } catch (Exception t) {
+            _logger.error("Error checking synchronization status for user '{}'", username, t);
+            throw new EntException("Error checking synchronization status  for user " + username, t);
+        }
+    }
+
+    @Override
+    public int externalAuthSyncClean(final Instant threshold, final int batchSize) throws EntException {
+        try {
+            return this.getAuthorizationDAO().externalAuthSyncClean(threshold, batchSize);
+        } catch (Exception t) {
+            _logger.error("Error cleaning synchronization table", t);
+            throw new EntException("Error cleaning synchronization table", t);
         }
     }
 
