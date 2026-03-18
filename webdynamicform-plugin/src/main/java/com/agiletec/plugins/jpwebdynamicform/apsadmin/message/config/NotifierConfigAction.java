@@ -521,6 +521,6 @@ public class NotifierConfigAction extends BaseAction implements INotifierConfigA
 	private IMessageManager _messageManager;
 	private IMailManager mailManager;
 	
-	private static final String MAIL_REGEX = "(.*<.+@.+\\.[a-z]+>)|(.+@.+\\.[a-z]+)";
+	private static final String MAIL_REGEX = "^[^@\\s]+@[^@\\s]+\\.[a-z]+$";
 	
 }
