@@ -23,6 +23,8 @@ package com.agiletec.plugins.jpwebdynamicform.aps.system.services.message.parse;
 
 import com.agiletec.plugins.jpwebdynamicform.aps.system.services.message.model.MessageModel;
 import com.agiletec.plugins.jpwebdynamicform.aps.system.services.message.model.MessageTypeNotifierConfig;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging;
 import org.jdom2.CDATA;
@@ -35,6 +37,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.xml.sax.SAXException;
 
 public class MessageNotifierConfigDOM {
 
@@ -199,9 +202,16 @@ public class MessageNotifierConfigDOM {
 	 */
 	protected Element getRootElement(String xmlText) throws EntException {
 		SAXBuilder builder = new SAXBuilder();
+
+		// Disabilita DTD e entità esterne
+		builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		builder.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		builder.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		Element root = null;
+
 		try {
 			Document doc = builder.build(reader);
 			root = doc.getRootElement();
