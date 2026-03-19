@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletRequestWrapper;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -64,9 +65,29 @@ public class CaptchaHelper implements ICaptchaHelper {
 		if ("v2".equalsIgnoreCase(protocol)) {
 			return this.verifyRecaptchaV2(request);
 		} else {
-			String clientRecaptchaResponse = request.getParameter(CaptchaHelper.CLIENT_CAPTCHA_TOKEN_PARAM_NAME);
+			// Read recaptchaToken from the unwrapped request to bypass XSS filter
+			// (XSSRequestWrapper's ESAPI validation has a 2000-char limit that
+			// truncates/mangles reCAPTCHA v3 tokens)
+			String clientRecaptchaResponse = getRawParameter(request, CLIENT_CAPTCHA_TOKEN_PARAM_NAME);
 			return verifyRecaptchaV3(clientRecaptchaResponse);
 		}
+	}
+
+	/**
+	 * Gets a parameter value from the original unwrapped request,
+	 * bypassing any servlet request wrapper filtering.
+	 */
+	private String getRawParameter(ServletRequest request, String paramName) {
+		ServletRequest current = request;
+		while (current instanceof ServletRequestWrapper) {
+			current = ((ServletRequestWrapper) current).getRequest();
+		}
+		String value = current.getParameter(paramName);
+		if (value != null && !value.matches("[A-Za-z0-9_\\-]+")) {
+			logger.warn("Invalid recaptcha token format");
+			return null;
+		}
+		return value;
 	}
 
 	@Override

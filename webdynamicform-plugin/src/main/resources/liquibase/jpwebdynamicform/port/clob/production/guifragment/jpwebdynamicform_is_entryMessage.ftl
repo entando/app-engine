@@ -37,7 +37,7 @@
     </p>
     <@s.if test="honeypotEnabled">
         <p class="noscreen">
-            <@wp.i18n key="jpwebdynamicform_${honeypotParamName}" /><br />
+            <@wp.i18n key="jpwebdynamicform_${honeypotParamName!''}" /><br />
             <@wpsf.textfield name="%{honeypotParamName}" id="" maxlength=254 />
         </p>
     </@s.if>

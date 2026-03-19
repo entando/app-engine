@@ -59,6 +59,7 @@ public class ActionURLTag extends TagSupport implements IParameterParentTag {
 			IPage currPage = (IPage) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_PAGE);
 			Integer currentFrame = (Integer) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_FRAME);
 			pageUrl.setPage(currPage);
+			pageUrl.setEscapeAmp(false);
 			pageUrl.addParam(InternalServletTag.REQUEST_PARAM_ACTIONPATH, this.getPath());
 			pageUrl.addParam(InternalServletTag.REQUEST_PARAM_FRAMEDEST, currentFrame.toString());
 			if (null != this.getParameters()) {
