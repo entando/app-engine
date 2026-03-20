@@ -35,6 +35,7 @@
 			<interceptor name="entandoActionLogger" class="org.entando.entando.apsadmin.system.ActionLoggerInterceptor" />	
 			<interceptor name="entandoToken" class="org.entando.entando.apsadmin.system.CustomTokenInterceptor" />	
 			<interceptor name="redirectMessage" class="org.entando.entando.apsadmin.system.RedirectMessageInterceptor" />
+			<interceptor name="headlessLayout" class="org.entando.entando.apsadmin.system.HeadlessLayoutInterceptor" />
 			
 			<interceptor-stack name="entandoFreeStack">
 				<interceptor-ref name="tenant"/>
@@ -65,12 +66,14 @@
 			<interceptor-stack name="entandoDefaultStack">
 				<interceptor-ref name="backofficeRequestAuth"/>
 				<interceptor-ref name="requestAuth"/>
+				<interceptor-ref name="headlessLayout"/>
 				<interceptor-ref name="entandoFreeStack"/>
 			</interceptor-stack>
-			
+
 			<interceptor-stack name="entandoValidationStack">
 				<interceptor-ref name="backofficeRequestAuth"/>
 				<interceptor-ref name="requestAuth"/>
+				<interceptor-ref name="headlessLayout"/>
 				<interceptor-ref name="entandoFreeValidationStack" />
 			</interceptor-stack>
 			

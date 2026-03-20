@@ -1,0 +1,5 @@
+<config>
+    <parameter name="typeCode">Code of the Message Type</parameter>
+    <parameter name="formProtectionType">Protection type of the form</parameter>
+    <action name="webdynamicformConfig"/>
+</config>

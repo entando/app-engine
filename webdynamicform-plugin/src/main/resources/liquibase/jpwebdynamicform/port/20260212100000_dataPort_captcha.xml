@@ -1,0 +1,27 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="20260212100000_jpwebdynamicform_dataPort_captcha" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM GUIFRAGMENT
+                WHERE code = 'jpwebdynamicform_is_captchaInclude'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynamicform_is_captchaInclude"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynamicform_is_captchaInclude.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

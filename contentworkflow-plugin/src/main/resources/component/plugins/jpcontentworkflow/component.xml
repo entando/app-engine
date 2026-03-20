@@ -11,6 +11,14 @@
 		<code>jacms</code>
 		<code>jpmail</code>
 	</dependencies>
+	<properties>
+		<property key="appBuilderMenu.hook" value="cms" />
+		<menuItem id="menu-workflow"
+				  labelId="cms.menu.workflow"
+				  defaultLabel="Workflow"
+				  href="do/jpcontentworkflow/Workflow/list.action"
+				  requiredPermission="editContents|validateContents" />
+	</properties>
 	<installation>
         <tableMapping>
             <datasource name="servDataSource">

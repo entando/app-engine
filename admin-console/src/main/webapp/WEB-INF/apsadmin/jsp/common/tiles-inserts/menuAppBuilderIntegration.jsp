@@ -167,6 +167,28 @@
         </div>
     </li>
 
+    <wpsa:hookPoint key="core.menu.legacyplugins.appbuilder" objectName="hookPointElements_core_menu_legacyplugins">
+        <s:if test="#hookPointElements_core_menu_legacyplugins.size > 0">
+            <li class="list-group-item secondary-nav-item-pf" data-target="#legacy-plugins-secondary">
+                <a>
+                    <span class="fa fa-puzzle-piece" data-toggle="tooltip" title="<s:text name="menu.legacyPlugins" />"></span>
+                    <span class="list-group-item-value"><s:text name="menu.legacyPlugins" /></span>
+                </a>
+                <div id="legacy-plugins-secondary" class="nav-pf-secondary-nav">
+                    <div class="nav-item-pf-header">
+                        <a class="secondary-collapse-toggle-pf" data-toggle="collapse-secondary-nav"></a>
+                        <span><s:text name="menu.legacyPlugins" /></span>
+                    </div>
+                    <ul class="list-group">
+                        <s:iterator value="#hookPointElements_core_menu_legacyplugins" var="hookPointElement">
+                            <wpsa:include value="%{#hookPointElement.filePath}"></wpsa:include>
+                        </s:iterator>
+                    </ul>
+                </div>
+            </li>
+        </s:if>
+    </wpsa:hookPoint>
+
     <wp:ifauthorized permission="viewUsers" var="isViewUsers" />
     <wp:ifauthorized permission="editUsers" var="isEditUsers" />
     <wp:ifauthorized permission="editUserProfile" var="isEditProfiles" />

@@ -1,0 +1,34 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_config_test" author="entando" context="test">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM SYSCONFIG
+                WHERE item = 'jpwebdynamicform_messageTypes'
+                and version = 'test'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="sysconfig">
+            <column name="version" value="test"/>
+            <column name="item" value="jpwebdynamicform_messageTypes"/>
+            <column name="descr" value="Definizione dei Tipi di Messaggio"/>
+            <column name="config" valueClobFile="clob/test/jpwebdynamicform_messageTypes.xml" />
+        </insert>
+
+        <insert tableName="sysconfig">
+            <column name="version" value="test"/>
+            <column name="item" value="jpwebdynamicform_messageNotifierConfig"/>
+            <column name="descr" value="Configurazione del servizio di notifica Messaggi"/>
+            <column name="config" valueClobFile="clob/test/jpwebdynamicform_messageNotifierConfig.xml" />
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

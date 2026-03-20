@@ -1,0 +1,120 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="00000000000001_jpwebdynamicform_schemaServ" author="entando">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="jpwebdynamicform_messages"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="jpwebdynamicform_messages">
+            <column name="messageid" type="varchar(16)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="varchar(40)"/>
+            <column name="langcode" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="messagetype" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creationdate" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="messagexml" type="clob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="jpwebdynamicform_messages" indexName="jpwebdynamicform_messages_messagetype_idx">
+            <column name="messagetype"/>
+        </createIndex>
+
+        <createTable tableName="jpwebdynamicform_search">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="messageid" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attrname" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="textvalue" type="varchar(255)"/>
+            <column name="datevalue" type="datetime"/>
+            <column name="numvalue" type="int"/>
+            <column name="langcode" type="varchar(3)"/>
+        </createTable>
+        <createIndex tableName="jpwebdynamicform_search" indexName="jpwebdynamicform_search_messageid_idx">
+            <column name="messageid"/>
+        </createIndex>
+        <createIndex tableName="jpwebdynamicform_search" indexName="jpwebdynamicform_search_attrname_idx">
+            <column name="attrname"/>
+        </createIndex>
+        <addForeignKeyConstraint constraintName="jpwebdynamicform_search_fkey"
+                                 baseTableName="jpwebdynamicform_search"
+                                 baseColumnNames="messageid"
+                                 referencedTableName="jpwebdynamicform_messages"
+                                 referencedColumnNames="messageid"
+        />
+
+        <createTable tableName="jpwebdynamicform_attroles">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="messageid" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attrname" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rolename" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="jpwebdynamicform_attroles" indexName="jpwebdynamicform_attroles_messageid_idx">
+            <column name="messageid"/>
+        </createIndex>
+        <createIndex tableName="jpwebdynamicform_attroles" indexName="jpwebdynamicform_attroles_attrname_idx">
+            <column name="attrname"/>
+        </createIndex>
+        <createIndex tableName="jpwebdynamicform_attroles" indexName="jpwebdynamicform_attroles_rolename_idx">
+            <column name="rolename"/>
+        </createIndex>
+        <addForeignKeyConstraint constraintName="jpwebdynamicform_attroles_fkey"
+                                 baseTableName="jpwebdynamicform_attroles"
+                                 baseColumnNames="messageid"
+                                 referencedTableName="jpwebdynamicform_messages"
+                                 referencedColumnNames="messageid"
+        />
+
+        <createTable tableName="jpwebdynamicform_answers">
+            <column name="answerid" type="varchar(16)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="messageid" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="operator" type="varchar(40)"/>
+            <column name="senddate" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="text" type="clob">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="jpwebdynamicform_answers_fkey"
+                                 baseTableName="jpwebdynamicform_answers"
+                                 baseColumnNames="messageid"
+                                 referencedTableName="jpwebdynamicform_messages"
+                                 referencedColumnNames="messageid"
+        />
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="jpwebdynamicformCaptchaHelper"
+		  class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.captcha.CaptchaHelper">
+		<property name="configManager" ref="BaseConfigManager"/>
+	</bean>
+
+	<bean id="jpwebdynamicformMessageActionHelper" parent="entityActionHelper"
+		  class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.helper.MessageActionHelper">
+		<property name="i18nManager" ref="I18nManager"/>
+	</bean>
+
+	<bean id="jpwebdynamicformMessageTypesAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.MessageTypesAction"
+			parent="abstractBaseAction" >
+		<property name="messageManager" ref="jpwebdynamicformMessageManager" />
+		<property name="i18nManager" ref="I18nManager" />
+	</bean>
+
+	<bean id="jpwebdynamicformUserNewMessageAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.UserNewMessageAction"
+			parent="abstractEntityAction" >
+		<property name="messageManager" ref="jpwebdynamicformMessageManager" />
+		<property name="i18nManager" ref="I18nManager" />
+		<property name="captchaHelper" ref="jpwebdynamicformCaptchaHelper"/>
+		<property name="entityActionHelper" ref="jpwebdynamicformMessageActionHelper"/>
+	</bean>
+
+	<bean id="jpwebdynamicformListAttributeAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.attribute.action.list.MessageListAttributeAction"
+			parent="abstractBaseAction" >
+		<property name="entityActionHelper" ref="entityActionHelper"/>
+	</bean>
+
+	<bean id="jpwebdynamicformCaptchaAction" scope="prototype"
+			class="com.agiletec.plugins.jpwebdynamicform.aps.internalservlet.message.CaptchaAction"
+			parent="jpwebdynamicformUserNewMessageAction" >
+		<property name="entityActionHelper" ref="jpwebdynamicformMessageActionHelper"/>
+	</bean>
+
+</beans>

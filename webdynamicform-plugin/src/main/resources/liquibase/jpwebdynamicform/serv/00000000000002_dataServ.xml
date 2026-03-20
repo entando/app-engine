@@ -1,0 +1,24 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="00000000000002_jpwebdynamicform_dataServ" author="entando">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM AUTHPERMISSIONS
+                WHERE permissionname = 'jpwebdynamicform_manageForms'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="authpermissions">
+            <column name="permissionname" value="jpwebdynamicform_manageForms"/>
+            <column name="descr" value="Manage Web Dynamic Forms"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -55,6 +55,9 @@
         <keycloak.client.secret>b4b34472-9926-4753-9db8-a50f152df3da</keycloak.client.secret>
         <keycloak.public.client.id>entando-web</keycloak.public.client.id>
 
+        <!-- Iframe Configuration -->
+        <iframe.disabled>false</iframe.disabled>
+
         <!-- CORS Configuration -->
         <cors.enabled>true</cors.enabled>
         <cors.access.control.allow.origin>http://localhost:${appbuilder.port}</cors.access.control.allow.origin>
@@ -351,6 +354,12 @@
             </properties>
         </profile>
         <profile>
+            <id>app-builder-dev</id>
+            <properties>
+                <iframe.disabled>true</iframe.disabled>
+            </properties>
+        </profile>
+        <profile>
             <id>contentscheduler</id>
             <dependencies>
                 <dependency>
@@ -409,6 +418,40 @@
                                     <resources>
                                         <resource>
                                             <directory>${basedir}/../contentworkflow-plugin/src/main/webapp</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>webdynamicform</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.entando.entando.plugins</groupId>
+                    <artifactId>entando-plugin-jpwebdynamicform</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-webdynamicform-resources</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target/${project.build.finalName}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/../webdynamicform-plugin/src/main/webapp</directory>
                                         </resource>
                                     </resources>
                                 </configuration>
@@ -1034,6 +1077,7 @@
                         <servdb.username>${servdb.username}</servdb.username>
                         <servdb.password>${servdb.password}</servdb.password>
                         <keycloak.enabled>${keycloak.enabled}</keycloak.enabled>
+                        <iframe.disabled>${iframe.disabled}</iframe.disabled>
                         <keycloak.realm>${keycloak.realm}</keycloak.realm>
                         <keycloak.auth.url>${keycloak.auth.url}</keycloak.auth.url>
                         <keycloak.client.id>${keycloak.client.id}</keycloak.client.id>

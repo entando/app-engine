@@ -39,6 +39,8 @@ public class Component {
 
     private Map<String, String> liquibaseChangeSets;
 
+    private Map<String, Object> properties;
+
     public Component(Element rootElement, Map<String, String> postProcessClasses) throws Throwable {
         try {
             code = rootElement.getChildText("code");
@@ -82,6 +84,38 @@ public class Component {
                         this.getLiquibaseChangeSets().put(dataSource, changeSet);
                     }
 
+                }
+            }
+            Element propertiesElement = rootElement.getChild("properties");
+            if (null != propertiesElement) {
+                properties = new HashMap<>();
+                List<Element> propertyElements = propertiesElement.getChildren("property");
+                for (int i = 0; i < propertyElements.size(); i++) {
+                    Element propertyElement = propertyElements.get(i);
+                    String key = propertyElement.getAttributeValue("key");
+                    String value = propertyElement.getAttributeValue("value");
+                    properties.put(key, value);
+                }
+                List<Element> menuItemElements = propertiesElement.getChildren("menuItem");
+                if (!menuItemElements.isEmpty()) {
+                    List<Map<String, String>> items = new ArrayList<>();
+                    for (int i = 0; i < menuItemElements.size(); i++) {
+                        Element menuItemElement = menuItemElements.get(i);
+                        Map<String, String> item = new HashMap<>();
+                        item.put("id", menuItemElement.getAttributeValue("id"));
+                        item.put("defaultLabel", menuItemElement.getAttributeValue("defaultLabel"));
+                        String labelId = menuItemElement.getAttributeValue("labelId");
+                        if (null != labelId) {
+                            item.put("labelId", labelId);
+                        }
+                        item.put("href", menuItemElement.getAttributeValue("href"));
+                        String requiredPermission = menuItemElement.getAttributeValue("requiredPermission");
+                        if (null != requiredPermission) {
+                            item.put("requiredPermission", requiredPermission);
+                        }
+                        items.add(item);
+                    }
+                    properties.put("appBuilderMenu.items", items);
                 }
             }
         } catch (Throwable t) {
@@ -194,6 +228,14 @@ public class Component {
     }
     protected void setLiquibaseChangeSets(Map<String, String> liquibaseChangeSets) {
         this.liquibaseChangeSets = liquibaseChangeSets;
+    }
+
+    public Map<String, Object> getProperties() {
+        return properties;
+    }
+
+    protected void setProperties(Map<String, Object> properties) {
+        this.properties = properties;
     }
 
 }

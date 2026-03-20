@@ -4,6 +4,12 @@
 <%@ taglib prefix="tiles" uri="http://tiles.apache.org/tags-tiles" %>
 <%@ taglib prefix="wp" uri="/aps-core" %>
 <%@ taglib prefix="wpsa" uri="/apsadmin-core" %>
+<%
+    if (Boolean.TRUE.equals(request.getAttribute("entandoHeadlessMode"))) {
+%><jsp:include page="headless.jsp" /><%
+        return;
+    }
+%>
 <!DOCTYPE html>
 <!--[if IE 9]><html lang="en-us" class="ie9 layout-pf layout-pf-fixed"><![endif]-->
 <!--[if gt IE 9]><!-->

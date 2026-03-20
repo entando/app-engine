@@ -74,8 +74,8 @@ public class Struts2ServletDispatcher extends HttpServlet {
 			Integer currentFrame = (Integer) reqCtx.getExtraParam(SystemConstants.EXTRAPAR_CURRENT_FRAME);
 			Boolean staticAction = (Boolean) reqCtx.getExtraParam(InternalServletTag.EXTRAPAR_STATIC_ACTION);
 			
-			boolean executeCustomAction = (null == staticAction || !staticAction) 
-					&& (null == currentFrameActionPath || Integer.parseInt(currentFrameActionPath) == currentFrame.intValue());
+			boolean executeCustomAction = (null == staticAction || !staticAction)
+					&& (null == currentFrameActionPath || currentFrameActionPath.isEmpty() || Integer.parseInt(currentFrameActionPath) == currentFrame.intValue());
 			
             prepare.createActionContext(request, response);
             prepare.assignDispatcherToThread();
