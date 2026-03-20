@@ -10,10 +10,13 @@ import java.io.ObjectOutputStream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 
+@Isolated
 class AttributeSerializationIntegrationTest extends BaseTestCase {
 
     private ILangManager langManager;
@@ -26,8 +29,9 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeTextAttribute() throws Exception {
         TextAttribute attribute = new TextAttribute();
+        attribute.setName("testAttribute");
         attribute.setLangManager(langManager);
-        attribute = testSerializeAndDeserialize(attribute);
+        attribute = testSerializeAndDeserializeWithApplicationContext(attribute);
         Assertions.assertNotNull(attribute.getLangManager());
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
         Assertions.assertNull(attribute.getLangManager());
@@ -36,9 +40,10 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     @Test
     void testSerializeEnumeratorAttribute() throws Exception {
         EnumeratorAttribute attribute = new EnumeratorAttribute();
+        attribute.setName("testEnumerator");
         attribute.setBeanFactory(this.getApplicationContext());
         attribute.setLangManager(langManager);
-        attribute = testSerializeAndDeserialize(attribute);
+        attribute = testSerializeAndDeserializeWithApplicationContext(attribute);
         Assertions.assertNotNull(attribute.getBeanFactory());
         Assertions.assertNotNull(attribute.getLangManager());
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
@@ -46,9 +51,17 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         Assertions.assertNull(attribute.getLangManager());
     }
 
+    private <T> T testSerializeAndDeserializeWithApplicationContext(T attribute) throws Exception {
+        try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class)) {
+            contextLoader.when(ContextLoader::getCurrentWebApplicationContext)
+                    .thenReturn((WebApplicationContext) getApplicationContext());
+            return testSerializeAndDeserialize(attribute);
+        }
+    }
+
     private <T> T testSerializeAndDeserializeNullApplicationContext(T attribute) throws Exception {
         try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class)) {
-            contextLoader.when(() -> ContextLoader.getCurrentWebApplicationContext()).thenReturn(null);
+            contextLoader.when(ContextLoader::getCurrentWebApplicationContext).thenReturn(null);
             return testSerializeAndDeserialize(attribute);
         }
     }

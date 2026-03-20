@@ -15,7 +15,8 @@ package com.agiletec.aps.system.services.authorization;
 
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
-
+import java.sql.SQLException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -24,17 +25,27 @@ import java.util.Map;
  */
 public interface IAuthorizationDAO {
 	
-	public void addUserAuthorization(String username, Authorization authorization);
+	void addUserAuthorization(String username, Authorization authorization);
 	
-	public void addUserAuthorizations(String username, List<Authorization> authorizations);
+	void addUserAuthorizations(String username, List<Authorization> authorizations);
 	
-	public void updateUserAuthorizations(String username, List<Authorization> authorizations);
+	void updateUserAuthorizations(String username, List<Authorization> authorizations);
 	
-	public void deleteUserAuthorization(String username, String groupname, String rolename);
+	void deleteUserAuthorization(String username, String groupname, String rolename);
 	
-	public List<Authorization> getUserAuthorizations(String username, Map<String, Group> groups, Map<String, Role> roles);
+	List<Authorization> getUserAuthorizations(String username, Map<String, Group> groups, Map<String, Role> roles);
 	
-	public void deleteUserAuthorizations(String username);
+	void deleteUserAuthorizations(String username);
 	
-	public List<String> getUsersByAuthorities(List<String> groupNames, List<String> roleNames);
+	List<String> getUsersByAuthorities(List<String> groupNames, List<String> roleNames);
+
+	int deleteUserAuthorizationByGroupAndRole(String username, List<String> groups, List<String> roles);
+
+    // Returns true if the user's external authentication synchronization is up to date
+    boolean externalAuthSyncCheck(String username, Long iat);
+
+	void externalAuthSync(String username, Long iat,
+			List<Authorization> toAdd, List<Authorization> toRemove);
+
+	int externalAuthSyncClean(Instant threshold, int batchSize) throws SQLException;
 }

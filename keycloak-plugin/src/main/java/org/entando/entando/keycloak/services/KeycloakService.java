@@ -2,12 +2,16 @@ package org.entando.entando.keycloak.services;
 
 import static org.entando.entando.KeycloakWiki.wiki;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.KeycloakWiki;
 import org.entando.entando.aps.system.exception.RestServerError;
@@ -45,17 +49,60 @@ public class KeycloakService {
         return listUsers(null);
     }
 
+    // Handle invocations such as http://localhost:8081/auth/admin/realms/entando-development/users?briefRepresentation=true&first=0&max=20&search=testutentemariorossi%2B4375@gmail.com
     public List<UserRepresentation> listUsers(final String text) {
         final String url = String.format("%s/admin/realms/%s/users", configuration.getAuthUrl(), configuration.getRealm());
-        final Map<String, String> params = StringUtils.isEmpty(text)
-                ? Collections.emptyMap()
-                : Collections.singletonMap("username", text);
-        String token = this.extractToken();
-        final ResponseEntity<UserRepresentation[]> response = this.executeRequest(token, url,
-                HttpMethod.GET, createEntity(token), UserRepresentation[].class, params);
-        return Optional.ofNullable(response.getBody())
+        final String searchString = StringUtils.isNotBlank(text) ? encodeForKeycloakSearchAPI(text) : text;
+        final boolean isExact = StringUtils.isBlank(text) || (StringUtils.isNotBlank(text) && searchString.equals(text));
+        final Map<String, String> params = this.buildParams(searchString, isExact);
+
+        final String token = this.extractToken();
+        final ResponseEntity<UserRepresentation[]> response = this.executeEscapedRequest(token, url,
+                HttpMethod.GET, createEntity(token, null), UserRepresentation[].class, params, 0);
+        List<UserRepresentation> retval = Optional.ofNullable(response.getBody())
                 .map(Arrays::asList)
                 .orElse(Collections.emptyList());
+        if (StringUtils.isNotBlank(text) && isExact && retval.size() > 1) {
+            // must match the exact element by USERNAME
+            Optional<UserRepresentation> userOpt = retval.stream()
+                    .filter(e ->  (e.getUsername() != null && e.getUsername().equals(text))
+                            || (e.getEmail() != null && e.getEmail().equals(text)))
+                    .findFirst();
+            return userOpt.stream().toList();
+        }
+        return retval;
+    }
+
+    private Map<String, String> buildParams(final String text, boolean isExact) {
+        final Map<String, String> params = new HashMap<>();
+        if (StringUtils.isNotBlank(text)) {
+            if (isExact) {
+                params.put("username", text);
+            } else {
+                params.put("briefRepresentation", "true");
+                params.put("search", text);
+                // reference for paged request:
+                // params.put("first", "0");
+                // params.put("max", "20");
+            }
+        }
+        return params;
+    }
+
+    private String encodeForKeycloakSearchAPI(String text) {
+        final List<Character> specialCharacters = List.of(
+                '#', '+', '&', '%', '\'', '/', '=', '?', '^', '{', '|', '}', '`', '"'
+        );
+        final StringBuilder encoded = new StringBuilder();
+
+        for (char c : text.toCharArray()) {
+            if (specialCharacters.contains(c)) {
+                encoded.append(URLEncoder.encode(String.valueOf(c), StandardCharsets.UTF_8));
+            } else {
+                encoded.append(c);
+            }
+        }
+        return encoded.toString();
     }
 
     public void removeUser(final String uuid) {
@@ -127,6 +174,48 @@ public class KeycloakService {
             }
             if (HttpStatus.UNAUTHORIZED.equals(e.getStatusCode())) {
                 return this.executeRequest(null, url, method, entity, result, params, retryCount + 1);
+            }
+            throw e;
+        }
+    }
+
+    private <T, Y> ResponseEntity<Y> executeEscapedRequest(String token, final String url, final HttpMethod method, final HttpEntity<T> entity,
+            final Class<Y> result, final Map<String, String> params, int retryCount) {
+        try {
+            final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
+            final Optional<String> isAlreadyEscaped = params.values()
+                    .stream().filter(v -> StringUtils.isNotBlank(v) && v.contains("%"))
+                    .findFirst();
+            if (isAlreadyEscaped.isEmpty()) {
+                // default behaviour, query string is escaped automatically
+                params.forEach(builder::queryParam);
+                return restTemplate.exchange(builder.build().toUri(), method,
+                        createEntity(token, entity.getBody()), result);
+            } else {
+                /*
+                 * We don't want to automatically escape character since they come
+                 * already escaped, so we construct URI directly from the string
+                 */
+                StringBuilder queryBuilder = new StringBuilder();
+                params.forEach((key, value) -> {
+                    if (queryBuilder.length() > 0) {
+                        queryBuilder.append("&");
+                    }
+                    queryBuilder.append(key).append("=").append(value);
+                });
+                String escapedUrl = builder.build().toUri() + "?" + queryBuilder;
+                return  restTemplate.exchange(
+                        URI.create(escapedUrl), method, createEntity(token, entity.getBody()),
+                        result);
+            }
+        } catch (HttpClientErrorException e) {
+            if (HttpStatus.FORBIDDEN.equals(e.getStatusCode()) || (HttpStatus.UNAUTHORIZED.equals(e.getStatusCode()) && retryCount > 10)) {
+                throw new RestServerError("There was an error while trying to load user because the " +
+                        "client on Keycloak doesn't have permission to do that. " +
+                        "The client needs to have Service Accounts enabled and the permission 'realm-admin' on client 'realm-management'. ", e);
+            }
+            if (HttpStatus.UNAUTHORIZED.equals(e.getStatusCode())) {
+                return this.executeEscapedRequest(null, url, method, entity, result, params, retryCount + 1);
             }
             throw e;
         }
