@@ -215,7 +215,7 @@ public class KeycloakFilter implements Filter {
     private void doLogout(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         final HttpSession session = request.getSession();
         final String idToken = (String)session.getAttribute(SESSION_PARAM_ID_TOKEN);
-        final String redirectUri = request.getRequestURL().toString().replace("/do/logout.action", "");
+        final String redirectUri = UrlUtils.determineFrontendURL(request).replace("/do/logout.action", "");
         session.invalidate();
         response.sendRedirect(oidcService.getLogoutUrl(redirectUri, idToken));
     }
@@ -224,7 +224,7 @@ public class KeycloakFilter implements Filter {
         final HttpSession session = request.getSession();
         final String authorizationCode = request.getParameter("code");
         final String stateParameter = request.getParameter("state");
-        final String redirectUri = request.getRequestURL().toString();
+        final String redirectUri = UrlUtils.determineFrontendURL(request);
         final String redirectTo = request.getParameter("redirectTo");
         final String error = request.getParameter("error");
         final String errorDescription = request.getParameter("error_description");
