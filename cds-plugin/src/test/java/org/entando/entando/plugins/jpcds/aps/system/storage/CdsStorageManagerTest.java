@@ -80,7 +80,8 @@ class CdsStorageManagerTest {
                 eq(false),
                 any(),
                 any(),
-                eq(false))).thenReturn(ret);
+                eq(false),
+                eq(0))).thenReturn(ret);
 
         ApsTenantApplicationUtils.setTenant("my-tenant");
         cdsStorageManager.createDirectory("/sub-path-testy",false);
@@ -96,7 +97,8 @@ class CdsStorageManagerTest {
                         eq(false),
                         any(),
                         any(),
-                        eq(false));
+                        eq(false),
+                        eq(0));
 
     }
 
@@ -126,7 +128,8 @@ class CdsStorageManagerTest {
                 eq(false),
                 any(),
                 any(),
-                eq(false))).thenReturn(ret);
+                eq(false),
+                eq(0))).thenReturn(ret);
 
         ApsTenantApplicationUtils.setTenant("my-tenant");
         Assertions.assertThatThrownBy(
@@ -157,7 +160,8 @@ class CdsStorageManagerTest {
                 eq(false),
                 any(),
                 any(),
-                eq(false))).thenReturn(ret);
+                eq(false),
+                eq(0))).thenReturn(ret);
 
         ApsTenantApplicationUtils.setTenant("my-tenant");
         InputStream is = new ByteArrayInputStream("testo a casos".getBytes(StandardCharsets.UTF_8));
@@ -169,7 +173,8 @@ class CdsStorageManagerTest {
                         eq(false),
                         any(),
                         any(),
-                        eq(false));
+                        eq(false),
+                        eq(0));
 
     }
 
@@ -533,7 +538,8 @@ class CdsStorageManagerTest {
                 eq(false),
                 any(),
                 any(),
-                eq(false))).thenReturn(ret);
+                eq(false),
+                eq(0))).thenReturn(ret);
 
         ApsTenantApplicationUtils.setTenant("my-tenant");
         InputStream is = new ByteArrayInputStream("testo a casos".getBytes(StandardCharsets.UTF_8));
@@ -552,7 +558,8 @@ class CdsStorageManagerTest {
                         eq(false),
                         any(),
                         any(),
-                        eq(false));
+                        eq(false),
+                        eq(0));
 
     }
 
