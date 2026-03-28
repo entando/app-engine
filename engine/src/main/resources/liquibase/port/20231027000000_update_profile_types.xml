@@ -5,11 +5,11 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
            http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-    <changeSet id="20230626000000_mfe_communication_mediator_object" author="entando" context="production">
+    <changeSet id="20231027000000_update_profile_types" author="entando" context="production">
 
-        <update tableName="pagemodels">
-            <column name="templategui" valueClobFile="clob/production/pagemodels_2_1.ftl" />
-            <where>code='single_frame_page'</where>
+        <update tableName="sysconfig">
+            <column name="config" valueClobFile="clob/production/sysconfig_3_1.xml" />
+            <where>item='userProfileTypes'</where>
         </update>
 
     </changeSet>
