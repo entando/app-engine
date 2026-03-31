@@ -196,9 +196,7 @@ class KeycloakFilterTest {
         Mockito.lenient().when(auth.getRefreshToken()).thenReturn("refresh-token-over-here");
         try ( MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class, () -> {
-                keycloakFilter.doFilter(request, response, filterChain);
-            });
+            Assertions.assertThrows(EntandoTokenException.class, () -> keycloakFilter.doFilter(request, response, filterChain));
         }
     }
 
@@ -430,7 +428,6 @@ class KeycloakFilterTest {
     void testLoginWithAuthorizationCode() throws Exception {
 
         final String path = "/do/login";
-        final String endpoint = "https://dev.entando.org/entando-app" + path;
 
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn(path);
@@ -607,11 +604,11 @@ class KeycloakFilterTest {
         final String contextRoot = "/entando-de-app";
         final String protoAndServerName = "http://dev.entando.org";
 
-        testLoginExecuteFine(protoAndServerName, contextRoot, path, protoAndServerName+contextRoot+redirectPath, redirectPath);
+        testLoginExecuteFine(contextRoot, path, protoAndServerName+contextRoot+redirectPath, redirectPath);
 
     }
 
-    private void testLoginExecuteFine(final String protoAndServerName, final String contextRoot, final String path,
+    private void testLoginExecuteFine(final String contextRoot, final String path,
             final String redirectToUri, final String redirectToPath) throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn(path);
@@ -639,10 +636,8 @@ class KeycloakFilterTest {
         final String path = "/do/login.action";
         final String redirectPath = "/pages/en/homepage/";
         final String contextRoot = "/entando-de-app";
-        final String protoAndServerName = "http://dev.entando.org";
 
-        testLoginExecuteFine(protoAndServerName, contextRoot, path, contextRoot+redirectPath, redirectPath);
-
+        testLoginExecuteFine(contextRoot, path, contextRoot+redirectPath, redirectPath);
     }
 
     @Test
