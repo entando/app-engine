@@ -112,3 +112,4 @@
         value="%{#attr.labelSubmit}" />
     </p>
 </form>
+<@wp.fragment code="jpwebdynform_is_front-DateSubmitHandler" escapeXml=false />

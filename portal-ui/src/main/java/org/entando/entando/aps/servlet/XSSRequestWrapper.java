@@ -62,7 +62,7 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
         try {
             value = ESAPI.validator().getValidInput("HTTP parameter value: " + value, value, "HTTPParameterValue", 2000, true);
         } catch (ValidationException e) {
-            log.error("Invalid parameter ('{}' - '{}'), encoding as HTML attribute", name, value, e);
+            log.warn("Invalid parameter ('{}' - '{}'), encoding as HTML attribute", name, value);
             value = ESAPI.encoder().encodeForHTMLAttribute(value);
         } catch (Throwable e) {
             log.debug("Invalid parameter ('{}' - '{}') - error message {}", name, value, e.getMessage());
@@ -78,7 +78,7 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
         try {
             value = ESAPI.validator().getValidInput("HTTP header value: " + value, value, "HTTPHeaderValue", 150, false);
         } catch (ValidationException e) {
-            log.error("Invalid header ('{}' - '{}'), encoding as HTML attribute", name, value, e);
+            log.warn("Invalid header ('{}' - '{}'), encoding as HTML attribute", name, value);
             value = ESAPI.encoder().encodeForHTMLAttribute(value);
         } catch (Throwable e) {
             log.debug("Invalid header ('{}' - '{}') - error message {}", name, value, e.getMessage());

@@ -451,4 +451,25 @@
 
     </changeSet>
 
+    <changeSet id="00000000000001_jpwebdynamicform_dataPort_guifragments_dateSubmitHandler" author="entando" context="production">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- Use uppercase table name to avoid MySQL issue -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM GUIFRAGMENT
+                WHERE code = 'jpwebdynform_is_front-DateSubmitHandler'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="guifragment">
+            <column name="code" value="jpwebdynform_is_front-DateSubmitHandler"/>
+            <column name="plugincode" value="jpwebdynamicform"/>
+            <column name="defaultgui"
+                    valueClobFile="clob/production/guifragment/jpwebdynform_is_front-DateSubmitHandler.ftl"/>
+            <column name="locked" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
 </databaseChangeLog>
