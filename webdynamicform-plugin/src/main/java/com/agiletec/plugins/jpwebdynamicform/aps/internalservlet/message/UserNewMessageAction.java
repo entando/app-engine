@@ -25,6 +25,8 @@ import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
+import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
+import java.util.regex.Pattern;
 import com.agiletec.aps.system.services.i18n.II18nManager;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.system.services.page.Widget;
@@ -52,7 +54,9 @@ import java.util.List;
 public class UserNewMessageAction extends AbstractApsEntityAction implements INewMessageAction {
 
 	private static final EntLogging.EntLogger logger = EntLogging.EntLogFactory.getSanitizedLogger(UserNewMessageAction.class);
-	
+
+	private static final Pattern ALLOWED_CHARS = Pattern.compile("^([\\p{L}0-9.\\-/+=@_ ]|&amp;#27;)*$");
+
 	@Override
 	public void validate() {
 		Message message = this.getMessage();
@@ -61,6 +65,20 @@ public class UserNewMessageAction extends AbstractApsEntityAction implements INe
 		}
 		super.validate();
 		this.validateCaptcha();
+		this.validateAllowedChars(message);
+	}
+
+	private void validateAllowedChars(Message message) {
+		String langCode = this.getCurrentLang().getCode();
+		for (AttributeInterface attr : message.getAttributeList()) {
+			if (attr instanceof ITextAttribute) {
+				String text = ((ITextAttribute) attr).getTextForLang(langCode);
+				if (text != null && !ALLOWED_CHARS.matcher(text).matches()) {
+					this.addFieldError(attr.getName(),
+							this.getText("Errors.webdynamicform.invalidChars", new String[]{attr.getDescription()}));
+				}
+			}
+		}
 	}
 
 	public String getRecaptchaType() {
@@ -222,6 +240,7 @@ public class UserNewMessageAction extends AbstractApsEntityAction implements INe
 				message.setUsername(username);
 				message.setCreationDate(new Date());
 				message.setLangCode(this.getCurrentLang().getCode());
+				unescapeTextAttributes(message);
 				try {
 					this.getMessageManager().sendMessage(message);
 				} catch (Throwable t) {
@@ -240,6 +259,22 @@ public class UserNewMessageAction extends AbstractApsEntityAction implements INe
 			return FAILURE;
 		}
 		return SUCCESS;
+	}
+
+	private void unescapeTextAttributes(Message message) {
+		String langCode = message.getLangCode();
+		if (langCode == null) {
+			langCode = this.getLangManager().getDefaultLang().getCode();
+		}
+		for (AttributeInterface attr : message.getAttributeList()) {
+			if (attr instanceof ITextAttribute) {
+				ITextAttribute textAttr = (ITextAttribute) attr;
+				String text = textAttr.getTextForLang(langCode);
+				if (text != null && text.contains("&amp;#27;")) {
+					textAttr.setText(text.replace("&amp;#27;", "'"), langCode);
+				}
+			}
+		}
 	}
 
 	/**

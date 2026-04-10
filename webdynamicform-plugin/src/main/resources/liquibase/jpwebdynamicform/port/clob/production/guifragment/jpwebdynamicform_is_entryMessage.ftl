@@ -112,4 +112,33 @@
         value="%{#attr.labelSubmit}" />
     </p>
 </form>
+<script nonce="<@wp.cspNonce />">
+    (function() {
+        function encodeXSSChars(str) {
+            return str
+                .replace(/'/g, '&amp;#27;');
+        }
+        function unescapeXSSChars(str) {
+            return str.replace(/&amp;#27;/g, "'");
+        }
+        function decodeHtmlEntities(str) {
+            var txt = document.createElement("textarea");
+            txt.innerHTML = str;
+            return txt.value;
+        }
+        var form = document.getElementById('jpwebdynamicform_form');
+        if (form) {
+            var inputs = form.querySelectorAll('input[type="text"], textarea');
+            for (var i = 0; i < inputs.length; i++) {
+                inputs[i].value = unescapeXSSChars(inputs[i].value);
+                inputs[i].value = decodeHtmlEntities(inputs[i].value);
+            }
+            form.addEventListener('submit', function() {
+                var fields = form.querySelectorAll('input[type="text"], textarea');
+                for (var j = 0; j < fields.length; j++) {
+                    fields[j].value = encodeXSSChars(fields[j].value);
+                }
+            });
+        }
+    })();
 <@wp.fragment code="jpwebdynform_is_front-DateSubmitHandler" escapeXml=false />
