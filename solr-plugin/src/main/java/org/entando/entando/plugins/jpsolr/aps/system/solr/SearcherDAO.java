@@ -49,6 +49,7 @@ import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
@@ -404,8 +405,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
             Long upperValue = (null != filter.getEnd()) ? ((Number) filter.getEnd()).longValue() : Long.MAX_VALUE;
             query = LongPoint.newRangeQuery(key, lowerValue, upperValue);
         } else {
-            String start = (null != filter.getStart()) ? filter.getStart().toString().toLowerCase() : "A";
-            String end = (null != filter.getEnd()) ? filter.getEnd().toString().toLowerCase() + "z" : null;
+            String start = (null != filter.getStart()) ? ClientUtils.escapeQueryChars(filter.getStart().toString().toLowerCase()) : "A";
+            String end = (null != filter.getEnd()) ? ClientUtils.escapeQueryChars(filter.getEnd().toString().toLowerCase()) + "z" : null;
             query = TermRangeQuery.newStringRange(key, start + relevance, (null != end) ? (end + relevance) : null,
                     true, true);
         }
@@ -479,7 +480,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
                 compositeQuery.add(queryTerm, BooleanClause.Occur.SHOULD);
                 String attachmentKey = key + SolrFields.ATTACHMENT_FIELD_SUFFIX;
                 TermQuery termAttachment = new TermQuery(
-                        new Term(attachmentKey, val.toLowerCase() + relevance));
+                        new Term(attachmentKey, ClientUtils.escapeQueryChars(val.toLowerCase()) + relevance));
                 compositeQuery.add(termAttachment, BooleanClause.Occur.SHOULD);
                 fieldQuery.add(compositeQuery.build(), bc);
             } else {
@@ -520,11 +521,19 @@ public class SearcherDAO implements ISolrSearcherDAO {
         //NOTE: search for lower case....
         String stringValue = value.toLowerCase();
         boolean useWildCard = false;
-        if (value.startsWith("*") || value.endsWith("*")) {
+        boolean leadingStar = stringValue.startsWith("*");
+        boolean trailingStar = stringValue.endsWith("*");
+        if (leadingStar || trailingStar) {
             useWildCard = true;
+            int from = leadingStar ? 1 : 0;
+            int to = (trailingStar && stringValue.length() > from) ? stringValue.length() - 1 : stringValue.length();
+            String core = stringValue.substring(from, to);
+            stringValue = (leadingStar ? "*" : "") + ClientUtils.escapeQueryChars(core) + (trailingStar ? "*" : "");
         } else if (isLikeSearch) {
-            stringValue = "*" + stringValue + "*";
+            stringValue = "*" + ClientUtils.escapeQueryChars(stringValue) + "*";
             useWildCard = true;
+        } else {
+            stringValue = ClientUtils.escapeQueryChars(stringValue);
         }
         Term term = new Term(key, stringValue + relevance);
         return (useWildCard) ? new WildcardQuery(term) : new TermQuery(term);
