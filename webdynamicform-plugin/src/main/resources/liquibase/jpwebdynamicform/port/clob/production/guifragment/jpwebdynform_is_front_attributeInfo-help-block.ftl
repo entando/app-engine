@@ -7,7 +7,6 @@
 
 <@s.if test="%{#hasValidationRulesVar || #attribute.type == 'Date' || (#attribute.textAttribute && (#attribute.minLength != -1 || #attribute.maxLength != -1))}">
     <span class="help-block">
-		<@s.if test="#attribute.type == 'Date'">dd/MM/yyyy&#32;</@s.if>
         <@s.if test="%{#validationRules.helpMessageKey != null}">
             <@s.set var="label" scope="page" value="#validationRules.helpMessageKey" /><@wp.i18n key="${label}" />
         </@s.if>

@@ -1,55 +1,15 @@
-<#assign c=JspTaglibs["http://java.sun.com/jsp/jstl/core"]>
 <#assign s=JspTaglibs["/struts-tags"]>
-<#assign wp=JspTaglibs["/aps-core"]>
-<#assign wpsf=JspTaglibs["/apsadmin-form"]>
-<#assign currentLangVar ><@wp.info key="currentLang" /></#assign>
-<@s.if test="#attribute.failedDateString == null">
-    <@s.set var="dateAttributeValue" value="#attribute.getFormattedDate('dd/MM/yyyy')" />
+<@s.if test="#lang.default">
+    <@s.if test="#attribute.failedDateString == null">
+        <@s.set var="dateAttributeValue" value="#attribute.getFormattedDate('yyyy-MM-dd')" />
+    </@s.if>
+    <@s.else>
+        <@s.set var="dateAttributeValue" value="#attribute.failedDateString" />
+    </@s.else>
+    <input type="date"
+        id="<@s.property value="#attribute_id" />"
+        data-jpwebdynamicform-date="true"
+        name="<@s.property value="#attributeTracer.getFormFieldName(#attribute)" />"
+        value="<@s.property value="#dateAttributeValue" />"
+        class="jpwebdynamicform-date" />
 </@s.if>
-<@s.else>
-    <@s.set var="dateAttributeValue" value="#attribute.failedDateString" />
-</@s.else>
-<@wpsf.textfield
-useTabindexAutoIncrement=true id="%{attribute_id}"
-name="%{#attributeTracer.getFormFieldName(#attribute)}"
-value="%{#dateAttributeValue}" maxlength="10" cssClass="text userprofile-date" />
-&#32;
-<#assign js_for_datepicker="jQuery(function($){
-	$.datepicker.regional['it'] = {
-		closeText: 'Chiudi',
-		prevText: '&#x3c;Prec',
-		nextText: 'Succ&#x3e;',
-		currentText: 'Oggi',
-		monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-			'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
-		monthNamesShort: ['Gen','Feb','Mar','Apr','Mag','Giu',
-			'Lug','Ago','Set','Ott','Nov','Dic'],
-		dayNames: ['Domenica','Luned&#236','Marted&#236','Mercoled&#236','Gioved&#236','Venerd&#236','Sabato'],
-		dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
-		dayNamesMin: ['Do','Lu','Ma','Me','Gi','Ve','Sa'],
-		weekHeader: 'Sm',
-		dateFormat: 'dd/mm/yy',
-		firstDay: 1,
-		isRTL: false,
-		showMonthAfterYear: false,
-		yearSuffix: ''};
-});
-
-jQuery(function($){
-	if (Modernizr.touch && Modernizr.inputtypes.date) {
-		$.each(	$('input.jpwebdynamicform-date'), function(index, item) {
-			item.type = 'date';
-		});
-	} else {
-		$.datepicker.setDefaults( $.datepicker.regional['${currentLangVar}'] );
-		$('input.jpwebdynamicform-date').datepicker({
-      			changeMonth: true,
-      			changeYear: true,
-      			dateFormat: 'dd/mm/yy'
-    		});
-	}
-});" >
-<@wp.headInfo type="JS" info="entando-misc-html5-essentials/modernizr-2.5.3-full.js" />
-<@wp.headInfo type="JS_EXT" info="http://code.jquery.com/ui/1.10.0/jquery-ui.min.js" />
-<@wp.headInfo type="CSS_EXT" info="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.min.css" />
-<@wp.headInfo type="JS_RAW" info="${js_for_datepicker}" />

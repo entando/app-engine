@@ -95,6 +95,8 @@ class KeycloakFilterTest {
         Mockito.lenient().when(session.getServletContext()).thenReturn(svCtx);
         Mockito.lenient().when(wac.getBean(ITenantManager.class)).thenReturn(tenantManager);
         Mockito.lenient().when(request.getServerName()).thenReturn("dev.entando.org");
+        Mockito.lenient().when(request.getScheme()).thenReturn("https");
+        Mockito.lenient().when(request.getServerPort()).thenReturn(443);
         Mockito.lenient().when(request.getHeader("X-Forwarded-Proto")).thenReturn("https");
         Mockito.lenient().when(request.getHeader("Host")).thenReturn("dev.entando.org");
     }
@@ -117,7 +119,7 @@ class KeycloakFilterTest {
         when(request.getRequestURL()).thenReturn(new StringBuffer(loginEndpoint));
         Mockito.lenient().when(request.getParameter(eq("redirectTo"))).thenReturn(requestRedirect);
 
-        final String redirect = "http://dev.entando.org/auth/realms/entando/protocol/openid-connect/auth";
+        final String redirect = "https://dev.entando.org/auth/realms/entando/protocol/openid-connect/auth";
         when(oidcService.getRedirectUrl(any(), any(), any())).thenReturn(redirect);
 
         keycloakFilter.doFilter(request, response, filterChain);
@@ -169,7 +171,6 @@ class KeycloakFilterTest {
 
     @Test
     void testAuthenticationFlowWithError() {
-        final String loginEndpoint = "https://dev.entando.org/entando-app/do/login";
         final String state = "0ca97afd-f0b0-4860-820a-b7cd1414f69c";
         final String authorizationCode = "the-authorization-code-from-keycloak";
 
@@ -185,7 +186,6 @@ class KeycloakFilterTest {
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter(eq("code"))).thenReturn(authorizationCode);
         when(request.getParameter(eq("state"))).thenReturn(state);
-        when(request.getRequestURL()).thenReturn(new StringBuffer(loginEndpoint));
         Mockito.lenient().when(request.getContextPath()).thenReturn("/entando-app");
 
 
@@ -196,15 +196,12 @@ class KeycloakFilterTest {
         Mockito.lenient().when(auth.getRefreshToken()).thenReturn("refresh-token-over-here");
         try ( MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class, () -> {
-                keycloakFilter.doFilter(request, response, filterChain);
-            });
+            Assertions.assertThrows(EntandoTokenException.class, () -> keycloakFilter.doFilter(request, response, filterChain));
         }
     }
 
     @Test
     void testAuthenticationWithInvalidAuthCode() throws IOException, ServletException {
-        final String loginEndpoint = "https://dev.entando.org/entando-app/do/login";
         final String state = "0ca97afd-f0b0-4860-820a-b7cd1414f69c";
         final String authorizationCode = "the-authorization-code-from-keycloak";
 
@@ -216,7 +213,6 @@ class KeycloakFilterTest {
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter(eq("code"))).thenReturn(authorizationCode);
         when(request.getParameter(eq("state"))).thenReturn(state);
-        when(request.getRequestURL()).thenReturn(new StringBuffer(loginEndpoint));
         when(request.getContextPath()).thenReturn("/entando-app");
 
         final HttpClientErrorException exception = Mockito.mock(HttpClientErrorException.class);
@@ -235,11 +231,9 @@ class KeycloakFilterTest {
     @Test
     void shouldLoginWithInvalidRedirectURLHostnameNotThrowError() throws IOException, ServletException {
         final String requestRedirect = "https://not.authorized.url";
-        final String loginEndpoint = "https://dev.entando.org/entando-app/do/login";
 
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/login");
-        when(request.getRequestURL()).thenReturn(new StringBuffer(loginEndpoint));
         Mockito.lenient().when(request.getParameter(eq("redirectTo"))).thenReturn(requestRedirect);
 
         final String redirect = "http://dev.entando.org/auth/realms/entando/protocol/openid-connect/auth";
@@ -254,11 +248,8 @@ class KeycloakFilterTest {
 
     @Test
     void testLogout() throws IOException, ServletException {
-        final String loginEndpoint = "https://dev.entando.org/entando-app/do/logout.action";
-
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/logout.action");
-        when(request.getRequestURL()).thenReturn(new StringBuffer(loginEndpoint));
 
         final String redirect = "http://dev.entando.org/auth/realms/entando/protocol/openid-connect/logout";
         when(oidcService.getLogoutUrl(any(),any())).thenReturn(redirect);
@@ -437,11 +428,9 @@ class KeycloakFilterTest {
     void testLoginWithAuthorizationCode() throws Exception {
 
         final String path = "/do/login";
-        final String endpoint = "https://dev.entando.org/entando-app" + path;
 
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn(path);
-        when(request.getRequestURL()).thenReturn(new StringBuffer(endpoint));
         when(request.getParameter("state")).thenReturn("<state>");
         when(request.getParameter("code")).thenReturn("<code>");
 
@@ -593,7 +582,6 @@ class KeycloakFilterTest {
         String path = "/do/login.action";
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn(path);
-        when(request.getRequestURL()).thenReturn(new StringBuffer("http://dev.entando.org/entando-de-app/do/login.action"));
         when(request.getParameter("code")).thenReturn(null);
         when(request.getParameter("state")).thenReturn(null);
         when(request.getParameter("redirectTo")).thenReturn("http://fakedomain.entando.org/entando-de-app/pages/en/homepage/");
@@ -616,15 +604,14 @@ class KeycloakFilterTest {
         final String contextRoot = "/entando-de-app";
         final String protoAndServerName = "http://dev.entando.org";
 
-        testLoginExecuteFine(protoAndServerName, contextRoot, path, protoAndServerName+contextRoot+redirectPath, redirectPath);
+        testLoginExecuteFine(contextRoot, path, protoAndServerName+contextRoot+redirectPath, redirectPath);
 
     }
 
-    private void testLoginExecuteFine(final String protoAndServerName, final String contextRoot, final String path,
+    private void testLoginExecuteFine(final String contextRoot, final String path,
             final String redirectToUri, final String redirectToPath) throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn(path);
-        when(request.getRequestURL()).thenReturn(new StringBuffer(protoAndServerName+contextRoot+path));
         when(request.getParameter("code")).thenReturn(null);
         when(request.getParameter("state")).thenReturn(null);
         when(request.getParameter("redirectTo")).thenReturn(redirectToUri);
@@ -649,10 +636,8 @@ class KeycloakFilterTest {
         final String path = "/do/login.action";
         final String redirectPath = "/pages/en/homepage/";
         final String contextRoot = "/entando-de-app";
-        final String protoAndServerName = "http://dev.entando.org";
 
-        testLoginExecuteFine(protoAndServerName, contextRoot, path, contextRoot+redirectPath, redirectPath);
-
+        testLoginExecuteFine(contextRoot, path, contextRoot+redirectPath, redirectPath);
     }
 
     @Test
@@ -661,7 +646,6 @@ class KeycloakFilterTest {
         String path = "/do/login.action";
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn(path);
-        when(request.getRequestURL()).thenReturn(new StringBuffer("http://dev.entando.org/entando-de-app/do/login.action"));
         when(request.getParameter("code")).thenReturn(null);
         when(request.getParameter("state")).thenReturn(null);
         when(request.getParameter("redirectTo")).thenReturn("https://dev.entando.org/entando-de-app/pages/en/mypage");

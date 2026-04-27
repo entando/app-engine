@@ -12,20 +12,12 @@
 		<property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenuAppBuilder.jsp</value></property>
 		<property name="hookPointKey"><value>core.menu.legacyplugins.appbuilder</value></property>
 	</bean>
-	<bean id="jpwebdynamicformLegacyPluginsMenuHookPoint1" class="com.agiletec.apsadmin.system.plugin.HookPointElementContainer" >
-		<property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenuAppBuilder1.jsp</value></property>
-		<property name="hookPointKey"><value>core.menu.legacyplugins.appbuilder</value></property>
-	</bean>
 
 	<!--
 	<bean id="jpwebdynamicformSubMenu" class="com.agiletec.apsadmin.system.plugin.PluginSubMenuContainer" >
 		<property name="pluginCode" value="jpwebdynamicform" />
 		<property name="subMenuFilePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/common/layouts/subMenu.jsp</value></property>
 	</bean>
-    <bean id="jpwebdynamicformConfigSystemParamsHookPoint" class="com.agiletec.apsadmin.system.plugin.HookPointElementContainer" >
-        <property name="filePath"><value>/WEB-INF/plugins/jpwebdynamicform/apsadmin/jsp/admin/configSystemParams-jack.jsp</value></property>
-        <property name="hookPointKey"><value>core.configSystemParams</value></property>
-    </bean>
 	-->
 
 	<bean id="jpwebdynamicformMessageFinderAction" scope="prototype"
