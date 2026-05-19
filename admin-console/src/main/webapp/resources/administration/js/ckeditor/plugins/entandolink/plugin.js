@@ -9,57 +9,6 @@ CKEDITOR.plugins.add('entandolink', {
 		if (window.entandoCKEditor === undefined) {
 			window.entandoCKEditor = {};
 		}
-		// Storage for saved selection state (needed because selection can be lost when popup gets focus)
-		if (window.entandoCKEditorSelection === undefined) {
-			window.entandoCKEditorSelection = {};
-		}
-		// Remove cke_bm_* bookmark spans (hidden position markers; children are &nbsp; placeholders, not real content)
-		function removeBookmarkSpans() {
-
-			console.log('[entandolink] removeBookmarkSpans() CALLED');
-
-			var body = editor.document.getBody().$;
-
-			var spans = Array.prototype.slice.call(
-					body.querySelectorAll(
-							'span[id^="cke_bm_"], span[data-cke-bookmark]'
-					)
-			);
-
-			console.log('[entandolink] found bookmarks:', spans.length);
-
-			spans.forEach(function(span) {
-
-				while (span.firstChild) {
-					span.firstChild.remove();
-				}
-
-				if (span.parentNode) {
-					span.parentNode.removeChild(span);
-				}
-			});
-		}
-		function cleanupBookmarks() {
-
-			console.log('[entandolink] cleanupBookmarks() CALLED', {
-				insertPending: editor._insertPending,
-				mode: editor.mode
-			});
-
-			// Do not clean up while inserting
-			if (editor._insertPending) {
-				console.log('[entandolink] cleanup skipped (_insertPending=true)');
-				return;
-			}
-
-			// Only in wysiwyg
-			if (editor.mode !== 'wysiwyg' || !editor.document) {
-				console.log('[entandolink] cleanup skipped (not wysiwyg)');
-				return;
-			}
-
-			removeBookmarkSpans();
-		}
 		// Add the link and unlink buttons.
 		editor.addCommand('entandolink', {
 			exec: function(editor) {
@@ -68,26 +17,22 @@ CKEDITOR.plugins.add('entandolink', {
 				if (!(ranges.length == 1 && ranges[0].collapsed)) {
 					var id = 'entando_link_window_' + editor.element.$.id;
 
-					// Save selection state BEFORE opening popup (selection may be lost when popup gets focus)
 					var startElement = selection.getStartElement();
 					var isLink = startElement && startElement.getName() === 'a';
-					// Indicates that an insertion operation is in progress: prevents cleanupBookmarks
-					// from removing bookmark spans before insertElement is called by the popup
-					editor._insertPending = true;
-					var savedBookmarks = selection.createBookmarks2();
 					var savedSelectedHtml = editor.getSelectedHtml(true);
-
-					window.entandoCKEditorSelection[id] = {
-						bookmarks: savedBookmarks,
-						selectedHtml: savedSelectedHtml,
-						startElement: startElement,
-						isLink: isLink
-					};
-
-					// Create a wrapper around the editor that uses saved selection data
 					var originalEditor = editor;
 
-					// Create a mock selection object that returns saved values
+					// For new links: replace the selection with a placeholder span carrying
+					// the selected HTML, then swap it for the real <a> when the popup applies.
+					// We hold a direct JS reference to the placeholder — no querySelector,
+					// no dependency on attribute survival across CKEditor's ACF.
+					var ph = null;
+					if (!isLink) {
+						ph = editor.document.createElement('span');
+						ph.setHtml(savedSelectedHtml);
+						editor.insertElement(ph);
+					}
+
 					var mockSelection = {
 						getStartElement: function() { return startElement; },
 						getSelectedElement: function() { return isLink ? startElement : null; },
@@ -96,44 +41,39 @@ CKEDITOR.plugins.add('entandolink', {
 					};
 
 					var editorWrapper = {
-						// Return mock selection with saved startElement
-						getSelection: function() {
-							return mockSelection;
-						},
-						getSelectedHtml: function(toString) {
-							// Return saved HTML since selection may be lost
-							return savedSelectedHtml;
-						},
-						// Delegate all other properties/methods to original editor
+						getSelection: function() { return mockSelection; },
+						getSelectedHtml: function() { return savedSelectedHtml; },
 						focus: function() { return originalEditor.focus(); },
 						document: originalEditor.document,
 						insertElement: function(el) {
-							// Before inserting, try to restore selection
-							originalEditor.focus();
+							// Swap the placeholder span for the link element. Then override
+							// el.setAttribute / el.removeAttribute so the popup's post-insert
+							// attribute loop (rel, target, hreflang) reaches the actual <a>
+							// that's now in the DOM — otherwise those writes go to `el` which
+							// is no longer attached and the attributes are silently lost.
 							try {
-								var sel = originalEditor.getSelection();
-								if (savedBookmarks && sel) {
-									sel.selectBookmarks(savedBookmarks);
-								}
+								if (!ph || !ph.$ || !ph.$.parentNode) return;
+
+								ph.insertBeforeMe(el);
+								ph.remove();
+								ph = null;
+
+								var insertedEl = el;
+								el.setAttribute = function(name, value) {
+									insertedEl.$.setAttribute(name, value);
+								};
+								el.removeAttribute = function(name) {
+									insertedEl.$.removeAttribute(name);
+								};
+
+								originalEditor.focus();
+								originalEditor.updateElement();
 							} catch(e) {
-								console.warn('Could not restore bookmarks, inserting at cursor:', e);
+								console.error('entandolink: insertElement failed', e);
 							}
-							// Keep _insertPending = true DURING insertElement so that the 'change'
-							// event fired internally by CKEditor does not trigger cleanupBookmarks
-							// while CKEditor is still using its own bookmark spans for the insertion.
-							var result = originalEditor.insertElement(el);
-							originalEditor._insertPending = false;
-							// Cleanup bookmark spans left behind by CKEditor's internal operations
-							setTimeout(function() {
-								cleanupBookmarks();
-							}, 0);
-							return result;
 						},
 						updateElement: function() { return originalEditor.updateElement(); },
-						// Access to original editor for anything else
-						_original: originalEditor,
-						// Expose saved data for direct access if needed
-						_savedSelection: window.entandoCKEditorSelection[id]
+						_original: originalEditor
 					};
 					window.entandoCKEditor[id] = editorWrapper;
 					var width = window.innerWidth / 2;
@@ -143,7 +83,9 @@ CKEDITOR.plugins.add('entandolink', {
 						width = window.innerWidth;
 					}
 
-					var attributeHRef = selection.getStartElement().getAttribute( 'href');
+					// Use the saved startElement; the placeholder span was inserted above
+					// for new links, so re-querying would now return the wrong element.
+					var attributeHRef = isLink ? startElement.getAttribute('href') : null;
 					var attributeCode;
 					var hrefTab ='';
 					if (attributeHRef){
@@ -190,20 +132,28 @@ CKEDITOR.plugins.add('entandolink', {
 					var height = window.innerHeight - (window.innerHeight / 100 * 2);
 					var url=url+"&linkTypeVar="+linkTypeVar+"&prevLinkTypeVar="+linkTypeVar+"&prevCode="+attributeCode+"#"+activeTab;
 
-					var popup = window.open(url , id, 'width=' + width + ',height=' + height + ',location=no,scrollbars=yes,toolbar=no,resizable=1');
+					var linkWindow = window.open(url, id, 'width=' + width + ',height=' + height + ',location=no,scrollbars=yes,toolbar=no,resizable=1');
 
-					// Detect popup closed without inserting (user cancelled).
-					// When insertElement is called by the popup, it clears _insertPending itself;
-					// the interval stops as soon as the window closes.
-					var pollInterval = setInterval(function() {
-						if (!popup || popup.closed) {
-							clearInterval(pollInterval);
-							if (editor._insertPending) {
-								editor._insertPending = false;
-								cleanupBookmarks();
+					// If the popup is closed without applying a link, unwrap the placeholder
+					// span so the original text is restored exactly.
+					if (!isLink) {
+						var cancelTimer = setInterval(function() {
+							if (!linkWindow || linkWindow.closed) {
+								clearInterval(cancelTimer);
+								try {
+									if (ph && ph.$ && ph.$.parentNode) {
+										var child;
+										while ((child = ph.getFirst())) {
+											ph.insertBeforeMe(child);
+										}
+										ph.remove();
+										ph = null;
+										originalEditor.updateElement();
+									}
+								} catch(e) {}
 							}
-						}
-					}, 300);
+						}, 300);
+					}
 
 				}
 			}
@@ -212,17 +162,17 @@ CKEDITOR.plugins.add('entandolink', {
 			/** @ignore */
 			exec: function(editor) {
 				/*
-         * execCommand( 'unlink', ... ) in Firefox leaves behind <span> tags at where
-         * the <a> was, so again we have to remove the link ourselves. (See #430)
-         *
-         * TODO: Use the style system when it's complete. Let's use execCommand()
-         * as a stopgap solution for now.
-         */
+                 * execCommand( 'unlink', ... ) in Firefox leaves behind <span> tags at where
+                 * the <a> was, so again we have to remove the link ourselves. (See #430)
+                 *
+                 * TODO: Use the style system when it's complete. Let's use execCommand()
+                 * as a stopgap solution for now.
+                 */
 				var selection = editor.getSelection(),
-						bookmarks = selection.createBookmarks(),
-						ranges = selection.getRanges(),
-						rangeRoot,
-						element;
+					bookmarks = selection.createBookmarks(),
+					ranges = selection.getRanges(),
+					rangeRoot,
+					element;
 
 				for (var i = 0; i < ranges.length; i++) {
 					rangeRoot = ranges[i].getCommonAncestor(true);
@@ -235,12 +185,6 @@ CKEDITOR.plugins.add('entandolink', {
 				selection.selectRanges(ranges);
 				editor.document.$.execCommand('unlink', false, null);
 				selection.selectBookmarks(bookmarks);
-
-				// pulizia
-				setTimeout(function() {
-					cleanupBookmarks();
-				}, 0);
-
 			},
 			startDisabled: false
 		});
@@ -255,39 +199,17 @@ CKEDITOR.plugins.add('entandolink', {
 			icon: CKEDITOR.plugins.getPath(pluginName) + "entandounlink-icon.png"
 		});
 
-		// After command execution
-		editor.on('afterCommandExec', function(evt) {
-			if (
-					evt.data.name === 'unlink' ||
-					evt.data.name === 'entandounlink'
-					// 'entandolink' removed: bookmarks must persist until insertElement
-					// is called by the popup; cleanup happens in insertElement's finally block
-			) {
-				setTimeout(cleanupBookmarks, 0);
-			}
-		});
-
-		// After real modification of a given content (pop-up included)
-		editor.on('change', function() {
-			setTimeout(cleanupBookmarks, 0);
-		});
-
 		// Register selection change handler for the unlink button.
 		editor.on('selectionChange', function(evt) {
 			if (editor.readOnly) {
 				return;
 			}
 			var command = editor.getCommand('entandounlink'),
-					element = evt.data.path.lastElement && evt.data.path.lastElement.getAscendant('a', true);
+				element = evt.data.path.lastElement && evt.data.path.lastElement.getAscendant('a', true);
 			if (element && element.getName() == 'a' && element.getAttribute('href') && element.getChildCount())
 				command.setState(CKEDITOR.TRISTATE_OFF);
 			else
 				command.setState(CKEDITOR.TRISTATE_DISABLED);
-		});
-
-		// Clean before editing
-		editor.on('beforeGetData', function() {
-			cleanupBookmarks();
 		});
 
 		// If the "menu" plugin is loaded, register the menu items.
@@ -303,15 +225,14 @@ CKEDITOR.plugins.add('entandolink', {
 				}
 			});
 		}
-
 	},
 
 	afterInit: function(editor) {
 		// Register a filter to displaying placeholders after mode change.
 		var dataProcessor = editor.dataProcessor,
-				dataFilter = dataProcessor && dataProcessor.dataFilter,
-				htmlFilter = dataProcessor && dataProcessor.htmlFilter,
-				pathFilters = editor._.elementsPath && editor._.elementsPath.filters;
+			dataFilter = dataProcessor && dataProcessor.dataFilter,
+			htmlFilter = dataProcessor && dataProcessor.htmlFilter,
+			pathFilters = editor._.elementsPath && editor._.elementsPath.filters;
 
 		if (dataFilter) {
 			dataFilter.addRules({
@@ -353,28 +274,11 @@ CKEDITOR.plugins.add('entandolink', {
 			});
 		}
 
-		// Strip CKEditor bookmark spans (cke_bm_* / data-cke-bookmark) from HTML output.
-		// These are transient position markers created internally by CKEditor; they must
-		// never appear in the saved data or in Source view.
-		if (htmlFilter) {
-			htmlFilter.addRules({
-				elements: {
-					span: function(element) {
-						var id = element.attributes && element.attributes.id;
-						if ((id && /^cke_bm_/.test(id)) ||
-								(element.attributes && 'data-cke-bookmark' in element.attributes)) {
-							return false; // remove element and its children
-						}
-					}
-				}
-			});
-		}
-
 		if (pathFilters) {
 			pathFilters.push(function(element, name) {
 				if (name == 'a') {
 					if (CKEDITOR.plugins.entandolink.tryRestoreFakeAnchor(editor, element) ||
-							(element.getAttribute('name') && (!element.getAttribute('href') || !element.getChildCount()))) {
+						(element.getAttribute('name') && (!element.getAttribute('href') || !element.getChildCount()))) {
 						return 'anchor';
 					}
 				}
