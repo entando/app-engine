@@ -14,14 +14,13 @@
 package com.agiletec.plugins.jacms.aps.system.services.content.parse.attribute;
 
 import com.agiletec.aps.system.common.entity.parse.attribute.TextAttributeHandler;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ResourceAttributeInterface;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import java.io.IOException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -126,6 +125,9 @@ public class ResourceAttributeHandler extends TextAttributeHandler {
      */
     @Deprecated
     protected IResourceManager getResourceManager() {
+        if (this.resourceManager == null) {
+            this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
+        }
         return this.resourceManager;
     }
 
@@ -164,11 +166,9 @@ public class ResourceAttributeHandler extends TextAttributeHandler {
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
-        if (ctx == null) {
+        this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
+        if (this.resourceManager == null) {
             _logger.warn("Null WebApplicationContext during deserialization");
-            return;
         }
-        this.resourceManager = ctx.getBean(IResourceManager.class);
     }
 }

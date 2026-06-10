@@ -18,6 +18,7 @@ import com.agiletec.aps.system.common.entity.model.AttributeTracer;
 import com.agiletec.aps.system.common.entity.model.attribute.HypertextAttribute;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import com.agiletec.aps.system.services.page.IPageManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.CmsAttributeReference;
@@ -32,8 +33,6 @@ import java.util.List;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 
 /**
  * Rappresenta una informazione di tipo "ipertesto" specifico per il cms.
@@ -205,6 +204,9 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
 
     @Deprecated
     protected IContentManager getContentManager() {
+        if (this.contentManager == null) {
+            this.contentManager = ApplicationContextProvider.resolveBean(IContentManager.class);
+        }
         return contentManager;
     }
 
@@ -215,6 +217,9 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
 
     @Deprecated
     protected IPageManager getPageManager() {
+        if (this.pageManager == null) {
+            this.pageManager = ApplicationContextProvider.resolveBean(IPageManager.class);
+        }
         return pageManager;
     }
 
@@ -225,6 +230,9 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
 
     @Deprecated
     public IResourceManager getResourceManager() {
+        if (this.resourceManager == null) {
+            this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
+        }
         return resourceManager;
     }
 
@@ -245,14 +253,15 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
-        if (ctx == null) {
-            logger.warn("Null WebApplicationContext during deserialization");
-            return;
+        this.contentManager = ApplicationContextProvider.resolveBean(IContentManager.class);
+        this.pageManager = ApplicationContextProvider.resolveBean(IPageManager.class);
+        this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
+        ILangManager langManager = ApplicationContextProvider.resolveBean(ILangManager.class);
+        if (langManager != null) {
+            this.setLangManager(langManager);
         }
-        this.contentManager = ctx.getBean(IContentManager.class);
-        this.pageManager = ctx.getBean(IPageManager.class);
-        this.resourceManager = ctx.getBean(IResourceManager.class);
-        this.setLangManager(ctx.getBean(ILangManager.class));
+        if (this.resourceManager == null) {
+            logger.warn("Null WebApplicationContext during deserialization");
+        }
     }
 }

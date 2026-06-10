@@ -14,6 +14,7 @@
 package com.agiletec.aps.system.common.entity.model.attribute;
 
 import com.agiletec.aps.system.common.entity.model.attribute.util.EnumeratorAttributeItemsExtractor;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -188,6 +189,9 @@ public class EnumeratorAttribute extends MonoTextAttribute implements BeanFactor
 
     @Deprecated
     protected BeanFactory getBeanFactory() {
+        if (this._beanFactory == null) {
+            this._beanFactory = ApplicationContextProvider.getBeanFactory();
+        }
         return this._beanFactory;
     }
 
@@ -219,7 +223,12 @@ public class EnumeratorAttribute extends MonoTextAttribute implements BeanFactor
         } else if (ctx != null) {
             this.setBeanFactory(ctx);
         } else {
-            _logger.warn("Null WebApplicationContext during deserialization of Attribute '{}'", this.getName());
+            BeanFactory fallback = ApplicationContextProvider.getBeanFactory();
+            if (fallback != null) {
+                this.setBeanFactory(fallback);
+            } else {
+                _logger.warn("Null WebApplicationContext during deserialization of Attribute '{}'", this.getName());
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.page.IPageManager;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.parse.attribute.ResourceAttributeHandler;
@@ -46,10 +47,16 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         AttachAttribute attribute = new AttachAttribute();
         attribute.setName("testAttach");
         attribute.setResourceManager(resourceManager);
+        // current web application context available
         attribute = testSerializeAndDeserialize(attribute);
         Assertions.assertNotNull(attribute.getResourceManager());
+        // no current web application context -> re-wired through the ApplicationContextProvider fallback
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
-        Assertions.assertNull(attribute.getResourceManager());
+        Assertions.assertNotNull(attribute.getResourceManager());
+        // neither the current context nor the provider are available -> stays null (warn path).
+        // The raw field is checked (not the getter) so the self-healing getter does not re-resolve.
+        attribute = testSerializeAndDeserializeNoContextAvailable(attribute);
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "resourceManager"));
     }
 
     @Test
@@ -60,15 +67,23 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         attribute.setPageManager(pageManager);
         attribute.setResourceManager(resourceManager);
         attribute.setLangManager(langManager);
+        // current web application context available
         attribute = testSerializeAndDeserialize(attribute);
         Assertions.assertNotNull(attribute.getContentManager());
         Assertions.assertNotNull(attribute.getPageManager());
         Assertions.assertNotNull(attribute.getResourceManager());
         Assertions.assertNotNull(ReflectionTestUtils.invokeGetterMethod(attribute, "langManager"));
+        // no current web application context -> re-wired through the ApplicationContextProvider fallback
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
-        Assertions.assertNull(attribute.getContentManager());
-        Assertions.assertNull(attribute.getPageManager());
-        Assertions.assertNull(attribute.getResourceManager());
+        Assertions.assertNotNull(attribute.getContentManager());
+        Assertions.assertNotNull(attribute.getPageManager());
+        Assertions.assertNotNull(attribute.getResourceManager());
+        // neither the current context nor the provider are available -> stays null (warn path).
+        // Raw fields are checked (not the getters) so the self-healing getters do not re-resolve.
+        attribute = testSerializeAndDeserializeNoContextAvailable(attribute);
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "contentManager"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "pageManager"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "resourceManager"));
     }
 
     @Test
@@ -80,33 +95,58 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         attribute.setResourceManager(resourceManager);
         attribute.setLinkResolverManager(linkResolverManager);
         attribute.setLangManager(langManager);
+        // current web application context available
         attribute = testSerializeAndDeserialize(attribute);
         Assertions.assertNotNull(attribute.getContentManager());
         Assertions.assertNotNull(attribute.getPageManager());
         Assertions.assertNotNull(attribute.getResourceManager());
         Assertions.assertNotNull(attribute.getLinkResolverManager());
         Assertions.assertNotNull(ReflectionTestUtils.invokeGetterMethod(attribute, "langManager"));
+        // no current web application context -> re-wired through the ApplicationContextProvider fallback
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
-        Assertions.assertNull(attribute.getContentManager());
-        Assertions.assertNull(attribute.getPageManager());
-        Assertions.assertNull(attribute.getResourceManager());
-        Assertions.assertNull(attribute.getLinkResolverManager());
-        Assertions.assertNull(ReflectionTestUtils.invokeGetterMethod(attribute, "langManager"));
+        Assertions.assertNotNull(attribute.getContentManager());
+        Assertions.assertNotNull(attribute.getPageManager());
+        Assertions.assertNotNull(attribute.getResourceManager());
+        Assertions.assertNotNull(attribute.getLinkResolverManager());
+        // neither the current context nor the provider are available -> stays null (warn path).
+        // Raw fields are checked (not the getters) so the self-healing getters do not re-resolve.
+        attribute = testSerializeAndDeserializeNoContextAvailable(attribute);
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "contentManager"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "pageManager"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "resourceManager"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "linkResolverManager"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "_langManager"));
     }
 
     @Test
     void testSerializeResourceAttributeHandler() throws Exception {
         ResourceAttributeHandler attributeHandler = new ResourceAttributeHandler();
         attributeHandler.setResourceManager(resourceManager);
+        // current web application context available
         attributeHandler = testSerializeAndDeserialize(attributeHandler);
         Assertions.assertNotNull(ReflectionTestUtils.invokeGetterMethod(attributeHandler, "resourceManager"));
+        // no current web application context -> re-wired through the ApplicationContextProvider fallback
         attributeHandler = testSerializeAndDeserializeNullApplicationContext(attributeHandler);
-        Assertions.assertNull(ReflectionTestUtils.invokeGetterMethod(attributeHandler, "resourceManager"));
+        Assertions.assertNotNull(ReflectionTestUtils.invokeGetterMethod(attributeHandler, "resourceManager"));
+        // neither the current context nor the provider are available -> stays null (warn path).
+        attributeHandler = testSerializeAndDeserializeNoContextAvailable(attributeHandler);
+        Assertions.assertNull(ReflectionTestUtils.getField(attributeHandler, "resourceManager"));
     }
 
     private <T> T testSerializeAndDeserializeNullApplicationContext(T attribute) throws Exception {
         try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class)) {
             contextLoader.when(() -> ContextLoader.getCurrentWebApplicationContext()).thenReturn(null);
+            return testSerializeAndDeserialize(attribute);
+        }
+    }
+
+    private <T> T testSerializeAndDeserializeNoContextAvailable(T attribute) throws Exception {
+        try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class);
+                MockedStatic<ApplicationContextProvider> provider =
+                        Mockito.mockStatic(ApplicationContextProvider.class)) {
+            contextLoader.when(() -> ContextLoader.getCurrentWebApplicationContext()).thenReturn(null);
+            provider.when(() -> ApplicationContextProvider.resolveBean(Mockito.any())).thenReturn(null);
+            provider.when(ApplicationContextProvider::getBeanFactory).thenReturn(null);
             return testSerializeAndDeserialize(attribute);
         }
     }
