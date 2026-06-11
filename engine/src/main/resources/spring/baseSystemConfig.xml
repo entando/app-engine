@@ -142,7 +142,9 @@
         </property>
     </bean>
 
-    <bean class="org.entando.entando.aps.system.init.SystemPostProcessor" />
+    <!-- SystemPostProcessor removed: post-init processes are now executed by
+         org.entando.entando.aps.servlet.StartupListener after the WebApplicationContext
+         is fully refreshed and registered (see that class for details). -->
 
     <bean id="multipartResolver"
           class="org.springframework.web.multipart.support.StandardServletMultipartResolver">

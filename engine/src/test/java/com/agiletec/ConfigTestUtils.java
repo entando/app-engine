@@ -20,6 +20,7 @@ import java.util.*;
 import jakarta.servlet.ServletContext;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.entando.entando.aps.system.init.InitializerManager;
 import org.entando.entando.ent.util.EntLogging;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -55,6 +56,10 @@ public class ConfigTestUtils {
         ContextLoader contextLoader = new ContextLoader(applicationContext);
         contextLoader.initWebApplicationContext(srvCtx);
         applicationContext.refresh();
+        // Post-init processes used to be triggered during refresh() by SystemPostProcessor;
+        // in production they are now executed by StartupListener after the context is fully
+        // initialized. Replicate the same behavior here for the test context.
+        applicationContext.getBean(InitializerManager.class).executePostInitProcesses();
         return applicationContext;
     }
 

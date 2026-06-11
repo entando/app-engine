@@ -385,7 +385,7 @@ public abstract class AbstractResourceAttribute extends TextAttribute
             return;
         }
         try {
-            ResourceInterface resource = this.getResourceManager().loadResource(resourceId.toString());
+            ResourceInterface resource = this.getResourceManager().loadResource(resourceId.toString()); //NOSONAR
             if (null != resource) {
                 this.setResource(resource, this.getDefaultLangCode());
             }
