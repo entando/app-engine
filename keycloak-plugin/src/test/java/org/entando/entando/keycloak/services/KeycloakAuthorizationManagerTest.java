@@ -624,6 +624,32 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testExcludedUserSkipsDynamicSync() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getUsername()).thenReturn("excluded-user");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_WITH_EXCLUDE_USERS);
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).externalAuthSync(anyString(), anyLong(), anyList(), anyList());
+    }
+
+    @Test
+    void testNonExcludedUserStillProcessed() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getUsername()).thenReturn("regular-user");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_WITH_EXCLUDE_USERS);
+
+        manager.init();
+
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, times(1)).externalAuthSync(eq("regular-user"), anyLong(), anyList(), anyList());
+    }
+
+    @Test
     void testRoleFromProfileAndJwtWithPersistAuth() throws Exception {
         // Configurazione: un mapping per profilo (ROLE) e uno per JWT (ROLECLAIM), entrambi con persist=AUTH
         String xmlConf = "<DynamicMapping>"
@@ -1572,6 +1598,27 @@ class KeycloakAuthorizationManagerTest {
             + "</mappings>"
             + "<roles><role>generico</role></roles>"
             + "<groups><group>agroup</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_WITH_EXCLUDE_USERS = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLECLAIM</kind>"
+            + " </mapping>"
+            + "</mappings>"
+            + "<exclusions>"
+            + "   <exclusions>offline_access</exclusions>"
+            + "   <exclusions>uma_authorization</exclusions>"
+            + "</exclusions>"
+            + "<roles><role>generico</role></roles>"
+            + "<groups><group>imported_group</group></groups>"
+            + "<excludeUsers>"
+            + "   <excludeUsers>excluded-user</excludeUsers>"
+            + "</excludeUsers>"
             + "</DynamicMapping>";
 
     private static final String XML_ROLE_CLAIM_NONE = "<DynamicMapping>"

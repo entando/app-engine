@@ -21,6 +21,9 @@ public class DynamicMapping {
     @JacksonXmlElementWrapper(localName = "groups")
     public List<String> groups;
 
+    @JacksonXmlElementWrapper(localName = "excludeUsers")
+    public List<String> excludeUsers;
+
     public Boolean enabled;
     public PersistKind persist;
 

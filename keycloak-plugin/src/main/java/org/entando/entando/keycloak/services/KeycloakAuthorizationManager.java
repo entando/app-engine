@@ -68,6 +68,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
     private int cleanBatchSize;
 
+
     @Autowired
     public KeycloakAuthorizationManager(final KeycloakConfiguration configuration,
                                         final AuthorizationManager authorizationManager,
@@ -102,6 +103,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         List<String> ignore = new ArrayList<>();
         List<String> roles = new ArrayList<>();
         List<String> groups = new ArrayList<>();
+        List<String> excludeUsers = new ArrayList<>();
         Boolean enabled = false;
         PersistKind persist = PersistKind.FULL;
 
@@ -130,6 +132,8 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                             .orElseGet(List::of);
                     groups = ofNullable(dynConf.groups)
                             .orElse(List.of());
+                    excludeUsers = ofNullable(dynConf.excludeUsers)
+                            .orElse(List.of());
                     enabled = ofNullable(dynConf.enabled)
                             .orElse(false);
                     persist = ofNullable(dynConf.persist)
@@ -143,12 +147,12 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
             // finally
-            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, excludeUsers, enabled, persist);
 
             setImportConfiguration(cfg);
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);
-            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE);
 
             setImportConfiguration(cfg);
             throw e;
@@ -211,13 +215,14 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
     public void processNewUser(final UserDetails user, final String token, final boolean decode) {
         processNewUser(user);
-        // safety net! Admin is exempted from group and roles assignment
-        if (ADMIN_USER_NAME.equals(user.getUsername())) return;
-
+        // safety net! Admin is always exempted from group and roles assignment
+        if (ADMIN_USER_NAME.equals(user.getUsername()) || isUserExcluded(user.getUsername())) {
+            log.info("User {} is in the excludeUsers list. Skipping synchronization.", user.getUsername());
+            return;
+        }
         readLock.lock();
         try {
             if (!getImportConfiguration().getEnabled()) return;
-
             // Authorizations coming from dynamic mapping (that is, external sources)
             final List<Authorization> dynamicAuthorizations = new ArrayList<>();
             final Long iat;
@@ -542,6 +547,13 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             return false;
         }
         return getImportConfiguration().getIgnore().contains(name.trim());
+    }
+
+    private boolean isUserExcluded(String username) {
+        if (getImportConfiguration().getExcludeUsers() == null || StringUtils.isBlank(username)) {
+            return false;
+        }
+        return getImportConfiguration().getExcludeUsers().contains(username.trim());
     }
 
     private Authorization finalizeAssociation(KeycloakUser user, String roleName, String groupName,
