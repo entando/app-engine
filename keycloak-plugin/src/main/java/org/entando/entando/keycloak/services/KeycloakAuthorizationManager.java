@@ -211,6 +211,11 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             log.error("invalid dynamic mapping element, 'separator' is blank for {} kind", elem.kind);
             return false;
         }
+        if (elem.fallback != null && elem.kind != ROLEGROUP && elem.kind != ROLEGROUPCLAIM) {
+            log.error("invalid dynamic mapping element, 'fallback' is only valid for {} and {} kinds, found {}",
+                    ROLEGROUP, ROLEGROUPCLAIM, elem.kind);
+            return false;
+        }
         return true;
     }
 

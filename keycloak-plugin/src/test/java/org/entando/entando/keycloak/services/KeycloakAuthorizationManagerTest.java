@@ -489,6 +489,20 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testFallbackOnNonRolegroupKindIsInvalid() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_FALLBACK_ON_WRONG_KIND);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, times(1))
+                .externalAuthSync(eq("testuser"), anyLong(), eq(Collections.emptyList()), eq(Collections.emptyList()));
+    }
+
+    @Test
     void testDynamicConfigurationGroupRoleOnLoginConflict() throws Exception {
         Group group = new Group();
         Role role = new Role();
@@ -1828,7 +1842,23 @@ class KeycloakAuthorizationManagerTest {
             + "   <group>imported_group2</group>"
             + "  </groups>"
             + "</DynamicMapping>";
-    
+
+    // ROLECLAIM mapping with <fallback> set — invalid, should be rejected by isValid
+    private static final String XML_FALLBACK_ON_WRONG_KIND = "<DynamicMapping>"
+            + " <persist>FULL</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLECLAIM</kind>"
+            + "  <fallback>role</fallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "<roles><role>generico</role></roles>"
+            + "<groups></groups>"
+            + "</DynamicMapping>";
+
     private static final String XML_DISABLED = "<DynamicMapping>"
             + "<persist>FULL</persist>"
             + "<enabled>false</enabled>"
