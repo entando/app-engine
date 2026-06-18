@@ -584,11 +584,11 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         }
         // are they managed?
         if (StringUtils.isNotBlank(roleName) && !getImportConfiguration().getRoles().contains(roleName)) {
-            log.info("Role {} is not managed. Skipping assignment for user {}", roleName, user.getUsername());
+            log.warn("Role {} is not managed. Skipping assignment for user {}", roleName, user.getUsername());
             return null;
         }
         if (StringUtils.isNotBlank(groupName) && !getImportConfiguration().getGroups().contains(groupName)) {
-            log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
+            log.warn("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
             return null;
         }
         return createAuthorization(roleName, groupName, createRoleIfMissing);
