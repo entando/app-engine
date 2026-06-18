@@ -598,6 +598,126 @@ class KeycloakAuthorizationManagerTest {
     }
 
     @Test
+    void testRolegroupClaimSingleTokenFallbackRole() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUPCLAIM_SINGLE_TOKEN_FALLBACK_ROLE);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getRole().getName()).isEqualTo("solo-item");
+        assertThat(captured.get(0).getGroup()).isNull();
+    }
+
+    @Test
+    void testRolegroupClaimSingleTokenFallbackGroup() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUPCLAIM_SINGLE_TOKEN_FALLBACK_GROUP);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getGroup().getName()).isEqualTo("solo-item");
+        assertThat(captured.get(0).getRole()).isNull();
+    }
+
+    @Test
+    void testRolegroupClaimSingleTokenFallbackIgnore() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUPCLAIM_SINGLE_TOKEN_FALLBACK_IGNORE);
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).isEmpty();
+    }
+
+    @Test
+    void testRolegroupProfileSingleTokenFallbackRole() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_SINGLE_TOKEN_FALLBACK_ROLE);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("solo-item")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getRole().getName()).isEqualTo("solo-item");
+        assertThat(captured.get(0).getGroup()).isNull();
+    }
+
+    @Test
+    void testRolegroupProfileSingleTokenFallbackGroup() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_SINGLE_TOKEN_FALLBACK_GROUP);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("solo-item")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getGroup().getName()).isEqualTo("solo-item");
+        assertThat(captured.get(0).getRole()).isNull();
+    }
+
+    @Test
+    void testRolegroupProfileSingleTokenFallbackIgnore() throws Exception {
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_SINGLE_TOKEN_FALLBACK_IGNORE);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("solo-item")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).isEmpty();
+    }
+
+    @Test
     void testDynamicConfigurationWithIgnoredRoles() throws Exception {
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(userDetails.getUsername()).thenReturn("testuser");
@@ -1529,6 +1649,102 @@ class KeycloakAuthorizationManagerTest {
             + "  </groups>"
             + "</DynamicMapping>";
 
+    private static final String XML_ROLEGROUPCLAIM_SINGLE_TOKEN_FALLBACK_ROLE = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLEGROUPCLAIM</kind>"
+            + "  <separator>_SEP_</separator>"
+            + "  <singleTokenFallback>role</singleTokenFallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "  <roles><role>solo-item</role></roles>"
+            + "  <groups><group>solo-item</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_ROLEGROUPCLAIM_SINGLE_TOKEN_FALLBACK_GROUP = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLEGROUPCLAIM</kind>"
+            + "  <separator>_SEP_</separator>"
+            + "  <singleTokenFallback>group</singleTokenFallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "  <roles><role>solo-item</role></roles>"
+            + "  <groups><group>solo-item</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_ROLEGROUPCLAIM_SINGLE_TOKEN_FALLBACK_IGNORE = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <path>realm_access.roles</path>"
+            + "  <kind>ROLEGROUPCLAIM</kind>"
+            + "  <separator>_SEP_</separator>"
+            + "  <singleTokenFallback>ignore</singleTokenFallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "  <roles><role>solo-item</role></roles>"
+            + "  <groups><group>solo-item</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_ROLEGROUP_SINGLE_TOKEN_FALLBACK_ROLE = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <attribute>AD_GROUPROLE</attribute>"
+            + "  <kind>ROLEGROUP</kind>"
+            + "  <separator>_SEP_</separator>"
+            + "  <singleTokenFallback>role</singleTokenFallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "  <roles><role>solo-item</role></roles>"
+            + "  <groups><group>solo-item</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_ROLEGROUP_SINGLE_TOKEN_FALLBACK_GROUP = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <attribute>AD_GROUPROLE</attribute>"
+            + "  <kind>ROLEGROUP</kind>"
+            + "  <separator>_SEP_</separator>"
+            + "  <singleTokenFallback>group</singleTokenFallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "  <roles><role>solo-item</role></roles>"
+            + "  <groups><group>solo-item</group></groups>"
+            + "</DynamicMapping>";
+
+    private static final String XML_ROLEGROUP_SINGLE_TOKEN_FALLBACK_IGNORE = "<DynamicMapping>"
+            + " <persist>AUTH</persist>"
+            + " <enabled>true</enabled>"
+            + "<mappings>"
+            + " <mapping>"
+            + "  <enabled>true</enabled>"
+            + "  <attribute>AD_GROUPROLE</attribute>"
+            + "  <kind>ROLEGROUP</kind>"
+            + "  <separator>_SEP_</separator>"
+            + "  <singleTokenFallback>ignore</singleTokenFallback>"
+            + " </mapping>"
+            + "</mappings>"
+            + "  <roles><role>solo-item</role></roles>"
+            + "  <groups><group>solo-item</group></groups>"
+            + "</DynamicMapping>";
+
     private static final String XML_NO_MAPPING = "<DynamicMapping>"
             + " <persist>FULL</persist>"
             + " <enabled>true</enabled>"
@@ -1773,6 +1989,33 @@ class KeycloakAuthorizationManagerTest {
             + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
             + "    \"realm_access\" : {"
             + "      \"roles\" : [ \"group1\", \"_SEP_group2\" ]"
+            + "    },"
+            + "    \"scope\" : \"openid profile email\","
+            + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"email_verified\" : false,"
+            + "    \"name\" : \"User lastname\","
+            + "    \"preferred_username\" : \"user@email.it\","
+            + "    \"given_name\" : \"User\","
+            + "    \"family_name\" : \"lastname\","
+            + "    \"email\" : \"user@email.it\""
+            + "  }";
+
+    private static final String JWT_SINGLE_TOKEN = "{"
+            + "    \"exp\" : 1768319443,"
+            + "    \"iat\" : 1768319143,"
+            + "    \"auth_time\" : 1768319142,"
+            + "    \"jti\" : \"e64ed1da-aa8c-488f-be10-09e0c2f580c3\","
+            + "    \"iss\" : \"https://localhost:8080/auth/realms/entando\","
+            + "    \"aud\" : [ \"sim730\", \"account\" ],"
+            + "    \"sub\" : \"5e7213c6-ad81-4094-bb24-fead709b05af\","
+            + "    \"typ\" : \"Bearer\","
+            + "    \"azp\" : \"entando-web\","
+            + "    \"nonce\" : \"6a9f89c2-c904-4e9e-80cb-e8c1ccddd1e0\","
+            + "    \"session_state\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","
+            + "    \"acr\" : \"1\","
+            + "    \"allowed-origins\" : [ \"https://localhost:8080\", \"*\" ],"
+            + "    \"realm_access\" : {"
+            + "      \"roles\" : [ \"solo-item\" ]"
             + "    },"
             + "    \"scope\" : \"openid profile email\","
             + "    \"sid\" : \"0503e261-d522-41b6-8096-1debdd2c86e7\","

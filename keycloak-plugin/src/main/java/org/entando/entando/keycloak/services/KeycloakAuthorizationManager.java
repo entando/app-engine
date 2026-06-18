@@ -38,6 +38,7 @@ import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
 import org.entando.entando.keycloak.services.mapping.PersistKind;
+import org.entando.entando.keycloak.services.mapping.SingleTokenFallback;
 import org.entando.entando.keycloak.services.oidc.OidcMappingHelper;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -344,8 +345,14 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 final String[] tokens = candidate.split(sep);
 
                 if (tokens.length < 2) {
-                    // treat as a role
-//                    result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
+                    if (elem.singleTokenFallback == SingleTokenFallback.ROLE) {
+                        result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
+                    } else if (elem.singleTokenFallback == SingleTokenFallback.GROUP) {
+                        result.addAll(finalizeGroupAssociation(user, elem, List.of(candidate.trim())));
+                    } else {
+                        log.warn("Single-token candidate '{}' for user {} has no separator '{}' — discarding",
+                                candidate, user.getUsername(), sep);
+                    }
                     continue;
                 }
 
@@ -476,6 +483,18 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 return result;
             }
             for (String groupRoleToken : authorizations) {
+                final String[] tokens = groupRoleToken.split(separator);
+                if (tokens.length < 2) {
+                    if (elem.singleTokenFallback == SingleTokenFallback.ROLE) {
+                        result.addAll(finalizeRoleAssociation(user, elem, List.of(groupRoleToken.trim())));
+                    } else if (elem.singleTokenFallback == SingleTokenFallback.GROUP) {
+                        result.addAll(finalizeGroupAssociation(user, elem, List.of(groupRoleToken.trim())));
+                    } else {
+                        log.warn("Single-token candidate '{}' for user {} has no separator '{}' — discarding",
+                                groupRoleToken, user.getUsername(), separator);
+                    }
+                    continue;
+                }
                 Authorization auth = parseAuthForRoleGroup(user, groupRoleToken, separator);
                 if (auth != null) {
                     result.add(auth);
