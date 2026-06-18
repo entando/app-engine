@@ -345,13 +345,17 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 final String[] tokens = candidate.split(sep);
 
                 if (tokens.length < 2) {
-                    if (elem.singleTokenFallback == SingleTokenFallback.ROLE) {
-                        result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
-                    } else if (elem.singleTokenFallback == SingleTokenFallback.GROUP) {
+                    if (elem.fallback == SingleTokenFallback.GROUP) {
                         result.addAll(finalizeGroupAssociation(user, elem, List.of(candidate.trim())));
-                    } else {
+                    } else if (elem.fallback == SingleTokenFallback.IGNORE) {
                         log.warn("Single-token candidate '{}' for user {} has no separator '{}' — discarding",
                                 candidate, user.getUsername(), sep);
+                    } else {
+                        if (elem.fallback == null) {
+                            log.info("No fallback configured for single-token candidate '{}' for user '{}' — defaulting to role assignment",
+                                    candidate, user.getUsername());
+                        }
+                        result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
                     }
                     continue;
                 }
@@ -485,13 +489,17 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             for (String groupRoleToken : authorizations) {
                 final String[] tokens = groupRoleToken.split(separator);
                 if (tokens.length < 2) {
-                    if (elem.singleTokenFallback == SingleTokenFallback.ROLE) {
-                        result.addAll(finalizeRoleAssociation(user, elem, List.of(groupRoleToken.trim())));
-                    } else if (elem.singleTokenFallback == SingleTokenFallback.GROUP) {
+                    if (elem.fallback == SingleTokenFallback.GROUP) {
                         result.addAll(finalizeGroupAssociation(user, elem, List.of(groupRoleToken.trim())));
-                    } else {
+                    } else if (elem.fallback == SingleTokenFallback.IGNORE) {
                         log.warn("Single-token candidate '{}' for user {} has no separator '{}' — discarding",
                                 groupRoleToken, user.getUsername(), separator);
+                    } else {
+                        if (elem.fallback == null) {
+                            log.info("No fallback configured for single-token candidate '{}' for user '{}' — defaulting to role assignment",
+                                    groupRoleToken, user.getUsername());
+                        }
+                        result.addAll(finalizeRoleAssociation(user, elem, List.of(groupRoleToken.trim())));
                     }
                     continue;
                 }

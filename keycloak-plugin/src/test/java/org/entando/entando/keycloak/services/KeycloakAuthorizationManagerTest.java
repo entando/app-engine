@@ -538,10 +538,33 @@ class KeycloakAuthorizationManagerTest {
 
     @Test
     void testDynamicConfigurationRoleGroupOnLoginFromJwtEdgeCases() throws Exception {
+        // JWT_ROLEGROUP_EDGE has ["group1", "_SEP_group2"]:
+        //   "group1"      → single token, <fallback>ignore</fallback> → discarded
+        //   "_SEP_group2" → splits to ["", "group2"], empty role name → discarded
+        String xmlEdgeCases = "<DynamicMapping>"
+                + " <persist>FULL</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLEGROUPCLAIM</kind>"
+                + "  <separator>_SEP_</separator>"
+                + "  <fallback>ignore</fallback>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<exclusions>"
+                + "   <exclusions>default-roles-entando-development</exclusions>"
+                + "   <exclusions>offline_access</exclusions>"
+                + "   <exclusions>uma_authorization</exclusions>"
+                + "  </exclusions>"
+                + "  <roles><role>role1</role><role>role2</role><role>group1</role></roles>"
+                + "  <groups><group>group1</group><group>group2</group></groups>"
+                + "</DynamicMapping>";
         when(configuration.getDefaultAuthorizations()).thenReturn(null);
         when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
         when(userDetails.getUsername()).thenReturn("testuser");
-        when(configManager.getConfigItem(anyString())).thenReturn(XML_ROLEGROUP_CLAIM);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlEdgeCases);
 
         manager.init();
 
@@ -1658,7 +1681,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
             + "  <separator>_SEP_</separator>"
-            + "  <singleTokenFallback>role</singleTokenFallback>"
+            + "  <fallback>role</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "  <roles><role>solo-item</role></roles>"
@@ -1674,7 +1697,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
             + "  <separator>_SEP_</separator>"
-            + "  <singleTokenFallback>group</singleTokenFallback>"
+            + "  <fallback>group</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "  <roles><role>solo-item</role></roles>"
@@ -1690,7 +1713,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
             + "  <separator>_SEP_</separator>"
-            + "  <singleTokenFallback>ignore</singleTokenFallback>"
+            + "  <fallback>ignore</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "  <roles><role>solo-item</role></roles>"
@@ -1706,7 +1729,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_SEP_</separator>"
-            + "  <singleTokenFallback>role</singleTokenFallback>"
+            + "  <fallback>role</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "  <roles><role>solo-item</role></roles>"
@@ -1722,7 +1745,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_SEP_</separator>"
-            + "  <singleTokenFallback>group</singleTokenFallback>"
+            + "  <fallback>group</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "  <roles><role>solo-item</role></roles>"
@@ -1738,7 +1761,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <attribute>AD_GROUPROLE</attribute>"
             + "  <kind>ROLEGROUP</kind>"
             + "  <separator>_SEP_</separator>"
-            + "  <singleTokenFallback>ignore</singleTokenFallback>"
+            + "  <fallback>ignore</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "  <roles><role>solo-item</role></roles>"
