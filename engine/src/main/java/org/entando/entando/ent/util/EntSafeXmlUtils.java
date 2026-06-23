@@ -15,6 +15,7 @@
 package org.entando.entando.ent.util;
 
 import org.entando.entando.ent.exception.EntRuntimeException;
+import org.jdom2.input.SAXBuilder;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
@@ -74,6 +75,16 @@ public class EntSafeXmlUtils {
         SchemaFactory factory = EntSafeXmlUtils.newSafeSchemaFactory(schemaLanguage);
         StreamSource schemaSource = new StreamSource(resourceAsStream);
         return factory.newSchema(schemaSource);
+    }
+
+    public static SAXBuilder newSafeSAXBuilder() {
+        SAXBuilder builder = new SAXBuilder();
+        builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        builder.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        builder.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        builder.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        builder.setExpandEntities(false);
+        return builder;
     }
 
     private EntSafeXmlUtils() {

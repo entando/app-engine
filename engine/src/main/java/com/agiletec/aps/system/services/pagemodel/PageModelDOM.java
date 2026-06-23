@@ -28,6 +28,7 @@ import org.entando.entando.aps.system.services.widgettype.WidgetType;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
@@ -107,13 +108,13 @@ public class PageModelDOM {
 	}
 
 	private void decodeDOM(String xmlText) throws EntException {
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		try {
 			_doc = builder.build(reader);
 		} catch (Throwable t) {
-			_logger.error("Error parsing the page template XML: {}", xmlText, t);
+			_logger.error("Error parsing the page template XML", t);
 			throw new EntException("Error parsing the page template XML", t);
 		}
 	}
