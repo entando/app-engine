@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        Exclusion rules for RequestLoggingInterceptor HTML sanitization.
+        Each entry specifies one or more parameters that will not be sanitized for a given action path.
+        actionPath is optional: if omitted, the exclusion applies to all actions.
+        actionPath is matched with endsWith() — the deployment context path need not be included.
+
+        Example:
+        <bean class="org.entando.entando.apsadmin.system.RequestLoggingInterceptorConfig$Exclusion">
+            <property name="parameters"><list><value>content</value></list></property>
+        </bean>
+        <bean class="org.entando.entando.apsadmin.system.RequestLoggingInterceptorConfig$Exclusion">
+            <property name="actionPath" value="/do/PageModel/save.action"/>
+            <property name="parameters">
+                <list>
+                    <value>template</value>
+                    <value>extraConfig</value>
+                </list>
+            </property>
+        </bean>
+    -->
+    <bean id="RequestLoggingInterceptorConfig"
+          class="org.entando.entando.apsadmin.system.RequestLoggingInterceptorConfig">
+        <property name="exclusions">
+            <list>
+                <bean class="org.entando.entando.apsadmin.system.RequestLoggingInterceptorConfig$Exclusion">
+                    <property name="actionPath" value="/do/PageModel/save.action"/>
+                    <property name="parameters">
+                        <list>
+                            <value>template</value>
+                            <value>xmlConfiguration</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.entando.entando.apsadmin.system.RequestLoggingInterceptorConfig$Exclusion">
+                    <property name="actionPath" value="/do/Content/save.action"/>
+                    <property name="parameters">
+                        <list>
+                            <value>textAttribute</value>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+</beans>

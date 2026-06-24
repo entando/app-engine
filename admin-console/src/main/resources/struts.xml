@@ -36,7 +36,8 @@
 			<interceptor name="entandoToken" class="org.entando.entando.apsadmin.system.CustomTokenInterceptor" />	
 			<interceptor name="redirectMessage" class="org.entando.entando.apsadmin.system.RedirectMessageInterceptor" />
 			<interceptor name="headlessLayout" class="org.entando.entando.apsadmin.system.HeadlessLayoutInterceptor" />
-			
+			<interceptor name="requestLogger" class="org.entando.entando.apsadmin.system.RequestLoggingInterceptor" />
+
 			<interceptor-stack name="entandoFreeStack">
 				<interceptor-ref name="tenant"/>
 				<interceptor-ref name="mdcTenant"/>
@@ -54,6 +55,7 @@
 			</interceptor-stack>
 			
 			<interceptor-stack name="entandoFreeValidationStack">
+				<interceptor-ref name="requestLogger" />
 				<interceptor-ref name="entandoFreeStack" />
 				<interceptor-ref name="validation">
 					<param name="excludeMethods">input,back,cancel</param>
@@ -101,7 +103,8 @@
 		<interceptors>
             
 			<interceptor name="i18nFrontEnd" class="org.entando.entando.aps.internalservlet.system.I18nFrontEndInterceptor" />
-            
+			<interceptor name="requestLogger" class="org.entando.entando.apsadmin.system.RequestLoggingInterceptor" />
+
 			<interceptor-stack name="entandoFrontEndFreeStack">
 				<interceptor-ref name="exception"/>
 				<interceptor-ref name="alias"/>
@@ -122,6 +125,7 @@
 			</interceptor-stack>
             
 			<interceptor-stack name="entandoFrontEndFreeValidationStack">
+				<interceptor-ref name="requestLogger" />
 				<interceptor-ref name="entandoFrontEndFreeStack" />
 				<interceptor-ref name="validation">
 					<param name="excludeMethods">input,back,cancel</param>
