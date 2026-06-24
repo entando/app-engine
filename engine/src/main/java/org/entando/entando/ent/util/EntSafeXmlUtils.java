@@ -42,6 +42,7 @@ public class EntSafeXmlUtils {
     private static final String HTTP_XML_ORG_SAX_FEATURES_EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities";
     private static final String HTTP_APACHE_ORG_XML_FEATURES_NONVALIDATING_LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
     public static final String XMLSCHEMA_FACTORY_CLASS = "com.sun.org.apache.xerces.internal.jaxp.validation.XMLSchemaFactory";
+    public static final String HTTP_APACHE_ORG_XML_FEATURES_DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
 
     private static SAXParserFactory newSaxParserFactory() {
         SAXParserFactory parseFactory = SAXParserFactory.newInstance();
@@ -79,10 +80,10 @@ public class EntSafeXmlUtils {
 
     public static SAXBuilder newSafeSAXBuilder() {
         SAXBuilder builder = new SAXBuilder();
-        builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        builder.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        builder.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        builder.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        builder.setFeature(HTTP_APACHE_ORG_XML_FEATURES_DISALLOW_DOCTYPE_DECL, true);
+        builder.setFeature(HTTP_XML_ORG_SAX_FEATURES_EXTERNAL_GENERAL_ENTITIES, false);
+        builder.setFeature(HTTP_XML_ORG_SAX_FEATURES_EXTERNAL_PARAMETER_ENTITIES, false);
+        builder.setFeature(HTTP_APACHE_ORG_XML_FEATURES_NONVALIDATING_LOAD_EXTERNAL_DTD, false);
         builder.setExpandEntities(false);
         return builder;
     }
