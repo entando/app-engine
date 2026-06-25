@@ -28,7 +28,7 @@ import com.agiletec.plugins.jacms.apsadmin.resource.helper.IResourceActionHelper
  * @author E.Santoboni
  */
 public abstract class AbstractResourceAction extends AbstractTreeAction {
-	
+
 	public List<String> getResourceTypeCodes() {
 		return this.getResourceManager().getResourceTypeCodes();
 	}
@@ -58,7 +58,14 @@ public abstract class AbstractResourceAction extends AbstractTreeAction {
 	public String getResourceTypeCode() {
 		return _resourceTypeCode;
 	}
+
+	// Accept only registered type codes; neutralizes reflected input at the single bind point (SSTI, WSTG-INPV-18).
 	public void setResourceTypeCode(String resourceTypeCode) {
+		if (null != resourceTypeCode && null != this.getResourceManager()
+				&& !this.getResourceManager().getResourceTypeCodes().contains(resourceTypeCode)) {
+			this._resourceTypeCode = null;
+			return;
+		}
 		this._resourceTypeCode = resourceTypeCode;
 	}
 	
