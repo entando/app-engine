@@ -45,8 +45,8 @@ public final class LabelSanitizer {
         }
         for (Object key : new ArrayList<>(properties.keySet())) {
             Object value = properties.get(key);
-            if (value instanceof String) {
-                properties.put(key, stripMarkup((String) value));
+            if (value instanceof String s) {
+                properties.put(key, stripMarkup(s));
             }
         }
     }
