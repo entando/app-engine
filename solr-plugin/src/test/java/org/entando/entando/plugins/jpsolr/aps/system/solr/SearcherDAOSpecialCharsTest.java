@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Special-character handling tests for SearcherDAO query building.
@@ -241,6 +242,100 @@ class SearcherDAOSpecialCharsTest {
 
         runAndAssert(filter,
                 "+(entity_key:\"foo:bar\" entity_key:\"baz+qux\") +(entity_group:free)");
+    }
+
+    // ------------------------------------------------------------------
+    // Field-key injection tests (CVE-class: Lucene query injection)
+    //
+    // User-controlled field names that contain Lucene/Solr meta-characters
+    // (parentheses, spaces, operators, local-params braces …) corrupt the
+    // query string produced by BooleanQuery.toString() and can break the
+    // group-based access-control filter.  All such inputs must be rejected
+    // with IllegalArgumentException before any Term object is constructed.
+    // ------------------------------------------------------------------
+
+    @Test
+    void shouldRejectFieldNameWithParenthesisAndOrOperator() {
+        // Simulates: filters[0].attribute = "foo) OR (*:*"
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("foo) OR (*:*", false, "value");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
+    }
+
+    @Test
+    void shouldRejectEntityAttrWithInjectedOperator() {
+        // Simulates: filters[0].entityAttr = "attr) OR (*:*"  (isAttributeFilter = true)
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("attr) OR (*:*", true, "value");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
+    }
+
+    @Test
+    void shouldRejectFieldNameWithSpaces() {
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("valid AND malicious", false, "value");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
+    }
+
+    @Test
+    void shouldRejectLangCodeUsedAsFullTextSearchKey() {
+        // Simulates: lang = "en) OR (*:*" passed as the full-text search field key.
+        // The filter key IS the lang code when fullTextSearch = true.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("en) OR (*:*", "search text",
+                        TextSearchOption.AT_LEAST_ONE_WORD);
+        filter.setFullTextSearch(true);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
+    }
+
+    @Test
+    void shouldRejectInjectedLangCodePrefixOnAttributeFilter() {
+        // Simulates a crafted SolrSearchEngineFilter whose langCode (the prefix
+        // prepended to the field name for attribute filters) contains operators.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("key", true, "value");
+        filter.setLangCode("en) OR (*:*");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
+    }
+
+    @Test
+    void shouldRejectFieldNameWithSolrLocalParamsBrace() {
+        // Simulates an attempt to inject Solr local params ({!...}) via field name.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("{!func}log(popularity)", false, "value");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
+    }
+
+    @Test
+    void shouldRejectFieldNameInDoubleFilterArray() {
+        // Same injection via the searchFacetedContents(SearchEngineFilter[][] …) overload.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("foo) OR (*:*", false, "value");
+
+        SearchEngineFilter[][] doubleFilters =
+                new SearchEngineFilter[][]{{filter}};
+
+        assertThrows(IllegalArgumentException.class, () ->
+                searcherDAO.searchFacetedContents(doubleFilters,
+                        new SearchEngineFilter[]{}, new ArrayList<>()));
     }
 
     // ------------------------------------------------------------------
