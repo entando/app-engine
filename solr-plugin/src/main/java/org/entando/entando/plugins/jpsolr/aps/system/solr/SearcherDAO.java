@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +65,12 @@ import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngine
  */
 @Slf4j
 public class SearcherDAO implements ISolrSearcherDAO {
+
+    // Allowlist for Lucene/Solr field names: only alphanumeric and underscore.
+    // Parentheses, spaces, operators (AND/OR/NOT), and other Lucene meta-characters
+    // in a field name break the serialized query string produced by BooleanQuery.toString()
+    // and are the root of the Lucene query injection vulnerability.
+    private static final Pattern VALID_FIELD_KEY = Pattern.compile("[a-zA-Z0-9_]+");
 
     private ITreeNodeManager treeNodeManager;
     private ILangManager langManager;
@@ -541,6 +548,10 @@ public class SearcherDAO implements ISolrSearcherDAO {
 
     protected String getFilterKey(SearchEngineFilter<?> filter) {
         String key = filter.getKey().replace(":", "_");
+        if (!VALID_FIELD_KEY.matcher(key).matches()) {
+            throw new IllegalArgumentException(
+                    "Rejected Solr field key with unsafe characters: '" + key + "'");
+        }
         if (filter.isFullTextSearch()) {
             return key;
         }
@@ -548,7 +559,12 @@ public class SearcherDAO implements ISolrSearcherDAO {
             String insertedLangCode = filter.getLangCode();
             String langCode = (StringUtils.isBlank(insertedLangCode)) ? this.getLangManager().getDefaultLang().getCode()
                     : insertedLangCode;
-            key = langCode.toLowerCase() + "_" + key;
+            String normalizedLang = langCode.toLowerCase();
+            if (!VALID_FIELD_KEY.matcher(normalizedLang).matches()) {
+                throw new IllegalArgumentException(
+                        "Rejected Solr lang code with unsafe characters: '" + normalizedLang + "'");
+            }
+            key = normalizedLang + "_" + key;
         } else if (!key.startsWith(SolrFields.SOLR_FIELD_PREFIX)) {
             key = SolrFields.SOLR_FIELD_PREFIX + key;
         }
