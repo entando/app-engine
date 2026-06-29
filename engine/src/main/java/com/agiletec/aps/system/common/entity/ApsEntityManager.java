@@ -255,6 +255,7 @@ public abstract class ApsEntityManager extends AbstractService
         if (null == entityType) {
             throw new EntException("Invalid entity type to add");
         }
+        this.sanitizeEntityTypeLabels(entityType);
         Map<String, IApsEntity> newEntityTypes = this.getEntityTypes();
         newEntityTypes.put(entityType.getTypeCode(), entityType);
         this.updateEntityPrototypes(newEntityTypes);
