@@ -45,6 +45,7 @@ import org.entando.entando.aps.system.services.widgettype.events.WidgetTypeChang
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.ent.util.LabelSanitizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -131,6 +132,7 @@ public class PageManager extends AbstractParameterizableService implements IPage
      */
     @Override
     public synchronized void addPage(IPage page) throws EntException {
+        LabelSanitizer.stripMarkup(page.getTitles());
         try {
             IPage parent = this.getDraftPage(page.getParentCode());
             if (null == parent) {
@@ -165,6 +167,7 @@ public class PageManager extends AbstractParameterizableService implements IPage
      */
     @Override
     public synchronized void updatePage(IPage page) throws EntException {
+        LabelSanitizer.stripMarkup(page.getTitles());
         try {
             this.getPageDAO().updatePage(page);
             this.getCacheWrapper().updateDraftPage(page);
