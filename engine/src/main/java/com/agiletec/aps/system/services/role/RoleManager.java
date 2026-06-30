@@ -25,6 +25,7 @@ import com.agiletec.aps.system.services.role.cache.IPermissionCacheWrapper;
 import com.agiletec.aps.system.services.role.cache.IRoleCacheWrapper;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.LabelSanitizer;
 
 /**
  * Servizio di gestione dei ruoli.
@@ -110,6 +111,7 @@ public class RoleManager extends AbstractService implements IRoleManager, Refres
 	 */
 	@Override
 	public void updateRole(Role role) throws EntException {
+		role.setDescription(LabelSanitizer.stripMarkup(role.getDescription()));
 		try {
 			this.getRoleDAO().updateRole(role);
 			this.getRoleCacheWrapper().updateRole(role);
@@ -127,6 +129,7 @@ public class RoleManager extends AbstractService implements IRoleManager, Refres
 	 */
 	@Override
 	public void addRole(Role role) throws EntException {
+		role.setDescription(LabelSanitizer.stripMarkup(role.getDescription()));
 		try {
 			this.getRoleDAO().addRole(role);
 			this.getRoleCacheWrapper().addRole(role);
