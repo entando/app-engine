@@ -21,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Special-character handling tests for SearcherDAO query building.
@@ -250,44 +249,39 @@ class SearcherDAOSpecialCharsTest {
     // User-controlled field names that contain Lucene/Solr meta-characters
     // (parentheses, spaces, operators, local-params braces …) corrupt the
     // query string produced by BooleanQuery.toString() and can break the
-    // group-based access-control filter.  All such inputs must be rejected
-    // with IllegalArgumentException before any Term object is constructed.
+    // group-based access-control filter.  All such inputs must be dropped
+    // (logged and skipped) so that the injected field never reaches the
+    // executed query, which retains only the safe access-control clause.
     // ------------------------------------------------------------------
 
     @Test
-    void shouldRejectFieldNameWithParenthesisAndOrOperator() {
+    void shouldDropFieldNameWithParenthesisAndOrOperator() throws Exception {
         // Simulates: filters[0].attribute = "foo) OR (*:*"
         SolrSearchEngineFilter<String> filter =
                 new SolrSearchEngineFilter<>("foo) OR (*:*", false, "value");
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        runAndAssert(filter, "+(entity_group:free)");
     }
 
     @Test
-    void shouldRejectEntityAttrWithInjectedOperator() {
+    void shouldDropEntityAttrWithInjectedOperator() throws Exception {
         // Simulates: filters[0].entityAttr = "attr) OR (*:*"  (isAttributeFilter = true)
         SolrSearchEngineFilter<String> filter =
                 new SolrSearchEngineFilter<>("attr) OR (*:*", true, "value");
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        runAndAssert(filter, "+(entity_group:free)");
     }
 
     @Test
-    void shouldRejectFieldNameWithSpaces() {
+    void shouldDropFieldNameWithSpaces() throws Exception {
         SolrSearchEngineFilter<String> filter =
                 new SolrSearchEngineFilter<>("valid AND malicious", false, "value");
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        runAndAssert(filter, "+(entity_group:free)");
     }
 
     @Test
-    void shouldRejectLangCodeUsedAsFullTextSearchKey() {
+    void shouldDropLangCodeUsedAsFullTextSearchKey() throws Exception {
         // Simulates: lang = "en) OR (*:*" passed as the full-text search field key.
         // The filter key IS the lang code when fullTextSearch = true.
         SolrSearchEngineFilter<String> filter =
@@ -295,37 +289,31 @@ class SearcherDAOSpecialCharsTest {
                         TextSearchOption.AT_LEAST_ONE_WORD);
         filter.setFullTextSearch(true);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        runAndAssert(filter, "+(entity_group:free)");
     }
 
     @Test
-    void shouldRejectInjectedLangCodePrefixOnAttributeFilter() {
+    void shouldDropInjectedLangCodePrefixOnAttributeFilter() throws Exception {
         // Simulates a crafted SolrSearchEngineFilter whose langCode (the prefix
         // prepended to the field name for attribute filters) contains operators.
         SolrSearchEngineFilter<String> filter =
                 new SolrSearchEngineFilter<>("key", true, "value");
         filter.setLangCode("en) OR (*:*");
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        runAndAssert(filter, "+(entity_group:free)");
     }
 
     @Test
-    void shouldRejectFieldNameWithSolrLocalParamsBrace() {
+    void shouldDropFieldNameWithSolrLocalParamsBrace() throws Exception {
         // Simulates an attempt to inject Solr local params ({!...}) via field name.
         SolrSearchEngineFilter<String> filter =
                 new SolrSearchEngineFilter<>("{!func}log(popularity)", false, "value");
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        runAndAssert(filter, "+(entity_group:free)");
     }
 
     @Test
-    void shouldRejectFieldNameInDoubleFilterArray() {
+    void shouldDropFieldNameInDoubleFilterArray() throws Exception {
         // Same injection via the searchFacetedContents(SearchEngineFilter[][] …) overload.
         SolrSearchEngineFilter<String> filter =
                 new SolrSearchEngineFilter<>("foo) OR (*:*", false, "value");
@@ -333,9 +321,14 @@ class SearcherDAOSpecialCharsTest {
         SearchEngineFilter[][] doubleFilters =
                 new SearchEngineFilter[][]{{filter}};
 
-        assertThrows(IllegalArgumentException.class, () ->
-                searcherDAO.searchFacetedContents(doubleFilters,
-                        new SearchEngineFilter[]{}, new ArrayList<>()));
+        ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
+        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
+                .thenReturn(mockQueryResponse());
+
+        searcherDAO.searchFacetedContents(doubleFilters,
+                new SearchEngineFilter[]{}, new ArrayList<>());
+
+        Assertions.assertEquals("+(entity_group:free)", queryCaptor.getValue().getQuery());
     }
 
     // ------------------------------------------------------------------
