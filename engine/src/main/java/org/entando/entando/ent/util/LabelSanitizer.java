@@ -32,7 +32,12 @@ public final class LabelSanitizer {
      */
     public static String stripMarkup(String value) {
         return (value == null) ? null
-                : value.replace("<", "").replace(">", "").replace("\"", "");
+                : value.replace("<", "")
+                .replace(">", "")
+                .replace("\"", "")
+                .replace("&lt;", "")
+                .replace("&gt;", "")
+                .replace("&quot;", "");
     }
 
     /**
