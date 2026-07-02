@@ -322,8 +322,9 @@ class SearcherDAOSpecialCharsTest {
                 new SearchEngineFilter[][]{{filter}};
 
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
+        QueryResponse queryResponse = mockQueryResponse();
         Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
-                .thenReturn(mockQueryResponse());
+                .thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(doubleFilters,
                 new SearchEngineFilter[]{}, new ArrayList<>());
