@@ -1,5 +1,9 @@
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
@@ -19,7 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -118,7 +121,7 @@ class SearcherDAOSpecialCharsTest {
 
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
+        when(solrClient.query(any(), queryCaptor.capture()))
                 .thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
@@ -323,7 +326,7 @@ class SearcherDAOSpecialCharsTest {
 
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
+        when(solrClient.query(any(), queryCaptor.capture()))
                 .thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(doubleFilters,
@@ -339,7 +342,7 @@ class SearcherDAOSpecialCharsTest {
     private void runAndAssert(SearchEngineFilter filter, String expectedQuery) throws Exception {
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
+        when(solrClient.query(any(), queryCaptor.capture()))
                 .thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
@@ -351,13 +354,13 @@ class SearcherDAOSpecialCharsTest {
     private void mockDefaultLang() {
         Lang lang = new Lang();
         lang.setCode("en");
-        Mockito.when(langManager.getDefaultLang()).thenReturn(lang);
+        when(langManager.getDefaultLang()).thenReturn(lang);
     }
 
     private QueryResponse mockQueryResponse() {
-        QueryResponse queryResponse = Mockito.mock(QueryResponse.class);
+        QueryResponse queryResponse = mock(QueryResponse.class);
         SolrDocumentList documents = new SolrDocumentList();
-        Mockito.when(queryResponse.getResults()).thenReturn(documents);
+        when(queryResponse.getResults()).thenReturn(documents);
         return queryResponse;
     }
 }

