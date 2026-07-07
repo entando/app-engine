@@ -182,18 +182,26 @@ public class SearcherDAO implements ISolrSearcherDAO {
     }
 
     private void addFilters(SolrQuery solrQuery, SearchEngineFilter[] filters) {
-        if (null != filters) {
-            for (SearchEngineFilter<?> filter : filters) {
-                if (null != this.getRelevance(filter)) {
-                    solrQuery.addSort("score", ORDER.desc);
-                } else if (null != filter.getOrder()) {
-                    String fieldKey = this.getFilterKey(filter);
-                    if (null != fieldKey) {
-                        boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
-                        solrQuery.addSort(fieldKey, (revert) ? ORDER.desc : ORDER.asc);
-                    }
-                }
-            }
+        if (null == filters) {
+            return;
+        }
+        for (SearchEngineFilter<?> filter : filters) {
+            this.addSort(solrQuery, filter);
+        }
+    }
+
+    private void addSort(SolrQuery solrQuery, SearchEngineFilter<?> filter) {
+        if (null != this.getRelevance(filter)) {
+            solrQuery.addSort("score", ORDER.desc);
+            return;
+        }
+        if (null == filter.getOrder()) {
+            return;
+        }
+        String fieldKey = this.getFilterKey(filter);
+        if (null != fieldKey) {
+            boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
+            solrQuery.addSort(fieldKey, revert ? ORDER.desc : ORDER.asc);
         }
     }
 
