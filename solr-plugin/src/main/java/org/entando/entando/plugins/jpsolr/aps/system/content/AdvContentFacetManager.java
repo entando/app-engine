@@ -22,6 +22,7 @@ import com.agiletec.plugins.jacms.aps.system.services.content.widget.UserFilterO
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -29,9 +30,15 @@ import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.searchengine.FacetedContentsResult;
 import org.entando.entando.aps.system.services.searchengine.SearchEngineFilter;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.web.common.exceptions.ValidationConflictException;
+import org.entando.entando.web.common.model.Filter;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
+import org.entando.entando.plugins.jpsolr.web.content.model.SolrFilter;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +50,11 @@ import org.springframework.stereotype.Service;
 @Service
 @SolrActive(true)
 public class AdvContentFacetManager implements IAdvContentFacetManager {
+
+    private static final EntLogger logger = EntLogFactory.getSanitizedLogger(AdvContentFacetManager.class);
+
+    private static final Pattern SAFE_IDENTIFIER = Pattern.compile("[a-zA-Z0-9_.:,-]+");
+    private static final Pattern INJECTION_PATTERN = Pattern.compile("\\$\\{|%24%7B", Pattern.CASE_INSENSITIVE);
 
     private final ICategoryManager categoryManager;
     private final ICmsSearchEngineManager searchEngineManager;
@@ -101,11 +113,12 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     @Override
     public SolrFacetedContentsResult getFacetedContents(AdvRestContentListRequest requestList, UserDetails user) {
+        this.validateRequest(requestList);
         SolrFacetedContentsResult facetedResult;
         try {
-            String langCode =
-                    (StringUtils.isBlank(requestList.getLang())) ? this.langManager.getDefaultLang().getCode()
-                            : requestList.getLang();
+            String langCode = StringUtils.isBlank(requestList.getLang())
+                    ? this.langManager.getDefaultLang().getCode()
+                    : requestList.getLang();
             SolrSearchEngineFilter[] searchFilters = requestList.extractFilters(langCode);
             SolrSearchEngineFilter[][] doubleFilters = requestList.extractDoubleFilters(langCode);
             if (null != searchFilters) {
@@ -122,6 +135,93 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
             throw new RestServerError("error in search contents", ex);
         }
         return facetedResult;
+    }
+
+    protected void validateRequest(AdvRestContentListRequest requestList) {
+        BeanPropertyBindingResult bindingResult =
+                new BeanPropertyBindingResult(requestList, "advContentSearchRequest");
+        // lang
+        if (!StringUtils.isBlank(requestList.getLang())) {
+            boolean validLang = this.langManager.getLangs().stream()
+                    .anyMatch(l -> l.getCode().equals(requestList.getLang()));
+            if (!validLang) {
+                bindingResult.rejectValue("lang", "INVALID_LANG_CODE",
+                        new Object[]{}, "lang.code.invalid");
+            }
+        }
+        // sort
+        rejectIfUnsafeIdentifier(requestList.getSort(), "sort", bindingResult);
+        // direction
+        rejectIfUnsafeIdentifier(requestList.getDirection(), "direction", bindingResult);
+        // text
+        rejectIfInjection(requestList.getText(), "text", bindingResult);
+        // searchOption
+        rejectIfUnsafeIdentifier(requestList.getSearchOption(), "searchOption", bindingResult);
+        // csvCategories
+        if (null != requestList.getCsvCategories()) {
+            for (String csv : requestList.getCsvCategories()) {
+                rejectIfUnsafeIdentifier(csv, "csvCategories", bindingResult);
+            }
+        }
+        // filters
+        validateFilters(requestList.getFilters(), "filters", bindingResult);
+        // doubleFilters
+        if (null != requestList.getDoubleFilters()) {
+            for (SolrFilter[] innerFilters : requestList.getDoubleFilters()) {
+                validateFilters(innerFilters, "doubleFilters", bindingResult);
+            }
+        }
+        if (bindingResult.hasErrors()) {
+            throw new ValidationConflictException(bindingResult);
+        }
+    }
+
+    private void validateFilters(Filter[] filters, String fieldPrefix,
+            BeanPropertyBindingResult bindingResult) {
+        if (null == filters) {
+            return;
+        }
+        for (Filter filter : filters) {
+            rejectIfUnsafeIdentifier(filter.getAttribute(), fieldPrefix + ".attribute", bindingResult);
+            rejectIfUnsafeIdentifier(filter.getEntityAttr(), fieldPrefix + ".entityAttr", bindingResult);
+            rejectIfUnsafeIdentifier(filter.getOperator(), fieldPrefix + ".operator", bindingResult);
+            rejectIfUnsafeIdentifier(filter.getOrder(), fieldPrefix + ".order", bindingResult);
+            rejectIfUnsafeIdentifier(filter.getType(), fieldPrefix + ".type", bindingResult);
+            rejectIfInjection(filter.getValue(), fieldPrefix + ".value", bindingResult);
+            if (null != filter.getAllowedValues()) {
+                for (String av : filter.getAllowedValues()) {
+                    rejectIfInjection(av, fieldPrefix + ".allowedValues", bindingResult);
+                }
+            }
+            if (filter instanceof SolrFilter solrFilter) {
+                rejectIfUnsafeIdentifier(solrFilter.getSearchOption(),
+                        fieldPrefix + ".searchOption", bindingResult);
+            }
+        }
+    }
+
+    private static void rejectIfUnsafeIdentifier(String value, String field,
+            BeanPropertyBindingResult bindingResult) {
+        if (StringUtils.isBlank(value)) {
+            return;
+        }
+        if (!SAFE_IDENTIFIER.matcher(value).matches()) {
+            logger.warn("Rejected unsafe identifier in field '{}': '{}'", field, value);
+            bindingResult.rejectValue(null, "INVALID_PARAMETER",
+                    new Object[]{field}, "parameter.invalid");
+        }
+    }
+
+    private static void rejectIfInjection(String value, String field,
+            BeanPropertyBindingResult bindingResult) {
+        if (StringUtils.isBlank(value)) {
+            return;
+        }
+        if (INJECTION_PATTERN.matcher(value).find()) {
+            logger.warn("Rejected injection pattern in field '{}': '{}'", field, value);
+            bindingResult.rejectValue(null, "INVALID_PARAMETER",
+                    new Object[]{field}, "parameter.invalid");
+        }
     }
 
     protected List<String> getAllowedGroups(UserDetails currentUser) {

