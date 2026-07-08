@@ -20,7 +20,10 @@ import org.entando.entando.aps.system.services.searchengine.FacetedContentsResul
  */
 public class SolrFacetedContentsResult extends FacetedContentsResult {
     
-    private Integer totalSize;
+    // Defaults to 0 so a search that returns no result - including one where the Solr query
+    // failed and the exception was swallowed in SearcherDAO.executeQuery - still yields a valid
+    // total. A null here would make PagedMetadata throw an NPE while building the response.
+    private Integer totalSize = 0;
 
     public SolrFacetedContentsResult() {
         super();

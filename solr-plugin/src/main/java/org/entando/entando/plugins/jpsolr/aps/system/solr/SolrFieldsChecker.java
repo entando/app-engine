@@ -83,6 +83,13 @@ public class SolrFieldsChecker {
     private void checkLangFields() {
         for (Lang lang : this.languages) {
             this.checkField(lang.getCode(), SolrFields.TYPE_TEXT_GENERAL, true);
+            // The per-language attachment field ("<lang>_attachment") is written by IndexerDAO
+            // and queried by SearcherDAO when includeAttachments=true. It must exist in the
+            // schema up front; otherwise a full-text search with includeAttachments on an
+            // environment where no attachment content has been indexed queries an unknown field
+            // and fails. Same type/multiplicity as the main language field.
+            this.checkField(lang.getCode() + SolrFields.ATTACHMENT_FIELD_SUFFIX,
+                    SolrFields.TYPE_TEXT_GENERAL, true);
         }
     }
 

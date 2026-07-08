@@ -189,6 +189,23 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
     }
 
     @Test
+    void testFullTextWithAttachmentsDoesNotFail() throws Exception {
+        // Full-text search with includeAttachments=true queries the "<lang>_attachment" field.
+        // That field must exist in the schema even when no attachment content has been indexed,
+        // otherwise the search fails with HTTP 500 instead of returning results from the main field.
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("text", "entando")
+                        .param("includeAttachments", "true")
+                        .param("lang", "en"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("text", "entando")
+                        .param("includeAttachments", "true")
+                        .param("lang", "it"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void testMalformedFilterWithoutFieldReturns400() throws Exception {
         // A filter that carries search intent (value + operator) but no attribute/entityAttr
         // and is not full-text cannot be honoured. It must be rejected with 400, NOT silently
