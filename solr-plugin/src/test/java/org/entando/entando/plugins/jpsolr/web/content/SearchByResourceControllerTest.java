@@ -39,7 +39,6 @@ import org.entando.entando.plugins.jpsolr.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -182,10 +181,13 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
         List<String> expectedContentsId = Arrays.asList(addedContentIds.get(1), addedContentIds.get(2));
         int payloadSize_1 = JsonPath.read(bodyResult_1, "$.payload.size()");
         Assertions.assertEquals(expectedContentsId.size(), payloadSize_1);
-        for (int i = 0; i < expectedContentsId.size(); i++) {
-            String extractedId = JsonPath.read(bodyResult_1, "$.payload[" + i + "]");
-            Assertions.assertEquals(expectedContentsId.get(i), extractedId);
-        }
+        // The three contents share the same 'created' timestamp (all inserted within the
+        // same second), so sorting by 'created' produces a tie whose order Solr resolves by
+        // internal document order - i.e. the order the asynchronous indexing threads happen
+        // to complete, which is not deterministic. Assert membership rather than position.
+        List<String> actualContentsId_1 = JsonPath.read(bodyResult_1, "$.payload");
+        Assertions.assertTrue(actualContentsId_1.containsAll(expectedContentsId),
+                "expected " + expectedContentsId + " but got " + actualContentsId_1);
 
         ResultActions result_2 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
@@ -199,10 +201,10 @@ public class SearchByResourceControllerTest extends AbstractControllerIntegratio
         List<String> expectedContentsId_2 = addedContentIds;
         int payloadSize_2 = JsonPath.read(bodyResult_2, "$.payload.size()");
         Assertions.assertEquals(expectedContentsId_2.size(), payloadSize_2);
-        for (int i = 0; i < expectedContentsId_2.size(); i++) {
-            String extractedId = JsonPath.read(bodyResult_2, "$.payload[" + i + "]");
-            Assertions.assertEquals(expectedContentsId_2.get(i), extractedId);
-        }
+        // Order-independent for the same tie-broken 'created' sort reason as above.
+        List<String> actualContentsId_2 = JsonPath.read(bodyResult_2, "$.payload");
+        Assertions.assertTrue(actualContentsId_2.containsAll(expectedContentsId_2),
+                "expected " + expectedContentsId_2 + " but got " + actualContentsId_2);
 
         ResultActions result_3 = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
