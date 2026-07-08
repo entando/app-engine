@@ -182,16 +182,26 @@ public class SearcherDAO implements ISolrSearcherDAO {
     }
 
     private void addFilters(SolrQuery solrQuery, SearchEngineFilter[] filters) {
-        if (null != filters) {
-            for (SearchEngineFilter<?> filter : filters) {
-                if (null != this.getRelevance(filter)) {
-                    solrQuery.addSort("score", ORDER.desc);
-                } else if (null != filter.getOrder()) {
-                    String fieldKey = this.getFilterKey(filter);
-                    boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
-                    solrQuery.addSort(fieldKey, (revert) ? ORDER.desc : ORDER.asc);
-                }
-            }
+        if (null == filters) {
+            return;
+        }
+        for (SearchEngineFilter<?> filter : filters) {
+            this.addSort(solrQuery, filter);
+        }
+    }
+
+    private void addSort(SolrQuery solrQuery, SearchEngineFilter<?> filter) {
+        if (null != this.getRelevance(filter)) {
+            solrQuery.addSort("score", ORDER.desc);
+            return;
+        }
+        if (null == filter.getOrder()) {
+            return;
+        }
+        String fieldKey = this.getFilterKey(filter);
+        if (null != fieldKey) {
+            boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
+            solrQuery.addSort(fieldKey, revert ? ORDER.desc : ORDER.asc);
         }
     }
 
@@ -334,6 +344,9 @@ public class SearcherDAO implements ISolrSearcherDAO {
             return null;
         }
         String key = this.getFilterKey(filter);
+        if (null == key) {
+            return null;
+        }
         Object value = filter.getValue();
         List<?> allowedValues = filter.getAllowedValues();
         Integer relevanceValue = this.getRelevance(filter);
@@ -549,8 +562,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
     protected String getFilterKey(SearchEngineFilter<?> filter) {
         String key = filter.getKey().replace(":", "_");
         if (!VALID_FIELD_KEY.matcher(key).matches()) {
-            throw new IllegalArgumentException(
-                    "Rejected Solr field key with unsafe characters: '" + key + "'");
+            log.warn("Rejected Solr field key with unsafe characters: '{}'", key);
+            return null;
         }
         if (filter.isFullTextSearch()) {
             return key;
@@ -561,8 +574,8 @@ public class SearcherDAO implements ISolrSearcherDAO {
                     : insertedLangCode;
             String normalizedLang = langCode.toLowerCase();
             if (!VALID_FIELD_KEY.matcher(normalizedLang).matches()) {
-                throw new IllegalArgumentException(
-                        "Rejected Solr lang code with unsafe characters: '" + normalizedLang + "'");
+                log.warn("Rejected Solr lang code with unsafe characters: '{}'", normalizedLang);
+                return null;
             }
             key = normalizedLang + "_" + key;
         } else if (!key.startsWith(SolrFields.SOLR_FIELD_PREFIX)) {

