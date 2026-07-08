@@ -1078,6 +1078,156 @@ class KeycloakAuthorizationManagerTest {
         assertThat(toDeleteCaptor.getValue()).isEmpty();
     }
 
+    // -------------------------------------------------------------------------
+    // isValid tests — enabled mappings with missing required fields
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testIsValidFiltersEnabledMappingWithNullKind() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping><enabled>true</enabled></mapping>"
+                + "</mappings>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        assertThat(manager.getImportConfiguration().getEnabled()).isTrue();
+        assertThat(manager.getImportConfiguration().getProfileMappings()).isEmpty();
+        assertThat(manager.getImportConfiguration().getJwtMappings()).isEmpty();
+    }
+
+    @Test
+    void testIsValidFiltersEnabledMappingWithMissingAttribute() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping><enabled>true</enabled><kind>role</kind></mapping>"
+                + "</mappings>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        assertThat(manager.getImportConfiguration().getEnabled()).isTrue();
+        assertThat(manager.getImportConfiguration().getProfileMappings()).isEmpty();
+    }
+
+    @Test
+    void testIsValidFiltersEnabledMappingWithMissingPath() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping><enabled>true</enabled><kind>roleclaim</kind></mapping>"
+                + "</mappings>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        assertThat(manager.getImportConfiguration().getEnabled()).isTrue();
+        assertThat(manager.getImportConfiguration().getJwtMappings()).isEmpty();
+    }
+
+    @Test
+    void testIsValidFiltersEnabledMappingWithMissingSeparator() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping><enabled>true</enabled><attribute>AD_GROUPROLE</attribute><kind>rolegroup</kind></mapping>"
+                + "</mappings>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        assertThat(manager.getImportConfiguration().getEnabled()).isTrue();
+        assertThat(manager.getImportConfiguration().getProfileMappings()).isEmpty();
+    }
+
+    // -------------------------------------------------------------------------
+    // isValid — fallback on unsupported kind: warning only, mapping kept
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testIsValidWarnsFallbackOnUnsupportedKind() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>roleclaim</kind>"
+                + "  <fallback>role</fallback>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>generico</role></roles>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        // The mapping must NOT be rejected — fallback warning is non-fatal
+        assertThat(manager.getImportConfiguration().getJwtMappings()).hasSize(1);
+    }
+
+    // -------------------------------------------------------------------------
+    // Case-insensitivity: uppercase kind and persist identifiers
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testConfigAcceptsUppercaseKind() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + " <persist>full</persist>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLECLAIM</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>generico</role></roles>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        assertThat(manager.getImportConfiguration().getEnabled()).isTrue();
+        assertThat(manager.getImportConfiguration().getJwtMappings()).hasSize(1);
+    }
+
+    @Test
+    void testConfigAcceptsUppercasePersist() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <enabled>true</enabled>"
+                + " <persist>FULL</persist>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>roleclaim</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>generico</role></roles>"
+                + "</DynamicMapping>";
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        manager.init();
+
+        assertNotNull(manager.getImportConfiguration());
+        assertThat(manager.getImportConfiguration().getPersist())
+                .isEqualTo(org.entando.entando.keycloak.services.mapping.PersistKind.FULL);
+    }
+
     private Authorization authorization(final String groupName, final String roleName) {
         final Group group = new Group();
         group.setName(groupName);
@@ -1459,6 +1609,7 @@ class KeycloakAuthorizationManagerTest {
             + "  <path>realm_access.roles</path>"
             + "  <kind>ROLEGROUPCLAIM</kind>"
             + "  <separator>_SEP_</separator>"
+            + "  <fallback>ignore</fallback>"
             + " </mapping>"
             + "</mappings>"
             + "<exclusions>"
@@ -1599,6 +1750,222 @@ class KeycloakAuthorizationManagerTest {
             + "   <group>imported_group2</group>"
             + "  </groups>"
             + "</DynamicMapping>";
+
+    // -------------------------------------------------------------------------
+    // excludeUsers tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testExcludeUsersSkipsDynamicSync() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <persist>FULL</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLECLAIM</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<excludeUsers>"
+                + "  <excludeUsers>service-account</excludeUsers>"
+                + "</excludeUsers>"
+                + "<roles><role>generico</role></roles>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("service-account");
+        lenient().when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT, false);
+
+        verify(authorizationManager, never()).externalAuthSync(anyString(), anyLong(), anyList(), anyList());
+        verify(userDetails, never()).addAuthorizations(anyList());
+    }
+
+    // -------------------------------------------------------------------------
+    // fallback tests — rolegroupclaim (JWT path)
+    // -------------------------------------------------------------------------
+
+    private static final String JWT_SINGLE_TOKEN =
+            "{ \"iat\":1768319143, \"realm_access\":{ \"roles\":[\"singletoken\"] } }";
+
+    @Test
+    void testFallbackDefaultTreatsTokenAsRole() throws Exception {
+        // No <fallback> → default → treat as role + INFO log
+        String xml = "<DynamicMapping>"
+                + " <persist>NONE</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLEGROUPCLAIM</kind>"
+                + "  <separator>_SEP_</separator>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>singletoken</role></roles>"
+                + "<groups></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).hasSize(1);
+        assertThat(listCaptor.getValue().get(0).getRole().getName()).isEqualTo("singletoken");
+        assertThat(listCaptor.getValue().get(0).getGroup()).isNull();
+    }
+
+    @Test
+    void testFallbackRoleTreatsTokenAsRole() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <persist>NONE</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLEGROUPCLAIM</kind>"
+                + "  <separator>_SEP_</separator>"
+                + "  <fallback>role</fallback>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>singletoken</role></roles>"
+                + "<groups></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).hasSize(1);
+        assertThat(listCaptor.getValue().get(0).getRole().getName()).isEqualTo("singletoken");
+        assertThat(listCaptor.getValue().get(0).getGroup()).isNull();
+    }
+
+    @Test
+    void testFallbackGroupTreatsTokenAsGroup() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <persist>NONE</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLEGROUPCLAIM</kind>"
+                + "  <separator>_SEP_</separator>"
+                + "  <fallback>group</fallback>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles></roles>"
+                + "<groups><group>singletoken</group></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).hasSize(1);
+        assertThat(listCaptor.getValue().get(0).getGroup().getName()).isEqualTo("singletoken");
+        assertThat(listCaptor.getValue().get(0).getRole()).isNull();
+    }
+
+    @Test
+    void testFallbackIgnoreDiscardsToken() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <persist>NONE</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <path>realm_access.roles</path>"
+                + "  <kind>ROLEGROUPCLAIM</kind>"
+                + "  <separator>_SEP_</separator>"
+                + "  <fallback>ignore</fallback>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>singletoken</role></roles>"
+                + "<groups></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+        when(userDetails.getUsername()).thenReturn("testuser");
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, JWT_SINGLE_TOKEN, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).isEmpty();
+    }
+
+    // -------------------------------------------------------------------------
+    // fallback test — rolegroup (profile path)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testFallbackDefaultProfileRoleGroup() throws Exception {
+        String xml = "<DynamicMapping>"
+                + " <persist>NONE</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_GROUPROLE</attribute>"
+                + "  <kind>ROLEGROUP</kind>"
+                + "  <separator>_r_</separator>"
+                + " </mapping>"
+                + "</mappings>"
+                + "<roles><role>singletoken</role></roles>"
+                + "<groups></groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xml);
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUPROLE", List.of("singletoken")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        assertThat(listCaptor.getValue()).hasSize(1);
+        assertThat(listCaptor.getValue().get(0).getRole()).isNotNull();
+        assertThat(listCaptor.getValue().get(0).getRole().getName()).isEqualTo("singletoken");
+        assertThat(listCaptor.getValue().get(0).getGroup()).isNull();
+    }
 
     private static final String JWT_NO_ROLE = "{"
             + "  \"header\" : {"

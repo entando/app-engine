@@ -7,6 +7,8 @@ import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.R
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUP;
 import static org.entando.entando.keycloak.services.mapping.DynamicMappingKind.ROLEGROUPCLAIM;
 
+import java.util.regex.Pattern;
+
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.services.authorization.Authorization;
 import com.agiletec.aps.system.services.authorization.AuthorizationManager;
@@ -37,6 +39,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMapping;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingKind;
+import org.entando.entando.keycloak.services.mapping.FallbackKind;
 import org.entando.entando.keycloak.services.mapping.PersistKind;
 import org.entando.entando.keycloak.services.oidc.OidcMappingHelper;
 import org.entando.entando.keycloak.services.oidc.model.KeycloakUser;
@@ -102,6 +105,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         List<String> ignore = new ArrayList<>();
         List<String> roles = new ArrayList<>();
         List<String> groups = new ArrayList<>();
+        List<String> excludeUsers = new ArrayList<>();
         Boolean enabled = false;
         PersistKind persist = PersistKind.FULL;
 
@@ -130,6 +134,8 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                             .orElseGet(List::of);
                     groups = ofNullable(dynConf.groups)
                             .orElse(List.of());
+                    excludeUsers = ofNullable(dynConf.excludeUsers)
+                            .orElse(List.of());
                     enabled = ofNullable(dynConf.enabled)
                             .orElse(false);
                     persist = ofNullable(dynConf.persist)
@@ -143,12 +149,12 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
             // finally
-            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist, excludeUsers);
 
             setImportConfiguration(cfg);
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);
-            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE, List.of());
 
             setImportConfiguration(cfg);
             throw e;
@@ -190,23 +196,36 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
      * @return true if the element is valid, false otherwise
      */
     private boolean isValid(DynamicMappingElement elem) {
-        if (elem.kind == null) {
-            log.error("invalid dynamic mapping element, 'kind' is blank");
+        try {
+            if (elem == null) {
+                log.error("invalid dynamic mapping element, element is null");
+                return false;
+            }
+            if (elem.kind == null) {
+                log.error("invalid dynamic mapping element, 'kind' is missing");
+                return false;
+            }
+            if (StringUtils.isBlank(elem.attribute) && !elem.kind.isJwtMapping()) {
+                log.error("invalid dynamic mapping element, 'attribute' is blank for kind {}", elem.kind);
+                return false;
+            }
+            if (StringUtils.isBlank(elem.path) && elem.kind.isJwtMapping()) {
+                log.error("invalid dynamic mapping element, 'path' is blank for {} kind", elem.kind);
+                return false;
+            }
+            if (StringUtils.isBlank(elem.separator) && (elem.kind == ROLEGROUP || elem.kind == ROLEGROUPCLAIM)) {
+                log.error("invalid dynamic mapping element, 'separator' is blank for {} kind", elem.kind);
+                return false;
+            }
+            if (elem.fallback != null && elem.kind != ROLEGROUP && elem.kind != ROLEGROUPCLAIM) {
+                log.warn("dynamic mapping element has 'fallback' set for kind {} which does not support it; "
+                        + "'fallback' is only applicable to {} and {}", elem.kind, ROLEGROUP, ROLEGROUPCLAIM);
+            }
+            return true;
+        } catch (Exception e) {
+            log.error("Unexpected error validating dynamic mapping element", e);
             return false;
         }
-        if (StringUtils.isBlank(elem.attribute) && !elem.kind.isJwtMapping()) {
-            log.error("invalid dynamic mapping element, 'attribute' is blank for kind {}", elem.kind);
-            return false;
-        }
-        if (StringUtils.isBlank(elem.path) && elem.kind.isJwtMapping()) {
-            log.error("invalid dynamic mapping element, 'path' is blank for {} kind", elem.kind);
-            return false;
-        }
-        if (StringUtils.isBlank(elem.separator) && (elem.kind == ROLEGROUP || elem.kind == ROLEGROUPCLAIM)) {
-            log.error("invalid dynamic mapping element, 'separator' is blank for {} kind", elem.kind);
-            return false;
-        }
-        return true;
     }
 
     public void processNewUser(final UserDetails user, final String token, final boolean decode) {
@@ -216,6 +235,11 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
         readLock.lock();
         try {
+            final List<String> excludedUsers = getImportConfiguration().getExcludeUsers();
+            if (excludedUsers != null && user.getUsername() != null && excludedUsers.contains(user.getUsername())) {
+                log.debug("user {} is in the excludeUsers list, skipping dynamic sync", user.getUsername());
+                return;
+            }
             if (!getImportConfiguration().getEnabled()) return;
 
             // Authorizations coming from dynamic mapping (that is, external sources)
@@ -336,19 +360,18 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 }
 
                 final String sep = StringUtils.isNotBlank(elem.separator) ? elem.separator : DEFAULT_SEPARATOR;
-                final String[] tokens = candidate.split(sep);
 
-                if (tokens.length < 2) {
-                    // treat as a role
-//                    result.addAll(finalizeRoleAssociation(user, elem, List.of(candidate.trim())));
+                if (!candidate.contains(sep)) {
+                    result.addAll(applyFallbackForRoleGroup(user, elem, candidate.trim()));
                     continue;
                 }
 
+                final String[] tokens = candidate.split(Pattern.quote(sep), -1);
                 final String roleName = tokens[0].trim();
-                final String groupName = tokens[1].trim();
+                final String groupName = tokens.length > 1 ? tokens[1].trim() : "";
 
-                if (StringUtils.isBlank(roleName)) {
-                    log.warn("Invalid role name extracted from candidate '{}' for user {}", candidate, user.getUsername());
+                if (StringUtils.isBlank(roleName) || StringUtils.isBlank(groupName)) {
+                    log.warn("Blank role or group in token '{}' for user {}, discarding", candidate, user.getUsername());
                     continue;
                 }
 
@@ -361,6 +384,20 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
             }
         }
         return result;
+    }
+
+    private List<Authorization> applyFallbackForRoleGroup(KeycloakUser user, DynamicMappingElement elem, String token) {
+        if (elem.fallback == FallbackKind.IGNORE) {
+            log.warn("No separator in token '{}' for user {}, discarding (fallback=ignore)", token, user.getUsername());
+            return List.of();
+        }
+        if (elem.fallback == FallbackKind.GROUP) {
+            return finalizeGroupAssociation(user, elem, List.of(token));
+        }
+        if (elem.fallback == null) {
+            log.info("No separator in token '{}' for user {}, treating as role (implicit default fallback)", token, user.getUsername());
+        }
+        return finalizeRoleAssociation(user, elem, List.of(token));
     }
 
     private void processNewUser(final UserDetails user) {
@@ -471,6 +508,10 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 return result;
             }
             for (String groupRoleToken : authorizations) {
+                if (!groupRoleToken.contains(separator)) {
+                    result.addAll(applyFallbackForRoleGroup(user, elem, groupRoleToken.trim()));
+                    continue;
+                }
                 Authorization auth = parseAuthForRoleGroup(user, groupRoleToken, separator);
                 if (auth != null) {
                     result.add(auth);
@@ -483,17 +524,15 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
     }
 
     private Authorization parseAuthForRoleGroup(KeycloakUser user, String groupRoleToken, String separator) {
-        final String[] tokens = groupRoleToken.split(separator);
+        final String[] tokens = groupRoleToken.split(Pattern.quote(separator), -1);
 
-        if (tokens.length != 2
-                || StringUtils.isBlank(tokens[0])
-                || StringUtils.isBlank(tokens[1])) {
-            log.error("invalid dynamic config configuration detected");
+        final String roleName = tokens[0].trim();
+        final String groupName = tokens.length > 1 ? tokens[1].trim() : "";
+
+        if (StringUtils.isBlank(roleName) || StringUtils.isBlank(groupName)) {
+            log.warn("Blank role or group in token '{}' for user {}, discarding", groupRoleToken, user.getUsername());
             return null;
         }
-
-        final String groupName = tokens[1];
-        final String roleName = tokens[0];
 
         return finalizeAssociation(user, roleName, groupName, false);
     }
@@ -553,11 +592,11 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         }
         // are they managed?
         if (StringUtils.isNotBlank(roleName) && !getImportConfiguration().getRoles().contains(roleName)) {
-            log.info("Role {} is not managed. Skipping assignment for user {}", roleName, user.getUsername());
+            log.warn("Role {} is not in the roles allowlist. Skipping assignment for user {}", roleName, user.getUsername());
             return null;
         }
         if (StringUtils.isNotBlank(groupName) && !getImportConfiguration().getGroups().contains(groupName)) {
-            log.info("Group {} is not managed. Skipping assignment for user {}", groupName, user.getUsername());
+            log.warn("Group {} is not in the groups allowlist. Skipping assignment for user {}", groupName, user.getUsername());
             return null;
         }
         return createAuthorization(roleName, groupName, createRoleIfMissing);
