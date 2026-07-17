@@ -72,9 +72,16 @@ public class StartupListener extends org.springframework.web.context.ContextLoad
         String cspEnabled = System.getenv(SystemConstants.CSP_HEADER_ENABLED);
         if (StringUtils.isEmpty(cspEnabled) || Boolean.TRUE.toString().equalsIgnoreCase(cspEnabled)) {
             LOGGER.info("Content Security Policy (CSP) header is enabled");
-            String cspExtraConfig = System.getenv(SystemConstants.CSP_HEADER_EXTRACONFIG);
+            String cspExtraConfig = System.getenv(SystemConstants.CSP_HEADER_PORTAL_EXTRACONFIG);
+            if (StringUtils.isEmpty(cspExtraConfig)) {
+                cspExtraConfig = System.getenv(SystemConstants.CSP_HEADER_EXTRACONFIG);
+                if (!StringUtils.isEmpty(cspExtraConfig)) {
+                    LOGGER.warn("The CSP_HEADER_EXTRACONFIG environment variable is deprecated:"
+                            + " use CSP_HEADER_PORTAL_EXTRACONFIG instead");
+                }
+            }
             if (!StringUtils.isEmpty(cspExtraConfig)) {
-                LOGGER.info("Content Security Policy (CSP) extra-config set to: " + cspExtraConfig);
+                LOGGER.info("Content Security Policy (CSP) portal extra-config set to: " + cspExtraConfig);
             }
         } else {
             LOGGER.warn("Content Security Policy (CSP) header is not enabled");

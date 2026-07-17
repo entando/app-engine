@@ -58,8 +58,8 @@
                 </c:choose>
 
                 <div id="social-link">
-                    <a href="http://www.entando.com" target="_blank" rel="noopener noreferrer"><img src="<wp:resourceURL ignoreTenant="true" />administration/img/entando_icon.png" alt="Entando" /></a>
-                    <a href="http://github.com/entando/" target="_blank" rel="noopener noreferrer"><img src="<wp:resourceURL ignoreTenant="true" />administration/img/github.png" alt="Entando on Github" /></a>
+                    <a href="https://www.entando.com" target="_blank" rel="noopener noreferrer"><img src="<wp:resourceURL ignoreTenant="true" />administration/img/entando_icon.png" alt="Entando" /></a>
+                    <a href="https://github.com/entando/" target="_blank" rel="noopener noreferrer"><img src="<wp:resourceURL ignoreTenant="true" />administration/img/github.png" alt="Entando on Github" /></a>
                     <a href="https://twitter.com/entando" target="_blank" rel="noopener noreferrer"><img src="<wp:resourceURL ignoreTenant="true" />administration/img/twitter.png" alt="Entando on Twitter" /></a>
                 </div>
                 <div class="copyright-entando">Copyright <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %>&nbsp;<span class="entando-sm-write">Entando</span></div>

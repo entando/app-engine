@@ -55,8 +55,12 @@ public final class SystemConstants {
     public static final String PAR_FILEUPLOAD_MAXSIZE = "fileUploadMaxSize";
     
     public static final String PAR_CSP_ENABLED = "cspEnabled";
-    
+
     public static final String PAR_CSP_HEADER_EXTRA_CONFIG = "cspHeaderExtraConfig";
+
+    public static final String PAR_CSP_BACKOFFICE_CONFIG = "cspBackofficeConfig";
+
+    public static final String PAR_CSP_BACKOFFICE_REPORT_ONLY = "cspBackofficeReportOnly";
 
     /**
      * Nome parametro extra per requestContext: lingua corrente
@@ -317,7 +321,15 @@ public final class SystemConstants {
     public static final String ENTITY_EVENT_CHANNEL = "core-entity";
 
     public static final String CSP_HEADER_ENABLED = "CSP_HEADER_ENABLED";
+    public static final String CSP_HEADER_PORTAL_EXTRACONFIG = "CSP_HEADER_PORTAL_EXTRACONFIG";
+    /**
+     * @deprecated use {@link #CSP_HEADER_PORTAL_EXTRACONFIG}, which makes it explicit that the
+     * variable configures the portal (front-end) policy; kept for backward compatibility.
+     */
+    @Deprecated
     public static final String CSP_HEADER_EXTRACONFIG = "CSP_HEADER_EXTRACONFIG";
+    public static final String CSP_HEADER_BACKOFFICE_CONFIG = "CSP_HEADER_BACKOFFICE_CONFIG";
+    public static final String CSP_HEADER_BACKOFFICE_REPORT_ONLY = "CSP_HEADER_BACKOFFICE_REPORT_ONLY";
     public static final String ENTANDO_CSRF_PROTECTION = "ENTANDO_CSRF_PROTECTION";
     public static final String ENTANDO_CSRF_ALLOWED_DOMAINS = "ENTANDO_CSRF_ALLOWED_DOMAINS";
     public static final String SEPARATOR_DOMAINS = ",";
