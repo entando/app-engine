@@ -18,6 +18,7 @@ import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.resource.parse.ResourceDOM;
 import org.apache.commons.io.FilenameUtils;
+import org.entando.entando.aps.servlet.routing.VirtualContextHelper;
 import org.entando.entando.aps.system.services.storage.IStorageManager;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -424,7 +425,10 @@ public abstract class AbstractResource implements ResourceInterface, Serializabl
             String path = this.getStorageManager().getResourceUrl(subFolder.toString(), false);
             urlPath.append(path);
         }
-        return urlPath.toString();
+        // Prepend the current virtual-context path (e.g. /tenant1) so that resource URLs resolve to the
+        // correct tenant when virtual contexts are enabled. Absolute URLs (e.g. CDS public URLs) are left
+        // untouched; on the primary/master tenant (no virtual context) the path is returned unchanged.
+        return VirtualContextHelper.addVirtualContextToPath(urlPath.toString());
     }
 
     public boolean isProtectedResource() {
