@@ -1,5 +1,9 @@
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.lang.Lang;
@@ -19,7 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -118,7 +121,7 @@ class SearcherDAOSpecialCharsTest {
 
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
+        when(solrClient.query(any(), queryCaptor.capture()))
                 .thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
@@ -244,13 +247,102 @@ class SearcherDAOSpecialCharsTest {
     }
 
     // ------------------------------------------------------------------
+    // Field-key injection tests (CVE-class: Lucene query injection)
+    //
+    // User-controlled field names that contain Lucene/Solr meta-characters
+    // (parentheses, spaces, operators, local-params braces …) corrupt the
+    // query string produced by BooleanQuery.toString() and can break the
+    // group-based access-control filter.  All such inputs must be dropped
+    // (logged and skipped) so that the injected field never reaches the
+    // executed query, which retains only the safe access-control clause.
+    // ------------------------------------------------------------------
+
+    @Test
+    void shouldDropFieldNameWithParenthesisAndOrOperator() throws Exception {
+        // Simulates: filters[0].attribute = "foo) OR (*:*"
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("foo) OR (*:*", false, "value");
+
+        runAndAssert(filter, "+(entity_group:free)");
+    }
+
+    @Test
+    void shouldDropEntityAttrWithInjectedOperator() throws Exception {
+        // Simulates: filters[0].entityAttr = "attr) OR (*:*"  (isAttributeFilter = true)
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("attr) OR (*:*", true, "value");
+
+        runAndAssert(filter, "+(entity_group:free)");
+    }
+
+    @Test
+    void shouldDropFieldNameWithSpaces() throws Exception {
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("valid AND malicious", false, "value");
+
+        runAndAssert(filter, "+(entity_group:free)");
+    }
+
+    @Test
+    void shouldDropLangCodeUsedAsFullTextSearchKey() throws Exception {
+        // Simulates: lang = "en) OR (*:*" passed as the full-text search field key.
+        // The filter key IS the lang code when fullTextSearch = true.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("en) OR (*:*", "search text",
+                        TextSearchOption.AT_LEAST_ONE_WORD);
+        filter.setFullTextSearch(true);
+
+        runAndAssert(filter, "+(entity_group:free)");
+    }
+
+    @Test
+    void shouldDropInjectedLangCodePrefixOnAttributeFilter() throws Exception {
+        // Simulates a crafted SolrSearchEngineFilter whose langCode (the prefix
+        // prepended to the field name for attribute filters) contains operators.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("key", true, "value");
+        filter.setLangCode("en) OR (*:*");
+
+        runAndAssert(filter, "+(entity_group:free)");
+    }
+
+    @Test
+    void shouldDropFieldNameWithSolrLocalParamsBrace() throws Exception {
+        // Simulates an attempt to inject Solr local params ({!...}) via field name.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("{!func}log(popularity)", false, "value");
+
+        runAndAssert(filter, "+(entity_group:free)");
+    }
+
+    @Test
+    void shouldDropFieldNameInDoubleFilterArray() throws Exception {
+        // Same injection via the searchFacetedContents(SearchEngineFilter[][] …) overload.
+        SolrSearchEngineFilter<String> filter =
+                new SolrSearchEngineFilter<>("foo) OR (*:*", false, "value");
+
+        SearchEngineFilter[][] doubleFilters =
+                new SearchEngineFilter[][]{{filter}};
+
+        ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
+        QueryResponse queryResponse = mockQueryResponse();
+        when(solrClient.query(any(), queryCaptor.capture()))
+                .thenReturn(queryResponse);
+
+        searcherDAO.searchFacetedContents(doubleFilters,
+                new SearchEngineFilter[]{}, new ArrayList<>());
+
+        Assertions.assertEquals("+(entity_group:free)", queryCaptor.getValue().getQuery());
+    }
+
+    // ------------------------------------------------------------------
     // helpers (mirror SearcherDAOTest)
     // ------------------------------------------------------------------
 
     private void runAndAssert(SearchEngineFilter filter, String expectedQuery) throws Exception {
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture()))
+        when(solrClient.query(any(), queryCaptor.capture()))
                 .thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(new SearchEngineFilter[]{filter},
@@ -262,13 +354,13 @@ class SearcherDAOSpecialCharsTest {
     private void mockDefaultLang() {
         Lang lang = new Lang();
         lang.setCode("en");
-        Mockito.when(langManager.getDefaultLang()).thenReturn(lang);
+        when(langManager.getDefaultLang()).thenReturn(lang);
     }
 
     private QueryResponse mockQueryResponse() {
-        QueryResponse queryResponse = Mockito.mock(QueryResponse.class);
+        QueryResponse queryResponse = mock(QueryResponse.class);
         SolrDocumentList documents = new SolrDocumentList();
-        Mockito.when(queryResponse.getResults()).thenReturn(documents);
+        when(queryResponse.getResults()).thenReturn(documents);
         return queryResponse;
     }
 }

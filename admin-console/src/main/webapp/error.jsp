@@ -5,9 +5,9 @@
 <%@ taglib prefix="wp" uri="/aps-core" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
-		Object statusCode = request.getAttribute("javax.servlet.error.status_code");
-		Object exceptionType = request.getAttribute("javax.servlet.error.exception_type");
-		Object message = request.getAttribute("javax.servlet.error.message");
+		Object statusCode = request.getAttribute("jakarta.servlet.error.status_code");
+		Object exceptionType = request.getAttribute("jakarta.servlet.error.exception_type");
+		Object message = request.getAttribute("jakarta.servlet.error.message");
 %>
 <!DOCTYPE html>
 <html lang="en">

@@ -101,12 +101,37 @@ public class Authenticator extends AbstractControlService {
             }
             retStatus = ControllerManager.CONTINUE;
         } catch (Throwable t) {
-        	_logger.error("Error, could not fulfill the request", t);
+        	if (isMalformedRequest(t)) {
+        		// The request itself is malformed (e.g. invalid query string encoding): this is a
+        		// client error, not a server fault. Log it concisely, without the full stack trace.
+        		_logger.warn("Could not fulfill the request: malformed request ({})", t.getMessage());
+        	} else {
+        		_logger.error("Error, could not fulfill the request", t);
+        	}
             retStatus = ControllerManager.SYS_ERROR;
 			reqCtx.setHTTPError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return retStatus;
     }
+
+	/**
+	 * Detects whether the given throwable (or any cause in its chain) denotes a malformed client
+	 * request, such as an invalid query string encoding surfaced while accessing request parameters.
+	 * Such conditions are client errors (HTTP 400) and don't warrant a full ERROR stack trace.
+	 * Matching is done by class name to avoid a hard dependency on the servlet container internals.
+	 */
+	private static boolean isMalformedRequest(Throwable t) {
+		for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+			String className = cause.getClass().getSimpleName();
+			if ("BadMessageException".equals(className) || cause instanceof IllegalArgumentException) {
+				return true;
+			}
+			if (cause.getCause() == cause) {
+				break;
+			}
+		}
+		return false;
+	}
 	
 	protected IUserManager getUserManager() {
 		return _userManager;

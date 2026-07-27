@@ -20,5 +20,6 @@ public class KeycloakImportConfig {
     private transient List<String> groups;
     private transient Boolean enabled;
     private transient PersistKind persist;
+    private transient List<String> excludeUsers;
 
 }

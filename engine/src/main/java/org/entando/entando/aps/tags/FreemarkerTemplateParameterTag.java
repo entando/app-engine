@@ -16,7 +16,7 @@ package org.entando.entando.aps.tags;
 import com.agiletec.aps.system.RequestContext;
 import freemarker.core.Environment;
 import freemarker.ext.beans.StringModel;
-import freemarker.ext.servlet.AllHttpScopesHashModel;
+import freemarker.ext.jakarta.servlet.AllHttpScopesHashModel;
 import freemarker.template.TemplateModel;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.jsp.JspException;

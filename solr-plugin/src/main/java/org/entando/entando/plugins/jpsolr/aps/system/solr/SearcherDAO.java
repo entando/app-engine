@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +65,12 @@ import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngine
  */
 @Slf4j
 public class SearcherDAO implements ISolrSearcherDAO {
+
+    // Allowlist for Lucene/Solr field names: only alphanumeric and underscore.
+    // Parentheses, spaces, operators (AND/OR/NOT), and other Lucene meta-characters
+    // in a field name break the serialized query string produced by BooleanQuery.toString()
+    // and are the root of the Lucene query injection vulnerability.
+    private static final Pattern VALID_FIELD_KEY = Pattern.compile("[a-zA-Z0-9_]+");
 
     private ITreeNodeManager treeNodeManager;
     private ILangManager langManager;
@@ -175,16 +182,26 @@ public class SearcherDAO implements ISolrSearcherDAO {
     }
 
     private void addFilters(SolrQuery solrQuery, SearchEngineFilter[] filters) {
-        if (null != filters) {
-            for (SearchEngineFilter<?> filter : filters) {
-                if (null != this.getRelevance(filter)) {
-                    solrQuery.addSort("score", ORDER.desc);
-                } else if (null != filter.getOrder()) {
-                    String fieldKey = this.getFilterKey(filter);
-                    boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
-                    solrQuery.addSort(fieldKey, (revert) ? ORDER.desc : ORDER.asc);
-                }
-            }
+        if (null == filters) {
+            return;
+        }
+        for (SearchEngineFilter<?> filter : filters) {
+            this.addSort(solrQuery, filter);
+        }
+    }
+
+    private void addSort(SolrQuery solrQuery, SearchEngineFilter<?> filter) {
+        if (null != this.getRelevance(filter)) {
+            solrQuery.addSort("score", ORDER.desc);
+            return;
+        }
+        if (null == filter.getOrder()) {
+            return;
+        }
+        String fieldKey = this.getFilterKey(filter);
+        if (null != fieldKey) {
+            boolean revert = filter.getOrder().toString().equalsIgnoreCase("DESC");
+            solrQuery.addSort(fieldKey, revert ? ORDER.desc : ORDER.asc);
         }
     }
 
@@ -327,6 +344,9 @@ public class SearcherDAO implements ISolrSearcherDAO {
             return null;
         }
         String key = this.getFilterKey(filter);
+        if (null == key) {
+            return null;
+        }
         Object value = filter.getValue();
         List<?> allowedValues = filter.getAllowedValues();
         Integer relevanceValue = this.getRelevance(filter);
@@ -541,6 +561,10 @@ public class SearcherDAO implements ISolrSearcherDAO {
 
     protected String getFilterKey(SearchEngineFilter<?> filter) {
         String key = filter.getKey().replace(":", "_");
+        if (!VALID_FIELD_KEY.matcher(key).matches()) {
+            log.warn("Rejected Solr field key with unsafe characters: '{}'", key);
+            return null;
+        }
         if (filter.isFullTextSearch()) {
             return key;
         }
@@ -548,7 +572,12 @@ public class SearcherDAO implements ISolrSearcherDAO {
             String insertedLangCode = filter.getLangCode();
             String langCode = (StringUtils.isBlank(insertedLangCode)) ? this.getLangManager().getDefaultLang().getCode()
                     : insertedLangCode;
-            key = langCode.toLowerCase() + "_" + key;
+            String normalizedLang = langCode.toLowerCase();
+            if (!VALID_FIELD_KEY.matcher(normalizedLang).matches()) {
+                log.warn("Rejected Solr lang code with unsafe characters: '{}'", normalizedLang);
+                return null;
+            }
+            key = normalizedLang + "_" + key;
         } else if (!key.startsWith(SolrFields.SOLR_FIELD_PREFIX)) {
             key = SolrFields.SOLR_FIELD_PREFIX + key;
         }

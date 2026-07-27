@@ -27,6 +27,7 @@ import org.entando.entando.plugins.jpsolr.conditions.SolrActive;
 import org.entando.entando.plugins.jpsolr.web.content.model.AdvRestContentListRequest;
 import org.entando.entando.plugins.jpsolr.web.content.model.SolrContentPagedMetadata;
 import org.entando.entando.plugins.jpsolr.web.content.model.SolrFacetedPagedMetadata;
+import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.common.model.PagedRestResponse;
 import org.entando.entando.web.common.model.RestResponse;
 import org.entando.entando.web.common.validator.AbstractPaginationValidator;
@@ -34,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -76,6 +78,11 @@ public class AdvContentSearchController {
 
             @Override
             public boolean isValidField(String fieldName, Class<?> type) {
+                if (fieldName == null) {
+                    // full-text filters carry the search term in "value" and leave
+                    // the attribute null; there is no field to validate in that case.
+                    return true;
+                }
                 if (fieldName.contains(".")) {
                     return true;
                 } else {
@@ -90,6 +97,7 @@ public class AdvContentSearchController {
             @RequestAttribute(value = "user", required = false) UserDetails currentUser) {
         logger.debug("getting contents with request {}", requestList);
         this.getPaginationValidator().validateRestListRequest(requestList, String.class);
+        this.validateSearchableFilters(requestList);
         SolrFacetedContentsResult facetedResult = this.advContentFacetManager
                 .getFacetedContents(requestList, currentUser);
         List<String> result = facetedResult.getContentsId();
@@ -107,6 +115,7 @@ public class AdvContentSearchController {
             @RequestAttribute(value = "user", required = false) UserDetails currentUser) {
         logger.debug("getting contents with request {}", requestList);
         this.getPaginationValidator().validateRestListRequest(requestList, String.class);
+        this.validateSearchableFilters(requestList);
         SolrFacetedContentsResult result = this.advContentFacetManager
                 .getFacetedContents(requestList, currentUser);
         boolean isGuest = (null == currentUser || currentUser.getUsername()
@@ -116,6 +125,22 @@ public class AdvContentSearchController {
         pagedMetadata.setBody(result);
         pagedMetadata.getAdditionalParams().put("guestUser", String.valueOf(isGuest));
         return new ResponseEntity<>(new RestResponse<>(result, pagedMetadata), HttpStatus.OK);
+    }
+
+    /**
+     * Rejects filters that carry search intent (a value, operator, ordering or allowed values)
+     * but provide no attribute to search on. Such filters cannot be honoured; discarding them
+     * silently would return a broader result set than requested as if it were a success, so they
+     * are reported as a bad request. Empty placeholder filters (no intent at all) are tolerated
+     * and dropped later during filter extraction.
+     */
+    private void validateSearchableFilters(AdvRestContentListRequest requestList) {
+        if (requestList.hasMalformedFilters()) {
+            BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(requestList, "requestList");
+            bindingResult.reject(AbstractPaginationValidator.ERRCODE_FILTERING_ATTR_INVALID,
+                    new Object[]{}, "filtering.filter.attr.name.invalid");
+            throw new ValidationGenericException(bindingResult);
+        }
     }
 
 }
