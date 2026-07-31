@@ -231,6 +231,8 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
         if (!isCount) {
             boolean ordered = appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
+        } else {
+            this.closeMasterCountQueryBlock(query);
         }
         return query.toString();
     }
@@ -247,9 +249,14 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
 
     protected StringBuffer createMasterCountQueryBlock() {
         String masterTableName = this.getMasterTableName();
-        StringBuffer query = new StringBuffer("SELECT COUNT(*)");
+        StringBuffer query = new StringBuffer("SELECT COUNT(*) FROM ( SELECT DISTINCT ");
+        query.append(masterTableName).append(".").append(this.getMasterTableIdFieldName());
         query.append(" FROM ").append(masterTableName).append(" ");
         return query;
+    }
+
+    protected void closeMasterCountQueryBlock(StringBuffer query) {
+        query.append(") counter");
     }
 
     private StringBuffer createMasterSelectQueryBlock(FieldSearchFilter[] filters, boolean selectAll) {

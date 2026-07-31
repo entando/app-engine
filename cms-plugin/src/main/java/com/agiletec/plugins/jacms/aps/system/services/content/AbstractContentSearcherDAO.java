@@ -220,7 +220,9 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
         if (!isCount) {
             boolean ordered = this.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
-        }
+		} else {
+			this.closeMasterCountQueryBlock(query);
+		}
 		//System.out.println("********** " + query.toString());
 		return query.toString();
 	}
