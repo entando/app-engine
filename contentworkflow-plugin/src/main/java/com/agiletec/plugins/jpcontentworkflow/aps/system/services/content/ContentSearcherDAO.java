@@ -174,7 +174,9 @@ public class ContentSearcherDAO extends com.agiletec.plugins.jacms.aps.system.se
 		if (!isCount) {
             appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
-        }
+		} else {
+			this.closeMasterCountQueryBlock(query);
+		}
 		return query.toString();
 	}
 	

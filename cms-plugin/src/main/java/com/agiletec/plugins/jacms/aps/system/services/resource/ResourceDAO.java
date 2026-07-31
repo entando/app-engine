@@ -382,6 +382,8 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         if (!isCount) {
             super.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
+        } else {
+            this.closeMasterCountQueryBlock(query);
         }
         return query.toString();
     }
