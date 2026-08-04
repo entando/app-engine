@@ -28,6 +28,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.entity.NestedBooleanSearchSupport;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
@@ -40,6 +41,10 @@ import com.agiletec.aps.util.DateConverter;
  * This class implements a filter to search among entities.
  * @author E.Santoboni
  */
+// NOTE: java:S2143 ("use the java.time API") is intentionally suppressed. This filter model uses legacy
+// java.util.Date/SimpleDateFormat for its date value/serialization contract; migrating it to java.time
+// is out of scope for ESB-1133 (boolean search) and tracked separately.
+@SuppressWarnings("java:S2143")
 public class EntitySearchFilter<T> extends FieldSearchFilter implements Serializable {
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(EntitySearchFilter.class);
@@ -371,6 +376,12 @@ public class EntitySearchFilter<T> extends FieldSearchFilter implements Serializ
 				AttributeInterface attr = null;
 				if (null != key) {
 					attr = (AttributeInterface) prototype.getAttribute(key);
+					if (null == attr) {
+						// fall back to a Composite-nested boolean referenced by its path key
+						// '<composite>_<boolean>', the delimiter escaped by doubling inside each
+						// segment (top-level attributes always take precedence)
+						attr = NestedBooleanSearchSupport.resolveNestedBooleanByKey(prototype, key);
+					}
 					filter.setKey(key);
 				} else {
 					attr = (AttributeInterface) prototype.getAttributeByRole(roleName);

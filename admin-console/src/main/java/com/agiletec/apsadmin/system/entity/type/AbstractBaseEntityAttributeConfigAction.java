@@ -14,6 +14,7 @@
 package com.agiletec.apsadmin.system.entity.type;
 
 import com.agiletec.aps.system.common.entity.IEntityManager;
+import com.agiletec.aps.system.common.entity.NestedBooleanSearchSupport;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeRole;
@@ -47,6 +48,10 @@ import org.springframework.beans.factory.ListableBeanFactory;
  * Base action for Configure Entity Attributes.
  * @author E.Santoboni
  */
+// NOTE: java:S2143 ("use the java.time API") is intentionally suppressed. This date-range attribute
+// config action is inherently built on java.util.Date (range start/end/equal fields); migrating it to
+// java.time is out of scope for ESB-1133 (boolean search) and tracked separately.
+@SuppressWarnings("java:S2143")
 public class AbstractBaseEntityAttributeConfigAction extends BaseAction implements BeanFactoryAware {
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(AbstractBaseEntityAttributeConfigAction.class);
@@ -263,6 +268,24 @@ public class AbstractBaseEntityAttributeConfigAction extends BaseAction implemen
 			return attribute.isSearchableOptionSupported();
 		} catch (Throwable t) {
 			_logger.error("error in isSearchableOptionSupported", t);
+		}
+		return false;
+	}
+
+	/**
+	 * Whether the given attribute type may be flagged searchable when used as a <b>composite child</b>.
+	 * Only boolean-like children (Boolean, CheckBox, ThreeState) are indexed (under the path key
+	 * "&lt;composite&gt;_&lt;boolean&gt;") in the DB search tables; every other type is forced
+	 * non-searchable as a composite child, so the searchable option must not be offered for them.
+	 * @param attributeTypeCode the attribute type code.
+	 * @return true only for the boolean-like types.
+	 */
+	public boolean isNestedSearchableOptionSupported(String attributeTypeCode) {
+		try {
+			AttributeInterface attribute = this.getAttributePrototype(attributeTypeCode);
+			return NestedBooleanSearchSupport.isIndexableNestedBoolean(attribute);
+		} catch (Exception t) {
+			_logger.error("error in isNestedSearchableOptionSupported", t);
 		}
 		return false;
 	}

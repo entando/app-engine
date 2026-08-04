@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import org.jdom2.Element;
 
 import com.agiletec.aps.system.SystemConstants;
@@ -136,6 +137,18 @@ public class DateAttribute extends AbstractAttribute implements IndexableAttribu
      */
     public Date getDate() {
         return _date;
+    }
+
+    /** A date is range-queried, so it is indexed as a date field rather than as text. */
+    @Override
+    public SearchFieldType getSearchFieldType() {
+        return SearchFieldType.DATE;
+    }
+
+    /** The instant itself, not its rendered form: a date field has to be comparable. */
+    @Override
+    public Object getSearchFieldValue() {
+        return this.getDate();
     }
 
     /**

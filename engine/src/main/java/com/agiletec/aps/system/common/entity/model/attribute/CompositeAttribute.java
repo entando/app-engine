@@ -183,7 +183,18 @@ public class CompositeAttribute extends AbstractComplexAttribute {
         }
         compositeAttrElem = (AttributeInterface) compositeAttrElem.getAttributePrototype();
         compositeAttrElem.setAttributeConfig(currentAttrJdomElem);
-        compositeAttrElem.setSearchable(false);
+        // Composite children are non-searchable by design (they would collide in the DB search tables
+        // under their unqualified name), EXCEPT the types that declare themselves nested-searchable -
+        // boolean-like children today - which are indexed under the path key built from their hierarchy
+        // and so may keep their configured searchable flag. The attribute answers for itself: this model
+        // class must not depend on the search-indexing policy to parse a type configuration.
+        // This is the tolerance path only: a type being loaded must never fail, so a stale flag left in
+        // the stored configuration is corrected here. Explicit configuration is gated at the persistence
+        // boundary instead, by ApsEntityManager.normalizeNestedSearchableFlags, which also enforces the
+        // list-ancestry half of the rule that this parse point has no context to see.
+        if (!compositeAttrElem.isNestedSearchSupported()) {
+            compositeAttrElem.setSearchable(false);
+        }
         compositeAttrElem.setDefaultLangCode(this.getDefaultLangCode());
         this.addAttribute(compositeAttrElem);
     }

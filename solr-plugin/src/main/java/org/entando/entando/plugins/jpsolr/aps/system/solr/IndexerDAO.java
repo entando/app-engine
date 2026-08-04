@@ -13,12 +13,12 @@
  */
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import com.agiletec.aps.system.common.entity.NestedBooleanSearchSupport;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AbstractComplexAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
-import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.category.Category;
@@ -28,7 +28,6 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ResourceAttributeInterface;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +45,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Data Access Object dedita alla indicizzazione di documenti.
  */
+// NOTE: java:S2143 ("use the java.time API") is intentionally suppressed. This class uses legacy
+// java.util.Date to interoperate with the content date model (getCreated/getLastModified); migrating
+// the date stack to java.time is out of scope for ESB-1133 (boolean search) and tracked separately.
+@SuppressWarnings("java:S2143")
 public class IndexerDAO implements ISolrIndexerDAO {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexerDAO.class);
@@ -115,31 +118,49 @@ public class IndexerDAO implements ISolrIndexerDAO {
         for (String groupName : entity.getGroups()) {
             document.addField(SolrFields.SOLR_CONTENT_GROUP_FIELD_NAME, groupName);
         }
-        if (entity instanceof Content) {
-            if (null != entity.getDescription()) {
-                document.addField(SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
-            }
-            Date creation = ((Content) entity).getCreated();
-            Date lastModify =
-                    (null != ((Content) entity).getLastModified()) ? ((Content) entity).getLastModified() : creation;
-            if (null != creation) {
-                document.addField(SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, creation);
-            }
-            if (null != lastModify) {
-                document.addField(SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
-            }
+        this.addContentMetadata(entity, document);
+        this.indexAttributes(entity, document);
+        this.indexCategories(entity, document);
+        return document;
+    }
+
+    private void addContentMetadata(IApsEntity entity, SolrInputDocument document) {
+        if (!(entity instanceof Content)) {
+            return;
         }
+        Content content = (Content) entity;
+        if (null != entity.getDescription()) {
+            document.addField(SolrFields.SOLR_CONTENT_DESCRIPTION_FIELD_NAME, entity.getDescription());
+        }
+        Date creation = content.getCreated();
+        Date lastModify = (null != content.getLastModified()) ? content.getLastModified() : creation;
+        if (null != creation) {
+            document.addField(SolrFields.SOLR_CONTENT_CREATION_FIELD_NAME, creation);
+        }
+        if (null != lastModify) {
+            document.addField(SolrFields.SOLR_CONTENT_LAST_MODIFY_FIELD_NAME, lastModify);
+        }
+    }
+
+    private void indexAttributes(IApsEntity entity, SolrInputDocument document) {
         for (AttributeInterface currentAttribute : entity.getAttributeList()) {
             Object value = currentAttribute.getValue();
-            if (null == value) {
+            // An attribute with no value is skipped - except a three-state one, whose *unset* state is
+            // itself a value to index (its getValue() returns null on purpose, unlike a plain Boolean
+            // which coerces to false). Tested on the declared field type rather than on the class, so
+            // this loop still names no subclass.
+            //
+            // NB: the test must be on the field TYPE and not on getSearchFieldValue() being non-null.
+            // An empty Image/Attach/Link has a null getValue() but a non-null (empty-string)
+            // indexable value, so keying off the value would stop skipping it and would add empty
+            // entries to the full-text field that this method has never added.
+            if (null == value && SearchFieldType.TRISTATE != currentAttribute.getSearchFieldType()) {
                 continue;
             }
             for (Lang lang : this.getLangManager().getLangs()) {
                 this.indexAttribute(document, currentAttribute, lang);
             }
         }
-        this.indexCategories(entity, document);
-        return document;
     }
 
     protected void indexCategories(IApsEntity entity, SolrInputDocument document) {
@@ -149,7 +170,7 @@ public class IndexerDAO implements ISolrIndexerDAO {
             for (ITreeNode category : categories) {
                 this.extractCategoryCodes(category, codes);
             }
-            codes.stream().forEach(c -> document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, c));
+            codes.forEach(c -> document.addField(SolrFields.SOLR_CONTENT_CATEGORY_FIELD_NAME, c));
         }
     }
 
@@ -165,23 +186,24 @@ public class IndexerDAO implements ISolrIndexerDAO {
     protected void indexAttribute(SolrInputDocument document, AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
         if (!attribute.isSimple()) {
-            this.indexComplexAttribute(document, (AbstractComplexAttribute) attribute, lang);
+            // Two independent concerns, one pass each: every text descendant feeds the full-text field
+            // (lists included), and every path-indexed boolean gets its own field. Which booleans those
+            // are, and under which path, is the engine's decision - not this class's.
+            this.indexComplexAttributeForFullText(document, (AbstractComplexAttribute) attribute, lang);
+            NestedBooleanSearchSupport.forEachIndexableNestedBoolean(attribute, (child, path) -> {
+                child.setRenderingLang(lang.getCode());
+                // getSearchFieldValue() never returns null for a boolean-like attribute: an unset
+                // ThreeStateAttribute yields its "not set" literal, an unset Boolean/CheckBox
+                // coerces to false.
+                this.indexValue(document, lang.getCode().toLowerCase() + "_" + path,
+                        child.getSearchFieldValue());
+            });
             return;
         }
-        if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
-                && attribute.isSearchable())) {
-            Object valueToIndex = null;
-            if (attribute instanceof DateAttribute) {
-                valueToIndex = ((DateAttribute) attribute).getDate();
-            } else if (attribute instanceof NumberAttribute) {
-                valueToIndex = ((NumberAttribute) attribute).getValue();
-                if (null != valueToIndex) {
-                    valueToIndex = ((BigDecimal) valueToIndex).intValue();
-                }
-            } else {
-                valueToIndex = ((IndexableAttributeInterface) attribute).getIndexeableFieldValue();
-            }
+        if (attribute.hasSearchField()) {
+            // Which attributes have a field, and what goes in it, is the attribute's own answer - not a
+            // ladder of type tests repeated here, in the schema checker and in the settings report.
+            Object valueToIndex = attribute.getSearchFieldValue();
             if (null == valueToIndex) {
                 return;
             }
@@ -203,13 +225,19 @@ public class IndexerDAO implements ISolrIndexerDAO {
         }
     }
 
-    private void indexComplexAttribute(SolrInputDocument document, AbstractComplexAttribute complexAttribute,
-            Lang lang) {
+    /**
+     * Route every text descendant of a complex attribute to the full-text {@code <lang>} field,
+     * wherever it occurs - including inside a List/Monolist. No path is needed here: the full-text
+     * field is named after the language alone. Per-attribute boolean fields are not this method's
+     * business; {@code indexAttribute} asks the engine for those.
+     */
+    private void indexComplexAttributeForFullText(SolrInputDocument document,
+            AbstractComplexAttribute complexAttribute, Lang lang) {
         for (AttributeInterface attribute : complexAttribute.getAttributes()) {
             attribute.setRenderingLang(lang.getCode());
             if (!attribute.isSimple()) {
-                this.indexComplexAttribute(document, (AbstractComplexAttribute) attribute, lang);
-            } else if (attribute instanceof IndexableAttributeInterface){
+                this.indexComplexAttributeForFullText(document, (AbstractComplexAttribute) attribute, lang);
+            } else if (attribute instanceof IndexableAttributeInterface) {
                 String valueToIndex = ((IndexableAttributeInterface) attribute).getIndexeableFieldValue();
                 this.addFieldForFullTextSearch(document, attribute, lang, valueToIndex);
             }
@@ -232,6 +260,7 @@ public class IndexerDAO implements ISolrIndexerDAO {
 
     private void indexValue(SolrInputDocument document, String fieldName, Object valueToIndex) {
         fieldName = fieldName.replace(":", "_");
+        logger.debug("Indexing attribute field '{}' with value '{}'", fieldName, valueToIndex);
         document.addField(fieldName, valueToIndex);
     }
 

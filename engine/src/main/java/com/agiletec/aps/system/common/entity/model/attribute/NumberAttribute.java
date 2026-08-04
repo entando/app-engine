@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
@@ -88,6 +89,22 @@ public class NumberAttribute extends AbstractAttribute implements IndexableAttri
     @Override
     public BigDecimal getValue() {
         return _number;
+    }
+
+    /** A number is range-queried, so it is indexed as a number field rather than as text. */
+    @Override
+    public SearchFieldType getSearchFieldType() {
+        return SearchFieldType.NUMBER;
+    }
+
+    /**
+     * The integral value: the search field is an integer field, so the {@code BigDecimal} is narrowed
+     * here rather than at each indexing site.
+     */
+    @Override
+    public Object getSearchFieldValue() {
+        BigDecimal value = this.getValue();
+        return (null == value) ? null : value.intValue();
     }
 
     /**

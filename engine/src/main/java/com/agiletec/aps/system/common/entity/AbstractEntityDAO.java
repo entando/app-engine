@@ -16,9 +16,11 @@ package com.agiletec.aps.system.common.entity;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -28,10 +30,8 @@ import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
 import com.agiletec.aps.system.common.entity.model.AttributeSearchInfo;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
-import com.agiletec.aps.system.common.util.EntityAttributeIterator;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.lang.ILangManager;
-import java.sql.SQLException;
 
 /**
  * Abstract DAO class used for the management of the ApsEntities.
@@ -204,29 +204,41 @@ public abstract class AbstractEntityDAO extends AbstractDAO implements IEntityDA
 	}
 	
 	protected void addEntitySearchRecord(String id, IApsEntity entity, PreparedStatement stat) throws Throwable {
-		EntityAttributeIterator attributeIter = new EntityAttributeIterator(entity);
-		while (attributeIter.hasNext()) {
-			AttributeInterface currAttribute = (AttributeInterface) attributeIter.next();
-			List<AttributeSearchInfo> infos = currAttribute.getSearchInfos(this.getLangManager().getLangs());
-			if (currAttribute.isSearchable() && null != infos) {
-				for (int i=0; i<infos.size(); i++) {
-					AttributeSearchInfo searchInfo = infos.get(i);
-					stat.setString(1, id);
-					stat.setString(2, currAttribute.getName());
-					stat.setString(3, searchInfo.getString());
-					if (searchInfo.getDate() != null) {
-						stat.setTimestamp(4, new java.sql.Timestamp(searchInfo.getDate().getTime()));
-					} else {
-						stat.setDate(4, null);
-					}
-					stat.setBigDecimal(5, searchInfo.getBigDecimal());
-					stat.setString(6, searchInfo.getLangCode());
-					stat.addBatch();
-					stat.clearParameters();
-				}
+		// Stated rather than assumed: indexing a null entity is meaningless and no caller does it (each
+		// one reads entity.getId() to obtain the id passed here). The planner below tolerates a null entity
+		// because its other callers - the admin search forms - may have no prototype yet; this path never
+		// does, so say so instead of letting the next line decide.
+		Objects.requireNonNull(entity, "entity to index");
+		// The whole write rule - which attributes are indexed, and under which attrname - is decided once,
+		// by the engine's single traversal. This DAO does not walk the attribute tree, does not know that
+		// lists are excluded from path indexing, and does not build a path: it writes what it is handed.
+		for (SearchRecordSpec spec : NestedBooleanSearchSupport.planSearchRecords(entity,
+				this.getSearchKeyStrategy())) {
+			List<AttributeSearchInfo> infos = spec.attribute().getSearchInfos(this.getLangManager().getLangs());
+			if (null != infos) {
+				this.addAttributeSearchInfoRecords(id, spec.attrName(), infos, stat);
 			}
 		}
 		stat.executeBatch();
+	}
+
+	private void addAttributeSearchInfoRecords(String id, String attrName,
+			List<AttributeSearchInfo> infos, PreparedStatement stat) throws SQLException {
+		// id and attrname are invariant across the info rows of this attribute; set them once and let
+		// the per-row columns (3-6) be overwritten each iteration before addBatch().
+		stat.setString(1, id);
+		stat.setString(2, attrName);
+		for (AttributeSearchInfo searchInfo : infos) {
+			stat.setString(3, searchInfo.getString());
+			if (searchInfo.getDate() != null) {
+				stat.setTimestamp(4, new java.sql.Timestamp(searchInfo.getDate().getTime()));
+			} else {
+				stat.setDate(4, null);
+			}
+			stat.setBigDecimal(5, searchInfo.getBigDecimal());
+			stat.setString(6, searchInfo.getLangCode());
+			stat.addBatch();
+		}
 	}
 	
 	protected void addEntityAttributeRoleRecord(String id, IApsEntity entity, Connection conn) {
@@ -342,6 +354,25 @@ public abstract class AbstractEntityDAO extends AbstractDAO implements IEntityDA
 	 */
 	protected abstract String getExtractingAllEntityIdQuery();
 	
+	/**
+	 * The key strategy of the entity manager that owns this DAO - the same one its validation uses, so a
+	 * key that was accepted at persist time is the key that gets written here. Defaults to the strategy
+	 * matching the search tables the platform ships, so a DAO that is not explicitly wired keeps working.
+	 */
+	protected IEntitySearchKeyStrategy getSearchKeyStrategy() {
+		return this.searchKeyStrategy;
+	}
+
+	/**
+	 * @param searchKeyStrategy the strategy matching this DAO's search table; null restores the default.
+	 * Must be the same instance (or an equivalent one) as the owning manager's, or the keys written here
+	 * would not be the keys the readers resolve.
+	 */
+	public void setSearchKeyStrategy(IEntitySearchKeyStrategy searchKeyStrategy) {
+		this.searchKeyStrategy = (null != searchKeyStrategy)
+				? searchKeyStrategy : DefaultEntitySearchKeyStrategy.INSTANCE;
+	}
+
 	protected ILangManager getLangManager() {
 		return _langManager;
 	}
@@ -350,5 +381,7 @@ public abstract class AbstractEntityDAO extends AbstractDAO implements IEntityDA
 	}
 	
 	private ILangManager _langManager;
+
+	private IEntitySearchKeyStrategy searchKeyStrategy = DefaultEntitySearchKeyStrategy.INSTANCE;
 	
 }

@@ -76,7 +76,7 @@
                     <wpsf:textfield name="username" id="search-username" cssClass="form-control " title="%{getText('label.search.by')+' '+getText('label.username')}" placeholder="%{getText('label.username')}" />
                 </div>
             </div>
-            <s:set var="searchableAttributesVar" value="searchableAttributes" />
+            <s:set var="searchableAttributesVar" value="searchableAttributeRefs" />
             <s:set var="searchableAttributesPageScope"
                    value="%{#searchableAttributesVar}" scope="page" />
             <!--users section-->
@@ -241,16 +241,56 @@
                                             </div>
                                         </div>
                                     </s:elseif>
-                                    <%-- Boolean & ThreeState --%>
-                                    <s:elseif
-                                        test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
+                                    <%-- ThreeState: Any, Yes, No, Not set (the unset/none state) --%>
+                                    <s:elseif test="#attribute.type == 'ThreeState'">
                                         <s:set var="booleanInputFieldName"
                                                value="%{#attribute.name+'_booleanFieldName'}" />
                                         <s:set var="booleanInputFieldValue"
                                                value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
                                         <div class="form-group">
                                             <label class="control-label col-sm-3 "><s:property
-                                                    value="#attribute.name" /></label>
+                                                    value="%{searchableAttributeLabels[#attribute.name] != null ? searchableAttributeLabels[#attribute.name] : #attribute.name}" /></label>
+
+                                            <div class="btn-group col-xs-9" data-toggle="buttons">
+                                                <label
+                                                    class="btn btn-default <s:if test="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}"> active </s:if>">
+                                                    <wpsf:radio id="any_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value=""
+                                                                checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}" />
+                                                    &#32;<s:text name="label.any" />
+                                                </label> <label
+                                                    class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'true'}"> active </s:if>">
+                                                    <wpsf:radio id="true_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value="true"
+                                                                checked="%{#booleanInputFieldValue == 'true'}" /> &#32;<s:text
+                                                                name="label.yes" />
+                                                </label> <label
+                                                    class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'false'}"> active </s:if>">
+                                                    <wpsf:radio id="false_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value="false"
+                                                                checked="%{#booleanInputFieldValue == 'false'}" /> &#32;<s:text
+                                                                name="label.no" />
+                                                </label> <label
+                                                    class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'none'}"> active </s:if>">
+                                                    <wpsf:radio id="none_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value="none"
+                                                                checked="%{#booleanInputFieldValue == 'none'}" /> &#32;<s:text
+                                                                name="label.notSet" />
+                                                </label>
+
+                                            </div>
+                                        </div>
+                                    </s:elseif>
+                                    <%-- Boolean & CheckBox --%>
+                                    <s:elseif
+                                        test="#attribute.type == 'Boolean' || #attribute.type == 'CheckBox'">
+                                        <s:set var="booleanInputFieldName"
+                                               value="%{#attribute.name+'_booleanFieldName'}" />
+                                        <s:set var="booleanInputFieldValue"
+                                               value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-3 "><s:property
+                                                    value="%{searchableAttributeLabels[#attribute.name] != null ? searchableAttributeLabels[#attribute.name] : #attribute.name}" /></label>
 
                                             <div class="btn-group col-xs-9" data-toggle="buttons">
                                                 <label
@@ -258,7 +298,7 @@
                                                     <wpsf:radio id="none_%{#booleanInputFieldName}"
                                                                 name="%{#booleanInputFieldName}" value=""
                                                                 checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" />
-                                                    &#32;<s:text name="label.bothYesAndNo" />
+                                                    &#32;<s:text name="label.any" />
                                                 </label> <label
                                                     class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'true'}"> active </s:if>">
                                                     <wpsf:radio id="true_%{#booleanInputFieldName}"

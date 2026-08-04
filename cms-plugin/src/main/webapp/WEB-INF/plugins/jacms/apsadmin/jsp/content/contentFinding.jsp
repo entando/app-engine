@@ -93,7 +93,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <s:set var="searchableAttributes" value="searchableAttributes" />
+                                        <s:set var="searchableAttributes" value="searchableAttributeRefs" />
                                         <s:if test="null != #searchableAttributes && #searchableAttributes.size() > 0">
 
                                             <s:iterator var="attribute" value="#searchableAttributes">
@@ -188,10 +188,67 @@
                                                     </div>
 
                                                 </s:elseif>
-                                                <s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
+                                                <s:elseif test="#attribute.type == 'ThreeState'">
                                                     <p>
                                                         <span class="important">
-                                                            <s:property value="#attribute.name" />
+                                                            <s:property value="%{searchableAttributeLabels[#attribute.name] != null ? searchableAttributeLabels[#attribute.name] : #attribute.name}" />
+                                                        </span>
+                                                        <br />
+                                                    </p>
+                                                    <s:set var="booleanInputFieldName">
+                                                        <s:property value="#attribute.name" />_booleanFieldName</s:set>
+                                                    <s:set var="booleanInputFieldValue">
+                                                        <s:property
+                                                            value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
+                                                    </s:set>
+                                                    <%-- ThreeState has three stored states plus "don't filter": Any (no
+                                                         filter), Yes (true), No (false) and Not set (the unset/none state). --%>
+                                                    <ul class="noBullet radiocheck">
+                                                        <li>
+                                                            <wpsf:radio
+                                                                id="any_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value=""
+                                                                checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}" /><label
+                                                                for="any_<s:property value="#booleanInputFieldName" />"
+                                                                class="normal"><s:text name="label.any" />
+                                                            </label>
+                                                        </li>
+                                                        <li>
+                                                            <wpsf:radio
+                                                                id="true_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value="true"
+                                                                checked="%{#booleanInputFieldValue == 'true'}" />
+                                                            <label
+                                                                for="true_<s:property value="#booleanInputFieldName" />"
+                                                                class="normal"><s:text name="label.yes" />
+                                                            </label>
+                                                        </li>
+                                                        <li>
+                                                            <wpsf:radio
+                                                                id="false_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value="false"
+                                                                checked="%{#booleanInputFieldValue == 'false'}" />
+                                                            <label
+                                                                for="false_<s:property value="#booleanInputFieldName" />"
+                                                                class="normal"><s:text name="label.no" />
+                                                            </label>
+                                                        </li>
+                                                        <li>
+                                                            <wpsf:radio
+                                                                id="none_%{#booleanInputFieldName}"
+                                                                name="%{#booleanInputFieldName}" value="none"
+                                                                checked="%{#booleanInputFieldValue == 'none'}" />
+                                                            <label
+                                                                for="none_<s:property value="#booleanInputFieldName" />"
+                                                                class="normal"><s:text name="label.notSet" />
+                                                            </label>
+                                                        </li>
+                                                    </ul>
+                                                </s:elseif>
+                                                <s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'CheckBox'">
+                                                    <p>
+                                                        <span class="important">
+                                                            <s:property value="%{searchableAttributeLabels[#attribute.name] != null ? searchableAttributeLabels[#attribute.name] : #attribute.name}" />
                                                         </span>
                                                         <br />
                                                     </p>
@@ -203,16 +260,16 @@
                                                     </s:set>
                                                     <ul class="noBullet radiocheck">
                                                         <li>
-                                                            <wpsf:radio 
+                                                            <wpsf:radio
                                                                 id="none_%{#booleanInputFieldName}"
                                                                 name="%{#booleanInputFieldName}" value=""
                                                                 checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" /><label
                                                                 for="none_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.bothYesAndNo" />
+                                                                class="normal"><s:text name="label.any" />
                                                             </label>
                                                         </li>
                                                         <li>
-                                                            <wpsf:radio 
+                                                            <wpsf:radio
                                                                 id="true_%{#booleanInputFieldName}"
                                                                 name="%{#booleanInputFieldName}" value="true"
                                                                 checked="%{#booleanInputFieldValue == 'true'}" />
@@ -222,7 +279,7 @@
                                                             </label>
                                                         </li>
                                                         <li>
-                                                            <wpsf:radio 
+                                                            <wpsf:radio
                                                                 id="false_%{#booleanInputFieldName}"
                                                                 name="%{#booleanInputFieldName}" value="false"
                                                                 checked="%{#booleanInputFieldValue == 'false'}" />
@@ -378,7 +435,7 @@
                                      value="%{getSearchFormFieldValue(#numberEndInputFieldName)}" />
                     </s:elseif>
                     <s:elseif
-                        test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
+                        test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState' || #attribute.type == 'CheckBox'">
                         <s:set var="booleanInputFieldName">
                             <s:property value="#attribute.name" />_booleanFieldName</s:set>
                         <wpsf:hidden name="%{#booleanInputFieldName}"

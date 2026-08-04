@@ -19,6 +19,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import org.entando.entando.ent.exception.EntException;
@@ -150,8 +151,17 @@ public class IndexerDAO implements IIndexerDAO {
 
     protected void indexAttribute(Document document, AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
-        if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute) && attribute.isSearchable())) {
+        // Only attributes that carry indexable content get a Lucene field. The condition used to
+        // also admit a searchable Date or Number attribute, which could never widen it: both types
+        // implement IndexableAttributeInterface themselves, so that clause was dropped as dead.
+        //
+        // DELIBERATE DIVERGENCE from the Solr engine: boolean-like attributes (Boolean, CheckBox,
+        // ThreeState) are NOT indexed here, and must not be. On this engine attribute filtering is
+        // served by the DB search tables (contentsearch/workcontentsearch), which is where a boolean's
+        // searchable flag writes its row; Lucene only provides full text. Switching this test to the
+        // engine-wide attribute.hasSearchField() would therefore start writing boolean fields into
+        // every Lucene document - a change of index contents, not a refactor.
+        if (attribute instanceof IndexableAttributeInterface) {
             Object[] values = this.extractValuesToIndex(attribute);
             if (null == values[0]) {
                 return;
@@ -170,7 +180,7 @@ public class IndexerDAO implements IIndexerDAO {
                     document.add(new TextField(lang.getCode(), valueToIndex, Field.Store.YES));
                 }
             }
-            boolean isDate = (attribute instanceof DateAttribute);
+            boolean isDate = (SearchFieldType.DATE == attribute.getSearchFieldType());
             String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
             this.indexValue(document, fieldName, valueToIndex, number, isDate);
             if (null == attribute.getRoles()) {
@@ -207,15 +217,31 @@ public class IndexerDAO implements IIndexerDAO {
         }
     }
     
+    /**
+     * The pair this engine needs for one attribute: the string to index, and its numeric form when the
+     * attribute has one (used for range queries and numeric sorting).
+     *
+     * <p>The dispatch is on the attribute's <b>declared</b> {@link SearchFieldType} rather than on its
+     * class, so a custom attribute type that declares itself a date or a number is treated as one here
+     * too - previously anything that was not literally a {@code DateAttribute}/{@code NumberAttribute}
+     * fell through to the text branch.</p>
+     *
+     * <p>The <i>formatting</i> stays this engine's own, deliberately. Lucene needs a minute-resolution
+     * date string and a {@code long} for the numeric field, whereas
+     * {@link AttributeInterface#getSearchFieldValue()} hands back the shape the per-attribute field
+     * takes ({@code Date}, {@code Integer}), which is not what these two Lucene fields want - and whose
+     * {@code int} narrowing would truncate a number that does not fit 32 bits.</p>
+     */
     protected Object[] extractValuesToIndex(AttributeInterface attribute) {
         Object[] values = new Object[2];
         String valueToIndex = null;
         Long number = null;
-        if (attribute instanceof DateAttribute) {
+        SearchFieldType searchFieldType = attribute.getSearchFieldType();
+        if (SearchFieldType.DATE == searchFieldType) {
             Date date = ((DateAttribute) attribute).getDate();
             number = (null != date) ? date.getTime() : null;
             valueToIndex = (null != number) ? DateTools.timeToString(number, DateTools.Resolution.MINUTE) : valueToIndex;
-        } else if (attribute instanceof NumberAttribute) {
+        } else if (SearchFieldType.NUMBER == searchFieldType) {
             BigDecimal value = ((NumberAttribute) attribute).getValue();
             number = (null != value) ? value.longValue() : null;
             valueToIndex = (null != number) ? String.valueOf(number) : valueToIndex;

@@ -21,6 +21,7 @@ import org.jdom2.Element;
 
 import com.agiletec.aps.system.common.entity.model.AttributeSearchInfo;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import com.agiletec.aps.system.services.lang.Lang;
 
 /**
@@ -80,6 +81,33 @@ public class BooleanAttribute extends AbstractAttribute {
     @Override
     public boolean isSearchableOptionSupported() {
         return true;
+    }
+
+    /**
+     * Boolean-like attributes - this class and its subclasses {@code CheckBoxAttribute} and
+     * {@code ThreeStateAttribute} - are the attribute types that may be flagged searchable while nested
+     * in a Composite: they are indexed under the path key built from their hierarchy, so they cannot
+     * collide with a same-named attribute elsewhere in the type.
+     */
+    @Override
+    public boolean isNestedSearchSupported() {
+        return true;
+    }
+
+    /**
+     * A two-valued boolean field. {@code ThreeStateAttribute} overrides this with
+     * {@link SearchFieldType#TRISTATE} - which is why no consumer has to remember that it is a subclass
+     * of this class.
+     */
+    @Override
+    public SearchFieldType getSearchFieldType() {
+        return SearchFieldType.BOOLEAN;
+    }
+
+    /** {@link #getValue()} already coerces the unset state to {@code false}, so this is never null. */
+    @Override
+    public Object getSearchFieldValue() {
+        return this.getValue();
     }
 
     @Override

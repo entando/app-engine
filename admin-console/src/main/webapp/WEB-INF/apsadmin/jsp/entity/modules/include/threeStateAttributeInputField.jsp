@@ -24,6 +24,6 @@
 			id="none_%{#currentThreestateAttributeNameVar}" 
 			value="" 
 			checked="%{#attribute.booleanValue == null}"/>
-		<s:text name="label.bothYesAndNo"/>
+		<s:text name="label.notSet"/>
 	</label>
 </div>

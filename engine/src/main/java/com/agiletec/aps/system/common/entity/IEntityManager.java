@@ -71,6 +71,37 @@ public interface IEntityManager extends IManager {
     public List<ApsEntityRecord> searchRecords(EntitySearchFilter[] filters) throws EntException;
 
     /**
+     * How this manager addresses nested attributes in its search table: the width of its
+     * {@code attrname} column, which attribute types may be reached by a path, and how a path becomes a
+     * key.
+     *
+     * <p>Each manager owns its own search table, so the length bound is a property of <i>this</i>
+     * manager rather than of the platform. The default is
+     * {@link DefaultEntitySearchKeyStrategy#INSTANCE}, which matches the tables the platform ships; a
+     * manager whose table differs - including one in a custom project - returns its own.</p>
+     *
+     * @return the search key strategy; never null.
+     */
+    default IEntitySearchKeyStrategy getSearchKeyStrategy() {
+        return DefaultEntitySearchKeyStrategy.INSTANCE;
+    }
+
+    /**
+     * What the given entity type offers to a search: the attributes a form can filter on, their labels,
+     * the key each is addressed by, and the defects of that key set.
+     *
+     * <p>All of it is a pure function of the type, so an implementation is expected to compute it once
+     * per type and keep it - {@link ApsEntityManager} does. The default computes it on demand, which
+     * keeps any other implementation of this interface working.</p>
+     *
+     * @param typeCode the entity type code.
+     * @return the schema; never null, empty when the type does not exist.
+     */
+    default EntitySearchSchema getSearchSchema(String typeCode) {
+        return EntitySearchSchema.build(this.getEntityPrototype(typeCode), this.getSearchKeyStrategy());
+    }
+
+    /**
      * Create an object from the prototype.
      *
      * @param typeCode The type of the prototype to return.

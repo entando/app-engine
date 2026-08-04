@@ -15,6 +15,7 @@ package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
 
+import com.agiletec.aps.system.common.entity.NestedBooleanSearchSupport;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingEvent;
 import com.agiletec.aps.system.common.entity.event.EntityTypesChangingObserver;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
@@ -58,6 +59,10 @@ import org.springframework.beans.factory.InitializingBean;
  * @author E.Santoboni
  */
 @Slf4j
+// NOTE: java:S2143 ("use the java.time API") is intentionally suppressed. Legacy java.util.Date is
+// used only to stamp a reload timestamp (new Date()); java.time migration is out of scope for
+// ESB-1133 (boolean search) and tracked separately.
+@SuppressWarnings("java:S2143")
 public class SolrSearchEngineManager extends SearchEngineManager
         implements ISolrSearchEngineManager, PublicContentChangedObserver, EntityTypesChangingObserver,
         InitializingBean {
@@ -173,23 +178,50 @@ public class SolrSearchEngineManager extends SearchEngineManager
                         entityType.getDescription());
                 list.add(typeSettings);
                 Content prototype = this.getContentManager().createContentType(entityType.getCode());
+                List<Lang> languages = this.langManager.getLangs();
                 for (AttributeInterface attribute : prototype.getAttributeList()) {
-                    Map<String, Map<String, Serializable>> currentConfig = new HashMap<>();
-                    List<Lang> languages = this.langManager.getLangs();
-                    for (Lang lang : languages) {
-                        String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
-                        fields.stream()
-                                .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
-                                .findFirst().ifPresent(currentField ->
-                                        currentConfig.put(fieldName, (Map<String, Serializable>) currentField));
-                    }
+                    Map<String, Map<String, Serializable>> currentConfig =
+                            this.buildCurrentFieldConfig(attribute.getName(), languages, fields);
                     typeSettings.addAttribute(attribute, currentConfig, languages);
+                    if (!attribute.isSimple()) {
+                        this.addNestedBooleanSettings(attribute, fields, languages, typeSettings);
+                    }
                 }
             }
         } catch (Exception e) {
             throw new EntException("Error extracting config", e);
         }
         return list;
+    }
+
+    private Map<String, Map<String, Serializable>> buildCurrentFieldConfig(String attributeName,
+            List<Lang> languages, List<Map<String, ?>> fields) {
+        Map<String, Map<String, Serializable>> currentConfig = new HashMap<>();
+        for (Lang lang : languages) {
+            String fieldName = lang.getCode().toLowerCase() + "_" + attributeName;
+            fields.stream()
+                    .filter(f -> f.get(SOLR_FIELD_NAME).equals(fieldName))
+                    .findFirst().ifPresent(currentField ->
+                            currentConfig.put(fieldName, (Map<String, Serializable>) currentField));
+        }
+        return currentConfig;
+    }
+
+    /**
+     * Report every path-indexed nested boolean of this complex attribute in the content-type settings,
+     * under the same full path the schema and the index use (e.g.
+     * {@code en_complexAttrName_boolAttrName}), so the admin "content types settings" endpoint and the
+     * lazy schema-refresh validity check ({@code isValid()}) stay in sync with them. The set of
+     * eligible attributes and their paths come from the engine's shared traversal, which is what
+     * guarantees the three Solr consumers agree.
+     */
+    private void addNestedBooleanSettings(AttributeInterface attribute, List<Map<String, ?>> fields,
+            List<Lang> languages, ContentTypeSettings typeSettings) {
+        NestedBooleanSearchSupport.forEachIndexableNestedBoolean(attribute, (child, path) -> {
+            Map<String, Map<String, Serializable>> currentConfig =
+                    this.buildCurrentFieldConfig(path, languages, fields);
+            typeSettings.addNestedBooleanAttribute(child, path, currentConfig, languages);
+        });
     }
 
     @Override

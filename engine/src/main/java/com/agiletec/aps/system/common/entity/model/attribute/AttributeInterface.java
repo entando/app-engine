@@ -25,6 +25,8 @@ import com.agiletec.aps.system.common.entity.model.AttributeTracer;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.util.IAttributeValidationRules;
 import com.agiletec.aps.system.common.entity.parse.attribute.AttributeHandlerInterface;
+import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.services.lang.Lang;
@@ -161,6 +163,73 @@ public interface AttributeInterface extends Serializable {
      * @return True if the attribute has the searchable option supported.
      */
     public boolean isSearchableOptionSupported();
+
+    /**
+     * Test whether the attribute supports the searchable option when it is used as the <b>child of a
+     * Composite</b>, i.e. whether it can be indexed under a path key rather than under its own name.
+     *
+     * <p>A Composite child cannot be indexed under its unqualified name - it would collide in the search
+     * tables with a same-named attribute elsewhere in the type - so it is indexed under the path key
+     * built from its hierarchy instead. Only the attribute types that opt in here are given such a key;
+     * every other type has its {@code searchable} flag cleared when the Composite is configured.</p>
+     *
+     * <p>Defaults to {@code false}, so an attribute type is nested-searchable only if it says so: a
+     * custom attribute implementation keeps working unchanged, and the platform does not have to know
+     * the closed set of eligible types.</p>
+     *
+     * @return True if the attribute may be flagged searchable while nested in a Composite.
+     */
+    default boolean isNestedSearchSupported() {
+        return false;
+    }
+
+    /**
+     * The kind of per-attribute search field this attribute contributes to a search engine, or
+     * {@code null} when it contributes none.
+     *
+     * <p>This is the platform's type dispatch for search indexing, and it replaces the
+     * {@code instanceof} ladder that each search back-end used to repeat. The default answer covers
+     * every attribute that produces indexable content ({@link IndexableAttributeInterface}) as
+     * {@link SearchFieldType#TEXT}; {@code DateAttribute}, {@code NumberAttribute},
+     * {@code BooleanAttribute} and {@code ThreeStateAttribute} override it. A custom attribute type
+     * overrides it to be indexed without any back-end being edited.</p>
+     *
+     * @return the search field type, or null if the attribute has no per-attribute search field.
+     */
+    default SearchFieldType getSearchFieldType() {
+        return (this instanceof IndexableAttributeInterface) ? SearchFieldType.TEXT : null;
+    }
+
+    /**
+     * The value to store in this attribute's per-attribute search field, or {@code null} when there is
+     * nothing to store. Paired with {@link #getSearchFieldType()}: the type tells a back-end how to
+     * declare the field, this tells it what to put in it.
+     *
+     * <p>The default returns the attribute's indexable content. Overriding implementations return the
+     * value in the shape the field type implies - a {@code Date} for {@link SearchFieldType#DATE}, an
+     * {@code Integer} for {@link SearchFieldType#NUMBER}, a {@code Boolean} for
+     * {@link SearchFieldType#BOOLEAN}, a string literal for {@link SearchFieldType#TRISTATE}.</p>
+     *
+     * @return the value to index, or null if there is none.
+     */
+    default Object getSearchFieldValue() {
+        return (this instanceof IndexableAttributeInterface indexable)
+                ? indexable.getIndexeableFieldValue() : null;
+    }
+
+    /**
+     * Whether this attribute actually gets a per-attribute search field: it has a
+     * {@link #getSearchFieldType() field type}, and - for the types that require it - it is flagged
+     * searchable. An attribute that already produces indexable content gets its field either way,
+     * which is the behaviour the platform has always had.
+     *
+     * @return true if a search back-end must declare and populate a field for this attribute.
+     */
+    default boolean hasSearchField() {
+        SearchFieldType searchFieldType = this.getSearchFieldType();
+        return null != searchFieldType
+                && (!searchFieldType.isSearchableFlagRequired() || this.isSearchable());
+    }
 
     /**
      * Return the list of the informations characterizing the attribute in order to perform database queries.

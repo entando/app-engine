@@ -14,6 +14,7 @@
 package org.entando.entando.plugins.jpsolr.aps.system.solr.model;
 
 import com.agiletec.aps.system.common.entity.IEntityManager;
+import com.agiletec.aps.system.common.searchengine.SearchFieldType;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 
 /**
@@ -54,4 +55,37 @@ public final class SolrFields {
     public static final String TYPE_PLONGS = "plongs";
     public static final String TYPE_PDATE = "pdate";
     public static final String TYPE_PDATES = "pdates";
+
+    /**
+     * The Solr field type for one of the engine's back-end-neutral {@link SearchFieldType}s - the whole
+     * of this plugin's knowledge about how an attribute is stored, in one place.
+     *
+     * <p>{@link SearchFieldType#TRISTATE} maps to a non-analyzed {@code string} rather than to
+     * {@code boolean}: its third, unset state has no representation in Solr's two-valued
+     * {@code BoolField}, so it is stored as the literal {@code true}/{@code false}/{@code none}. That is
+     * the only reason the engine distinguishes it from {@link SearchFieldType#BOOLEAN}, and expressing it
+     * as a mapping entry - rather than as an {@code instanceof} ordered subclass-first - is what makes
+     * it impossible for a consumer to get wrong.</p>
+     *
+     * @param searchFieldType the attribute's declared field type; may be null.
+     * @return the Solr field type name, or null when the attribute declares no search field.
+     */
+    public static String solrType(SearchFieldType searchFieldType) {
+        if (null == searchFieldType) {
+            return null;
+        }
+        switch (searchFieldType) {
+            case DATE:
+                return TYPE_PDATES;
+            case NUMBER:
+                return TYPE_PLONGS;
+            case BOOLEAN:
+                return TYPE_BOOLEAN;
+            case TRISTATE:
+                return TYPE_STRING;
+            case TEXT:
+            default:
+                return TYPE_TEXT_GEN_SORT;
+        }
+    }
 }

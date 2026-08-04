@@ -92,7 +92,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         String bodyResult = result.andReturn().getResponse().getContentAsString();
         result.andExpect(status().isOk());
         int totalPayloadSize = JsonPath.read(bodyResult, "$.payload.size()");
-        Assertions.assertEquals(24, totalPayloadSize);
+        Assertions.assertEquals(28, totalPayloadSize);
 
         result = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")
@@ -346,7 +346,7 @@ class AdvContentSearchControllerTest extends AbstractControllerIntegrationTest {
         result.andExpect(status().isOk());
         System.out.println(bodyResult);
         int payloadSize = JsonPath.read(bodyResult, "$.payload.size()");
-        Assertions.assertEquals(15, payloadSize);
+        Assertions.assertEquals(19, payloadSize);
 
         ResultActions evnResult = mockMvc
                 .perform(get("/plugins/advcontentsearch/contents")

@@ -14,7 +14,10 @@
 package org.entando.entando.web.userprofile;
 
 import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
+import com.agiletec.aps.system.common.entity.NestedBooleanSearchSupport;
+import com.agiletec.aps.system.common.entity.SearchRecordSpec;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
+import com.agiletec.aps.system.common.entity.model.attribute.CompositeAttribute;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.User;
@@ -39,6 +42,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.io.InputStream;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -296,6 +300,60 @@ class ProfileTypeControllerIntegrationTest extends AbstractControllerIntegration
         }
     }
     
+    /**
+     * A Composite child of a type that does not support nested search must not be accepted as a list
+     * filter: it has no path key, so it would be indexed under its unqualified name and collide with a
+     * same-named attribute elsewhere in the type. Before this was enforced, the request succeeded and the
+     * flag survived to the stored XML until the next reload silently cleared it.
+     */
+    @Test
+    void testAddProfileType_shouldRejectAListFilterOnANonNestableCompositeChild() throws Exception {
+        try {
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("TST"));
+            UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+            String accessToken = mockOAuthInterceptor(user);
+
+            ResultActions result = this.executeProfileTypePost("5_POST_composite_listFilter_invalid.json",
+                    accessToken, status().isBadRequest());
+            result.andExpect(jsonPath("$.payload", Matchers.hasSize(0)));
+            result.andExpect(jsonPath("$.errors", Matchers.hasSize(1)));
+            result.andExpect(jsonPath("$.errors[0].code", is("41")));
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("TST"));
+        } finally {
+            if (null != this.userProfileManager.getEntityPrototype("TST")) {
+                ((IEntityTypesConfigurer) this.userProfileManager).removeEntityPrototype("TST");
+            }
+        }
+    }
+
+    /**
+     * The counterpart: a boolean-like child is accepted, keeps its flag through persistence and reload,
+     * and is planned under its <b>path</b> key - with no record under its unqualified name.
+     */
+    @Test
+    void testAddProfileType_shouldAcceptAListFilterOnABooleanCompositeChild() throws Exception {
+        try {
+            Assertions.assertNull(this.userProfileManager.getEntityPrototype("TST"));
+            UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+            String accessToken = mockOAuthInterceptor(user);
+
+            this.executeProfileTypePost("5_POST_composite_listFilter_valid.json", accessToken, status().isOk());
+
+            IApsEntity stored = this.userProfileManager.getEntityPrototype("TST");
+            Assertions.assertNotNull(stored);
+            CompositeAttribute composite = (CompositeAttribute) stored.getAttribute("compo");
+            Assertions.assertTrue(composite.getAttribute("flag").isSearchable());
+            Assertions.assertFalse(composite.getAttribute("note").isSearchable());
+            Assertions.assertEquals(List.of("compo_flag"),
+                    NestedBooleanSearchSupport.planSearchRecords(stored).stream()
+                            .map(SearchRecordSpec::attrName).toList());
+        } finally {
+            if (null != this.userProfileManager.getEntityPrototype("TST")) {
+                ((IEntityTypesConfigurer) this.userProfileManager).removeEntityPrototype("TST");
+            }
+        }
+    }
+
     private ResultActions executeProfileTypePost(String fileName, String accessToken, ResultMatcher expected) throws Exception {
         InputStream isJsonPostValid = this.getClass().getResourceAsStream(fileName);
         String jsonPostValid = FileTextReader.getText(isJsonPostValid);

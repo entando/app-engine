@@ -17,10 +17,6 @@ import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrField
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
 
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
-import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
-import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.Lang;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -71,24 +67,40 @@ public class ContentTypeSettings implements Serializable {
         AttributeSettings settings = new AttributeSettings(attribute, languages);
         this.getAttributeSettings().add(settings);
         settings.setCurrentConfig(currentField);
-        if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
-                && attribute.isSearchable())) {
-            String type;
-            if (attribute instanceof DateAttribute) {
-                type = SolrFields.TYPE_PDATES;
-            } else if (attribute instanceof NumberAttribute) {
-                type = SolrFields.TYPE_PLONGS;
-            } else if (attribute instanceof BooleanAttribute) {
-                type = SolrFields.TYPE_BOOLEAN;
-            } else {
-                type = SolrFields.TYPE_TEXT_GEN_SORT;
-            }
+        if (attribute.hasSearchField()) {
+            // The expected type is the attribute's own declaration, translated once by SolrFields -
+            // the same call the schema checker and the indexer make, so the three cannot disagree.
             Map<String, Serializable> newField = new HashMap<>();
-            newField.put(SOLR_FIELD_TYPE, type);
+            newField.put(SOLR_FIELD_TYPE, SolrFields.solrType(attribute.getSearchFieldType()));
             newField.put(SOLR_FIELD_MULTIVALUED, false);
             settings.setExpectedConfig(newField);
         }
+    }
+
+    /**
+     * Registers a searchable boolean-like attribute nested inside a Composite attribute, reported under
+     * its full path {@code <composite>_<child>} rather than its own name. The path is what the schema
+     * field and the index actually use, so it is also the only identifier that distinguishes two
+     * same-named children of different Composites - reporting the bare child name made those two rows
+     * indistinguishable in the settings screen and in {@code GET /config}.
+     *
+     * <p>Single-valued: a Composite occurs at most once per document per lang (List/Monolist ancestry is
+     * excluded by the caller), so the nested field is never repeated.</p>
+     *
+     * @param attribute the nested boolean-like attribute; its type drives the expected Solr type.
+     * @param path the full path key, matching the keys of {@code currentField} minus the lang prefix.
+     * @param currentField the schema fields found for this path, keyed by {@code <lang>_<path>}.
+     * @param languages the languages a complete configuration must cover.
+     */
+    public void addNestedBooleanAttribute(AttributeInterface attribute, String path,
+            Map<String, Map<String, Serializable>> currentField, List<Lang> languages) {
+        AttributeSettings settings = new AttributeSettings(attribute, path, languages);
+        this.getAttributeSettings().add(settings);
+        settings.setCurrentConfig(currentField);
+        Map<String, Serializable> newField = new HashMap<>();
+        newField.put(SOLR_FIELD_TYPE, SolrFields.solrType(attribute.getSearchFieldType()));
+        newField.put(SOLR_FIELD_MULTIVALUED, false);
+        settings.setExpectedConfig(newField);
     }
 
     public boolean isValid() {
@@ -104,7 +116,18 @@ public class ContentTypeSettings implements Serializable {
         private final List<String> expectedLanguages;
 
         public AttributeSettings(AttributeInterface attribute, List<Lang> expectedLanguages) {
-            this.setCode(attribute.getName());
+            this(attribute, attribute.getName(), expectedLanguages);
+        }
+
+        /**
+         * @param attribute the attribute being reported.
+         * @param code how it is addressed in the schema and the index - its own name at top level, its
+         * full path when nested in a Composite. Taking it explicitly keeps this in step with the keys of
+         * {@code currentConfig}, which are always {@code <lang>_<code>}.
+         * @param expectedLanguages the languages a complete configuration must cover.
+         */
+        public AttributeSettings(AttributeInterface attribute, String code, List<Lang> expectedLanguages) {
+            this.setCode(code);
             this.setTypeCode(attribute.getType());
             this.expectedLanguages = expectedLanguages.stream().map(Lang::getCode).collect(Collectors.toList());
         }
