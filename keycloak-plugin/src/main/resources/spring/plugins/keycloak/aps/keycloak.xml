@@ -10,11 +10,11 @@
     <context:component-scan base-package="org.entando.entando.keycloak.services"/>
 
     <task:scheduled-tasks>
-        <!-- Refresh configuration every minute -->
+        <!-- Refresh configuration every 15 minutes -->
         <task:scheduled
                 ref="keycloakAuthorizationManager"
                 method="refreshConfiguration"
-                cron="${KC_CONFIG_REFRESH:0 * * * * *}" />
+                cron="${KC_CONFIG_REFRESH:0 0/15 * * * *}" />
 
         <!-- Disabled by default -->
         <task:scheduled

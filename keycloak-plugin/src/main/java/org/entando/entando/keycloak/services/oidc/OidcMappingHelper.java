@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.keycloak.services.mapping.DynamicMappingElement;
@@ -100,21 +99,26 @@ public class OidcMappingHelper {
         if (authNode.isArray()) {
             return extractFromArrayNode(authNode);
         }
-        if (authNode.isTextual()) {
-            return List.of(authNode.asText());
-        }
-        if (authNode.isNumber()) {
-            return List.of(authNode.asText());
+        if (authNode.isTextual() || authNode.isNumber()) {
+            final String value = authNode.asText().trim();
+            return value.isEmpty() ? Collections.emptyList() : List.of(value);
         }
         log.warn("Unsupported node type for path '{}' in JWT: {}", claimMapper.path, authNode.getNodeType());
         return Collections.emptyList();
     }
 
+    /**
+     * Collect the textual elements of a claim array, discarding blank ones. A blank name cannot be
+     * matched against the allowlists, so keeping it would only produce an empty authorization.
+     *
+     * @param arrayNode the claim array node
+     * @return the trimmed, non-blank values
+     */
     private static List<String> extractFromArrayNode(JsonNode arrayNode) {
         List<String> authorizations = new ArrayList<>();
         for (JsonNode node : arrayNode) {
-            if (node.isTextual()) {
-                authorizations.add(node.asText());
+            if (node.isTextual() && !node.asText().isBlank()) {
+                authorizations.add(node.asText().trim());
             }
         }
         return authorizations;
