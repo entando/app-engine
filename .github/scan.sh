@@ -25,6 +25,29 @@ fi
 # poms were not version-set yet. Harmless (and quiet) when already set.
 mvn versions:set -DnewVersion="$ARTIFACT_VERSION" -q || true
 
+# --- coverage-report guard ---------------------------------------------------
+# The scanner treats a missing coverage report as "0% covered" rather than as an
+# error, so a pipeline that fails to produce one fails the quality gate on
+# "Coverage on New Code" and blames the code. That reads as a code problem and
+# sends the author looking in the wrong place. gate.sh already refuses to pass
+# when no surefire report exists; this is the same check for coverage. It only
+# warns - the scan must still run so Sonar is always updated - but it names the
+# real cause up front.
+COVERAGE_REPORTS=$(find . -type f -path '*/target/site/jacoco*/jacoco.xml' 2>/dev/null | wc -l)
+if [ "$COVERAGE_REPORTS" -eq 0 ]; then
+  echo "::warning title=No coverage reports::No jacoco.xml was found, so Sonar will record 0% coverage on new code regardless of how well tested it is. Check that the 'Build & run tests' step ran the tests and reached the verify phase."
+  {
+    echo "### [WARN] Sonar quality gate — no coverage reports found"
+    echo ""
+    echo "No \`jacoco.xml\` exists under any module's \`target/site/jacoco*/\`, so this analysis"
+    echo "carries **no coverage data** and any \"Coverage on New Code\" failure below reflects the"
+    echo "missing report, **not** untested code. Verify that the tests ran and reached \`verify\`."
+  } >> "$SUMMARY"
+else
+  echo "~> $COVERAGE_REPORTS JaCoCo XML report(s) found:"
+  find . -type f -path '*/target/site/jacoco*/jacoco.xml' 2>/dev/null | sed 's/^/     /'
+fi
+
 mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar \
   -Dsonar.verbose=true \
   -Dsonar.qualitygate.wait=true \
