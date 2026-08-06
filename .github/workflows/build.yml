@@ -57,6 +57,7 @@ jobs:
       # NOTE: still runs on node20 even at its latest (v5); the maintainer has not
       # shipped a node24 build yet. GitHub runs it on node24 via the compatibility
       # shim, so it keeps working — bump the major once a node24 release lands.
+      if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
       uses: advanced-security/maven-dependency-submission-action@v4
 
     - name: Save the build output
@@ -120,7 +121,7 @@ jobs:
         run: .github/test.sh
 
       - name: Sonar quality gate
-        if: always()
+        if: always() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
         run: .github/scan.sh
 
       - name: Unit test gate
@@ -140,6 +141,7 @@ jobs:
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   publish:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
       pull-requests: write
