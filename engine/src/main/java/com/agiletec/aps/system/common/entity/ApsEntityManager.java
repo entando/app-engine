@@ -14,6 +14,9 @@
 package com.agiletec.aps.system.common.entity;
 
 import com.agiletec.aps.system.SystemConstants;
+import org.entando.entando.aps.system.common.entity.search.NestedSearchSupport;
+import com.agiletec.aps.util.ApsTenantApplicationUtils;
+import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.aps.system.services.tenants.RefreshableBeanTenantAware;
 import org.entando.entando.ent.util.EntSafeXmlUtils;
 import java.io.IOException;
@@ -28,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -55,6 +59,7 @@ import com.agiletec.aps.util.DateConverter;
 import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.apache.commons.beanutils.BeanComparator;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -62,6 +67,8 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.LabelSanitizer;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchKeys;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchSchema;
 
 /**
  * This abstract service must be extended in all those services that make use of
@@ -106,6 +113,20 @@ public abstract class ApsEntityManager extends AbstractService
     private String attributeDisablingCodesFileName;
 
     private IEntityManagerCacheWrapper cacheWrapper;
+
+    /**
+     * The {@code attrname} width of this manager's search table. Defaults to the width of the tables the
+     * platform ships; a manager whose column is narrower or wider is given its own through Spring,
+     * without any engine-wide constant having to change.
+     */
+    private int maxSearchKeyLength = EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH;
+
+    /**
+     * The search schema of each type, computed on first use and kept until the types change. Keyed by
+     * <b>tenant</b> and then by type code: the types themselves come from per-tenant configuration, so a
+     * single type-code-keyed map would serve one tenant's schema to another.
+     */
+    private final Map<String, Map<String, EntitySearchSchema>> searchSchemas = new ConcurrentHashMap<>();
     
     @Override
     public void init() throws Exception {
@@ -130,6 +151,14 @@ public abstract class ApsEntityManager extends AbstractService
     public void refresh() throws Throwable {
         super.refresh();
         this.attributeDisablingCodes = null;
+        // every type change goes through here, and a schema holds references to the prototype's own
+        // attributes - so it must not outlive the prototype it describes
+        this.searchSchemas.clear();
+    }
+
+    @Override
+    public void releaseTenantAware() {
+        this.searchSchemas.remove(this.currentTenantKey());
     }
 
     @Override
@@ -256,6 +285,8 @@ public abstract class ApsEntityManager extends AbstractService
             throw new EntException("Invalid entity type to add");
         }
         this.sanitizeEntityTypeLabels(entityType);
+        this.normalizeNestedSearchableFlags(entityType);
+        this.checkNestedSearchKeys(entityType);
         Map<String, IApsEntity> newEntityTypes = this.getEntityTypes();
         newEntityTypes.put(entityType.getTypeCode(), entityType);
         this.updateEntityPrototypes(newEntityTypes);
@@ -274,6 +305,8 @@ public abstract class ApsEntityManager extends AbstractService
             throw new EntException("Invalid entity type to update");
         }
         this.sanitizeEntityTypeLabels(entityType);
+        this.normalizeNestedSearchableFlags(entityType);
+        this.checkNestedSearchKeys(entityType);
         Map<String, IApsEntity> entityTypes = this.getEntityTypes();
         IApsEntity oldEntityType = entityTypes.get(entityType.getTypeCode());
         if (null == oldEntityType) {
@@ -283,6 +316,60 @@ public abstract class ApsEntityManager extends AbstractService
         this.updateEntityPrototypes(entityTypes);
         this.verifyReloadingNeeded(oldEntityType, entityType);
         this.notifyEntityTypesChanging(oldEntityType, entityType, EntityTypesChangingEvent.UPDATE_OPERATION_CODE);
+    }
+
+    /**
+     * Correct a {@code searchable} flag the tree cannot honour, before the type is persisted - the single
+     * enforcement point for the REST services, the legacy API and the admin console alike.
+     *
+     * <p>Runs <b>before</b> {@link #checkNestedSearchKeys}: normalization removes keys, so the key
+     * validation must see the normalized tree or it could reject a key that was about to disappear.</p>
+     */
+    private void normalizeNestedSearchableFlags(IApsEntity entityType) {
+        // Stated rather than assumed: both callers reject a null type before reaching here, while
+        // normalizeSearchableFlags() tolerates one for its other callers - so without this the code
+        // would claim "may be null" and "never null" two lines apart.
+        Objects.requireNonNull(entityType, "entity type to normalize");
+        List<NestedSearchSupport.ClearedSearchableFlag> cleared =
+                NestedSearchSupport.normalizeSearchableFlags(entityType);
+        if (cleared.isEmpty()) {
+            return;
+        }
+        String details = cleared.stream()
+                .map(NestedSearchSupport.ClearedSearchableFlag::getDescription)
+                .collect(Collectors.joining("; "));
+        logger.info("Cleared the searchable flag on entity type '{}': {}",
+                entityType.getTypeCode(), details);
+    }
+
+    /**
+     * Reject an entity type whose nested boolean search keys are unusable - duplicated (two attribute
+     * paths flattening to the same key) or longer than the {@code attrname} column that has to store
+     * them. Both would otherwise surface much later and silently: as false positives on the DB search
+     * path, as a rejected document or an endless schema refresh on the Solr one, or as a truncated /
+     * failing insert on content save.
+     *
+     * <p>This is a choke point for explicit configuration only - the admin action, the REST service and
+     * the API interface. Type <i>loading</i> goes through {@code refresh()} and is never validated, so
+     * an existing deployment always boots; and only keys involving the nested boolean feature are
+     * checked, so a type that does not use it can never be rejected.</p>
+     *
+     * @param entityType the entity type being persisted.
+     * @throws EntException if any search key is duplicated or too long.
+     */
+    private void checkNestedSearchKeys(IApsEntity entityType) throws EntException {
+        List<NestedSearchSupport.KeyProblem> problems =
+                NestedSearchSupport.validateNestedSearchKeys(entityType, this.getMaxSearchKeyLength());
+        if (problems.isEmpty()) {
+            return;
+        }
+        String details = problems.stream()
+                .map(NestedSearchSupport.KeyProblem::getDescription)
+                .collect(Collectors.joining("; "));
+        logger.error("Invalid nested boolean search keys on entity type '{}': {}",
+                entityType.getTypeCode(), details);
+        throw new EntException("Invalid nested boolean search keys on entity type '"
+                + entityType.getTypeCode() + "': " + details);
     }
 
     /**
@@ -390,11 +477,61 @@ public abstract class ApsEntityManager extends AbstractService
         this.notifyEvent(event);
     }
 
+    @Override
+    public int getMaxSearchKeyLength() {
+        return this.maxSearchKeyLength;
+    }
+
     /**
-     * Return the map of the Entity Types managed by the service.
+     * The search schema of a type, computed once and kept until {@link #refresh()}. Building it is what
+     * used to happen four times per search-form render - once for the offered attributes, once for their
+     * labels, and again for every filter resolved - each time by walking the whole attribute tree.
      *
-     * @return The map of the Entity Types indexed by the type code.
+     * <p>It is also the point where a type with unusable keys becomes <b>visible</b>. Explicit
+     * configuration (the admin action, the REST service) rejects such a type outright, but type
+     * <i>loading</i> must never fail or an existing deployment could not boot - so a defect that arrives
+     * that way is logged here, once per type, instead of silently producing false positives in the index.
+     * That is the hole the persist-time validation alone could not close.</p>
      */
+    @Override
+    public EntitySearchSchema getSearchSchema(String typeCode) {
+        if (null == typeCode) {
+            return EntitySearchSchema.build(null, this.getMaxSearchKeyLength());
+        }
+        return this.searchSchemas
+                .computeIfAbsent(this.currentTenantKey(), t -> new ConcurrentHashMap<>())
+                .computeIfAbsent(typeCode, this::buildSearchSchema);
+    }
+
+    private EntitySearchSchema buildSearchSchema(String typeCode) {
+        EntitySearchSchema schema = EntitySearchSchema.build(this.getEntityPrototype(typeCode),
+                this.getMaxSearchKeyLength());
+        if (!schema.isValid() && logger.isErrorEnabled()) {
+            // joined here rather than in the call: the argument would otherwise be built even when
+            // error logging is off
+            logger.error("Entity type '{}' of manager '{}' has unusable search keys, so the affected "
+                    + "filters cannot work as configured: {}", typeCode, this.getName(),
+                    schema.getProblems().stream()
+                            .map(NestedSearchSupport.KeyProblem::getDescription)
+                            .collect(Collectors.joining("; ")));
+        }
+        return schema;
+    }
+
+    /** The tenant whose configuration the types currently come from; the primary one by default. */
+    private String currentTenantKey() {
+        return ApsTenantApplicationUtils.getTenant().orElse(ITenantManager.PRIMARY_CODE);
+    }
+
+    /**
+     * @param maxSearchKeyLength the {@code attrname} width of this manager's search table; a
+     * non-positive value restores the platform default rather than rejecting every key.
+     */
+    public void setMaxSearchKeyLength(int maxSearchKeyLength) {
+        this.maxSearchKeyLength = (maxSearchKeyLength > 0)
+                ? maxSearchKeyLength : EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH;
+    }
+
     protected Map<String, IApsEntity> getEntityTypes() {
         Map<String, IApsEntity> types = null;
         try {

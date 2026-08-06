@@ -290,6 +290,152 @@ class ContentTypeResourceIntegrationTest extends AbstractControllerIntegrationTe
     }
 
     @Test
+    void testCreateContentTypeWithDuplicatedNestedBooleanSearchKey() throws Exception {
+        // top-level 'compo_flag' and composite 'compo' child 'flag' flatten to the same search key:
+        // the DB would silently return false positives, Solr would reject the document
+        String typeCode = "TB1";
+        try {
+            ContentTypeDtoRequest request = contentTypeRequest(typeCode);
+            request.getAttributes().add(searchableBooleanDto("compo_flag"));
+            request.getAttributes().add(compositeDto("compo", searchableBooleanDto("flag")));
+            mockMvc.perform(
+                    post("/plugins/cms/contentTypes")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(jsonMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                    .andDo(resultPrint())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[0].code", is("38")))
+                    .andExpect(jsonPath("$.errors[0].message", Matchers.containsString("compo_flag")))
+                    .andExpect(jsonPath("$.errors[0].message", Matchers.containsString("compo > flag")));
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        } finally {
+            if (null != this.contentManager.getEntityPrototype(typeCode)) {
+                ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype(typeCode);
+            }
+            waitNotifyingThread();
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        }
+    }
+
+    @Test
+    void testCreateContentTypeWithTooLongNestedBooleanSearchKey() throws Exception {
+        // the key has to fit the 'attrname' column of the content search tables
+        String typeCode = "TB2";
+        try {
+            ContentTypeDtoRequest request = contentTypeRequest(typeCode);
+            request.getAttributes().add(compositeDto("c".repeat(260), searchableBooleanDto("flag")));
+            mockMvc.perform(
+                    post("/plugins/cms/contentTypes")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(jsonMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                    .andDo(resultPrint())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[0].code", is("39")))
+                    .andExpect(jsonPath("$.errors[0].message", Matchers.containsString("265")));
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        } finally {
+            if (null != this.contentManager.getEntityPrototype(typeCode)) {
+                ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype(typeCode);
+            }
+            waitNotifyingThread();
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        }
+    }
+
+    @Test
+    void testCreateContentTypeWithSoundNestedBooleanSearchKeys() throws Exception {
+        // the counterpart of the two rejections: a '_' in a name is ordinary snake_case, not a defect,
+        // as long as no two attributes end up on the same key
+        String typeCode = "TB3";
+        try {
+            ContentTypeDtoRequest request = contentTypeRequest(typeCode);
+            request.getAttributes().add(searchableBooleanDto("top_flag"));
+            request.getAttributes().add(compositeDto("compo", searchableBooleanDto("cmp_bool")));
+            mockMvc.perform(
+                    post("/plugins/cms/contentTypes")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(jsonMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                    .andDo(resultPrint())
+                    .andExpect(status().isCreated());
+            Assertions.assertNotNull(this.contentManager.getEntityPrototype(typeCode));
+        } finally {
+            if (null != this.contentManager.getEntityPrototype(typeCode)) {
+                ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype(typeCode);
+            }
+            waitNotifyingThread();
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        }
+    }
+
+    @Test
+    void testAddCollidingNestedBooleanAttributeToExistingContentType() throws Exception {
+        // the collision can also be introduced one attribute at a time, over the attribute endpoint
+        String typeCode = "TB4";
+        try {
+            ContentTypeDtoRequest request = contentTypeRequest(typeCode);
+            request.getAttributes().add(searchableBooleanDto("compo_flag"));
+            mockMvc.perform(
+                    post("/plugins/cms/contentTypes")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(jsonMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                    .andExpect(status().isCreated());
+            mockMvc.perform(
+                    post("/plugins/cms/contentTypes/{code}/attributes", typeCode)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(jsonMapper.writeValueAsString(
+                            compositeDto("compo", searchableBooleanDto("flag"))))
+                    .accept(MediaType.APPLICATION_JSON_UTF8))
+                    .andDo(resultPrint())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[0].code", is("38")));
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode).getAttribute("compo"));
+        } finally {
+            if (null != this.contentManager.getEntityPrototype(typeCode)) {
+                ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype(typeCode);
+            }
+            waitNotifyingThread();
+            Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        }
+    }
+
+    private ContentTypeDtoRequest contentTypeRequest(String typeCode) {
+        Assertions.assertNull(this.contentManager.getEntityPrototype(typeCode));
+        Content content = new Content();
+        content.setTypeCode(typeCode);
+        content.setTypeDescription("My content type " + typeCode);
+        ContentTypeDtoRequest request = new ContentTypeDtoRequest(content);
+        request.setName("Content request");
+        return request;
+    }
+
+    private EntityTypeAttributeFullDto searchableBooleanDto(String code) {
+        EntityTypeAttributeFullDto attribute = new EntityTypeAttributeFullDto();
+        attribute.setCode(code);
+        attribute.setType("Boolean");
+        attribute.setName(code);
+        attribute.setListFilter(true);
+        return attribute;
+    }
+
+    private EntityTypeAttributeFullDto compositeDto(String code, EntityTypeAttributeFullDto child) {
+        EntityTypeAttributeFullDto attribute = new EntityTypeAttributeFullDto();
+        attribute.setCode(code);
+        attribute.setType("Composite");
+        attribute.setName(code);
+        attribute.setCompositeAttributes(List.of(child));
+        return attribute;
+    }
+
+    @Test
     void testCreateExistingContentType() throws Exception {
         String typeCode = "FIR";
         Map<String, String> placeholders = new HashMap<>();

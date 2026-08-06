@@ -76,7 +76,7 @@
                     <wpsf:textfield name="username" id="search-username" cssClass="form-control " title="%{getText('label.search.by')+' '+getText('label.username')}" placeholder="%{getText('label.username')}" />
                 </div>
             </div>
-            <s:set var="searchableAttributesVar" value="searchableAttributes" />
+            <s:set var="searchableAttributesVar" value="searchableAttributeRefs" />
             <s:set var="searchableAttributesPageScope"
                    value="%{#searchableAttributesVar}" scope="page" />
             <!--users section-->
@@ -88,16 +88,19 @@
                 <div class="col-sm-10">
                     <div class="btn-group col-sm-10 spacer-form" data-toggle="buttons">
                         <label class="btn btn-default <s:if test="%{withProfile==null}"> active </s:if>">
-                            <wpsf:radio id="" name="withProfile" value="" checked="%{withProfile==null}" /> &#32;
+                            <input type="radio" id="withProfile_all" name="withProfile" value=""
+                                   <s:if test="%{withProfile==null}">checked="checked"</s:if> />&#32;
                             <s:text name="label.userprofile.search.usersAllProfile" />
-                        </label> 
+                        </label>
                         <label class="btn btn-default <s:if test="%{withProfile.toString().equalsIgnoreCase('1')}"> active </s:if>">
-                            <wpsf:radio id="" name="withProfile" value="1"  checked="%{withProfile.toString().equalsIgnoreCase('1')}" />&#32;
+                            <input type="radio" id="withProfile_with" name="withProfile" value="1"
+                                   <s:if test="%{withProfile.toString().equalsIgnoreCase('1')}">checked="checked"</s:if> />&#32;
                             <s:text name="label.userprofile.search.usersWithProfile" />
-                        </label> 
+                        </label>
                         <label class="btn btn-default <s:if test="%{withProfile.toString().equalsIgnoreCase('0')}"> active </s:if>">
-                            <wpsf:radio id="" name="withProfile" value="0" checked="%{withProfile.toString().equalsIgnoreCase('0')}" />
-                            &#32;<s:text name="label.userprofile.search.usersWithoutProfile" />
+                            <input type="radio" id="withProfile_without" name="withProfile" value="0"
+                                   <s:if test="%{withProfile.toString().equalsIgnoreCase('0')}">checked="checked"</s:if> />&#32;
+                            <s:text name="label.userprofile.search.usersWithoutProfile" />
                         </label>
                     </div>
                 </div>
@@ -114,7 +117,10 @@
                         </p>
                     </div>
 
-                    <div id="collapseOne" class="panel-collapse collapse">
+                    <%-- Keep the panel open across the full-page reload triggered by "Set"
+                         (changeProfileType) and by a search: the profile-type selector and its
+                         attribute filters live inside it. --%>
+                    <div id="collapseOne" class="panel-collapse collapse <s:if test="%{entityTypeCode != null && entityTypeCode != ''}">in</s:if>">
                         <div class="panel-body">
                             <c:if test="${empty searchableAttributesPageScope}">
                                 <div class="form-group">
@@ -129,13 +135,13 @@
                                        for="userprofile_src_entityPrototypes"> 
                                     <s:text name="note.userprofile.search.profileType" />
                                 </label>
-                                <div class="col-sm-8 input-group" style="padding: 0 20px 0 20px">
+                                <div class="col-sm-8 input-group input-20px-leftRight">
                                     <wpsf:select id="userprofile_src_entityPrototypes"
                                                  list="entityPrototypes" name="entityTypeCode" headerKey=""
                                                  headerValue="%{getText('label.all')}" listKey="typeCode"
                                                  listValue="typeDescr" cssClass="form-control" />
                                     <div class="input-group-btn">
-                                        <wpsf:submit type="button" cssClass="btn btn-default"
+                                        <wpsf:submit type="button" cssClass="btn btn-primary"
                                                      action="changeProfileType" value="set">
                                             <s:text name="label.set" />
                                         </wpsf:submit>
@@ -158,14 +164,14 @@
                                             </label>
                                             <div class="col-sm-8">
                                                 <wpsf:textfield id="%{#currentAttributeHtmlId}"
-                                                                ame="%{#textInputFieldName}"
+                                                                name="%{#textInputFieldName}"
                                                                 value="%{getSearchFormFieldValue(#textInputFieldName)}"
                                                                 cssClass="form-control" />
                                             </div>
                                         </div>
                                     </s:if>
                                     <%-- Date Attribute --%>
-                                    <s:elseif test="#attribute.type == 'Date'">
+                                    <s:elseif test="#attribute.date">
                                         <s:set var="currentAttributeHtmlId" value="%{'userprofile_src_'+#attribute.name}" />
                                         <s:set var="dateStartInputFieldName" value="%{#attribute.name+'_dateStartFieldName'}" />
                                         <s:set var="dateEndInputFieldName" value="%{#attribute.name+'_dateEndFieldName'}" />
@@ -205,7 +211,7 @@
                                         </div>
                                     </s:elseif>
                                     <%-- Number Attribute --%>
-                                    <s:elseif test="#attribute.type == 'Number'">
+                                    <s:elseif test="#attribute.number">
                                         <s:set var="currentAttributeHtmlId" value="%{'userprofile_src_'+#attribute.name}" />
                                         <s:set var="numberStartInputFieldName" value="%{#attribute.name+'_numberStartFieldName'}" />
                                         <s:set var="numberEndInputFieldName" value="%{#attribute.name+'_numberEndFieldName'}" />
@@ -241,35 +247,75 @@
                                             </div>
                                         </div>
                                     </s:elseif>
-                                    <%-- Boolean & ThreeState --%>
-                                    <s:elseif
-                                        test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
+                                    <%-- ThreeState: Any, Yes, No, Not set (the unset/none state) --%>
+                                    <s:elseif test="#attribute.tristate">
                                         <s:set var="booleanInputFieldName"
                                                value="%{#attribute.name+'_booleanFieldName'}" />
                                         <s:set var="booleanInputFieldValue"
                                                value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
                                         <div class="form-group">
                                             <label class="control-label col-sm-3 "><s:property
-                                                    value="#attribute.name" /></label>
+                                                    value="#attribute.label" /></label>
+
+                                            <div class="btn-group col-xs-9" data-toggle="buttons">
+                                                <label
+                                                    class="btn btn-default <s:if test="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}"> active </s:if>">
+                                                    <input type="radio" id="any_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value=""
+                                                           <s:if test="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}">checked="checked"</s:if> />
+                                                    &#32;<s:text name="label.any" />
+                                                </label> <label
+                                                    class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'true'}"> active </s:if>">
+                                                    <input type="radio" id="true_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value="true"
+                                                           <s:if test="%{#booleanInputFieldValue == 'true'}">checked="checked"</s:if> />&#32;<s:text
+                                                                name="label.yes" />
+                                                </label> <label
+                                                    class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'false'}"> active </s:if>">
+                                                    <input type="radio" id="false_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value="false"
+                                                           <s:if test="%{#booleanInputFieldValue == 'false'}">checked="checked"</s:if> />&#32;<s:text
+                                                                name="label.no" />
+                                                </label> <label
+                                                    class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'none'}"> active </s:if>">
+                                                    <input type="radio" id="none_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value="none"
+                                                           <s:if test="%{#booleanInputFieldValue == 'none'}">checked="checked"</s:if> />&#32;<s:text
+                                                                name="label.notSet" />
+                                                </label>
+
+                                            </div>
+                                        </div>
+                                    </s:elseif>
+                                    <%-- Two-valued boolean family: Any, Yes, No --%>
+                                    <s:elseif
+                                        test="#attribute.booleanLike && !#attribute.tristate">
+                                        <s:set var="booleanInputFieldName"
+                                               value="%{#attribute.name+'_booleanFieldName'}" />
+                                        <s:set var="booleanInputFieldValue"
+                                               value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-3 "><s:property
+                                                    value="#attribute.label" /></label>
 
                                             <div class="btn-group col-xs-9" data-toggle="buttons">
                                                 <label
                                                     class="btn btn-default <s:if test="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}"> active </s:if>">
-                                                    <wpsf:radio id="none_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value=""
-                                                                checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" />
-                                                    &#32;<s:text name="label.bothYesAndNo" />
+                                                    <input type="radio" id="none_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value=""
+                                                           <s:if test="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}">checked="checked"</s:if> />
+                                                    &#32;<s:text name="label.any" />
                                                 </label> <label
                                                     class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'true'}"> active </s:if>">
-                                                    <wpsf:radio id="true_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value="true"
-                                                                checked="%{#booleanInputFieldValue == 'true'}" /> &#32;<s:text
+                                                    <input type="radio" id="true_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value="true"
+                                                           <s:if test="%{#booleanInputFieldValue == 'true'}">checked="checked"</s:if> />&#32;<s:text
                                                                 name="label.yes" />
                                                 </label> <label
                                                     class="btn btn-default <s:if test="%{#booleanInputFieldValue == 'false'}"> active </s:if>">
-                                                    <wpsf:radio id="false_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value="false"
-                                                                checked="%{#booleanInputFieldValue == 'false'}" /> &#32;<s:text
+                                                    <input type="radio" id="false_<s:property value="#booleanInputFieldName" />"
+                                                           name="<s:property value="#booleanInputFieldName" />" value="false"
+                                                           <s:if test="%{#booleanInputFieldValue == 'false'}">checked="checked"</s:if> />&#32;<s:text
                                                                 name="label.no" />
                                                 </label>
 

@@ -35,6 +35,7 @@ import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
+import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.CompositeAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.ListAttribute;
@@ -2332,14 +2333,10 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
 
             batchContentStatusRequest.getCodes().add(newContentId3);
 
-            batchContentStatusRequest.getCodes().stream().forEach(code -> {
-                try {
-                    Assertions.assertNotNull(this.contentManager.loadContent(code, false));
-                    Assertions.assertNull(this.contentManager.loadContent(code, true));
-                } catch (Exception e) {
-                    Assertions.fail();
-                }
-            });
+            batchContentStatusRequest.getCodes().forEach(code -> Assertions.assertDoesNotThrow(() -> {
+                Assertions.assertNotNull(this.contentManager.loadContent(code, false));
+                Assertions.assertNull(this.contentManager.loadContent(code, true));
+            }));
 
             result = mockMvc
                     .perform(put("/plugins/cms/contents/status")
@@ -2348,14 +2345,10 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                             .header("Authorization", "Bearer " + accessToken));
             result.andExpect(status().isOk());
 
-            batchContentStatusRequest.getCodes().stream().forEach(code -> {
-                try {
-                    Assertions.assertNotNull(this.contentManager.loadContent(code, false));
-                    Assertions.assertNotNull(this.contentManager.loadContent(code, true));
-                } catch (Exception e) {
-                    Assertions.fail();
-                }
-            });
+            batchContentStatusRequest.getCodes().forEach(code -> Assertions.assertDoesNotThrow(() -> {
+                Assertions.assertNotNull(this.contentManager.loadContent(code, false));
+                Assertions.assertNotNull(this.contentManager.loadContent(code, true));
+            }));
 
             batchContentStatusRequest.setStatus("draft");
 
@@ -2366,14 +2359,10 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                             .header("Authorization", "Bearer " + accessToken));
             result.andExpect(status().isOk());
 
-            batchContentStatusRequest.getCodes().stream().forEach(code -> {
-                try {
-                    Assertions.assertNotNull(this.contentManager.loadContent(code, false));
-                    Assertions.assertNull(this.contentManager.loadContent(code, true));
-                } catch (Exception e) {
-                    Assertions.fail();
-                }
-            });
+            batchContentStatusRequest.getCodes().forEach(code -> Assertions.assertDoesNotThrow(() -> {
+                Assertions.assertNotNull(this.contentManager.loadContent(code, false));
+                Assertions.assertNull(this.contentManager.loadContent(code, true));
+            }));
 
         } finally {
             if (null != newContentId1) {
@@ -2713,6 +2702,66 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
         String bodyResult2 = result.andReturn().getResponse().getContentAsString();
         int payloadSize2 = JsonPath.read(bodyResult2, "$.payload.size()");
         Assertions.assertEquals(payloadSize2, payloadSize);
+    }
+
+    @Test
+    void testGetContentsFilteredByNestedCompositeBooleanAttribute() throws Exception {
+        // Solr-disabled end-to-end: a searchable boolean nested in a Composite is filterable via
+        // GET /plugins/cms/contents using the path key "<composite>_<boolean>" as entityAttr.
+        String trueId = null;
+        String falseId = null;
+        try {
+            trueId = this.createPublishedAllWithNestedBoolean(Boolean.TRUE);
+            falseId = this.createPublishedAllWithNestedBoolean(Boolean.FALSE);
+            UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                    .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
+            String accessToken = mockOAuthInterceptor(user);
+            ResultActions result = mockMvc
+                    .perform(get("/plugins/cms/contents")
+                            .param("status", IContentService.STATUS_ONLINE)
+                            .param("filters[0].entityAttr", "Composite_Boolean")
+                            .param("filters[0].operator", "eq")
+                            .param("filters[0].value", "true")
+                            .param("filters[0].type", "boolean")
+                            .param("pageSize", "50")
+                            .header("Authorization", "Bearer " + accessToken));
+            result.andExpect(status().isOk());
+            String body = result.andReturn().getResponse().getContentAsString();
+            int size = JsonPath.read(body, "$.payload.size()");
+            List<String> ids = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                ids.add(JsonPath.read(body, "$.payload[" + i + "].id"));
+            }
+            Assertions.assertTrue(ids.contains(trueId));
+            Assertions.assertFalse(ids.contains(falseId));
+        } finally {
+            this.deletePublishedContent(trueId);
+            this.deletePublishedContent(falseId);
+        }
+    }
+
+    private String createPublishedAllWithNestedBoolean(Boolean value) throws Exception {
+        Content clone = this.contentManager.loadContent("ALL4", false);
+        clone.setId(null);
+        clone.setMainGroup(Group.FREE_GROUP_NAME);
+        CompositeAttribute composite = (CompositeAttribute) clone.getAttribute("Composite");
+        BooleanAttribute nestedBoolean = (BooleanAttribute) composite.getAttribute("Boolean");
+        nestedBoolean.setSearchable(true);
+        nestedBoolean.setBooleanValue(value);
+        this.contentManager.saveContent(clone);
+        this.contentManager.insertOnLineContent(clone);
+        return clone.getId();
+    }
+
+    private void deletePublishedContent(String id) throws Exception {
+        if (null == id) {
+            return;
+        }
+        Content content = this.contentManager.loadContent(id, false);
+        if (null != content) {
+            this.contentManager.removeOnLineContent(content);
+            this.contentManager.deleteContent(content);
+        }
     }
 
     @Test
@@ -4546,8 +4595,8 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
                 .withAuthorization(Group.FREE_GROUP_NAME, "tempRole", Permission.BACKOFFICE).build();
         String accessToken = mockOAuthInterceptor(user);
-        String lastModified = "2014-03-21 17:10:07";
-        this.checkStatus(accessToken, 1, 6, 18, 25, lastModified);
+        String lastModified = "2026-01-01 00:00:04";
+        this.checkStatus(accessToken, 1, 6, 22, 29, lastModified);
         List<String> newContentIds = new ArrayList<String>();
         try {
             for (int i = 0; i < 10; i++) {
@@ -4557,7 +4606,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                 newContentIds.add(content.getId());
             }
             String dateString1 = DateConverter.getFormattedDate(new Date(), SystemConstants.API_DATE_FORMAT);
-            this.checkStatus(accessToken, 1+10, 6, 18, 25+10, dateString1);
+            this.checkStatus(accessToken, 1+10, 6, 22, 29+10, dateString1);
 
             synchronized (this) {
                 this.wait(1000);
@@ -4569,7 +4618,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             }
             String dateString2 = DateConverter.getFormattedDate(new Date(), SystemConstants.API_DATE_FORMAT);
             Assertions.assertNotEquals(dateString1, dateString2);
-            this.checkStatus(accessToken, 1, 6, 18+10, 25+10, dateString2);
+            this.checkStatus(accessToken, 1, 6, 22+10, 29+10, dateString2);
 
             synchronized (this) {
                 this.wait(1000);
@@ -4584,7 +4633,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
             synchronized (this) {
                 this.wait(1000);
             }
-            this.checkStatus(accessToken, 1, 6+10, 18, 25+10, dateString3);
+            this.checkStatus(accessToken, 1, 6+10, 22, 29+10, dateString3);
         } catch (Exception e) {
             throw e;
         } finally {
@@ -4594,7 +4643,7 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                 this.contentManager.removeOnLineContent(content);
                 this.contentManager.deleteContent(id);
             }
-            this.checkStatus(accessToken, 1, 6, 18, 25, lastModified);
+            this.checkStatus(accessToken, 1, 6, 22, 29, lastModified);
         }
     }
 

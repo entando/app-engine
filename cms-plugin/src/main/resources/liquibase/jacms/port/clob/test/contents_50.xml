@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content id="BLT1" typecode="BLT" typedescr="Boolean search test type">
+    <descr>Flag on</descr>
+    <groups mainGroup="free" />
+    <categories />
+    <attributes>
+        <attribute name="Title" attributetype="Text">
+            <text lang="en">Flag on</text>
+        </attribute>
+        <attribute name="Flag" attributetype="Boolean">
+            <boolean>true</boolean>
+        </attribute>
+        <attribute name="Check" attributetype="CheckBox">
+            <boolean>true</boolean>
+        </attribute>
+        <composite name="Settings" attributetype="Composite">
+            <attribute name="Active" attributetype="Boolean">
+                <boolean>true</boolean>
+            </attribute>
+            <attribute name="Sticky" attributetype="CheckBox">
+                <boolean>true</boolean>
+            </attribute>
+        </composite>
+    </attributes>
+    <status>PUBLIC</status>
+</content>

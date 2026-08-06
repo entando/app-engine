@@ -51,7 +51,7 @@ class TestContentLinkAction extends AbstractBaseTestContentAction {
 
 		ContentLinkAction action = (ContentLinkAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(15, contentIds.size());//Contenuti pubblici liberi o non liberi con free gruppo extra
+		assertEquals(19, contentIds.size());//Contenuti pubblici liberi o non liberi con free gruppo extra
 		assertTrue(contentIds.contains("EVN25"));//Contenuto coach abilitato al gruppo free
 		assertTrue(contentIds.contains("ART121"));//Contenuto del gruppo "administrators" abilitato al gruppo free
 	}
@@ -68,7 +68,7 @@ class TestContentLinkAction extends AbstractBaseTestContentAction {
 
 		ContentLinkAction action = (ContentLinkAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(24, contentIds.size());//Tutti i contenuti pubblici
+		assertEquals(28, contentIds.size());//Tutti i contenuti pubblici
 	}
 
 	@Test
@@ -83,7 +83,7 @@ class TestContentLinkAction extends AbstractBaseTestContentAction {
 
 		ContentLinkAction action = (ContentLinkAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(20, contentIds.size());// Contenuti pubblici liberi, o del gruppo customers o altri con customers gruppo extra
+		assertEquals(24, contentIds.size());// Contenuti pubblici liberi, o del gruppo customers o altri con customers gruppo extra
 		assertTrue(contentIds.contains("ART122"));//Contenuto del gruppo "administrators" abilitato al gruppo customers
 		assertTrue(contentIds.contains("ART121"));//Contenuto del gruppo "administrators" abilitato al gruppo free
 		assertTrue(contentIds.contains("EVN25"));//Contenuto del gruppo "coach" abilitato al gruppo free
@@ -102,7 +102,7 @@ class TestContentLinkAction extends AbstractBaseTestContentAction {
 
 		ContentLinkAction action = (ContentLinkAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(20, contentIds.size());// Contenuti pubblici liberi, o del gruppo coach o altri con coach gruppo extra
+		assertEquals(24, contentIds.size());// Contenuti pubblici liberi, o del gruppo coach o altri con coach gruppo extra
 		assertTrue(contentIds.contains("ART121"));//Contenuto del gruppo "administrators" abilitato al gruppo coach
 		assertTrue(contentIds.contains("ART121"));//Contenuto del gruppo "administrators" abilitato al gruppo free
 		assertTrue(contentIds.contains("EVN25"));//Contenuto del gruppo "coach" abilitato al gruppo free
