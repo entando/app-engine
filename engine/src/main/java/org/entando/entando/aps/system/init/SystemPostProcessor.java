@@ -25,7 +25,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
  * fully refreshed and registered. This class is kept as a no-op to avoid breaking external
  * Spring configurations that may still declare it.
  */
-@Deprecated
+@Deprecated(since = "7.5.1")
 public class SystemPostProcessor implements BeanPostProcessor {
 
 	@Override

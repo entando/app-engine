@@ -204,9 +204,7 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
 
     @Deprecated
     protected IContentManager getContentManager() {
-        if (this.contentManager == null) {
-            this.contentManager = ApplicationContextProvider.resolveBean(IContentManager.class);
-        }
+        this.contentManager = ApplicationContextProvider.resolveIfNull(this.contentManager, IContentManager.class);
         return contentManager;
     }
 
@@ -217,9 +215,7 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
 
     @Deprecated
     protected IPageManager getPageManager() {
-        if (this.pageManager == null) {
-            this.pageManager = ApplicationContextProvider.resolveBean(IPageManager.class);
-        }
+        this.pageManager = ApplicationContextProvider.resolveIfNull(this.pageManager, IPageManager.class);
         return pageManager;
     }
 
@@ -230,9 +226,7 @@ public class CmsHypertextAttribute extends HypertextAttribute implements IRefere
 
     @Deprecated
     public IResourceManager getResourceManager() {
-        if (this.resourceManager == null) {
-            this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
-        }
+        this.resourceManager = ApplicationContextProvider.resolveIfNull(this.resourceManager, IResourceManager.class);
         return resourceManager;
     }
 

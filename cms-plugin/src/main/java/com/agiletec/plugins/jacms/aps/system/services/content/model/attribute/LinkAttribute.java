@@ -330,9 +330,7 @@ public class LinkAttribute extends TextAttribute implements IReferenceableAttrib
     
     @Deprecated
     protected IContentManager getContentManager() {
-        if (this.contentManager == null) {
-            this.contentManager = ApplicationContextProvider.resolveBean(IContentManager.class);
-        }
+        this.contentManager = ApplicationContextProvider.resolveIfNull(this.contentManager, IContentManager.class);
         return contentManager;
     }
 
@@ -343,9 +341,7 @@ public class LinkAttribute extends TextAttribute implements IReferenceableAttrib
 
     @Deprecated
     protected IPageManager getPageManager() {
-        if (this.pageManager == null) {
-            this.pageManager = ApplicationContextProvider.resolveBean(IPageManager.class);
-        }
+        this.pageManager = ApplicationContextProvider.resolveIfNull(this.pageManager, IPageManager.class);
         return pageManager;
     }
 
@@ -356,9 +352,7 @@ public class LinkAttribute extends TextAttribute implements IReferenceableAttrib
 
     @Deprecated
     protected ILinkResolverManager getLinkResolverManager() {
-        if (this.linkResolverManager == null) {
-            this.linkResolverManager = ApplicationContextProvider.resolveBean(ILinkResolverManager.class);
-        }
+        this.linkResolverManager = ApplicationContextProvider.resolveIfNull(this.linkResolverManager, ILinkResolverManager.class);
         return linkResolverManager;
     }
 
@@ -369,9 +363,7 @@ public class LinkAttribute extends TextAttribute implements IReferenceableAttrib
 
     @Deprecated
     public IResourceManager getResourceManager() {
-        if (this.resourceManager == null) {
-            this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
-        }
+        this.resourceManager = ApplicationContextProvider.resolveIfNull(this.resourceManager, IResourceManager.class);
         return resourceManager;
     }
 

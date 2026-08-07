@@ -605,9 +605,7 @@ public abstract class AbstractAttribute implements AttributeInterface, Serializa
 
     @Deprecated
     protected ILangManager getLangManager() {
-        if (this._langManager == null) {
-            this._langManager = ApplicationContextProvider.resolveBean(ILangManager.class);
-        }
+        this._langManager = ApplicationContextProvider.resolveIfNull(this._langManager, ILangManager.class);
         return _langManager;
     }
 

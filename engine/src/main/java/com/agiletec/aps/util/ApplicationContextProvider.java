@@ -13,9 +13,11 @@
  */
 package com.agiletec.aps.util;
 
+import java.util.concurrent.atomic.AtomicReference;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.web.context.ContextLoader;
@@ -38,18 +40,18 @@ public class ApplicationContextProvider implements BeanFactoryPostProcessor {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ApplicationContextProvider.class);
 
-    private static volatile ConfigurableListableBeanFactory beanFactory;
+    private static final AtomicReference<ConfigurableListableBeanFactory> BEAN_FACTORY = new AtomicReference<>();
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        ApplicationContextProvider.beanFactory = beanFactory;
+        BEAN_FACTORY.set(beanFactory);
     }
 
     /**
      * @return the captured bean factory, or {@code null} if not available yet.
      */
     public static ConfigurableListableBeanFactory getBeanFactory() {
-        return beanFactory;
+        return BEAN_FACTORY.get();
     }
 
     /**
@@ -60,7 +62,7 @@ public class ApplicationContextProvider implements BeanFactoryPostProcessor {
      * cannot be resolved (callers must treat {@code null} as "not available").
      */
     public static <T> T getBean(Class<T> type) {
-        ConfigurableListableBeanFactory factory = beanFactory;
+        ConfigurableListableBeanFactory factory = BEAN_FACTORY.get();
         if (factory == null) {
             return null;
         }
@@ -93,9 +95,34 @@ public class ApplicationContextProvider implements BeanFactoryPostProcessor {
     }
 
     /**
+     * Keeps an already wired reference, resolving it only when missing. Meant for the "self-healing"
+     * getters of the attributes whose transient manager references may not have survived
+     * deserialization or JAXB/SAX instantiation.
+     *
+     * @param current the reference currently held by the caller, possibly {@code null}.
+     * @param type the bean type to resolve when {@code current} is {@code null}.
+     * @return {@code current} when already set, otherwise the resolved bean (which may be
+     * {@code null} when the context is not available yet).
+     */
+    public static <T> T resolveIfNull(T current, Class<T> type) {
+        return (null != current) ? current : resolveBean(type);
+    }
+
+    /**
+     * Same as {@link #resolveIfNull(Object, Class)} for the bean factory itself, which cannot be
+     * resolved by type.
+     *
+     * @param current the factory currently held by the caller, possibly {@code null}.
+     * @return {@code current} when already set, otherwise the captured bean factory.
+     */
+    public static BeanFactory beanFactoryIfNull(BeanFactory current) {
+        return (null != current) ? current : getBeanFactory();
+    }
+
+    /**
      * Test hook to reset the captured factory.
      */
     public static void clear() {
-        ApplicationContextProvider.beanFactory = null;
+        BEAN_FACTORY.set(null);
     }
 }

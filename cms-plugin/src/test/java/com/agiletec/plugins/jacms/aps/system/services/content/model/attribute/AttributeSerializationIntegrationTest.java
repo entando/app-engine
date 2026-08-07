@@ -135,7 +135,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
 
     private <T> T testSerializeAndDeserializeNullApplicationContext(T attribute) throws Exception {
         try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class)) {
-            contextLoader.when(() -> ContextLoader.getCurrentWebApplicationContext()).thenReturn(null);
+            contextLoader.when(ContextLoader::getCurrentWebApplicationContext).thenReturn(null);
             return testSerializeAndDeserialize(attribute);
         }
     }
@@ -144,7 +144,7 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class);
                 MockedStatic<ApplicationContextProvider> provider =
                         Mockito.mockStatic(ApplicationContextProvider.class)) {
-            contextLoader.when(() -> ContextLoader.getCurrentWebApplicationContext()).thenReturn(null);
+            contextLoader.when(ContextLoader::getCurrentWebApplicationContext).thenReturn(null);
             provider.when(() -> ApplicationContextProvider.resolveBean(Mockito.any())).thenReturn(null);
             provider.when(ApplicationContextProvider::getBeanFactory).thenReturn(null);
             return testSerializeAndDeserialize(attribute);

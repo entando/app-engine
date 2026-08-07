@@ -56,9 +56,9 @@ public class ConfigTestUtils {
         ContextLoader contextLoader = new ContextLoader(applicationContext);
         contextLoader.initWebApplicationContext(srvCtx);
         applicationContext.refresh();
-        // Post-init processes used to be triggered during refresh() by SystemPostProcessor;
-        // in production they are now executed by StartupListener after the context is fully
-        // initialized. Replicate the same behavior here for the test context.
+        // The post-init processes are no longer triggered while the context is being refreshed:
+        // in production the StartupListener runs them once the context is fully initialized, so the
+        // test context replicates the very same behaviour here.
         applicationContext.getBean(InitializerManager.class).executePostInitProcesses();
         return applicationContext;
     }

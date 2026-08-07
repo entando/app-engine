@@ -189,9 +189,7 @@ public class EnumeratorAttribute extends MonoTextAttribute implements BeanFactor
 
     @Deprecated
     protected BeanFactory getBeanFactory() {
-        if (this._beanFactory == null) {
-            this._beanFactory = ApplicationContextProvider.getBeanFactory();
-        }
+        this._beanFactory = ApplicationContextProvider.beanFactoryIfNull(this._beanFactory);
         return this._beanFactory;
     }
 

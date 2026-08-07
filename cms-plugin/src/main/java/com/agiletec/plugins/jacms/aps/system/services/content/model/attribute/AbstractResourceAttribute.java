@@ -418,9 +418,7 @@ public abstract class AbstractResourceAttribute extends TextAttribute
     }
 
     protected IResourceManager getResourceManager() {
-        if (this.resourceManager == null) {
-            this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
-        }
+        this.resourceManager = ApplicationContextProvider.resolveIfNull(this.resourceManager, IResourceManager.class);
         return resourceManager;
     }
 
