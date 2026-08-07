@@ -20,6 +20,7 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.SessionCookieConfig;
 import org.entando.entando.aps.system.exception.CSRFProtectionException;
+import org.entando.entando.aps.system.init.InitializerManager;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService.InitializationTenantFilter;
 import org.junit.jupiter.api.AfterEach;
@@ -64,6 +65,9 @@ class StartupListenerTest {
     private ITenantInitializerService tenantInitializerService;
 
     @Mock
+    private InitializerManager initializerManager;
+
+    @Mock
     private SessionCookieConfig sessionCookieConfig;
 
     @SystemStub
@@ -82,6 +86,7 @@ class StartupListenerTest {
         when(servletContext.getInitParameter(any())).thenReturn(null);
         when(servletContext.getResourceAsStream(any())).thenReturn(null);
         when(webApplicationContext.getBean(ITenantInitializerService.class)).thenReturn(tenantInitializerService);
+        when(webApplicationContext.getBean(InitializerManager.class)).thenReturn(initializerManager);
         when(tenantInitializerService.startTenantsInitialization(any(), eq(InitializationTenantFilter.REQUIRED_INIT_AT_START)))
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(tenantInitializerService.startTenantsInitialization(any(), eq(InitializationTenantFilter.NOT_REQUIRED_INIT_AT_START)))
@@ -100,6 +105,8 @@ class StartupListenerTest {
         assertDoesNotThrow(() -> startupListener.contextInitialized(servletContextEvent));
 
         // Assert
+        // post-init processes are deferred from SystemPostProcessor and executed by the listener
+        verify(initializerManager).executePostInitProcesses();
         verify(tenantInitializerService).startTenantsInitialization(
                 eq(servletContext), eq(InitializationTenantFilter.REQUIRED_INIT_AT_START));
         verify(tenantInitializerService).startTenantsInitialization(
