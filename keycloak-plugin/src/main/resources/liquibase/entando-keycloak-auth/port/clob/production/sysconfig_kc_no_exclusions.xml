@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DynamicMapping>
+    <enabled>false</enabled>
+    <persist>FULL</persist>
+    <mappings>
+        <mapping>
+            <enabled>true</enabled>
+            <path>groups</path>
+            <kind>GROUPCLAIM</kind>
+        </mapping>
+        <mapping>
+            <enabled>true</enabled>
+            <path>realm_access.roles</path>
+            <kind>ROLECLAIM</kind>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <path>realm_access.roles</path>
+            <kind>ROLEGROUPCLAIM</kind>
+            <separator>_SEP_</separator>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <attribute>AD_ROLE</attribute>
+            <kind>ROLE</kind>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <attribute>AD_GROUP</attribute>
+            <kind>GROUP</kind>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <attribute>AD_GROUPROLE</attribute>
+            <kind>ROLEGROUP</kind>
+            <separator>_r_</separator>
+        </mapping>
+    </mappings>
+    <roles>
+        <role>imported_role</role>
+        <role>imported_role2</role>
+    </roles>
+    <groups>
+        <group>imported_group</group>
+        <group>imported_group2</group>
+    </groups>
+</DynamicMapping>
