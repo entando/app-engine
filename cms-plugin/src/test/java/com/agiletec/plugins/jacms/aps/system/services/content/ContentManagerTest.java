@@ -20,6 +20,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.spy;
 
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.parse.IEntityTypeFactory;
@@ -37,7 +43,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.BeanFactory;
@@ -71,7 +76,7 @@ class ContentManagerTest {
     private ContentManager contentManager;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() {
         MockitoAnnotations.initMocks(this);
         this.contentManager.setEntityClassName(className);
         this.contentManager.setConfigItemName(JacmsSystemConstants.CONFIG_ITEM_CONTENT_TYPES);
@@ -149,8 +154,8 @@ class ContentManagerTest {
     @Test
     void failGetDefaultModelById() throws Exception {
         Assertions.assertThrows(EntRuntimeException.class, () -> {
-            Mockito.lenient().when(this.entityTypeFactory.extractEntityType(Mockito.anyString(), Mockito.any(Class.class), 
-                    Mockito.anyString(), Mockito.eq(this.entityTypeDom), Mockito.eq(this.beanName), Mockito.eq(this.entityDom))).thenThrow(EntException.class);
+            lenient().when(this.entityTypeFactory.extractEntityType(anyString(), any(Class.class), 
+                    anyString(), eq(this.entityTypeDom), eq(this.beanName), eq(this.entityDom))).thenThrow(EntException.class);
             String modelId = this.contentManager.getDefaultModel("ART123");
         });
     }
@@ -158,6 +163,16 @@ class ContentManagerTest {
     @Test
     void getEntityPrototypeShouldReturnNullForNullTypeCode() {
         Assertions.assertNull(this.contentManager.getEntityPrototype(null));
+    }
+
+    @Test
+    void shouldReturnNullFromModelAccessorsWhenTypeNotFound() {
+        ContentManager spyManager = spy(this.contentManager);
+        doReturn(null).when(spyManager).getTypeById(anyString());
+
+        Assertions.assertNull(spyManager.getViewPage("XYZ123"));
+        Assertions.assertNull(spyManager.getDefaultModel("XYZ123"));
+        Assertions.assertNull(spyManager.getListModel("XYZ123"));
     }
 }
 

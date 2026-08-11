@@ -24,6 +24,8 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchKeys;
+import org.entando.entando.aps.system.common.entity.search.NestedSearchSupport;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
@@ -34,6 +36,9 @@ import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
 public class EntityTypeConfigAction extends AbstractEntityConfigAction implements IEntityTypeConfigAction {
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(EntityTypeConfigAction.class);
+
+	/** Form field the entry page renders every field error against (it lists them in one summary block). */
+	private static final String ENTITY_TYPE_CODE_FIELD = "entityTypeCode";
 	
 	@Override
 	public void validate() {
@@ -42,11 +47,53 @@ public class EntityTypeConfigAction extends AbstractEntityConfigAction implement
 		if (this.getOperationId() == ApsAdminSystemConstants.ADD && !this.hasFieldErrors()) {
 			if (null != this.getEntityPrototype(entityType.getTypeCode())) {
 				String[] args = {entityType.getTypeCode()};
-				this.addFieldError("entityTypeCode", this.getText("error.entity.alredy.exists", args));
+				this.addFieldError(ENTITY_TYPE_CODE_FIELD, this.getText("error.entity.alredy.exists", args));
+			}
+		}
+		this.checkNestedSearchKeys(entityType);
+	}
+
+	/**
+	 * Report, as field errors, the nested boolean search keys the type would write and that the engine
+	 * refuses to persist: keys produced by more than one attribute path, and keys longer than the DB
+	 * column that has to store them. Without this the save would fail with a bare stack trace and the
+	 * generic failure page; here the author is told which key is wrong and why, and is returned to the
+	 * form (the {@code input} result of {@code saveEntityType}).
+	 * @param entityType the entity type about to be saved.
+	 */
+	private void checkNestedSearchKeys(IApsEntity entityType) {
+		for (NestedSearchSupport.KeyProblem problem : NestedSearchSupport
+				.validateNestedSearchKeys(entityType, this.getMaxSearchKeyLength())) {
+			if (NestedSearchSupport.KeyProblemType.DUPLICATED == problem.type()) {
+				String[] args = {problem.key(), problem.getJoinedPaths()};
+				this.addFieldError(ENTITY_TYPE_CODE_FIELD,
+						this.getText("error.entity.nestedBoolean.key.duplicated", args));
+			} else if (NestedSearchSupport.KeyProblemType.AMBIGUOUS_SEGMENT == problem.type()) {
+				String[] args = {problem.getJoinedPaths(), EntitySearchKeys.KEY_SEPARATOR};
+				this.addFieldError(ENTITY_TYPE_CODE_FIELD,
+						this.getText("error.entity.nestedBoolean.key.ambiguousSegment", args));
+			} else {
+				String[] args = {problem.key(), String.valueOf(problem.key().length()),
+						String.valueOf(problem.maxKeyLength())};
+				this.addFieldError(ENTITY_TYPE_CODE_FIELD,
+						this.getText("error.entity.nestedBoolean.key.tooLong", args));
 			}
 		}
 	}
 	
+	/**
+	 * The {@code attrname} width the keys of this type have to fit, declared by the manager the type
+	 * belongs to. Falls back to the platform default when there is no manager to ask: {@code validate()}
+	 * can run before one has been resolved, and a missing manager must not turn a validation pass into a
+	 * NullPointerException.
+	 * @return the maximum search key length, in characters.
+	 */
+	private int getMaxSearchKeyLength() {
+		IEntityManager entityManager = this.getEntityManager();
+		return (null != entityManager)
+				? entityManager.getMaxSearchKeyLength() : EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH;
+	}
+
 	@Override
 	public String addEntityType() {
 		try {
@@ -71,7 +118,7 @@ public class EntityTypeConfigAction extends AbstractEntityConfigAction implement
 			IApsEntity entityType = this.getEntityPrototype(this.getEntityTypeCode());
 			if (null == entityType) {
 				String[] args = {this.getEntityTypeCode()};
-				this.addFieldError("entityTypeCode", this.getText("error.entity.type.null",args));
+				this.addFieldError(ENTITY_TYPE_CODE_FIELD, this.getText("error.entity.type.null",args));
 				return INPUT;
 			}
 			this.initSessionParams(entityType, ApsAdminSystemConstants.EDIT);

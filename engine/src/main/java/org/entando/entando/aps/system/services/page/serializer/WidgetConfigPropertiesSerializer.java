@@ -42,13 +42,13 @@ public class WidgetConfigPropertiesSerializer extends StdSerializer<ApsPropertie
 
         for (Entry<Object,Object> property : properties.entrySet()) {
             if(property.getKey().equals("categories")) {
-                logger.warn("Serializing WidgetConfig.config.categories into JSON Format");
+                logger.debug("Serializing WidgetConfig.config.categories into JSON Format");
                 writeCategories(jsonGenerator, property.getKey().toString(), property.getValue().toString());
             } else if (property.getKey().equals("contents")) {
-                logger.warn("Serializing WidgetConfig.config.contents into JSON Format");
+                logger.debug("Serializing WidgetConfig.config.contents into JSON Format");
                 writeContentsConfig(jsonGenerator, property.getKey().toString(), property.getValue().toString());
             } else if (property.getKey().toString().toLowerCase().contains("filters")) {
-                logger.warn("Serializing WidgetConfig.config.filters into JSON Format");
+                logger.debug("Serializing WidgetConfig.config.filters into JSON Format");
                 writeFiltersConfig(jsonGenerator, property.getKey().toString(), property.getValue().toString());
             } else {
                 writeStringProperty(jsonGenerator, property.getKey().toString(), property.getValue().toString());

@@ -1,0 +1,1365 @@
+{
+	"info": {
+		"_postman_id": "esb1154-advcontentsearch-0000-0000-000000000001",
+		"name": "Entando - AdvContentSearch (legit tests)",
+		"description": "Legit, real-world requests for the AdvContentSearchController endpoints:\n\n- GET {{baseUrl}}/contents\n- GET {{baseUrl}}/facetedcontents\n\nAll requests run as **guest** (the endpoint has no @RestAccessControl). Supplying a Bearer token in the `token` collection variable would switch results to that user's visibility.\n\nExpectations are based on the actual published content of the demo app (all `free`-group, English):\n\n| id    | type | title |\n|-------|------|-------|\n| BNR2  | BNR (Banner) | Hello, world! |\n| BNR3  | BNR (Banner) | A Modern Platform for Modern UX |\n| NWS4  | NWS (News)   | Why You Need a Micro Frontend Platform for Kubernetes |\n| NWS5  | NWS (News)   | Entando and JHipster: How It Works |\n| TCL6  | TCL (2 columns) | Sample - About Us |\n\nEnglish content, so full-text searches use `lang=en`. Every request asserts HTTP 200, an empty `errors` array, `metaData`, and a **non-empty** payload; content assertions use the type codes and the known ids above.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"event": [
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test('Status code is 200', function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"const contentType = pm.response.headers.get('Content-Type') || '';",
+					"if (contentType.indexOf('json') !== -1) {",
+					"    const body = pm.response.json();",
+					"    pm.test('No errors in the response envelope', function () {",
+					"        pm.expect(body.errors, JSON.stringify(body.errors)).to.be.an('array').that.is.empty;",
+					"    });",
+					"    pm.test('Response has metaData', function () {",
+					"        pm.expect(body).to.have.property('metaData');",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/entando-de-app/api/plugins/advcontentsearch",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "contents",
+			"item": [
+				{
+					"name": "C0 - All published contents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('includes the known free-group contents', function () {",
+									"    ['BNR2', 'BNR3', 'NWS4', 'NWS5', 'TCL6'].forEach(id => pm.expect(body.payload).to.include(id));",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?sort=created&direction=DESC&pageSize=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "sort",
+									"value": "created"
+								},
+								{
+									"key": "direction",
+									"value": "DESC"
+								},
+								{
+									"key": "pageSize",
+									"value": "25"
+								}
+							]
+						},
+						"description": "All published contents visible to a guest, newest first."
+					}
+				},
+				{
+					"name": "C1 - News (NWS)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('all returned contents are News (NWS*)', function () {",
+									"    body.payload.forEach(id => pm.expect(id).to.match(/^NWS/));",
+									"});",
+									"pm.test('includes NWS4 and NWS5', function () {",
+									"    pm.expect(body.payload).to.include('NWS4');",
+									"    pm.expect(body.payload).to.include('NWS5');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].attribute=typeCode&filters[0].operator=eq&filters[0].value=NWS&sort=created&direction=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "NWS"
+								},
+								{
+									"key": "sort",
+									"value": "created"
+								},
+								{
+									"key": "direction",
+									"value": "DESC"
+								}
+							]
+						},
+						"description": "News contents (NWS), newest first."
+					}
+				},
+				{
+					"name": "C2 - Banners (BNR)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('all returned contents are Banners (BNR*)', function () {",
+									"    body.payload.forEach(id => pm.expect(id).to.match(/^BNR/));",
+									"});",
+									"pm.test('includes BNR2 and BNR3', function () {",
+									"    pm.expect(body.payload).to.include('BNR2');",
+									"    pm.expect(body.payload).to.include('BNR3');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].attribute=typeCode&filters[0].operator=eq&filters[0].value=BNR",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "BNR"
+								}
+							]
+						},
+						"description": "Banner contents (BNR)."
+					}
+				},
+				{
+					"name": "C3 - Everything except News (not NWS)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('no News ids are returned', function () {",
+									"    body.payload.forEach(id => pm.expect(id).to.not.match(/^NWS/));",
+									"});",
+									"pm.test('includes non-News contents (BNR2, TCL6)', function () {",
+									"    pm.expect(body.payload).to.include('BNR2');",
+									"    pm.expect(body.payload).to.include('TCL6');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].attribute=typeCode&filters[0].operator=not&filters[0].value=NWS",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "not"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "NWS"
+								}
+							]
+						},
+						"description": "Negated type filter: all published contents that are not News."
+					}
+				},
+				{
+					"name": "C4 - Banners OR News (doubleFilters OR-group)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('only Banners or News are returned', function () {",
+									"    body.payload.forEach(id => pm.expect(id).to.match(/^(BNR|NWS)/));",
+									"});",
+									"pm.test('includes BNR2 and NWS4', function () {",
+									"    pm.expect(body.payload).to.include('BNR2');",
+									"    pm.expect(body.payload).to.include('NWS4');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?doubleFilters[0][0].attribute=typeCode&doubleFilters[0][0].operator=eq&doubleFilters[0][0].value=BNR&doubleFilters[0][1].attribute=typeCode&doubleFilters[0][1].operator=eq&doubleFilters[0][1].value=NWS&sort=modified&direction=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "doubleFilters[0][0].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "doubleFilters[0][0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "doubleFilters[0][0].value",
+									"value": "BNR"
+								},
+								{
+									"key": "doubleFilters[0][1].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "doubleFilters[0][1].operator",
+									"value": "eq"
+								},
+								{
+									"key": "doubleFilters[0][1].value",
+									"value": "NWS"
+								},
+								{
+									"key": "sort",
+									"value": "modified"
+								},
+								{
+									"key": "direction",
+									"value": "DESC"
+								}
+							]
+						},
+						"description": "OR-group via doubleFilters: Banners OR News in a single result set."
+					}
+				},
+				{
+					"name": "C5 - Full-text 'Entando' (en)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('matches the Entando/JHipster news (NWS5)', function () {",
+									"    pm.expect(body.payload).to.include('NWS5');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?text=Entando&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "Entando"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Full-text search over the English index for 'Entando'. Matches e.g. NWS5 ('Entando and JHipster')."
+					}
+				},
+				{
+					"name": "C6 - Full-text 'Kubernetes' (en)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('matches the Kubernetes micro-frontend news (NWS4)', function () {",
+									"    pm.expect(body.payload).to.include('NWS4');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?text=Kubernetes&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "Kubernetes"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Full-text search over the English index for 'Kubernetes'. Matches e.g. NWS4."
+					}
+				},
+				{
+					"name": "C7 - Created-after date range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].attribute=created&filters[0].operator=gt&filters[0].type=date&filters[0].value=2000-01-01 00:00:00&sort=created&direction=ASC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].attribute",
+									"value": "created"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "gt"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "date"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "2000-01-01 00:00:00"
+								},
+								{
+									"key": "sort",
+									"value": "created"
+								},
+								{
+									"key": "direction",
+									"value": "ASC"
+								}
+							]
+						},
+						"description": "Contents created after 2000-01-01 (all demo contents were created in 2026), oldest first."
+					}
+				},
+				{
+					"name": "C8 - Pagination (page 1, size 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('at most pageSize (2) items', function () {",
+									"    pm.expect(body.payload.length).to.be.at.most(2);",
+									"});",
+									"pm.test('metaData reflects the request', function () {",
+									"    pm.expect(body.metaData.page).to.eql(1);",
+									"    pm.expect(body.metaData.pageSize).to.eql(2);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?page=1&pageSize=2&sort=created&direction=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "2"
+								},
+								{
+									"key": "sort",
+									"value": "created"
+								},
+								{
+									"key": "direction",
+									"value": "DESC"
+								}
+							]
+						},
+						"description": "Default search, paginated. Verifies pagination metadata."
+					}
+				}
+			]
+		},
+		{
+			"name": "facetedcontents",
+			"item": [
+				{
+					"name": "F1 - Faceted defaults (all visible contents)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload.contentsId is a non-empty array', function () {",
+									"    pm.expect(body.payload.contentsId).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('includes the known free-group contents', function () {",
+									"    ['BNR2', 'NWS4', 'TCL6'].forEach(id => pm.expect(body.payload.contentsId).to.include(id));",
+									"});",
+									"pm.test('payload.occurrences (category facet counts) is present', function () {",
+									"    pm.expect(body.payload).to.have.property('occurrences');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/facetedcontents?pageSize=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"facetedcontents"
+							],
+							"query": [
+								{
+									"key": "pageSize",
+									"value": "25"
+								}
+							]
+						},
+						"description": "Faceted search with defaults. Returns content ids plus category facet occurrences (occurrences may be empty when contents carry no tree categories)."
+					}
+				},
+				{
+					"name": "F2 - Faceted News (NWS)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload.contentsId is a non-empty array', function () {",
+									"    pm.expect(body.payload.contentsId).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('all faceted contents are News (NWS*)', function () {",
+									"    body.payload.contentsId.forEach(id => pm.expect(id).to.match(/^NWS/));",
+									"});",
+									"pm.test('includes NWS4 and NWS5', function () {",
+									"    pm.expect(body.payload.contentsId).to.include('NWS4');",
+									"    pm.expect(body.payload.contentsId).to.include('NWS5');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/facetedcontents?filters[0].attribute=typeCode&filters[0].operator=eq&filters[0].value=NWS",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"facetedcontents"
+							],
+							"query": [
+								{
+									"key": "filters[0].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "NWS"
+								}
+							]
+						},
+						"description": "Faceted search restricted to News."
+					}
+				},
+				{
+					"name": "F3 - Faceted full-text 'Entando' (en)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload.contentsId is a non-empty array', function () {",
+									"    pm.expect(body.payload.contentsId).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('matches NWS5', function () {",
+									"    pm.expect(body.payload.contentsId).to.include('NWS5');",
+									"});",
+									"pm.test('occurrences present', function () {",
+									"    pm.expect(body.payload).to.have.property('occurrences');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/facetedcontents?text=Entando&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"facetedcontents"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "Entando"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Faceted full-text search over the English index for 'Entando'."
+					}
+				}
+			]
+		},
+		{
+			"name": "boolean attributes",
+			"description": "Boolean-like attribute search (Boolean, CheckBox, ThreeState) - top-level and nested inside Composite attributes.\n\n**Two kinds of request in this folder.**\n- **Data-backed (B1, B2, B3, B10)** - the test dataset defines content type `BLT` with top-level `Flag` (Boolean) and `Check` (CheckBox) flagged searchable=true, over four PUBLIC free-group contents: BLT1 (Flag=true, Check=true), BLT2 (false, false), BLT3 (true, false), BLT4 (false, Check never set). These assert real matches, on an instance seeded with the test dataset and reindexed - the same prerequisite as the `contents` folder.\n- **Request-shape only (B4-B9, B11)** - no seeded type flags a *Composite child* searchable, and no seeded ThreeState is searchable, so these document the correct URL form and assert HTTP 200 with a possibly empty payload. To make them return data: flag the composite child searchable=true in the content type (a Composite child is indexed iff it is flagged searchable - the same gate as a top-level boolean-like; there is no environment flag) and reindex.\n\n**Addressing.** A top-level attribute uses its own name, raw (entityAttr=Flag). One nested in a Composite uses its full path, the segments joined with '_' (entityAttr=promo_active, or entityAttr=layout_flags_sticky when doubly nested), and is single-valued (a Composite occurs at most once per document per lang). Because '_' is also legal inside a name, it is **escaped by doubling within each segment**: Composite `press_kit` + child `published` is `press__kit_published`, not `press_kit_published` - see B11. List/Monolist booleans are not searchable at all.\n\n**Boolean/CheckBox:** type=boolean is required and value must be true/false; gt/lt or a non-true/false value is rejected with HTTP 400 (not shown, as the collection asserts 200 for every request). An unset Boolean/CheckBox is indexed as false, so value=false also matches contents that never touched the field - see B10.\n\n**ThreeState:** indexed as Solr string (not boolean) because its third, uninitialized state can't fit a two-valued BoolField - use type=string and value=true/false/none. An unset ThreeState is indexed as the literal \"none\", not dropped.",
+			"item": [
+				{
+					"name": "B1 - Top-level boolean = true (BLT fixture)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('returns exactly the BLT contents whose Flag is true', function () {",
+									"    pm.expect(body.payload).to.include('BLT1');",
+									"    pm.expect(body.payload).to.include('BLT3');",
+									"    pm.expect(body.payload).to.not.include('BLT2');",
+									"    pm.expect(body.payload).to.not.include('BLT4');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=Flag&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=true&filters[1].attribute=typeCode&filters[1].operator=eq&filters[1].value=BLT&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "Flag"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "filters[1].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[1].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[1].value",
+									"value": "BLT"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Top-level Boolean `Flag` = true -> Solr field `en_Flag:true`, scoped to the BLT type.\n\nReal data: the test dataset defines content type `BLT` with `Flag` (Boolean) and `Check` (CheckBox) both flagged searchable=true, over four PUBLIC free-group contents: BLT1 (Flag=true), BLT2 (false), BLT3 (true), BLT4 (false). Expected: BLT1 and BLT3.\n\nRequires an instance seeded with the test dataset and reindexed - the same prerequisite the `contents` folder already has."
+					}
+				},
+				{
+					"name": "B2 - Top-level boolean = false (BLT fixture)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('returns exactly the BLT contents whose Flag is false', function () {",
+									"    pm.expect(body.payload).to.include('BLT2');",
+									"    pm.expect(body.payload).to.include('BLT4');",
+									"    pm.expect(body.payload).to.not.include('BLT1');",
+									"    pm.expect(body.payload).to.not.include('BLT3');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=Flag&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=false&filters[1].attribute=typeCode&filters[1].operator=eq&filters[1].value=BLT&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "Flag"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "false"
+								},
+								{
+									"key": "filters[1].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[1].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[1].value",
+									"value": "BLT"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Top-level Boolean `Flag` = false -> `en_Flag:false`. Expected: BLT2 and BLT4.\n\nNote that `false` is a stored value, not an absence: a Boolean/CheckBox that was never touched is indexed as false and matches here. Use ThreeState when 'not answered' must differ from 'answered no'."
+					}
+				},
+				{
+					"name": "B3 - Top-level boolean negation (not true)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('excludes the Flag=true contents', function () {",
+									"    pm.expect(body.payload).to.not.include('BLT1');",
+									"    pm.expect(body.payload).to.not.include('BLT3');",
+									"});",
+									"pm.test('returns the remaining BLT contents', function () {",
+									"    pm.expect(body.payload).to.include('BLT2');",
+									"    pm.expect(body.payload).to.include('BLT4');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=Flag&filters[0].type=boolean&filters[0].operator=not&filters[0].value=true&filters[1].attribute=typeCode&filters[1].operator=eq&filters[1].value=BLT&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "Flag"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "not"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "filters[1].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[1].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[1].value",
+									"value": "BLT"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Negation: NOT (`Flag` = true) -> Solr `-en_Flag:true`, scoped to BLT so the negation does not match every other content type (an unscoped negation matches everything that lacks the field).\n\nExpected: BLT2 and BLT4 - the same result as B2 here, because every BLT content has the field set. The two would differ if some content lacked `en_Flag` altogether: `not true` matches missing fields, `eq false` does not."
+					}
+				},
+				{
+					"name": "B4 - Boolean inside a Composite (full path)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is an array (empty is OK: demo app has no such composite)', function () {",
+									"    pm.expect(body.payload).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=promo_active&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=true&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "promo_active"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Boolean `active` nested in Composite `promo`. `entityAttr` is the full composite path `promo_active` -> single-valued Solr field `en_promo_active:true`. A Composite boolean-like child is indexed iff it is flagged searchable=true (inherited from the content-type definition - the same gate as a top-level boolean-like; no environment flag)."
+					}
+				},
+				{
+					"name": "B5 - Boolean in a nested Composite (double path)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is an array (empty is OK: demo app has no such composite)', function () {",
+									"    pm.expect(body.payload).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=layout_flags_sticky&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=true&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "layout_flags_sticky"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Boolean `sticky` nested two Composites deep (`layout` -> `flags` -> `sticky`). `entityAttr` is the full path `layout_flags_sticky` -> Solr field `en_layout_flags_sticky:true`."
+					}
+				},
+				{
+					"name": "B6 - Composite boolean AND type filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is an array', function () {",
+									"    pm.expect(body.payload).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].attribute=typeCode&filters[0].operator=eq&filters[0].value=NWS&filters[1].entityAttr=promo_active&filters[1].type=boolean&filters[1].operator=eq&filters[1].value=true&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "NWS"
+								},
+								{
+									"key": "filters[1].entityAttr",
+									"value": "promo_active"
+								},
+								{
+									"key": "filters[1].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[1].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[1].value",
+									"value": "true"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "AND of two filters: News (typeCode=NWS) whose Composite boolean `promo.active` is true. Multiple filters[i] entries are always AND-combined."
+					}
+				},
+				{
+					"name": "B7 - Faceted search on a Composite boolean",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload.contentsId is an array (empty is OK)', function () {",
+									"    pm.expect(body.payload.contentsId).to.be.an('array');",
+									"});",
+									"pm.test('occurrences present', function () {",
+									"    pm.expect(body.payload).to.have.property('occurrences');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/facetedcontents?filters[0].entityAttr=promo_active&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=true&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"facetedcontents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "promo_active"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Same Composite boolean filter against the faceted endpoint: returns matching content ids plus category facet occurrences."
+					}
+				},
+				{
+					"name": "B8 - Top-level ThreeState = none (unset)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is an array (empty is OK: demo app has no ThreeState attribute)', function () {",
+									"    pm.expect(body.payload).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=confirmed&filters[0].type=string&filters[0].operator=eq&filters[0].value=none&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "confirmed"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "string"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "none"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Top-level ThreeState attribute `confirmed`, targeting its uninitialized state -> Solr field `en_confirmed:none`. Unlike Boolean/CheckBox (unset coerces to false), an unset ThreeState is indexed as the literal string `none`, so it is directly term-queryable. Note type=string, not boolean. The top-level attribute must be flagged searchable in the content type."
+					}
+				},
+				{
+					"name": "B9 - ThreeState inside a Composite = true",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is an array (empty is OK: demo app has no such composite)', function () {",
+									"    pm.expect(body.payload).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=promo_confirmed&filters[0].type=string&filters[0].operator=eq&filters[0].value=true&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "promo_confirmed"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "string"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "ThreeState `confirmed` nested in Composite `promo`. `entityAttr` is the full composite path `promo_confirmed` -> single-valued Solr field `en_promo_confirmed:true` (string type, literal true/false/none). Same eligibility as a nested Boolean/CheckBox: indexed iff the composite child is flagged searchable=true (inherited from the content type; no environment flag)."
+					}
+				},
+				{
+					"name": "B10 - CheckBox = false also matches a never-touched field",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is a non-empty array', function () {",
+									"    pm.expect(body.payload).to.be.an('array').that.is.not.empty;",
+									"});",
+									"pm.test('matches the explicit false values', function () {",
+									"    pm.expect(body.payload).to.include('BLT2');",
+									"    pm.expect(body.payload).to.include('BLT3');",
+									"});",
+									"pm.test('and also the content that never set the CheckBox (unset coerces to false)', function () {",
+									"    pm.expect(body.payload).to.include('BLT4');",
+									"});",
+									"pm.test('excludes the only Check=true content', function () {",
+									"    pm.expect(body.payload).to.not.include('BLT1');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=Check&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=false&filters[1].attribute=typeCode&filters[1].operator=eq&filters[1].value=BLT&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "Check"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "false"
+								},
+								{
+									"key": "filters[1].attribute",
+									"value": "typeCode"
+								},
+								{
+									"key": "filters[1].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[1].value",
+									"value": "BLT"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "CheckBox `Check` = false -> `en_Check:false`. A CheckBox is filtered exactly like a Boolean (type=boolean); only the editor widget differs.\n\nThe point of this request: BLT4 defines **no** `Check` value at all, yet it matches. An unset Boolean/CheckBox coerces to `false` at index time, so `value=false` returns both the contents whose author answered 'no' (BLT2, BLT3) and those who never touched the field (BLT4). This is the single most common surprise with boolean filters - if you need to tell the two apart, model the attribute as a ThreeState."
+					}
+				},
+				{
+					"name": "B11 - Composite/attribute name containing '_' (escaped key)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const body = pm.response.json();",
+									"pm.test('payload is an array (empty is OK: no seeded type uses an underscored composite name)', function () {",
+									"    pm.expect(body.payload).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/contents?filters[0].entityAttr=press__kit_published&filters[0].type=boolean&filters[0].operator=eq&filters[0].value=true&lang=en",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contents"
+							],
+							"query": [
+								{
+									"key": "filters[0].entityAttr",
+									"value": "press__kit_published"
+								},
+								{
+									"key": "filters[0].type",
+									"value": "boolean"
+								},
+								{
+									"key": "filters[0].operator",
+									"value": "eq"
+								},
+								{
+									"key": "filters[0].value",
+									"value": "true"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Boolean `published` nested in a Composite named `press_kit`.\n\nThe path separator is `_`, and `_` is also legal **inside** a name, so it is escaped by doubling within each segment: the key is `press__kit_published`, NOT `press_kit_published` - the latter is the key of a Composite `press` with a child `kit_published`. Getting this wrong returns an empty result set with no error, so build the key by escaping each segment (or read it from `GET /plugins/cms/contentTypes/{code}`) rather than by concatenating names.\n\nA **top-level** attribute keeps its raw name, unescaped - only nested paths are escaped.\n\nRequest-shape example: no seeded type has an underscore in a composite name, so this returns an empty payload."
+					}
+				}
+			]
+		}
+	]
+}

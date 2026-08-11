@@ -1,0 +1,78 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!--
+        The front-end boolean user filters of the content list widgets offered three different ways to
+        say "do not filter on this attribute": leaving both radios unselected, ticking the separate
+        IGNORE checkbox, and - on ThreeState - the BOTH radio. The three are replaced by a single
+        selectable "Any" radio, matching the Any/Yes/No control the admin console finders use.
+
+        The IGNORE checkbox existed only because a radio cannot be deselected once chosen; with a real
+        "Any" option it is redundant, so the 'jacms_content_viewer_list_userfilter_ent_Bool_io' fragment
+        is no longer included by the three templates. The fragment itself is deliberately left in place:
+        it is separately addressable and a customer template may include it directly.
+
+        UserFilterOptionBean.getEntityFilter() keeps honouring both the IGNORE field and the legacy
+        "both" value, so a site whose fragments were customised - and therefore not rewritten here -
+        keeps working unchanged.
+
+        Not covered here: a fourth "Not set" option for ThreeState. That state writes no row at all
+        (ThreeStateAttribute.addSearchInfo() returns false when unset), so it needs a nullOption filter
+        rather than a value filter, i.e. a Java change as well. Tracked separately.
+    -->
+
+    <changeSet id="20260807000000_jacms_boolean_userfilter_any_label" author="entando" context="production">
+        <preConditions onFail="MARK_RAN" onFailMessage="The 'ANY' label already exists, leaving it untouched">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM localstrings WHERE keycode = 'ANY'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="localstrings">
+            <column name="keycode" value="ANY" />
+            <column name="langcode" value="it" />
+            <column name="stringvalue" value="Qualsiasi" />
+        </insert>
+        <insert tableName="localstrings">
+            <column name="keycode" value="ANY" />
+            <column name="langcode" value="en" />
+            <column name="stringvalue" value="Any" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="20260807000000_jacms_boolean_userfilter_any_option" author="entando" context="production">
+
+        <!--
+            Boolean: adds the "Any" radio and fixes the YES label, whose 'for' pointed at
+            '${formFieldNameVar}' while the input's id is 'true_${formFieldNameVar}'. Because a label's
+            'for' takes precedence over a labelable descendant, clicking the YES text did nothing.
+        -->
+        <update tableName="guifragment">
+            <column name="defaultgui" valueClobFile="clob/production/guifragment_12_2.ftl" />
+            <where>code='jacms_content_viewer_list_userfilter_ent_Boolean'</where>
+        </update>
+
+        <!--
+            CheckBox: was a single "Yes" checkbox, so it could only ever ask for true. It becomes the
+            same Any/Yes/No group - a capability increase: filtering for false is now possible.
+        -->
+        <update tableName="guifragment">
+            <column name="defaultgui" valueClobFile="clob/production/guifragment_14_2.ftl" />
+            <where>code='jacms_content_viewer_list_userfilter_ent_CheckBox'</where>
+        </update>
+
+        <!--
+            ThreeState: the BOTH radio meant "do not filter", which no user reads it as. It is replaced
+            by "Any"; a stored "both" value still renders as Any selected, so a bookmarked or
+            back-button submission keeps its meaning.
+        -->
+        <update tableName="guifragment">
+            <column name="defaultgui" valueClobFile="clob/production/guifragment_15_2.ftl" />
+            <where>code='jacms_content_viewer_list_userfilter_ent_ThreeSt'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

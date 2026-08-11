@@ -7,4 +7,6 @@
 
     <include file="serv/00000000000002_dataServ.xml" relativeToChangelogFile="true"/>
 
+    <include file="serv/00000000000003_schemaServ_widen_search_attrname.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

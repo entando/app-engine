@@ -19,6 +19,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.TextAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.ThreeStateAttribute;
 import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.services.content.widget.UserFilterOptionBean.AttributeFormFieldError;
@@ -193,5 +194,58 @@ class UserFilterOptionBeanTest {
         Assertions.assertNull(ef.getStart());
         Assertions.assertNull(ef.getEnd());
     }
-    
+
+    /**
+     * The hidden "_control" field is always submitted, so the form values map is never empty and the
+     * early return in getEntityFilter() does not apply. With no radio selected the widget must not
+     * filter at all: a nullOption filter here would ask for the contents with no indexed value for
+     * this attribute, which for a boolean is always the empty set.
+     */
+    @Test
+    void shouldNotFilterWhenNoBooleanValueIsSelected() throws Throwable {
+        Properties prop = new Properties();
+        prop.setProperty(UserFilterOptionBean.PARAM_KEY, "booleanAttribute");
+        prop.setProperty(UserFilterOptionBean.TYPE_ATTRIBUTE, "boolean");
+        prop.setProperty(UserFilterOptionBean.PARAM_IS_ATTRIBUTE_FILTER, "true");
+        BooleanAttribute booleanAttribute = Mockito.mock(BooleanAttribute.class);
+        Mockito.when(booleanAttribute.getType()).thenReturn("Boolean");
+        Mockito.when(booleanAttribute.getName()).thenReturn("booleanAttribute");
+        Mockito.when(prototype.getAttribute("booleanAttribute")).thenReturn(booleanAttribute);
+        Lang lang = new Lang();
+        lang.setCode("en");
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getParameter("booleanAttribute_booleanFieldName_frame9")).thenReturn(null);
+        Mockito.when(request.getParameter("booleanAttribute_booleanFieldName_ignore_frame9")).thenReturn(null);
+        Mockito.when(request.getParameter("booleanAttribute_booleanFieldName_control_frame9")).thenReturn("true");
+        UserFilterOptionBean ubof = new UserFilterOptionBean(prop, prototype, 9, lang, "yyyy-MM-dd", request);
+        Assertions.assertNull(ubof.getFormFieldErrors());
+        Assertions.assertNotNull(ubof.getFormFieldValues());
+        Assertions.assertNull(ubof.getEntityFilter());
+    }
+
+    /**
+     * The three-state "both" option means "do not filter", not "only the contents whose value is
+     * unset". It must produce no filter at all.
+     */
+    @Test
+    void shouldNotFilterWhenThreeStateBothIsSelected() throws Throwable {
+        Properties prop = new Properties();
+        prop.setProperty(UserFilterOptionBean.PARAM_KEY, "threeStateAttribute");
+        prop.setProperty(UserFilterOptionBean.TYPE_ATTRIBUTE, "boolean");
+        prop.setProperty(UserFilterOptionBean.PARAM_IS_ATTRIBUTE_FILTER, "true");
+        ThreeStateAttribute threeStateAttribute = Mockito.mock(ThreeStateAttribute.class);
+        Mockito.when(threeStateAttribute.getType()).thenReturn("ThreeState");
+        Mockito.when(threeStateAttribute.getName()).thenReturn("threeStateAttribute");
+        Mockito.when(prototype.getAttribute("threeStateAttribute")).thenReturn(threeStateAttribute);
+        Lang lang = new Lang();
+        lang.setCode("en");
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getParameter("threeStateAttribute_booleanFieldName_frame9")).thenReturn("both");
+        Mockito.when(request.getParameter("threeStateAttribute_booleanFieldName_ignore_frame9")).thenReturn(null);
+        Mockito.when(request.getParameter("threeStateAttribute_booleanFieldName_control_frame9")).thenReturn("true");
+        UserFilterOptionBean ubof = new UserFilterOptionBean(prop, prototype, 9, lang, "yyyy-MM-dd", request);
+        Assertions.assertNull(ubof.getFormFieldErrors());
+        Assertions.assertNull(ubof.getEntityFilter());
+    }
+
 }

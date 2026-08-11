@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content id="BLT3" typecode="BLT" typedescr="Boolean search test type">
+    <descr>Mixed</descr>
+    <groups mainGroup="free" />
+    <categories />
+    <attributes>
+        <attribute name="Title" attributetype="Text">
+            <text lang="en">Mixed</text>
+        </attribute>
+        <attribute name="Flag" attributetype="Boolean">
+            <boolean>true</boolean>
+        </attribute>
+        <attribute name="Check" attributetype="CheckBox">
+            <boolean>false</boolean>
+        </attribute>
+        <composite name="Settings" attributetype="Composite">
+            <attribute name="Active" attributetype="Boolean">
+                <boolean>false</boolean>
+            </attribute>
+            <attribute name="Sticky" attributetype="CheckBox">
+                <boolean>true</boolean>
+            </attribute>
+        </composite>
+    </attributes>
+    <status>PUBLIC</status>
+</content>

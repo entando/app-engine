@@ -1,5 +1,7 @@
 package org.entando.entando.plugins.jpsolr.aps.system.solr;
 
+import com.agiletec.aps.system.common.entity.model.attribute.CheckBoxAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.ThreeStateAttribute;
 import com.agiletec.aps.system.common.tree.ITreeNode;
 import com.agiletec.aps.system.common.tree.ITreeNodeManager;
 import com.agiletec.aps.system.services.group.Group;
@@ -22,10 +24,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -311,6 +315,151 @@ class SearcherDAOTest {
     }
 
     @Test
+    void shouldFilterByBooleanSingleValueTrue() throws Exception {
+        Boolean value = Boolean.TRUE;
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("key", value);
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(+entity_key:true) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldFilterByBooleanSingleValueFalse() throws Exception {
+        Boolean value = Boolean.FALSE;
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("key", value);
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(+entity_key:false) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldResolveBooleanAttributeFilterToLangQualifiedField() throws Exception {
+        // Mirrors GET .../contents?filters[0].entityAttr=<name>&operator=eq&value=true.
+        // An entityAttr filter is an attribute filter, so the key resolves to "<lang>_<name>".
+        // The indexer writes a boolean under that same "<lang>_<name>" field whether the boolean
+        // is top-level, a Composite child (its own name) or a Monolist element (the list's name),
+        // so addressing a nested boolean by its (leaf) name is fully supported.
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("featured", true, Boolean.TRUE);
+        filter.setLangCode("en");
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(+en_featured:true) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldResolveNestedBooleanCompositePathFilter() throws Exception {
+        // A composite-nested boolean is addressed by its full composite path, e.g. "complexAttrName_boolAttrName",
+        // which resolves to the "<lang>_complexAttrName_boolAttrName" field the indexer/schema build.
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("complexAttrName_boolAttrName", true, Boolean.TRUE);
+        filter.setLangCode("en");
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(+en_complexAttrName_boolAttrName:true) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldFilterUsingValueSourcedFromCheckBoxAttribute() throws Exception {
+        // The query layer never sees the source AttributeInterface, only the Boolean value a
+        // filter carries - proving CheckBoxAttribute's getValue() flows through identically to
+        // a plain BooleanAttribute's.
+        CheckBoxAttribute checkBoxAttribute = new CheckBoxAttribute();
+        checkBoxAttribute.setBooleanValue(Boolean.TRUE);
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("key", checkBoxAttribute.getValue());
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(+entity_key:true) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldFilterUsingValueSourcedFromThreeStateAttribute() throws Exception {
+        ThreeStateAttribute threeStateAttribute = new ThreeStateAttribute();
+        threeStateAttribute.setBooleanValue(Boolean.FALSE);
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("key", threeStateAttribute.getValue());
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(+entity_key:false) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldHandleBooleanFilterAllowedValues() throws Exception {
+        mockDefaultLang();
+        SearchEngineFilter<Boolean> filter = SearchEngineFilter.createAllowedValuesFilter("key", true,
+                List.of(Boolean.TRUE, Boolean.FALSE), null);
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+(en_key:true en_key:false) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldNegateBooleanFilter() throws Exception {
+        Boolean value = Boolean.TRUE;
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("key", value);
+        filter.setNotOption(true);
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "-(+entity_key:true) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldFilterOnNullValueBooleanFilterAsExistenceQuery() throws Exception {
+        SolrSearchEngineFilter<Boolean> filter = new SolrSearchEngineFilter<>("key", true);
+        filter.setLangCode("en");
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups, "+(+en_key:*) +(entity_group:free)");
+    }
+
+    @Test
+    void shouldIgnoreUnsupportedSingleValueType() throws Exception {
+        // Closes the "else if (value instanceof Boolean)" false branch of createSingleValueQuery:  // NOSONAR
+        // a value that is neither String, Date, Number nor Boolean falls through every branch,     // NOSONAR
+        // producing a no-op (empty) sub-query for that field instead of throwing.                  // NOSONAR
+        SolrSearchEngineFilter<Object> filter = new SolrSearchEngineFilter<>("key", new Object());
+
+        SearchEngineFilter[] filters = new SearchEngineFilter[]{filter};
+        SearchEngineFilter[] categories = new SearchEngineFilter[]{};
+        List<String> allowedGroups = new ArrayList<>();
+
+        testSearchFacetedContents(filters, categories, allowedGroups,
+                "+() +(entity_group:free)");
+    }
+
+    @Test
     void shouldFilterOnRangeOfStrings() throws Exception {
         SolrSearchEngineFilter filter = new SolrSearchEngineFilter("key", "A", "E");
 
@@ -328,7 +477,7 @@ class SearcherDAOTest {
 
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture())).thenReturn(queryResponse);
+        when(solrClient.query(any(), queryCaptor.capture())).thenReturn(queryResponse);
 
         SolrSearchEngineFilter filterSort = new SolrSearchEngineFilter("created", false);
         SolrSearchEngineFilter filterValue = new SolrSearchEngineFilter("key", true, "value");
@@ -358,7 +507,7 @@ class SearcherDAOTest {
             List<String> allowedGroups, String expectedQuery) throws Exception {
         ArgumentCaptor<SolrQuery> queryCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         QueryResponse queryResponse = mockQueryResponse();
-        Mockito.when(solrClient.query(Mockito.any(), queryCaptor.capture())).thenReturn(queryResponse);
+        when(solrClient.query(any(), queryCaptor.capture())).thenReturn(queryResponse);
 
         searcherDAO.searchFacetedContents(filters, categories, allowedGroups);
 
@@ -369,11 +518,12 @@ class SearcherDAOTest {
     private void mockDefaultLang() {
         Lang lang = new Lang();
         lang.setCode("en");
-        Mockito.when(langManager.getDefaultLang()).thenReturn(lang);
+        when(langManager.getDefaultLang()).thenReturn(lang);
     }
 
     private void mockCategory(String categoryCode) {
-        Mockito.when(treeNodeManager.getNode(categoryCode)).thenReturn(Mockito.mock(ITreeNode.class));
+        ITreeNode node = mock(ITreeNode.class);
+        when(treeNodeManager.getNode(categoryCode)).thenReturn(node);
     }
 
     private Date getDate(String date) throws Exception {
@@ -383,9 +533,9 @@ class SearcherDAOTest {
     }
 
     private QueryResponse mockQueryResponse() {
-        QueryResponse queryResponse = Mockito.mock(QueryResponse.class);
+        QueryResponse queryResponse = mock(QueryResponse.class);
         SolrDocumentList documents = new SolrDocumentList();
-        Mockito.when(queryResponse.getResults()).thenReturn(documents);
+        when(queryResponse.getResults()).thenReturn(documents);
         return queryResponse;
     }
 }
