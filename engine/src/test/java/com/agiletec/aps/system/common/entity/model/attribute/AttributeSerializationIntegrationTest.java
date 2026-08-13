@@ -3,6 +3,7 @@ package com.agiletec.aps.system.common.entity.model.attribute;
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -31,10 +33,17 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         TextAttribute attribute = new TextAttribute();
         attribute.setName("testAttribute");
         attribute.setLangManager(langManager);
+        // current web application context available -> manager re-wired from it
         attribute = testSerializeAndDeserializeWithApplicationContext(attribute);
         Assertions.assertNotNull(attribute.getLangManager());
+        // no current web application context (e.g. Redis/lettuce thread or startup):
+        // manager is re-wired through the ApplicationContextProvider fallback
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
-        Assertions.assertNull(attribute.getLangManager());
+        Assertions.assertNotNull(attribute.getLangManager());
+        // neither the current context nor the provider are available -> stays null (warn path).
+        // The raw field is checked (not the getter) so the self-healing getter does not re-resolve.
+        attribute = testSerializeAndDeserializeNoContextAvailable(attribute);
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "_langManager"));
     }
 
     @Test
@@ -43,12 +52,19 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
         attribute.setName("testEnumerator");
         attribute.setBeanFactory(this.getApplicationContext());
         attribute.setLangManager(langManager);
+        // current web application context available
         attribute = testSerializeAndDeserializeWithApplicationContext(attribute);
         Assertions.assertNotNull(attribute.getBeanFactory());
         Assertions.assertNotNull(attribute.getLangManager());
+        // no current web application context -> re-wired through the ApplicationContextProvider fallback
         attribute = testSerializeAndDeserializeNullApplicationContext(attribute);
-        Assertions.assertNull(attribute.getBeanFactory());
-        Assertions.assertNull(attribute.getLangManager());
+        Assertions.assertNotNull(attribute.getBeanFactory());
+        Assertions.assertNotNull(attribute.getLangManager());
+        // neither the current context nor the provider are available -> stays null (warn path).
+        // The raw fields are checked (not the getters) so the self-healing getters do not re-resolve.
+        attribute = testSerializeAndDeserializeNoContextAvailable(attribute);
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "_beanFactory"));
+        Assertions.assertNull(ReflectionTestUtils.getField(attribute, "_langManager"));
     }
 
     private <T> T testSerializeAndDeserializeWithApplicationContext(T attribute) throws Exception {
@@ -62,6 +78,17 @@ class AttributeSerializationIntegrationTest extends BaseTestCase {
     private <T> T testSerializeAndDeserializeNullApplicationContext(T attribute) throws Exception {
         try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class)) {
             contextLoader.when(ContextLoader::getCurrentWebApplicationContext).thenReturn(null);
+            return testSerializeAndDeserialize(attribute);
+        }
+    }
+
+    private <T> T testSerializeAndDeserializeNoContextAvailable(T attribute) throws Exception {
+        try (MockedStatic<ContextLoader> contextLoader = Mockito.mockStatic(ContextLoader.class);
+                MockedStatic<ApplicationContextProvider> provider =
+                        Mockito.mockStatic(ApplicationContextProvider.class)) {
+            contextLoader.when(ContextLoader::getCurrentWebApplicationContext).thenReturn(null);
+            provider.when(() -> ApplicationContextProvider.resolveBean(Mockito.any())).thenReturn(null);
+            provider.when(ApplicationContextProvider::getBeanFactory).thenReturn(null);
             return testSerializeAndDeserialize(attribute);
         }
     }

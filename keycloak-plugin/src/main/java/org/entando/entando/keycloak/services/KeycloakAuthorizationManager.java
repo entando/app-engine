@@ -87,7 +87,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
     /**
      * Immutable list of mapping elements that are currently active. The configuration is constantly updated
      * either by reloading the global configuration or after a certain amount of time (by default,
-     * one minute)
+     * 15 minutes — see {@code KC_CONFIG_REFRESH})
      */
     private final transient Map<String, KeycloakImportConfig> config = new ConcurrentHashMap<>();
 
@@ -102,7 +102,6 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
 
         List<DynamicMappingElement> profileMappings = new ArrayList<>();
         List<DynamicMappingElement> jwtMappings = new ArrayList<>();
-        List<String> ignore = new ArrayList<>();
         List<String> roles = new ArrayList<>();
         List<String> groups = new ArrayList<>();
         List<String> excludeUsers = new ArrayList<>();
@@ -115,6 +114,7 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 DynamicMapping dynConf = xmlMapper.readValue(xml, DynamicMapping.class);
                 if (dynConf != null) {
                     if (dynConf.mapping != null) {
+                        dynConf.mapping.forEach(this::normalizeMappingElement);
 
                         final Map<Boolean, List<DynamicMappingElement>> partitioned =
                                 dynConf.mapping.stream()
@@ -128,14 +128,9 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                         log.debug("{} dynamic auth mapping found, {} getConfig().profileMappings",
                                 jwtMappings.size(), profileMappings.size());
                     }
-                    ignore = ofNullable(dynConf.exclusions)
-                            .orElse(List.of());
-                    roles = ofNullable(dynConf.roles)
-                            .orElseGet(List::of);
-                    groups = ofNullable(dynConf.groups)
-                            .orElse(List.of());
-                    excludeUsers = ofNullable(dynConf.excludeUsers)
-                            .orElse(List.of());
+                    roles = normalizeNames(dynConf.roles);
+                    groups = normalizeNames(dynConf.groups);
+                    excludeUsers = normalizeNames(dynConf.excludeUsers);
                     enabled = ofNullable(dynConf.enabled)
                             .orElse(false);
                     persist = ofNullable(dynConf.persist)
@@ -149,12 +144,12 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
                 jwtMappings.forEach(m -> log.debug("jwt mapping active: {}", m.toString()));
             }
             // finally
-            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, ignore, roles, groups, enabled, persist, excludeUsers);
+            KeycloakImportConfig cfg = new KeycloakImportConfig(profileMappings, jwtMappings, roles, groups, enabled, persist, excludeUsers);
 
             setImportConfiguration(cfg);
         } catch (Exception e) {
             log.error("Error initializing KeycloakAuthorizationManager", e);
-            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE, List.of());
+            KeycloakImportConfig cfg = new KeycloakImportConfig(List.of(), List.of(), List.of(), List.of(), false, PersistKind.NONE, List.of());
 
             setImportConfiguration(cfg);
             throw e;
@@ -188,6 +183,43 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         } catch (Exception e) {
             log.error("Error cleaning sync data older than {}", tenMinutesAgo, e);
         }
+    }
+
+    /**
+     * Normalize a configured list of role, group or user names: surrounding whitespace is stripped,
+     * blank entries are dropped and duplicates are collapsed. Names are compared against the values
+     * extracted from the JWT or the user profile, which are normalized the same way, so that a
+     * stray space in the configuration cannot silently disable an entry.
+     *
+     * @param names the raw configured names, possibly null
+     * @return an immutable, normalized list; never null
+     */
+    private List<String> normalizeNames(List<String> names) {
+        return ofNullable(names)
+                .orElseGet(List::of)
+                .stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .distinct()
+                .toList();
+    }
+
+    /**
+     * Trim the free-text fields of a mapping element in place. A stray leading/trailing space or
+     * newline pasted into {@code <attribute>}, {@code <path>} or {@code <separator>} would otherwise
+     * never match the real Keycloak attribute key, JWT claim path or role-group token, silently
+     * turning the whole mapping into a no-op instead of a validation failure.
+     *
+     * @param elem the mapping element to normalize, possibly null
+     */
+    private void normalizeMappingElement(DynamicMappingElement elem) {
+        if (elem == null) {
+            return;
+        }
+        elem.attribute = StringUtils.trim(elem.attribute);
+        elem.path = StringUtils.trim(elem.path);
+        elem.separator = StringUtils.trim(elem.separator);
     }
 
     /**
@@ -236,7 +268,8 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         readLock.lock();
         try {
             final List<String> excludedUsers = getImportConfiguration().getExcludeUsers();
-            if (excludedUsers != null && user.getUsername() != null && excludedUsers.contains(user.getUsername())) {
+            if (excludedUsers != null && user.getUsername() != null
+                    && excludedUsers.contains(user.getUsername().trim())) {
                 log.debug("user {} is in the excludeUsers list, skipping dynamic sync", user.getUsername());
                 return;
             }
@@ -576,30 +609,27 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
         return finalizeAssociation(user, roleName, groupName, true);
     }
 
-    private boolean isIgnored(String name) {
-        if (getImportConfiguration().getIgnore() == null || StringUtils.isBlank(name)) {
-            return false;
-        }
-        return getImportConfiguration().getIgnore().contains(name.trim());
-    }
-
     private Authorization finalizeAssociation(KeycloakUser user, String roleName, String groupName,
             boolean createRoleIfMissing) {
-        // is it excluded?
-        if (isIgnored(roleName) || isIgnored(groupName)) {
-            log.info("Role {} or Group {} is in the exclusions list. Skipping assignment for user {}", roleName, groupName, user.getUsername());
+        // names are normalized here so that every source (JWT claim, profile attribute, role-group
+        // token) is compared against the allowlists on the same terms
+        final String role = StringUtils.trimToNull(roleName);
+        final String group = StringUtils.trimToNull(groupName);
+
+        if (role == null && group == null) {
+            log.warn("Blank role and group extracted for user {}, discarding", user.getUsername());
             return null;
         }
         // are they managed?
-        if (StringUtils.isNotBlank(roleName) && !getImportConfiguration().getRoles().contains(roleName)) {
-            log.warn("Role {} is not in the roles allowlist. Skipping assignment for user {}", roleName, user.getUsername());
+        if (StringUtils.isNotBlank(role) && !getImportConfiguration().getRoles().contains(role)) {
+            log.warn("Role {} is not in the roles allowlist. Skipping assignment for user {}", role, user.getUsername());
             return null;
         }
-        if (StringUtils.isNotBlank(groupName) && !getImportConfiguration().getGroups().contains(groupName)) {
-            log.warn("Group {} is not in the groups allowlist. Skipping assignment for user {}", groupName, user.getUsername());
+        if (StringUtils.isNotBlank(group) && !getImportConfiguration().getGroups().contains(group)) {
+            log.warn("Group {} is not in the groups allowlist. Skipping assignment for user {}", group, user.getUsername());
             return null;
         }
-        return createAuthorization(roleName, groupName, createRoleIfMissing);
+        return createAuthorization(role, group, createRoleIfMissing);
     }
 
     private Authorization createAuthorization(String roleName, String groupName, boolean createRoleIfMissing) {

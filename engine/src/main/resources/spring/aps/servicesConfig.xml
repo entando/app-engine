@@ -9,6 +9,10 @@
     <!--  async support -->
     <task:annotation-driven />
 
+    <!-- Startup-safe holder for the root bean factory; used to re-wire transient manager
+         references on attributes deserialized on threads without a current WebApplicationContext. -->
+    <bean id="ApplicationContextProvider" class="com.agiletec.aps.util.ApplicationContextProvider" />
+
     <context:component-scan base-package="org.entando.entando.aps.system.services.api"></context:component-scan>
 
     <bean id="PagedMetadataMapper" class="org.entando.entando.web.common.assembler.PagedMetadataMapper" />

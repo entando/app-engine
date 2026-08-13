@@ -135,6 +135,23 @@
                     </div>
                 </div>
             </s:if>
+            <%-- The filter option is offered only for boolean-like children of a Composite that is NOT
+                 inside a List/Monolist: a boolean reached through a list is never indexed as a filter
+                 by any search engine, so offering the flag there would let a user enable something
+                 that can never work. --%>
+            <s:if test="null == listAttribute && isNestedSearchableOptionSupported(attributeTypeCode)">
+                <div class="form-group">
+                    <div class="col-xs-2 control-label ">
+
+                        <label for="searchable">
+                            <s:text name="Entity.attribute.flag.searchable.full" />
+                        </label>
+                    </div>
+                    <div class="col-xs-10">
+                        <wpsf:checkbox name="searchable" id="searchable" cssClass="bootstrap-switch"/>
+                    </div>
+                </div>
+            </s:if>
 
         </fieldset>
 

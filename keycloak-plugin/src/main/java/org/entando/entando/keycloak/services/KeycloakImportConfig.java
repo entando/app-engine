@@ -15,7 +15,6 @@ public class KeycloakImportConfig {
 
     private transient List<DynamicMappingElement> profileMappings = new ArrayList<>();
     private transient List<DynamicMappingElement> jwtMappings =  new ArrayList<>();
-    private transient List<String> ignore;
     private transient List<String> roles;
     private transient List<String> groups;
     private transient Boolean enabled;

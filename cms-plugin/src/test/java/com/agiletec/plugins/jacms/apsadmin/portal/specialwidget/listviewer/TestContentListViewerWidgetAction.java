@@ -15,6 +15,8 @@ package com.agiletec.plugins.jacms.apsadmin.portal.specialwidget.listviewer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -105,6 +107,66 @@ class TestContentListViewerWidgetAction extends ApsAdminBaseTestCase {
 		assertEquals("ART", props.getProperty("contentType"));
 	}
 	
+	/**
+	 * The user filter key arrives as a request parameter and is not necessarily one the attribute
+	 * dropdown offered. A Composite-nested path key resolves to nothing at render time, so the widget
+	 * would log an error and silently drop the filter on every visit to the public page. It has to be
+	 * refused while there is still a form to report it on.
+	 */
+	@Test
+	void testAddUserFilterOnNestedAttributeKeyIsRefused() throws Throwable {
+		String result = this.executeAddUserFilter("admin", "homepage", "1", "content_viewer_list",
+				"ART", "attribute_cardBody_highlighted");
+		assertEquals(Action.INPUT, result);
+		ContentListViewerWidgetAction action = (ContentListViewerWidgetAction) this.getAction();
+		assertTrue(action.getFieldErrors().containsKey("userFilterKey"));
+		assertNull(action.getWidget().getConfig().getProperty("userFilters"));
+	}
+
+	@Test
+	void testAddUserFilterOnUnknownAttributeKeyIsRefused() throws Throwable {
+		String result = this.executeAddUserFilter("admin", "homepage", "1", "content_viewer_list",
+				"ART", "attribute_thisDoesNotExist");
+		assertEquals(Action.INPUT, result);
+		ContentListViewerWidgetAction action = (ContentListViewerWidgetAction) this.getAction();
+		assertTrue(action.getFieldErrors().containsKey("userFilterKey"));
+		assertNull(action.getWidget().getConfig().getProperty("userFilters"));
+	}
+
+	@Test
+	void testAddUserFilterOnTopLevelAttributeIsAccepted() throws Throwable {
+		String result = this.executeAddUserFilter("admin", "homepage", "1", "content_viewer_list",
+				"ART", "attribute_Titolo");
+		assertEquals(Action.SUCCESS, result);
+		ContentListViewerWidgetAction action = (ContentListViewerWidgetAction) this.getAction();
+		String userFilters = action.getWidget().getConfig().getProperty("userFilters");
+		assertNotNull(userFilters);
+		assertTrue(userFilters.contains("key=Titolo"));
+	}
+
+	@Test
+	void testAddFullTextUserFilterIsStillAccepted() throws Throwable {
+		String result = this.executeAddUserFilter("admin", "homepage", "1", "content_viewer_list",
+				"ART", "fulltext");
+		assertEquals(Action.SUCCESS, result);
+		ContentListViewerWidgetAction action = (ContentListViewerWidgetAction) this.getAction();
+		String userFilters = action.getWidget().getConfig().getProperty("userFilters");
+		assertNotNull(userFilters);
+		assertTrue(userFilters.contains("key=fulltext"));
+	}
+
+	private String executeAddUserFilter(String userName, String pageCode, String frame,
+			String showletTypeCode, String contentType, String userFilterKey) throws Throwable {
+		this.executeConfigContentType(userName, pageCode, frame, showletTypeCode, contentType);
+		this.initAction("/do/jacms/Page/SpecialWidget/ListViewer", "addUserFilter");
+		this.addParameter("pageCode", pageCode);
+		this.addParameter("frame", frame);
+		this.addParameter("widgetTypeCode", showletTypeCode);
+		this.addParameter("contentType", contentType);
+		this.addParameter("userFilterKey", userFilterKey);
+		return this.executeAction();
+	}
+
 	private String executeConfigListViewer(String userName, String pageCode, String frame, String showletTypeCode) throws Throwable {
 		this.setUserOnSession(userName);
 		this.initAction("/do/Page/SpecialWidget", "listViewerConfig");

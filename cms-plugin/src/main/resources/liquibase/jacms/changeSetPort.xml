@@ -21,4 +21,8 @@
 
     <include file="port/20230623000000_jacms_contentmodels_change_id_type.xml" relativeToChangelogFile="true" />
 
+    <include file="port/20260803000000_jacms_widen_search_attrname.xml" relativeToChangelogFile="true" />
+
+    <include file="port/20260807000000_jacms_boolean_userfilter_any_option.xml" relativeToChangelogFile="true" />
+
 </databaseChangeLog>

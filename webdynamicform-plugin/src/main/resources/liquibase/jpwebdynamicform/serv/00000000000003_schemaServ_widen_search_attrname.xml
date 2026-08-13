@@ -1,0 +1,31 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!--
+        'jpwebdynamicform_search' stores the search key of an attribute in 'attrname'. MessageDAO
+        extends AbstractEntityDAO and only overrides getAddingSearchRecordQuery() to target this table,
+        so it inherits the shared path-key writer: a boolean nested in a Composite is indexed under
+        '<composite>_<boolean>'. 30 characters are therefore no longer enough, and the engine validates
+        keys against EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH (255) at message-type save time -
+        so without this widening a key between 31 and 255 characters passes validation and then
+        truncates (MySQL, non-strict mode) or fails the transaction (PostgreSQL) at save time.
+
+        Widened to 255 to match 'contentsearch', 'workcontentsearch' and 'authuserprofilesearch'.
+        Widening a VARCHAR keeps the existing non-unique index on the column and is supported by
+        PostgreSQL, MySQL and Derby alike. The sibling 'jpwebdynamicform_attroles' table is
+        deliberately left alone: the role writer iterates top-level attributes only and never sees a
+        path key (same rationale as 'contentattributeroles').
+    -->
+    <changeSet id="00000000000003_schemaServ_widen_search_attrname" author="entando">
+
+        <modifyDataType tableName="jpwebdynamicform_search"
+                columnName="attrname"
+                newDataType="varchar(255)"/>
+
+    </changeSet>
+
+</databaseChangeLog>

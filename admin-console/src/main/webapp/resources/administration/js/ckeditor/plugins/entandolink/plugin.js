@@ -3,266 +3,288 @@
  Modified to save selection state before opening popup (fixes selection loss in newer browsers).
 */
 CKEDITOR.plugins.add('entandolink', {
-		requires: ['fakeobjects'],
-		init: function(editor) {
-				var pluginName = 'entandolink';
-				if (window.entandoCKEditor === undefined) {
-						window.entandoCKEditor = {};
-				}
-				// Storage for saved selection state (needed because selection can be lost when popup gets focus)
-				if (window.entandoCKEditorSelection === undefined) {
-						window.entandoCKEditorSelection = {};
-				}
-				// Add the link and unlink buttons.
-				editor.addCommand('entandolink', {
-					exec: function(editor) {
-						var selection = editor.getSelection();
-						var ranges = selection.getRanges(true);
-						if (!(ranges.length == 1 && ranges[0].collapsed)) {
-							var id = 'entando_link_window_' + editor.element.$.id;
-
-							// Save selection state BEFORE opening popup (selection may be lost when popup gets focus)
-							var startElement = selection.getStartElement();
-							var isLink = startElement && startElement.getName() === 'a';
-							var savedBookmarks = selection.createBookmarks(true);
-							var savedSelectedHtml = editor.getSelectedHtml(true);
-
-							window.entandoCKEditorSelection[id] = {
-								bookmarks: savedBookmarks,
-								selectedHtml: savedSelectedHtml,
-								startElement: startElement,
-								isLink: isLink
-							};
-
-							// Create a wrapper around the editor that uses saved selection data
-							var originalEditor = editor;
-
-							// Create a mock selection object that returns saved values
-							var mockSelection = {
-								getStartElement: function() { return startElement; },
-								getSelectedElement: function() { return isLink ? startElement : null; },
-								getRanges: function() { return []; },
-								getType: function() { return CKEDITOR.SELECTION_TEXT; }
-							};
-
-							var editorWrapper = {
-								// Return mock selection with saved startElement
-								getSelection: function() {
-									return mockSelection;
-								},
-								getSelectedHtml: function(toString) {
-									// Return saved HTML since selection may be lost
-									return savedSelectedHtml;
-								},
-								// Delegate all other properties/methods to original editor
-								focus: function() { return originalEditor.focus(); },
-								document: originalEditor.document,
-								insertElement: function(el) {
-									// Before inserting, try to restore selection
-									originalEditor.focus();
-									try {
-										var sel = originalEditor.getSelection();
-										if (savedBookmarks && sel) {
-											sel.selectBookmarks(savedBookmarks);
-										}
-									} catch(e) {
-										console.warn('Could not restore bookmarks, inserting at cursor:', e);
-									}
-									return originalEditor.insertElement(el);
-								},
-								updateElement: function() { return originalEditor.updateElement(); },
-								// Access to original editor for anything else
-								_original: originalEditor,
-								// Expose saved data for direct access if needed
-								_savedSelection: window.entandoCKEditorSelection[id]
-							};
-							window.entandoCKEditor[id] = editorWrapper;
-							var width = window.innerWidth / 2;
-							if (width < 780 && window.innerWidth > 780) {
-									width = 780;
-							} else {
-									width = window.innerWidth;
-							}
-
-                            var attributeHRef = selection.getStartElement().getAttribute( 'href');
-                            var attributeCode;
-                            var hrefTab ='';
-                            if (attributeHRef){
-                               hrefTab= attributeHRef.substring(0,4);
-                               attributeCode=attributeHRef.substring(4,attributeHRef.length-2);
-                            };
-                            var activeTab='';
-                            var linkTypeVar='';
-                            var link='entandoInternalUrlLink';
-                            switch (hrefTab) {
-
-                                case '#!U;':{
-                                    activeTab='resource-link';
-                                    link = 'entandoInternalUrlLink';
-                                    linkTypeVar=1;
-                                    attributeCode='';
-                                    break;
-                                }
-
-                                case '#!P;':{
-                                    linkTypeVar=2;
-                                    activeTab='page-link';
-                                    link= 'entandoInternalPageLink';
-                                    break;
-                                }
-
-                                case '#!C;':{
-                                    linkTypeVar=3;
-                                    link='entandoInternalContentLink';
-                                    activeTab='resource-link';
-                                    break;
-                                }
-
-                                case '#!R;':{
-                                    link='entandoInternalResourceLink';
-                                    linkTypeVar=5;
-                                    activeTab='content-link';
-                                    break;
-                                }
-
-                            }
-
-                            var url = editor.config.EntandoLinkActionPath.replace('entandoInternalLink',link);
-                            var height = window.innerHeight - (window.innerHeight / 100 * 2);
-                            var url=url+"&linkTypeVar="+linkTypeVar+"&prevLinkTypeVar="+linkTypeVar+"&prevCode="+attributeCode+"#"+activeTab;
-
-							window.open(url , id, 'width=' + width + ',height=' + height + ',location=no,scrollbars=yes,toolbar=no,resizable=1');
-
-						}
-					}
-				});
-				editor.addCommand('entandounlink', {
-					/** @ignore */
-					exec: function(editor) {
-						/*
-						 * execCommand( 'unlink', ... ) in Firefox leaves behind <span> tags at where
-						 * the <a> was, so again we have to remove the link ourselves. (See #430)
-						 *
-						 * TODO: Use the style system when it's complete. Let's use execCommand()
-						 * as a stopgap solution for now.
-						 */
-						var selection = editor.getSelection(),
-								bookmarks = selection.createBookmarks(),
-								ranges = selection.getRanges(),
-								rangeRoot,
-								element;
-
-						for (var i = 0; i < ranges.length; i++) {
-								rangeRoot = ranges[i].getCommonAncestor(true);
-								element = rangeRoot.getAscendant('a', true);
-								if (!element)
-										continue;
-								ranges[i].selectNodeContents(element);
-						}
-
-						selection.selectRanges(ranges);
-						editor.document.$.execCommand('unlink', false, null);
-						selection.selectBookmarks(bookmarks);
-					},
-					startDisabled: false
-				});
-				editor.ui.addButton('entandolink', {
-					label: editor.lang.link.toolbar,
-					command: 'entandolink',
-					icon: CKEDITOR.plugins.getPath(pluginName) + "entandolink-icon.png",
-				});
-				editor.ui.addButton('entandounlink', {
-					label: editor.lang.link.unlink,
-					command: 'entandounlink',
-					icon: CKEDITOR.plugins.getPath(pluginName) + "entandounlink-icon.png"
-				});
-
-				// Register selection change handler for the unlink button.
-				editor.on('selectionChange', function(evt) {
-					if (editor.readOnly) {
-							return;
-					}
-					var command = editor.getCommand('entandounlink'),
-							element = evt.data.path.lastElement && evt.data.path.lastElement.getAscendant('a', true);
-					if (element && element.getName() == 'a' && element.getAttribute('href') && element.getChildCount())
-							command.setState(CKEDITOR.TRISTATE_OFF);
-					else
-							command.setState(CKEDITOR.TRISTATE_DISABLED);
-				});
-
-				// If the "menu" plugin is loaded, register the menu items.
-				if (editor.addMenuItems) {
-					editor.addMenuItems({
-						entandolink: {
-								label: editor.lang.link.menu,
-								command: 'entandolink',
-						},
-						entandounlink: {
-								label: editor.lang.link.unlink,
-								command: 'entandounlink'
-						}
-					});
-				}
-		},
-
-		afterInit: function(editor) {
-			// Register a filter to displaying placeholders after mode change.
-			var dataProcessor = editor.dataProcessor,
-					dataFilter = dataProcessor && dataProcessor.dataFilter,
-					htmlFilter = dataProcessor && dataProcessor.htmlFilter,
-					pathFilters = editor._.elementsPath && editor._.elementsPath.filters;
-
-			if (dataFilter) {
-				dataFilter.addRules({
-					elements: {
-						a: function(element) {
-							var attributes = element.attributes;
-							if (!attributes.name)
-								return null;
-
-							var isEmpty = !element.children.length;
-
-							if (CKEDITOR.plugins.entandolink.synAnchorSelector) {
-								// IE needs a specific class name to be applied
-								// to the anchors, for appropriate styling.
-								var ieClass = isEmpty ? 'cke_anchor_empty' : 'cke_anchor';
-								var cls = attributes['class'];
-								if (attributes.name && (!cls || cls.indexOf(ieClass) < 0))
-										attributes['class'] = (cls || '') + ' ' + ieClass;
-
-								if (isEmpty && CKEDITOR.plugins.entandolink.emptyAnchorFix) {
-										attributes.contenteditable = 'false';
-										attributes['data-cke-editable'] = 1;
-								}
-							} else if (CKEDITOR.plugins.entandolink.fakeAnchor && isEmpty)
-								return editor.createFakeParserElement(element, 'cke_anchor', 'anchor');
-							return null;
-						}
-					}
-				});
-			}
-
-				if (CKEDITOR.plugins.entandolink.emptyAnchorFix && htmlFilter) {
-					htmlFilter.addRules({
-						elements: {
-							a: function(element) {
-								delete element.attributes.contenteditable;
-							}
-						}
-					});
-				}
-
-				if (pathFilters) {
-					pathFilters.push(function(element, name) {
-						if (name == 'a') {
-							if (CKEDITOR.plugins.entandolink.tryRestoreFakeAnchor(editor, element) ||
-								(element.getAttribute('name') && (!element.getAttribute('href') || !element.getChildCount()))) {
-								return 'anchor';
-							}
-						}
-					});
-				}
+	requires: ['fakeobjects'],
+	init: function(editor) {
+		var pluginName = 'entandolink';
+		if (window.entandoCKEditor === undefined) {
+			window.entandoCKEditor = {};
 		}
+		// Add the link and unlink buttons.
+		editor.addCommand('entandolink', {
+			exec: function(editor) {
+				var selection = editor.getSelection();
+				var ranges = selection.getRanges(true);
+				if (!(ranges.length == 1 && ranges[0].collapsed)) {
+					var id = 'entando_link_window_' + editor.element.$.id;
+
+					var startElement = selection.getStartElement();
+					var isLink = startElement && startElement.getName() === 'a';
+					var savedSelectedHtml = editor.getSelectedHtml(true);
+					var originalEditor = editor;
+
+					// For new links: replace the selection with a placeholder span carrying
+					// the selected HTML, then swap it for the real <a> when the popup applies.
+					// We hold a direct JS reference to the placeholder — no querySelector,
+					// no dependency on attribute survival across CKEditor's ACF.
+					var ph = null;
+					if (!isLink) {
+						ph = editor.document.createElement('span');
+						ph.setHtml(savedSelectedHtml);
+						editor.insertElement(ph);
+					}
+
+					var mockSelection = {
+						getStartElement: function() { return startElement; },
+						getSelectedElement: function() { return isLink ? startElement : null; },
+						getRanges: function() { return []; },
+						getType: function() { return CKEDITOR.SELECTION_TEXT; }
+					};
+
+					var editorWrapper = {
+						getSelection: function() { return mockSelection; },
+						getSelectedHtml: function() { return savedSelectedHtml; },
+						focus: function() { return originalEditor.focus(); },
+						document: originalEditor.document,
+						insertElement: function(el) {
+							// Swap the placeholder span for the link element. Then override
+							// el.setAttribute / el.removeAttribute so the popup's post-insert
+							// attribute loop (rel, target, hreflang) reaches the actual <a>
+							// that's now in the DOM — otherwise those writes go to `el` which
+							// is no longer attached and the attributes are silently lost.
+							try {
+								if (!ph || !ph.$ || !ph.$.parentNode) return;
+
+								ph.insertBeforeMe(el);
+								ph.remove();
+								ph = null;
+
+								var insertedEl = el;
+								el.setAttribute = function(name, value) {
+									insertedEl.$.setAttribute(name, value);
+								};
+								el.removeAttribute = function(name) {
+									insertedEl.$.removeAttribute(name);
+								};
+
+								originalEditor.focus();
+								originalEditor.updateElement();
+							} catch(e) {
+								console.error('entandolink: insertElement failed', e);
+							}
+						},
+						updateElement: function() { return originalEditor.updateElement(); },
+						_original: originalEditor
+					};
+					window.entandoCKEditor[id] = editorWrapper;
+					var width = window.innerWidth / 2;
+					if (width < 780 && window.innerWidth > 780) {
+						width = 780;
+					} else {
+						width = window.innerWidth;
+					}
+
+					// Use the saved startElement; the placeholder span was inserted above
+					// for new links, so re-querying would now return the wrong element.
+					var attributeHRef = isLink ? startElement.getAttribute('href') : null;
+					var attributeCode;
+					var hrefTab ='';
+					if (attributeHRef){
+						hrefTab= attributeHRef.substring(0,4);
+						attributeCode=attributeHRef.substring(4,attributeHRef.length-2);
+					};
+					var activeTab='';
+					var linkTypeVar='';
+					var link='entandoInternalUrlLink';
+					switch (hrefTab) {
+
+						case '#!U;':{
+							activeTab='resource-link';
+							link = 'entandoInternalUrlLink';
+							linkTypeVar=1;
+							attributeCode='';
+							break;
+						}
+
+						case '#!P;':{
+							linkTypeVar=2;
+							activeTab='page-link';
+							link= 'entandoInternalPageLink';
+							break;
+						}
+
+						case '#!C;':{
+							linkTypeVar=3;
+							link='entandoInternalContentLink';
+							activeTab='resource-link';
+							break;
+						}
+
+						case '#!R;':{
+							link='entandoInternalResourceLink';
+							linkTypeVar=5;
+							activeTab='content-link';
+							break;
+						}
+
+					}
+
+					var url = editor.config.EntandoLinkActionPath.replace('entandoInternalLink',link);
+					var height = window.innerHeight - (window.innerHeight / 100 * 2);
+					var url=url+"&linkTypeVar="+linkTypeVar+"&prevLinkTypeVar="+linkTypeVar+"&prevCode="+attributeCode+"#"+activeTab;
+
+					var linkWindow = window.open(url, id, 'width=' + width + ',height=' + height + ',location=no,scrollbars=yes,toolbar=no,resizable=1');
+
+					// If the popup is closed without applying a link, unwrap the placeholder
+					// span so the original text is restored exactly.
+					if (!isLink) {
+						var cancelTimer = setInterval(function() {
+							if (!linkWindow || linkWindow.closed) {
+								clearInterval(cancelTimer);
+								try {
+									if (ph && ph.$ && ph.$.parentNode) {
+										var child;
+										while ((child = ph.getFirst())) {
+											ph.insertBeforeMe(child);
+										}
+										ph.remove();
+										ph = null;
+										originalEditor.updateElement();
+									}
+								} catch(e) {}
+							}
+						}, 300);
+					}
+
+				}
+			}
+		});
+		editor.addCommand('entandounlink', {
+			/** @ignore */
+			exec: function(editor) {
+				/*
+                 * execCommand( 'unlink', ... ) in Firefox leaves behind <span> tags at where
+                 * the <a> was, so again we have to remove the link ourselves. (See #430)
+                 *
+                 * TODO: Use the style system when it's complete. Let's use execCommand()
+                 * as a stopgap solution for now.
+                 */
+				var selection = editor.getSelection(),
+					bookmarks = selection.createBookmarks(),
+					ranges = selection.getRanges(),
+					rangeRoot,
+					element;
+
+				for (var i = 0; i < ranges.length; i++) {
+					rangeRoot = ranges[i].getCommonAncestor(true);
+					element = rangeRoot.getAscendant('a', true);
+					if (!element)
+						continue;
+					ranges[i].selectNodeContents(element);
+				}
+
+				selection.selectRanges(ranges);
+				editor.document.$.execCommand('unlink', false, null);
+				selection.selectBookmarks(bookmarks);
+			},
+			startDisabled: false
+		});
+		editor.ui.addButton('entandolink', {
+			label: editor.lang.link.toolbar,
+			command: 'entandolink',
+			icon: CKEDITOR.plugins.getPath(pluginName) + "entandolink-icon.png",
+		});
+		editor.ui.addButton('entandounlink', {
+			label: editor.lang.link.unlink,
+			command: 'entandounlink',
+			icon: CKEDITOR.plugins.getPath(pluginName) + "entandounlink-icon.png"
+		});
+
+		// Register selection change handler for the unlink button.
+		editor.on('selectionChange', function(evt) {
+			if (editor.readOnly) {
+				return;
+			}
+			var command = editor.getCommand('entandounlink'),
+				element = evt.data.path.lastElement && evt.data.path.lastElement.getAscendant('a', true);
+			if (element && element.getName() == 'a' && element.getAttribute('href') && element.getChildCount())
+				command.setState(CKEDITOR.TRISTATE_OFF);
+			else
+				command.setState(CKEDITOR.TRISTATE_DISABLED);
+		});
+
+		// If the "menu" plugin is loaded, register the menu items.
+		if (editor.addMenuItems) {
+			editor.addMenuItems({
+				entandolink: {
+					label: editor.lang.link.menu,
+					command: 'entandolink',
+				},
+				entandounlink: {
+					label: editor.lang.link.unlink,
+					command: 'entandounlink'
+				}
+			});
+		}
+	},
+
+	afterInit: function(editor) {
+		// Register a filter to displaying placeholders after mode change.
+		var dataProcessor = editor.dataProcessor,
+			dataFilter = dataProcessor && dataProcessor.dataFilter,
+			htmlFilter = dataProcessor && dataProcessor.htmlFilter,
+			pathFilters = editor._.elementsPath && editor._.elementsPath.filters;
+
+		if (dataFilter) {
+			dataFilter.addRules({
+				elements: {
+					a: function(element) {
+						var attributes = element.attributes;
+						if (!attributes.name)
+							return null;
+
+						var isEmpty = !element.children.length;
+
+						if (CKEDITOR.plugins.entandolink.synAnchorSelector) {
+							// IE needs a specific class name to be applied
+							// to the anchors, for appropriate styling.
+							var ieClass = isEmpty ? 'cke_anchor_empty' : 'cke_anchor';
+							var cls = attributes['class'];
+							if (attributes.name && (!cls || cls.indexOf(ieClass) < 0))
+								attributes['class'] = (cls || '') + ' ' + ieClass;
+
+							if (isEmpty && CKEDITOR.plugins.entandolink.emptyAnchorFix) {
+								attributes.contenteditable = 'false';
+								attributes['data-cke-editable'] = 1;
+							}
+						} else if (CKEDITOR.plugins.entandolink.fakeAnchor && isEmpty)
+							return editor.createFakeParserElement(element, 'cke_anchor', 'anchor');
+						return null;
+					}
+				}
+			});
+		}
+
+		if (CKEDITOR.plugins.entandolink.emptyAnchorFix && htmlFilter) {
+			htmlFilter.addRules({
+				elements: {
+					a: function(element) {
+						delete element.attributes.contenteditable;
+					}
+				}
+			});
+		}
+
+		if (pathFilters) {
+			pathFilters.push(function(element, name) {
+				if (name == 'a') {
+					if (CKEDITOR.plugins.entandolink.tryRestoreFakeAnchor(editor, element) ||
+						(element.getAttribute('name') && (!element.getAttribute('href') || !element.getChildCount()))) {
+						return 'anchor';
+					}
+				}
+			});
+		}
+	}
 });
 
 CKEDITOR.plugins.entandolink = {
@@ -283,19 +305,19 @@ CKEDITOR.plugins.entandolink = {
 	 */
 	getSelectedLink: function(editor) {
 		try {
-				var selection = editor.getSelection();
-				if (selection.getType() == CKEDITOR.SELECTION_ELEMENT) {
-						var selectedElement = selection.getSelectedElement();
-						if (selectedElement.is('a'))
-								return selectedElement;
-				}
+			var selection = editor.getSelection();
+			if (selection.getType() == CKEDITOR.SELECTION_ELEMENT) {
+				var selectedElement = selection.getSelectedElement();
+				if (selectedElement.is('a'))
+					return selectedElement;
+			}
 
-				var range = selection.getRanges(true)[0];
-				range.shrink(CKEDITOR.SHRINK_TEXT);
-				var root = range.getCommonAncestor();
-				return root.getAscendant('a', true);
+			var range = selection.getRanges(true)[0];
+			range.shrink(CKEDITOR.SHRINK_TEXT);
+			var root = range.getCommonAncestor();
+			return root.getAscendant('a', true);
 		} catch (e) {
-				return null;
+			return null;
 		}
 	},
 

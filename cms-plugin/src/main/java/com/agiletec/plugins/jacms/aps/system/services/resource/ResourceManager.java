@@ -268,6 +268,9 @@ public class ResourceManager extends AbstractService
     @Override
     public void updateResource(ResourceDataBean bean) throws EntException {
         ResourceInterface oldResource = this.loadResource(bean.getResourceId());
+        if (null == oldResource) {
+            throw new EntException("Error updating resource: no resource found with id " + bean.getResourceId());
+        }
         try {
             if (null == bean.getInputStream()) {
                 oldResource.setDescription(LabelSanitizer.stripMarkup(bean.getDescr()));
@@ -563,6 +566,10 @@ public class ResourceManager extends AbstractService
     protected void refreshMasterFileNames(String resourceId) {
         try {
             ResourceInterface resource = this.loadResource(resourceId);
+            if (null == resource) {
+                logger.warn("Resource '{}' not found, skipping master file name refresh", resourceId);
+                return;
+            }
             if (resource.isMultiInstance()) {
                 ResourceInstance instance
                         = ((AbstractMultiInstanceResource) resource).getInstance(0, null);
@@ -584,6 +591,10 @@ public class ResourceManager extends AbstractService
     protected void refreshResourceInstances(String resourceId) {
         try {
             ResourceInterface resource = this.loadResource(resourceId);
+            if (null == resource) {
+                logger.warn("Resource '{}' not found, skipping instance refresh", resourceId);
+                return;
+            }
             resource.reloadResourceInstances();
             this.updateResource(resource);
         } catch (Throwable t) {

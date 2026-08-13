@@ -23,7 +23,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
+import org.entando.entando.aps.system.common.entity.search.EntitySearchKeys;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchSchema;
 import com.agiletec.aps.system.common.entity.IEntityManager;
+import org.entando.entando.aps.system.common.entity.search.SearchableAttributeRef;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
@@ -175,27 +178,98 @@ public abstract class AbstractApsEntityFinderAction extends BaseAction implement
 		return val;
 	}
 	
+	/**
+	 * @return the same list as {@link #getSearchableAttributes()}.
+	 * @deprecated the name is misspelled; use {@link #getSearchableAttributes()}. Not removable yet:
+	 * {@code webdynamicform-plugin}'s {@code messageFinding.jsp} still binds to
+	 * {@code searcheableAttributes}, and no JSP is compiled by this build, so deleting this would break
+	 * that page silently. Retire it together with that binding.
+	 */
 	@Deprecated
 	public List<AttributeInterface> getSearcheableAttributes() {
 		return this.getSearchableAttributes();
 	}
-	
+
+	/**
+	 * The searchable <b>top-level</b> attributes, as real {@link AttributeInterface} instances.
+	 *
+	 * <p>This deliberately keeps its historical return type. It is a {@code public} method on a
+	 * {@code public abstract} class that downstream projects extend, and its elements are addressed by
+	 * custom JSPs through arbitrary attribute properties ({@code #attribute.items},
+	 * {@code #attribute.roles}, ...). Narrowing it to a projection would compile cleanly here and then
+	 * fail at runtime in customer code - silently in JSPs, which this build never compiles.</p>
+	 *
+	 * <p>Nested searchable attributes are <b>not</b> included here, because they cannot be represented
+	 * as a plain attribute: their form field is named after a path key, not after
+	 * {@code attribute.getName()}. Search forms that support them must iterate
+	 * {@link #getSearchableAttributeRefs()} instead.</p>
+	 *
+	 * @return the ordered list of searchable top-level attributes; never null.
+	 */
 	public List<AttributeInterface> getSearchableAttributes() {
-		List<AttributeInterface> searchableAttributes = new ArrayList<AttributeInterface>();
+		List<AttributeInterface> searchableAttributes = new ArrayList<>();
 		IApsEntity prototype = this.getEntityPrototype();
 		if (null == prototype) {
 			return searchableAttributes;
 		}
-		List<AttributeInterface> contentAttributes = prototype.getAttributeList();
-		for (int i=0; i<contentAttributes.size(); i++) {
-			AttributeInterface attribute = contentAttributes.get(i);
+		for (AttributeInterface attribute : prototype.getAttributeList()) {
 			if (attribute.isActive() && attribute.isSearchable()) {
 				searchableAttributes.add(attribute);
 			}
 		}
 		return searchableAttributes;
 	}
-	
+
+	/**
+	 * The attributes the search form offers: searchable top-level attributes (legacy behaviour) plus
+	 * boolean-like attributes nested inside Composites, addressed by their path key
+	 * {@code <composite>_<boolean>}.
+	 *
+	 * <p>Each entry is a {@link SearchableAttributeRef} - the key, the display label and the <b>real</b>
+	 * attribute - not a renamed copy of the attribute. OGNL resolves {@code #attribute.name} to the key,
+	 * {@code #attribute.type} and {@code #attribute.textAttribute} to the real attribute's own values;
+	 * anything else is reached through {@code #attribute.source.<property>}.</p>
+	 *
+	 * <p>This is additive: {@link #getSearchableAttributes()} keeps its original contract for
+	 * pre-existing callers, and only forms that need nested attributes bind to this one.</p>
+	 *
+	 * @return the ordered list of searchable attribute references; never null.
+	 */
+	public List<SearchableAttributeRef> getSearchableAttributeRefs() {
+		return this.getSearchSchema().getSearchableAttributes();
+	}
+
+	/**
+	 * Display labels for {@link #getSearchableAttributeRefs()}, keyed by the attribute's machine key.
+	 * A nested boolean's label is its hierarchy (e.g. {@code "compo > cmp_bool"}) reconstructed from the
+	 * real attribute tree, so the search form renders it verbatim instead of splitting the flattened key
+	 * on '_' - which would mis-segment a name that itself contains '_'.
+	 * @return a map from machine key to display label; never null.
+	 * @deprecated a form iterating {@link #getSearchableAttributeRefs()} already holds the label:
+	 * {@code #attribute.label}. The core finder JSPs no longer bind this. Not removable yet: a downstream
+	 * JSP may still bind {@code searchableAttributeLabels}, and no JSP is compiled by this build, so
+	 * deleting it would break that page silently.
+	 */
+	@Deprecated
+	public Map<String, String> getSearchableAttributeLabels() {
+		return this.getSearchSchema().getLabels();
+	}
+
+	/**
+	 * What the current entity type offers to a search: the attributes, their labels and the key each is
+	 * addressed by. Read from the entity manager, which computes it once per type and keeps it, so a
+	 * form render no longer walks the attribute tree once per question it asks.
+	 * @return the schema of the current type; never null.
+	 */
+	protected EntitySearchSchema getSearchSchema() {
+		IEntityManager entityManager = this.getEntityManager();
+		EntitySearchSchema schema = (null == entityManager)
+				? null : entityManager.getSearchSchema(this.getEntityTypeCode());
+		// a finder without a manager has nothing to offer, and must not throw while a form renders
+		return (null != schema) ? schema
+				: EntitySearchSchema.build(null, EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH);
+	}
+
 	public List<AttributeRole> getAttributeRoles() {
 		return this.getEntityManager().getAttributeRoles();
 	}

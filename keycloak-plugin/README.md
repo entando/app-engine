@@ -27,8 +27,8 @@ This plugin doesn't come with Role and Group management, because Entando Core ro
 >- `keycloak.authenticated.user.default.authorizations`: **[OPTIONAL]** Use if you want to automatically assign `group:role` to any user that logs in, comma separated. Example: `administrators:admin,readers`
 
 ## Environment variables
->- `KC_CONFIG_REFRESH`: specifies the refresh period -in cron style!- of the dynamic configuration used to assign authorizations to the loggin-in users. The default is `0 * * * * *`
->- `KC_SYNC_CLEAN`: Specify the periodicity of the internal synchronization table cleanup. The default is `0 0 0/4 * * *`
+>- `KC_CONFIG_REFRESH`: specifies the refresh period -in cron style!- of the dynamic configuration used to assign authorizations to the loggin-in users. The default is `0 0/15 * * * *` (every 15 minutes)
+>- `KC_SYNC_CLEAN`: specifies the periodicity -in cron style!- of the internal synchronization table cleanup. **Disabled by default** (`0 0 0 31 2 *`, a date that never occurs); set a real cron expression to enable it.
 >- `KC_SYNC_BATCH_SIZE`: Specify the batch size for the internal synchronization table cleanup. The default is `100`
 
 

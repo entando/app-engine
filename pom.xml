@@ -10,7 +10,7 @@
     <groupId>org.entando</groupId>
 
     <artifactId>app-engine</artifactId>
-    <version>7.5.0</version>
+    <version>7.5.2</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -73,6 +73,7 @@
         <preDeploymentTestGroups/>
         <postDeploymentTestGroups/>
         <sonar.coverage.exclusions>**/*.js</sonar.coverage.exclusions>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml,${session.executionRootDirectory}/webapp/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <!--test database default settings -->
         <test.database.driver>org.apache.derby.jdbc.EmbeddedDriver</test.database.driver>
         <test.database.hostname>localhost</test.database.hostname>
@@ -161,7 +162,7 @@
         <asm.version>9.8</asm.version>
         <sun-mail.version>2.0.1</sun-mail.version>
         <subethasmtp.version>3.1.7</subethasmtp.version>
-        <pdfbox.version>2.0.24</pdfbox.version>
+        <pdfbox.version>3.0.5</pdfbox.version>
         <stax-ex.version>2.0.1</stax-ex.version>
         <stax2-api.version>4.2.2</stax2-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
