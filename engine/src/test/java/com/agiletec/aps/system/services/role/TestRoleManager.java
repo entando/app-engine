@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.SystemConstants;
+import org.entando.entando.ent.exception.EntException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -143,6 +144,22 @@ class TestRoleManager extends BaseTestCase {
     		Role role = roles.get(i);
     		assertEquals("supervisor", role.getName());
     	}
+    }
+
+    @Test
+    void testAddDuplicateRoleThrowsDuplicateRoleException() throws Throwable {
+        Role role = new Role();
+        role.setName("temp_dup_role");
+        role.setDescription("descr_dup_role");
+        try {
+            roleManager.addRole(role);
+            EntException ex = org.junit.jupiter.api.Assertions.assertThrows(EntException.class, () -> {
+                roleManager.addRole(role);
+            });
+            assertTrue(ex.getCause() instanceof DuplicateRoleException);
+        } finally {
+            roleManager.removeRole(role);
+        }
     }
 	
 }

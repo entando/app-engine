@@ -133,6 +133,9 @@ public class RoleManager extends AbstractService implements IRoleManager, Refres
 		try {
 			this.getRoleDAO().addRole(role);
 			this.getRoleCacheWrapper().addRole(role);
+		} catch (DuplicateRoleException e) {
+			logger.debug("Role '{}' already present, skipping insert", role.getName());
+			throw new EntException("Role already exists: " + role.getName(), e);
 		} catch (Throwable t) {
 			logger.error("Error while adding a role", t);
 			throw new EntException("Error while adding a role", t);
