@@ -1629,6 +1629,94 @@
         </dependencies>
     </dependencyManagement>
     <profiles>
+        <!--
+            Run the test suites against a database other than the default in-memory Derby.
+            Each profile supplies the driver, the four test.database.* properties the filtered
+            contextTestParams.properties consumes, and any JVM flag the driver needs.
+
+            Usage:  mvn test -Ppre-deployment-verification,test-postgresql -pl <module> -Dtest.database.name=<module>
+
+            test.database.name keeps one module's schema off another's: unlike Derby's in-memory
+            URL, an external server is shared and keeps state between runs.
+        -->
+        <profile>
+            <id>test-postgresql</id>
+            <properties>
+                <test.database.name>entando</test.database.name>
+                <test.database.hostname>localhost</test.database.hostname>
+                <test.database.port>55432</test.database.port>
+                <test.database.driver>org.postgresql.Driver</test.database.driver>
+                <test.database.port.url>jdbc:postgresql://${test.database.hostname}:${test.database.port}/${test.database.name}port</test.database.port.url>
+                <test.database.serv.url>jdbc:postgresql://${test.database.hostname}:${test.database.port}/${test.database.name}serv</test.database.serv.url>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <version>42.7.8</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <!--
+            REQUIRED: the MySQL server must be initialized with lower_case_table_names=1.
+
+            MySQL on Linux is case sensitive for table names, while Derby, PostgreSQL and Oracle all fold
+            unquoted identifiers. Three webdynamicform-plugin changesets contain raw SQL naming SYSCONFIG
+            and AUTHPERMISSIONS in upper case, so without the setting that module fails with
+            "Table '&lt;schema&gt;.SYSCONFIG' doesn't exist": 31 failures, none of them real.
+
+            The setting only takes effect when the instance is INITIALIZED. Applying it to an existing
+            data directory is rejected by MySQL 8, so an already created container has to be recreated.
+
+            See .PLAN/mysql-oracle-vendor-parity-plan.md for the container command and the measurements.
+            Each module needs its own pair of databases, &lt;name&gt;port and &lt;name&gt;serv, selected
+            with -Dtest.database.name.
+        -->
+        <profile>
+            <id>test-mysql</id>
+            <properties>
+                <test.database.name>entando</test.database.name>
+                <test.database.hostname>localhost</test.database.hostname>
+                <test.database.port>53306</test.database.port>
+                <test.database.driver>com.mysql.cj.jdbc.Driver</test.database.driver>
+                <test.database.port.url>jdbc:mysql://${test.database.hostname}:${test.database.port}/${test.database.name}port?useSSL=false&amp;allowPublicKeyRetrieval=true</test.database.port.url>
+                <test.database.serv.url>jdbc:mysql://${test.database.hostname}:${test.database.port}/${test.database.name}serv?useSSL=false&amp;allowPublicKeyRetrieval=true</test.database.serv.url>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.mysql</groupId>
+                    <artifactId>mysql-connector-j</artifactId>
+                    <version>9.4.0</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>test-oracle</id>
+            <properties>
+                <test.database.name>entando</test.database.name>
+                <test.database.hostname>localhost</test.database.hostname>
+                <test.database.port>1521</test.database.port>
+                <test.database.service>TESTENV</test.database.service>
+                <test.database.driver>oracle.jdbc.OracleDriver</test.database.driver>
+                <!-- Oracle has no notion of two databases on one connection: portDb and servDb share
+                     a schema, as the webapp 'oracle' profile already does. -->
+                <test.database.port.url>jdbc:oracle:thin:@//${test.database.hostname}:${test.database.port}/${test.database.service}</test.database.port.url>
+                <test.database.serv.url>jdbc:oracle:thin:@//${test.database.hostname}:${test.database.port}/${test.database.service}</test.database.serv.url>
+                <!-- Without these the handshake dies inside oracle.net.ano.Ano.negotiation with a
+                     misleading "Got minus one from a read call". -->
+                <argLine>-Djava.security.egd=file:/dev/./urandom -Doracle.jdbc.disableOob=true -Doracle.net.disableOob=true</argLine>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.oracle.ojdbc</groupId>
+                    <artifactId>ojdbc8</artifactId>
+                    <version>19.3.0.0</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>local-dev</id>
             <build>

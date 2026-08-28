@@ -3082,15 +3082,17 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
         result.andDo(resultPrint())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.size()", is(9)))
-                .andExpect(jsonPath("$.payload[0].id", is("EVN20")))
+                // every row in this result has typecode EVN, so the sort key is fully tied and the
+                // order comes from the contentid tie-breaker
+                .andExpect(jsonPath("$.payload[0].id", is("EVN191")))
                 .andExpect(jsonPath("$.payload[1].id", is("EVN192")))
-                .andExpect(jsonPath("$.payload[2].id", is("EVN23")))
-                .andExpect(jsonPath("$.payload[3].id", is("EVN24")))
-                .andExpect(jsonPath("$.payload[4].id", is("EVN21")))
-                .andExpect(jsonPath("$.payload[5].id", is("EVN25")))
-                .andExpect(jsonPath("$.payload[6].id", is("EVN191")))
-                .andExpect(jsonPath("$.payload[7].id", is("EVN194")))
-                .andExpect(jsonPath("$.payload[8].id", is("EVN193")));
+                .andExpect(jsonPath("$.payload[2].id", is("EVN193")))
+                .andExpect(jsonPath("$.payload[3].id", is("EVN194")))
+                .andExpect(jsonPath("$.payload[4].id", is("EVN20")))
+                .andExpect(jsonPath("$.payload[5].id", is("EVN21")))
+                .andExpect(jsonPath("$.payload[6].id", is("EVN23")))
+                .andExpect(jsonPath("$.payload[7].id", is("EVN24")))
+                .andExpect(jsonPath("$.payload[8].id", is("EVN25")));
     }
 
     @Test
@@ -3110,15 +3112,17 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
         result.andDo(resultPrint())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.size()", is(9)))
-                .andExpect(jsonPath("$.payload[0].id", is("EVN193")))
-                .andExpect(jsonPath("$.payload[1].id", is("EVN194")))
-                .andExpect(jsonPath("$.payload[2].id", is("EVN191")))
-                .andExpect(jsonPath("$.payload[3].id", is("EVN25")))
-                .andExpect(jsonPath("$.payload[4].id", is("EVN21")))
-                .andExpect(jsonPath("$.payload[5].id", is("EVN24")))
+                // every row in this result has the same status, so the sort key is fully tied and the
+                // order comes from the contentid tie-breaker
+                .andExpect(jsonPath("$.payload[0].id", is("EVN191")))
+                .andExpect(jsonPath("$.payload[1].id", is("EVN192")))
+                .andExpect(jsonPath("$.payload[2].id", is("EVN193")))
+                .andExpect(jsonPath("$.payload[3].id", is("EVN194")))
+                .andExpect(jsonPath("$.payload[4].id", is("EVN20")))
+                .andExpect(jsonPath("$.payload[5].id", is("EVN21")))
                 .andExpect(jsonPath("$.payload[6].id", is("EVN23")))
-                .andExpect(jsonPath("$.payload[7].id", is("EVN192")))
-                .andExpect(jsonPath("$.payload[8].id", is("EVN20")));
+                .andExpect(jsonPath("$.payload[7].id", is("EVN24")))
+                .andExpect(jsonPath("$.payload[8].id", is("EVN25")));
     }
 
     @Test

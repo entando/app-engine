@@ -156,7 +156,7 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 		//System.out.println("QUERY : " + query);
 		PreparedStatement stat = null;
 		try {
-			stat = conn.prepareStatement(query);
+			stat = this.prepareStatement(conn, query);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
@@ -218,13 +218,10 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 			this.addGroupsQueryBlock(query, groups);
 		}
         if (!isCount) {
-            boolean ordered = this.appendOrderQueryBlocks(filters, query, false);
+            this.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
-		} else {
-			this.closeMasterCountQueryBlock(query);
 		}
-		//System.out.println("********** " + query.toString());
-		return query.toString();
+		return this.toQueryString(query, isCount);
 	}
 	
 	protected void addGroupsQueryBlock(StringBuffer query, Collection<String> userGroupCodes) {

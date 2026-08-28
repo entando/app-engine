@@ -164,10 +164,28 @@ public class ConfigTestUtils {
             ds.setMaxTotal(12);
             ds.setMaxIdle(4);
             ds.setDriverClassName(className);
+            this.applySessionInitSql(ds, className);
             bindOrRebind(builder, "java:comp/env/jdbc/" + beanName, ds);
             logger.debug("created datasource " + beanName);
         } catch (Throwable t) {
             throw new RuntimeException("Error on creation datasource '" + beanName + "'", t);
+        }
+    }
+
+    /**
+     * Oracle parses a date literal against the session NLS_DATE_FORMAT, which defaults to DD-MON-RR, while
+     * the Liquibase fixtures render dates as ISO literals. Without this every suite fails at fixture load
+     * with ORA-01843. The statements run on each physical connection the pool opens, which is the scope
+     * the fixtures and the DAOs both need.
+     *
+     * @param ds The datasource being built.
+     * @param driverClassName The driver of that datasource.
+     */
+    private void applySessionInitSql(BasicDataSource ds, String driverClassName) {
+        if (null != driverClassName && driverClassName.toLowerCase().contains("oracle")) {
+            ds.setConnectionInitSqls(Arrays.asList(
+                    "ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'",
+                    "ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS.FF'"));
         }
     }
 

@@ -20,7 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
@@ -138,7 +140,7 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         String query = this.createQueryString(filters, isCount, selectAll);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query);
             int index = 0;
             index = this.addAttributeFilterStatementBlock(filters, index, stat);
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
@@ -217,12 +219,10 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         boolean hasAppendWhereClause = this.appendFullAttributeFilterQueryBlocks(filters, query, false);
         this.appendMetadataFieldFilterQueryBlocks(filters, query, hasAppendWhereClause);
         if (!isCount) {
-            boolean ordered = this.appendOrderQueryBlocks(filters, query, false);
+            this.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
-        } else {
-            this.closeMasterCountQueryBlock(query);
         }
-        return query.toString();
+        return this.toQueryString(query, isCount);
     }
 
     /**
@@ -238,7 +238,10 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
     protected StringBuffer createBaseQueryBlock(EntitySearchFilter[] filters, boolean isCount, boolean selectAll) {
         StringBuffer query = null;
         if (isCount) {
-            query = this.createMasterCountQueryBlock();
+            // count the rows of the very select block the list query pages over, so that the two can
+            // never disagree: an attribute filter joins the search table and can match several rows
+            // per entity, and LIMIT/OFFSET is applied to whatever that block returns
+            query = this.createMasterSelectQueryBlock(filters, false);
         } else {
             query = this.createMasterSelectQueryBlock(filters, selectAll);
         }
@@ -248,31 +251,79 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
 
     protected StringBuffer createMasterSelectQueryBlock(EntitySearchFilter[] filters, boolean selectAll) {
         String masterTableName = this.getEntityMasterTableName();
-        StringBuffer query = new StringBuffer("SELECT ").append(masterTableName).append(".");
+        StringBuffer query = new StringBuffer("SELECT ");
+        if (!selectAll) {
+            query.append("DISTINCT ");
+        }
+        query.append(masterTableName).append(".");
         if (selectAll) {
             query.append("* ");
         } else {
             query.append(this.getEntityMasterTableIdFieldName());
         }
         if (filters != null) {
-            String searchTableName = this.getEntitySearchTableName();
-            for (int i = 0; i < filters.length; i++) {
-                EntitySearchFilter filter = filters[i];
-                if (!filter.isAttributeFilter() && filter.isLikeOption()) {
-                    String tableFieldName = this.getTableFieldName(filter.getKey());
-                    //check for id column already present
-                    if (!tableFieldName.equals(this.getMasterTableIdFieldName())) {
-                        query.append(", ").append(masterTableName).append(".").append(tableFieldName);
-                    }
-                } else if (filter.isAttributeFilter() && filter.isLikeOption()) {
-                    String columnName = this.getAttributeFieldColunm(filter);
-                    query.append(", ").append(searchTableName).append(i).append(".").append(columnName);
-                    query.append(" AS ").append(columnName).append(i).append(" ");
-                }
+            if (selectAll) {
+                this.appendLikeFieldsSelectBlock(filters, query);
+            } else {
+                this.appendOrderFieldsSelectBlock(filters, query);
             }
         }
         query.append(" FROM ").append(masterTableName).append(" ");
         return query;
+    }
+
+    private void appendLikeFieldsSelectBlock(EntitySearchFilter[] filters, StringBuffer query) {
+        String masterTableName = this.getEntityMasterTableName();
+        String searchTableName = this.getEntitySearchTableName();
+        for (int i = 0; i < filters.length; i++) {
+            EntitySearchFilter filter = filters[i];
+            if (!filter.isAttributeFilter() && filter.isLikeOption()) {
+                String tableFieldName = this.getTableFieldName(filter.getKey());
+                //check for id column already present
+                if (!tableFieldName.equals(this.getMasterTableIdFieldName())) {
+                    query.append(", ").append(masterTableName).append(".").append(tableFieldName);
+                }
+            } else if (filter.isAttributeFilter() && filter.isLikeOption()) {
+                String columnName = this.getAttributeFieldColunm(filter);
+                query.append(", ").append(searchTableName).append(i).append(".").append(columnName);
+                query.append(" AS ").append(columnName).append(i).append(" ");
+            }
+        }
+    }
+
+    /**
+     * Project the columns the ORDER BY block will reference. Under DISTINCT they have to appear in the
+     * select list, and they are the only extra columns allowed to: any other column of the joined
+     * search table would make the entity distinct again, row by row.
+     */
+    private void appendOrderFieldsSelectBlock(EntitySearchFilter[] filters, StringBuffer query) {
+        // two filters can order on the same column; a count wraps this block in a derived table, and a
+        // derived table may not repeat a column name
+        Set<String> projected = new HashSet<>();
+        projected.add(this.getEntityMasterTableIdFieldName());
+        for (int i = 0; i < filters.length; i++) {
+            EntitySearchFilter filter = filters[i];
+            if ((null == filter.getKey() && null == filter.getRoleName())
+                    || null == filter.getOrder() || filter.isNullOption()) {
+                continue;
+            }
+            if (filter.isAttributeFilter()) {
+                String searchTableNameAlias = this.getEntitySearchTableName() + i;
+                String columnName = this.getAttributeFieldColunm(this.getOrderReferenceValue(filter));
+                if (null == columnName) {
+                    query.append(", ").append(searchTableNameAlias).append(".textvalue");
+                    query.append(", ").append(searchTableNameAlias).append(".datevalue");
+                    query.append(", ").append(searchTableNameAlias).append(".numvalue");
+                } else {
+                    query.append(", ").append(searchTableNameAlias).append(".").append(columnName);
+                }
+            } else {
+                String fieldName = this.getTableFieldName(filter.getKey());
+                if (projected.add(fieldName)) {
+                    query.append(", ").append(this.getEntityMasterTableName()).append(".").append(fieldName);
+                }
+            }
+        }
     }
 
     protected void appendJoinSearchTableQueryBlock(EntitySearchFilter[] filters, StringBuffer query) {
@@ -419,6 +470,8 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         if (filters == null) {
             return ordered;
         }
+        Set<String> orderedFields = new HashSet<>();
+        Object lastOrder = null;
         for (int i = 0; i < filters.length; i++) {
             EntitySearchFilter filter = filters[i];
             if ((null != filter.getKey() || null != filter.getRoleName()) && null != filter.getOrder() && !filter.isNullOption()) {
@@ -434,9 +487,12 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
                 } else {
                     String fieldName = this.getTableFieldName(filter.getKey());
                     query.append(this.getEntityMasterTableName()).append(".").append(fieldName).append(" ").append(filter.getOrder());
+                    orderedFields.add(fieldName);
                 }
+                lastOrder = filter.getOrder();
             }
         }
+        this.appendOrderTieBreaker(query, ordered, orderedFields, this.getEntityMasterTableIdFieldName(), lastOrder);
         return ordered;
     }
 
@@ -476,13 +532,7 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         if (order == null) {
             order = "";
         }
-        Object object = filter.getValue();
-        if (object == null) {
-            object = filter.getStart();
-        }
-        if (object == null) {
-            object = filter.getEnd();
-        }
+        Object object = this.getOrderReferenceValue(filter);
         if (null == object) {
             query.append(searchTableNameAlias).append(".textvalue ").append(order).append(", ")
                  .append(searchTableNameAlias).append(".datevalue ").append(order).append(", ")
@@ -491,6 +541,21 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         }
         query.append(searchTableNameAlias).append(".").append(this.getAttributeFieldColunm(object)).append(" ");
         query.append(order);
+    }
+
+    /**
+     * The value an ORDER BY on an attribute filter is resolved against. Shared with the select block so
+     * that the projected column and the ordered column are always the same one.
+     */
+    private Object getOrderReferenceValue(EntitySearchFilter filter) {
+        Object object = filter.getValue();
+        if (object == null) {
+            object = filter.getStart();
+        }
+        if (object == null) {
+            object = filter.getEnd();
+        }
+        return object;
     }
 
     private String getAttributeFieldColunm(EntitySearchFilter filter) {
