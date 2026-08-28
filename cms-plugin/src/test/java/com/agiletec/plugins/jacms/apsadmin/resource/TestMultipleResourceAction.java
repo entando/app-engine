@@ -242,6 +242,7 @@ class TestMultipleResourceAction extends ApsAdminBaseTestCase {
             resource.setMainGroup(Group.FREE_GROUP_NAME);
             resource.setDescr("Levò la bocca dal fero pasto quel peccator");
             resource.setCategories(new ArrayList<Category>());
+            resource.setMasterFileName("levo_la_bocca.jpg");
             this.resourceManager.addResource(resource);
             resourceId = resource.getId();
 

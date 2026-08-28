@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -33,6 +34,11 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 public class GroupDAO extends AbstractSearcherDAO implements IGroupDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(GroupDAO.class);
+
+    /** The columns of <code>authgroups</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            "groupname",
+            "descr");
 	
     @Override
     public int countGroups(FieldSearchFilter[] filters) {
@@ -160,8 +166,8 @@ public class GroupDAO extends AbstractSearcherDAO implements IGroupDAO {
 	}
 
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
     @Override
