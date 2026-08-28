@@ -23,11 +23,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import org.entando.entando.ent.exception.EntRuntimeException;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -42,6 +46,15 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(AbstractSearcherDAO.class);
     private static final String DEFAULT_LIKE_CLAUSE = "LIKE ? ";
+
+    /**
+     * The two halves wrapping the body of a count query, so that the count always matches the number of
+     * rows the corresponding list query can return. Applied together by {@link #toQueryString}, which is
+     * the only place allowed to use them: a count block that cannot be opened on its own cannot be left
+     * open either.
+     */
+    protected static final String COUNT_QUERY_PREFIX = "SELECT COUNT(*) FROM ( ";
+    protected static final String COUNT_QUERY_SUFFIX = ") counter";
 
     private String likeClause;
     private String dataSourceClassName;
@@ -97,10 +110,9 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
 
     protected PreparedStatement buildStatement(FieldSearchFilter[] filters, boolean isCount, boolean selectAll, Connection conn) {
         String query = this.createQueryString(filters, isCount, selectAll);
-        logger.trace("{}", query);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query);
             int index = 0;
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
         } catch (Throwable t) {
@@ -108,6 +120,37 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
             throw new RuntimeException("Error while creating the statement", t);
         }
         return stat;
+    }
+
+    /**
+     * The single point where a searcher hands a query to the driver. Every <code>buildStatement</code>
+     * goes through it, so the balance check below runs without anyone having to remember it.
+     *
+     * @param conn The connection.
+     * @param query The query to prepare.
+     * @return The prepared statement.
+     * @throws SQLException In case of error.
+     */
+    protected final PreparedStatement prepareStatement(Connection conn, String query) throws SQLException {
+        logger.trace("{}", query);
+        this.checkCountQueryBlockBalance(query);
+        return conn.prepareStatement(query);
+    }
+
+    /**
+     * Report a query whose count block is left open, or closed twice. {@link #toQueryString} cannot build
+     * one, but a subclass writing the markers by hand can, and the database would reject it with an opaque
+     * syntax error naming no source. The query is left untouched: this names the DAO that built it.
+     *
+     * @param query The query about to be prepared.
+     */
+    private void checkCountQueryBlockBalance(String query) {
+        int opened = StringUtils.countMatches(query, COUNT_QUERY_PREFIX);
+        int closed = StringUtils.countMatches(query, COUNT_QUERY_SUFFIX);
+        if (opened != closed) {
+            logger.error("Unbalanced count query block built by {}: {} opening and {} closing markers - query: {}",
+                    this.getClass().getName(), opened, closed, query);
+        }
     }
 
     /**
@@ -227,14 +270,28 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
 
     protected String createQueryString(FieldSearchFilter[] filters, boolean isCount, boolean selectAll) {
         StringBuffer query = this.createBaseQueryBlock(filters, isCount, selectAll);
-        boolean hasAppendWhereClause = this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
+        this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
         if (!isCount) {
-            boolean ordered = appendOrderQueryBlocks(filters, query, false);
+            this.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
-        } else {
-            this.closeMasterCountQueryBlock(query);
         }
-        return query.toString();
+        return this.toQueryString(query, isCount);
+    }
+
+    /**
+     * Close a query built by any of the <code>createQueryString</code> variants. A count wraps the body
+     * the matching list query pages over - both halves of the wrapper are applied here, in one
+     * expression, so the two can neither disagree nor be left unbalanced.
+     *
+     * @param query The body of the query: select block, joins and where clauses, without order or limit.
+     * @param isCount True when the query counts the rows of that body.
+     * @return The query to prepare.
+     */
+    protected final String toQueryString(StringBuffer query, boolean isCount) {
+        if (!isCount) {
+            return query.toString();
+        }
+        return new StringBuffer(COUNT_QUERY_PREFIX).append(query).append(COUNT_QUERY_SUFFIX).toString();
     }
 
     protected StringBuffer createBaseQueryBlock(FieldSearchFilter[] filters, boolean isCount, boolean selectAll) {
@@ -247,19 +304,24 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
         return query;
     }
 
+    /**
+     * The body counted by the count query of a searcher that queries the master table alone. No join can
+     * multiply a row here, so it is not distinct - a derived table without DISTINCT, aggregate or LIMIT is
+     * merged by the planner, leaving a plain count. Subclasses that do join must de-duplicate instead, and
+     * must do it on their list query too, or the two stop agreeing. Returns the body alone:
+     * {@link #toQueryString} wraps it.
+     *
+     * @return The body of the count query.
+     */
     protected StringBuffer createMasterCountQueryBlock() {
         String masterTableName = this.getMasterTableName();
-        StringBuffer query = new StringBuffer("SELECT COUNT(*) FROM ( SELECT DISTINCT ");
+        StringBuffer query = new StringBuffer("SELECT ");
         query.append(masterTableName).append(".").append(this.getMasterTableIdFieldName());
         query.append(" FROM ").append(masterTableName).append(" ");
         return query;
     }
 
-    protected void closeMasterCountQueryBlock(StringBuffer query) {
-        query.append(") counter");
-    }
-
-    private StringBuffer createMasterSelectQueryBlock(FieldSearchFilter[] filters, boolean selectAll) {
+    protected StringBuffer createMasterSelectQueryBlock(FieldSearchFilter[] filters, boolean selectAll) {
         String masterTableName = this.getMasterTableName();
         StringBuffer query = new StringBuffer("SELECT ").append(masterTableName).append(".");
         if (selectAll) {
@@ -309,7 +371,7 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
             return hasAppendWhereClause;
         }
         hasAppendWhereClause = this.verifyWhereClauseAppend(query, hasAppendWhereClause);
-        String tableFieldName = this.getTableFieldName(filter.getKey());
+        String tableFieldName = this.resolveTableFieldName(filter.getKey());
         if (filter.getAllowedValues() != null && filter.getAllowedValues().size() > 0) {
             List<Object> allowedValues = filter.getAllowedValues();
             for (int j = 0; j < allowedValues.size(); j++) {
@@ -368,6 +430,8 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
         if (filters == null) {
             return ordered;
         }
+        Set<String> orderedFields = new HashSet<>();
+        Object lastOrder = null;
         for (FieldSearchFilter filter : filters) {
             if (null != filter.getKey() && null != filter.getOrder() && !filter.isNullOption()) {
                 if (!ordered) {
@@ -376,11 +440,66 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
                 } else {
                     query.append(", ");
                 }
-                String fieldName = this.getTableFieldName(filter.getKey());
+                String fieldName = this.resolveTableFieldName(filter.getKey());
                 query.append(this.getMasterTableName()).append(".").append(fieldName).append(" ").append(filter.getOrder());
+                orderedFields.add(fieldName);
+                lastOrder = filter.getOrder();
             }
         }
+        this.appendOrderTieBreaker(query, ordered, orderedFields, this.getMasterTableIdFieldName(), lastOrder);
         return ordered;
+    }
+
+    /**
+     * Break ties on the master id so the ordering is total. A sort whose key repeats leaves the order of
+     * the tied rows to the database, and LIMIT/OFFSET then slices an order that can differ between the
+     * request for one page and the request for the next - so a row can be served twice, or never.
+     *
+     * <p>The tie-breaker follows the direction of the sort it breaks. When the requested key is the same
+     * for every row it becomes the only visible ordering, and a DESC request has to keep reading as
+     * descending.</p>
+     *
+     * @param query The query under construction.
+     * @param ordered Whether an ORDER BY block was opened.
+     * @param orderedFields The master-table fields already ordered on.
+     * @param idFieldName The master id field.
+     * @param lastOrder The direction of the last order term, or null to default to ascending.
+     */
+    protected void appendOrderTieBreaker(StringBuffer query, boolean ordered, Set<String> orderedFields,
+            String idFieldName, Object lastOrder) {
+        if (!ordered || orderedFields.contains(idFieldName)) {
+            return;
+        }
+        String direction = (null == lastOrder) ? FieldSearchFilter.ASC_ORDER : lastOrder.toString();
+        query.append(", ").append(this.getMasterTableName()).append(".").append(idFieldName)
+                .append(" ").append(direction);
+    }
+
+    /**
+     * Project the columns the ORDER BY block will reference. Only needed by a subclass whose select block
+     * is distinct: Derby and PostgreSQL reject an ORDER BY on a column outside the select list under
+     * DISTINCT. Mirrors the filter predicate of {@link #appendOrderQueryBlocks} and must keep mirroring it.
+     *
+     * @param filters The filters of the query.
+     * @param query The query under construction.
+     */
+    protected void appendOrderFieldsSelectBlock(FieldSearchFilter[] filters, StringBuffer query) {
+        if (null == filters) {
+            return;
+        }
+        Set<String> projected = new HashSet<>();
+        projected.add(this.getMasterTableIdFieldName());
+        for (FieldSearchFilter filter : filters) {
+            if (null == filter.getKey() || null == filter.getOrder() || filter.isNullOption()) {
+                continue;
+            }
+            String fieldName = this.resolveTableFieldName(filter.getKey());
+            // two filters can order on the same column; a count wraps this block in a derived table, and
+            // a derived table may not repeat a column name
+            if (projected.add(fieldName)) {
+                query.append(", ").append(this.getMasterTableName()).append(".").append(fieldName);
+            }
+        }
     }
 
     protected boolean verifyWhereClauseAppend(StringBuffer query, boolean hasAppendWhereClause) {
@@ -393,7 +512,40 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
         return hasAppendWhereClause;
     }
 
-    protected abstract String getTableFieldName(String metadataFieldKey);
+    /**
+     * The column a caller-provided metadata key names, looked up in the fields this searcher accepts.
+     * Every query block that concatenates a column name goes through here.
+     *
+     * <p>Filter <em>values</em> are bound as parameters, but a filter <em>key</em> becomes a column name
+     * by concatenation - in the WHERE block, in the ORDER BY, in the projection and in the GROUP BY -
+     * so an unchecked key is a SQL injection vector. Searchers used to map the key themselves, either
+     * straight through - relying on the REST layer validating it against a DTO's fields, a guarantee
+     * made far from here, invisible to static analysis, and absent for every non-REST caller - or
+     * through a chain of comparisons that each had to remember to reject the unknown key.</p>
+     *
+     * <p>The lookup happens here instead, once, so no subclass can be written that skips it, and what
+     * comes back is the column as {@link #getSearchableFields()} declares it, never as the caller
+     * spelled it.</p>
+     *
+     * @param metadataFieldKey The key supplied by the caller.
+     * @return The column it names, in the spelling this searcher declares.
+     */
+    protected final String resolveTableFieldName(String metadataFieldKey) {
+        String column = this.getSearchableFields().columnFor(metadataFieldKey);
+        if (null == column) {
+            logger.error("Unrecognized search key '{}' for {}", metadataFieldKey, this.getClass().getName());
+            throw new EntRuntimeException("Unrecognized search key for " + this.getClass().getName());
+        }
+        return column;
+    }
+
+    /**
+     * The search keys this searcher accepts and the column each one names, as literals - never caller
+     * input. A key outside them is refused.
+     *
+     * @return The accepted fields.
+     */
+    protected abstract SearchableFields getSearchableFields();
 
     /**
      * Return the name of the entities master table.

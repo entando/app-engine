@@ -3082,15 +3082,17 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
         result.andDo(resultPrint())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.size()", is(9)))
-                .andExpect(jsonPath("$.payload[0].id", is("EVN20")))
+                // every row in this result has typecode EVN, so the sort key is fully tied and the
+                // order comes from the contentid tie-breaker
+                .andExpect(jsonPath("$.payload[0].id", is("EVN191")))
                 .andExpect(jsonPath("$.payload[1].id", is("EVN192")))
-                .andExpect(jsonPath("$.payload[2].id", is("EVN23")))
-                .andExpect(jsonPath("$.payload[3].id", is("EVN24")))
-                .andExpect(jsonPath("$.payload[4].id", is("EVN21")))
-                .andExpect(jsonPath("$.payload[5].id", is("EVN25")))
-                .andExpect(jsonPath("$.payload[6].id", is("EVN191")))
-                .andExpect(jsonPath("$.payload[7].id", is("EVN194")))
-                .andExpect(jsonPath("$.payload[8].id", is("EVN193")));
+                .andExpect(jsonPath("$.payload[2].id", is("EVN193")))
+                .andExpect(jsonPath("$.payload[3].id", is("EVN194")))
+                .andExpect(jsonPath("$.payload[4].id", is("EVN20")))
+                .andExpect(jsonPath("$.payload[5].id", is("EVN21")))
+                .andExpect(jsonPath("$.payload[6].id", is("EVN23")))
+                .andExpect(jsonPath("$.payload[7].id", is("EVN24")))
+                .andExpect(jsonPath("$.payload[8].id", is("EVN25")));
     }
 
     @Test
@@ -3110,15 +3112,17 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
         result.andDo(resultPrint())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payload.size()", is(9)))
-                .andExpect(jsonPath("$.payload[0].id", is("EVN193")))
-                .andExpect(jsonPath("$.payload[1].id", is("EVN194")))
-                .andExpect(jsonPath("$.payload[2].id", is("EVN191")))
-                .andExpect(jsonPath("$.payload[3].id", is("EVN25")))
-                .andExpect(jsonPath("$.payload[4].id", is("EVN21")))
-                .andExpect(jsonPath("$.payload[5].id", is("EVN24")))
+                // every row in this result has the same status, so the sort key is fully tied and the
+                // order comes from the contentid tie-breaker
+                .andExpect(jsonPath("$.payload[0].id", is("EVN191")))
+                .andExpect(jsonPath("$.payload[1].id", is("EVN192")))
+                .andExpect(jsonPath("$.payload[2].id", is("EVN193")))
+                .andExpect(jsonPath("$.payload[3].id", is("EVN194")))
+                .andExpect(jsonPath("$.payload[4].id", is("EVN20")))
+                .andExpect(jsonPath("$.payload[5].id", is("EVN21")))
                 .andExpect(jsonPath("$.payload[6].id", is("EVN23")))
-                .andExpect(jsonPath("$.payload[7].id", is("EVN192")))
-                .andExpect(jsonPath("$.payload[8].id", is("EVN20")));
+                .andExpect(jsonPath("$.payload[7].id", is("EVN24")))
+                .andExpect(jsonPath("$.payload[8].id", is("EVN25")));
     }
 
     @Test
@@ -4355,6 +4359,55 @@ class ContentControllerIntegrationTest extends AbstractControllerIntegrationTest
                 ((IEntityTypesConfigurer) this.contentManager).removeEntityPrototype("LNK");
             }
         }
+    }
+
+    /**
+     * The reported total must describe the rows the endpoint can actually return.
+     *
+     * <p>This guards the count/list pairing at the API layer: <code>ContentService</code> pairs
+     * <code>countContents</code> with <code>loadContentsId</code> through
+     * <code>getPaginatedPublicContentsId</code>, and if the two ever describe different row sets the
+     * client is handed pages that come back empty.</p>
+     *
+     * <p><strong>It does not reproduce the historical defect</strong>, and was measured not to: when
+     * <code>PublicContentSearcherDAO</code> applied the online filter to its list alone, this endpoint
+     * still reported 24 for 24. The reason is that a published search resolves a narrower group set than
+     * a draft one (<code>ContentService.getAllowedGroups(user, true)</code>), and in the standard fixture
+     * that narrower corpus happens to be fully published. The defect is demonstrated one layer down, in
+     * ContentSearchJoinCountRegressionTest, where the manager reported 25 for a list of 24.</p>
+     *
+     * <p>Asserted against the payload rather than a literal, so the test survives fixture changes.</p>
+     */
+    @Test
+    void testGetPublishedContents_totalItemsDescribesThePayload() throws Exception {
+        UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        String accessToken = mockOAuthInterceptor(user);
+
+        String published = mockMvc
+                .perform(get("/plugins/cms/contents")
+                        .param("status", "published")
+                        .param("pageSize", "100")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String draft = mockMvc
+                .perform(get("/plugins/cms/contents")
+                        .param("pageSize", "100")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        int publishedTotal = JsonPath.read(published, "$.metaData.totalItems");
+        int publishedReturned = ((List<?>) JsonPath.read(published, "$.payload")).size();
+        int draftTotal = JsonPath.read(draft, "$.metaData.totalItems");
+
+        Assertions.assertEquals(publishedReturned, publishedTotal,
+                "totalItems must describe the payload the endpoint returns for a published search");
+        // the two searches resolve different group sets, so this is a sanity check on the fixture
+        // being mixed at all - not evidence that the published corpus contains a draft
+        Assertions.assertTrue(draftTotal >= publishedTotal,
+                "a draft search must never return fewer contents than the published one: "
+                        + draftTotal + " vs " + publishedTotal);
     }
 
     @Test
