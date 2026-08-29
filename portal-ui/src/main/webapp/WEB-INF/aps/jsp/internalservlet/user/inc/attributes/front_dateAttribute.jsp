@@ -58,6 +58,6 @@
 		});
 	</c:set>
 	<wp:headInfo type="JS" info="entando-misc-html5-essentials/modernizr-2.5.3-full.js" />
-	<wp:headInfo type="JS_EXT" info="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js" />
-	<wp:headInfo type="CSS_EXT" info="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.min.css" />
+	<wp:headInfo type="JS_EXT" info="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" />
+	<wp:headInfo type="CSS_EXT" info="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.min.css" />
 	<wp:headInfo type="JS_RAW" info="${js_for_datepicker}" />

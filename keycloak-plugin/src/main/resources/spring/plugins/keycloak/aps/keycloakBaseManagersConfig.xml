@@ -51,6 +51,12 @@
                 <entry key="cspEnabled">
                     <value>${csp.header.enabled:true}</value>
                 </entry>
+                <entry key="cspBackofficeConfig">
+                    <value>${csp.header.backoffice.config:default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'; connect-src 'self'}</value>
+                </entry>
+                <entry key="cspBackofficeReportOnly">
+                    <value>${csp.header.backoffice.reportOnly:false}</value>
+                </entry>
             </map>
         </property>
         <property name="configDAO" >

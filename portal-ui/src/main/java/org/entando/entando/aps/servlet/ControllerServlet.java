@@ -32,7 +32,6 @@ import freemarker.template.TemplateModelException;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.security.SecureRandom;
 import java.util.List;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -108,15 +107,7 @@ public class ControllerServlet extends freemarker.ext.jakarta.servlet.Freemarker
     }
 
     public String createSecureRandomString() {
-        int leftLimit = 48;
-        int rightLimit = 122;
-        int targetStringLength = 64;
-        SecureRandom rand = new SecureRandom();
-        return rand.ints(leftLimit, rightLimit + 1)
-                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-                .limit(targetStringLength)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString();
+        return CspNonceGenerator.createNonce();
     }
 
 	protected int controlRequest(HttpServletRequest request,

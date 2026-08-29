@@ -2,7 +2,7 @@
 <%@ taglib prefix="wp" uri="/aps-core" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<wp:headInfo type="JS_EXT" info="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js" />
+<wp:headInfo type="JS_EXT" info="https://code.jquery.com/ui/1.10.3/jquery-ui.min.js" />
 
 <jacms:contentList listName="contentList" titleVar="titleVar"
 	pageLinkVar="pageLinkVar" pageLinkDescriptionVar="pageLinkDescriptionVar" userFilterOptionsVar="userFilterOptionsVar" />
