@@ -361,7 +361,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         String query = this.createQueryString(filters, categories, isCount);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query);
             int index = 0;
             if (null != categories && categories.size() > 0) {
                 for (String category : categories) {
@@ -383,11 +383,13 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
             super.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
         }
-        return query.toString();
+        return this.toQueryString(query, isCount);
     }
 
     private StringBuffer createBaseQueryBlock(FieldSearchFilter[] filters, boolean selectAll, boolean isCount, List<String> categories) {
-        StringBuffer query = super.createBaseQueryBlock(filters, isCount, selectAll);
+        // count and list share one body: the category joins are the only thing that can return several
+        // rows per resource, and both sides have to see the same set
+        StringBuffer query = this.createMasterSelectQueryBlock(filters, selectAll);
         if (categories != null) {
             for (int i = 0; i < categories.size(); i++) {
                 query.append(String.format(
@@ -559,6 +561,25 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         } finally {
             closeConnection(conn);
         }
+    }
+
+    /**
+     * A resource holds one <code>resourcerelations</code> row per category, and nothing in the schema
+     * forbids the same pair twice, so the joined query can return the resource more than once. Both the
+     * list and the count select distinct ids; the columns the ORDER BY references have to be projected
+     * as well, since Derby and PostgreSQL reject an ORDER BY outside the select list under DISTINCT.
+     */
+    @Override
+    protected StringBuffer createMasterSelectQueryBlock(FieldSearchFilter[] filters, boolean selectAll) {
+        if (selectAll) {
+            return super.createMasterSelectQueryBlock(filters, selectAll);
+        }
+        String masterTableName = this.getMasterTableName();
+        StringBuffer query = new StringBuffer("SELECT DISTINCT ").append(masterTableName).append(".")
+                .append(this.getMasterTableIdFieldName());
+        this.appendOrderFieldsSelectBlock(filters, query);
+        query.append(" FROM ").append(masterTableName).append(" ");
+        return query;
     }
 
     @Override

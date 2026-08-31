@@ -241,7 +241,7 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
         String query = (isSelectMax) ? this.createQueryStringForSelectMax(filters, groupCodes): this.createQueryString(filters, groupCodes);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query);
             int index = 0;
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
             index = this.addGroupStatementBlock(groupCodes, index, stat);

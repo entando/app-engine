@@ -106,7 +106,7 @@ public class ContentSearcherDAO extends com.agiletec.plugins.jacms.aps.system.se
 		String query = this.createQueryString(workflowFilters, filters, categories, orClauseCategoryFilter, groupsForSelect, isCount, selectAll);
         PreparedStatement stat = null;
 		try {
-			stat = conn.prepareStatement(query);
+			stat = this.prepareStatement(conn, query);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
@@ -172,10 +172,10 @@ public class ContentSearcherDAO extends com.agiletec.plugins.jacms.aps.system.se
 		}
 		query.append(") ");
 		if (!isCount) {
-            appendOrderQueryBlocks(filters, query, false);
+            this.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
-        }
-		return query.toString();
+		}
+		return this.toQueryString(query, isCount);
 	}
 	
 }

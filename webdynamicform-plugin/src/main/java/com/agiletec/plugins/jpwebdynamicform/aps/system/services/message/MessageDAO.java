@@ -67,6 +67,19 @@ public class MessageDAO extends AbstractEntityDAO implements IMessageDAO {
 		return ADD_MESSAGE;
 	}
 
+	/**
+	 * Drop the sub-second part of a date before it is written. Both columns are declared as a plain
+	 * timestamp, so the fraction cannot be stored in any case, but the engines disagree on how they
+	 * discard it: MySQL rounds to the nearest second while Derby, PostgreSQL and Oracle truncate. Left
+	 * to the engine, a value written at .5 or later comes back a second ahead of the one held in memory.
+	 *
+	 * @param date The date to store.
+	 * @return The same instant, floored to the second.
+	 */
+	private static Timestamp toWholeSeconds(java.util.Date date) {
+		return new Timestamp(Math.floorDiv(date.getTime(), 1000L) * 1000L);
+	}
+
 	@Override
 	protected void buildAddEntityStatement(IApsEntity entity, PreparedStatement stat) throws Throwable {
 		Message message = (Message) entity;
@@ -74,7 +87,7 @@ public class MessageDAO extends AbstractEntityDAO implements IMessageDAO {
 		stat.setString(2, message.getUsername());
 		stat.setString(3, message.getLangCode());
 		stat.setString(4, message.getTypeCode());
-		stat.setTimestamp(5, new Timestamp(message.getCreationDate().getTime()));
+		stat.setTimestamp(5, toWholeSeconds(message.getCreationDate()));
 		stat.setString(6, message.getXML());
 	}
 
@@ -135,7 +148,7 @@ public class MessageDAO extends AbstractEntityDAO implements IMessageDAO {
 			stat.setString(1, answer.getAnswerId());
 			stat.setString(2, answer.getMessageId());
 			stat.setString(3, answer.getOperator());
-			stat.setTimestamp(4, new Timestamp(answer.getSendDate().getTime()));
+			stat.setTimestamp(4, toWholeSeconds(answer.getSendDate()));
 			stat.setString(5, answer.getText());
 			stat.executeUpdate();
 			conn.commit();
