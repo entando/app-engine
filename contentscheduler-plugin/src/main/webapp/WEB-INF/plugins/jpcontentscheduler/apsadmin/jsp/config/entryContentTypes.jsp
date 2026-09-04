@@ -176,6 +176,10 @@
             <div class="col-sm-10">
                 <div class="checkbox">
                     <wpsf:checkbox name="contentTypeElem.suspend" id="contentTypeElem_suspend" cssClass=" bootstrap-switch" />
+                    <%-- An unchecked box would submit nothing and leave
+                         'suspend' null instead of "false". The marker below lets the 'checkbox'
+                         interceptor inject the unchecked value. --%>
+                    <input type="hidden" name="__checkbox_contentTypeElem.suspend" value="false" />
                 </div>
             </div>
         </div>
