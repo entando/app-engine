@@ -71,7 +71,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PagedRestResponse<ContentModelDto>> getContentModels(RestListRequest requestList,
             BindingResult bindingResult) {
@@ -84,7 +84,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @GetMapping(value = "/{modelId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<ContentModelDto>> getContentModel(@PathVariable Long modelId) {
         logger.debug("loading contentModel {}", modelId);
@@ -93,7 +93,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<ContentModelDto>> addContentModel(@Valid @RequestBody ContentModelDto contentModel, BindingResult bindingResult) {
         logger.debug("adding content model");
@@ -105,7 +105,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @PutMapping(value = "/{modelId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<ContentModelDto>> updateContentModel(@PathVariable Long modelId, @Valid @RequestBody ContentModelDto contentModel, BindingResult bindingResult) {
         logger.debug("updating contentModel {}", modelId);
@@ -124,7 +124,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @DeleteMapping(value = "/{modelId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<Map<String, String>>> deleteContentModel(@PathVariable Long modelId) {
         logger.info("deleting content model {}", modelId);
@@ -134,7 +134,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @GetMapping(value = "/{modelId}/pagereferences", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PagedRestResponse<ContentModelReferenceDTO>> getReferences(@PathVariable Long modelId,RestListRequest requestList) {
         logger.debug("loading contentModel references for model {}", modelId);
@@ -144,7 +144,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @GetMapping(value = "/{modelId}/usage", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<ComponentUsage>> getComponentUsage(@PathVariable Long modelId) {
         logger.debug("loading contentModel usage for model {}", modelId);
@@ -153,7 +153,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @GetMapping(value = "/{modelId}/usage/details", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PagedRestResponse<ComponentUsageEntity>> getComponentUsageDetails(@PathVariable Long modelId, RestListRequest restListRequest) {
         logger.debug("get contentModel usage details for model {}", modelId);
@@ -163,7 +163,7 @@ public class ContentModelResourceController implements ContentModelResource {
     }
 
     @Override
-    @RestAccessControl(permission = Permission.SUPERUSER)
+    @RestAccessControl(permission = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
     @GetMapping(value = "/dictionary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SimpleRestResponse<IEntityModelDictionary>> getDictionary(@RequestParam(value = "typeCode", required = false) String typeCode) {
         logger.debug("loading contentModel dictionary for type {}", typeCode);

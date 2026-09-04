@@ -8,3 +8,5 @@ target
 work
 *.tgz
 derby.log
+/testing/
+/.testing/
