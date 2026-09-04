@@ -26,7 +26,6 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
-import com.agiletec.aps.system.exception.ApsSystemException;
 import com.agiletec.aps.system.services.authorization.IApsAuthority;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
@@ -38,11 +37,13 @@ import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.cache.CmsCacheWrapperManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentSearcherDAO;
+import com.agiletec.plugins.jacms.aps.system.services.content.event.PublicContentChangedEvent;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jpmail.aps.services.mail.IMailManager;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -445,6 +446,10 @@ public class ContentSchedulerManager extends AbstractService implements IContent
             } else {
                 this.getContentSchedulerDAO().updateContent(content, updateDate);
                 this.getContentSchedulerDAO().publishContent(content);
+                int operationEventCode = content.isOnLine()
+                        ? PublicContentChangedEvent.UPDATE_OPERATION_CODE
+                        : PublicContentChangedEvent.INSERT_OPERATION_CODE;
+                this.notifyPublicContentChanging(content, operationEventCode);
             }
         } catch (Throwable t) {
             ApsSystemUtils.logThrowable(t, this, "moveOnLineContent");
@@ -472,13 +477,33 @@ public class ContentSchedulerManager extends AbstractService implements IContent
                 content.setStatus(Content.STATUS_READY);
             }
             this.getContentSchedulerDAO().unpublishOnLineContent(content);
-            // this.notifyPublicContentChanging(content,
-            // PublicContentChangedEvent.REMOVE_OPERATION_CODE);
+            this.notifyPublicContentChanging(content, PublicContentChangedEvent.REMOVE_OPERATION_CODE);
             this.flushGroups(content.getId(), content.getTypeCode());
         } catch (Throwable t) {
             ApsSystemUtils.logThrowable(t, this, "removeOnLineContent");
             throw new EntException("Error while removing onLine content", t);
         }
+    }
+
+    /**
+     * Notify the change of a published content to the observing services.
+     * The event is built with the same channel and the same properties
+     *  used by ContentManager, so that it is propagated to the
+     * other instances as well.
+     *
+     * @param content The changed content.
+     * @param operationCode The code of the operation to notify.
+     */
+    private void notifyPublicContentChanging(Content content, int operationCode) {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("contentId", content.getId());
+        properties.put("operationCode", String.valueOf(operationCode));
+        PublicContentChangedEvent event = new PublicContentChangedEvent(JacmsSystemConstants.CONTENT_EVENT_CHANNEL, properties);
+        // setContent is deprecated but must still be set: SeoMappingManager discards the event
+        // when getContent() is null, while the search engine only needs the contentId.
+        event.setContent(content);
+        event.setOperationCode(operationCode);
+        this.notifyEvent(event);
     }
 
     private void flushGroups(String contentId, String typeCode) {
