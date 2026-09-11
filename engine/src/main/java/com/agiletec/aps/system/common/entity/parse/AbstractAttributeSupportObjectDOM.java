@@ -73,7 +73,7 @@ public abstract class AbstractAttributeSupportObjectDOM {
 	
 	protected Document decodeDOM(String xmlText) throws EntException {
 		Document doc = null;
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		try {

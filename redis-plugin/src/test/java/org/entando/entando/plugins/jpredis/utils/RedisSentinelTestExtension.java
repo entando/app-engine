@@ -5,6 +5,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import org.entando.entando.aps.system.services.cache.RedisEnvironmentVariables;
@@ -19,6 +20,7 @@ import org.mockito.Mockito;
 import org.opentest4j.TestAbortedException;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 public class RedisSentinelTestExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
@@ -41,9 +43,16 @@ public class RedisSentinelTestExtension implements BeforeAllCallback, AfterAllCa
         }
         if (!composeStarted) {
             DockerComposeContainer container = new DockerComposeContainer(new File("docker-compose-sentinel.yaml"))
-                    .withExposedService(REDIS_SERVICE, REDIS_PORT)
-                    .withExposedService(REDIS_SLAVE_SERVICE, REDIS_PORT)
-                    .withExposedService(REDIS_SENTINEL_SERVICE, REDIS_SENTINEL_PORT);
+                    .withExposedService(REDIS_SERVICE, REDIS_PORT,
+                            Wait.forLogMessage(".*Ready to accept connections.*", 1)
+                                    .withStartupTimeout(Duration.ofMinutes(1)))
+                    .withExposedService(REDIS_SLAVE_SERVICE, REDIS_PORT,
+                            Wait.forLogMessage(".*Ready to accept connections.*", 1)
+                                    .withStartupTimeout(Duration.ofMinutes(1)))
+                    .withExposedService(REDIS_SENTINEL_SERVICE, REDIS_SENTINEL_PORT,
+                            Wait.forLogMessage(".*Sentinel ID is.*", 1)
+                                    .withStartupTimeout(Duration.ofMinutes(1)));
+
             container.start();
             composeContainer = container;
             composeStarted = true;
