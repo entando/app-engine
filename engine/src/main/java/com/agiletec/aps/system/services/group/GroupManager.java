@@ -91,6 +91,9 @@ public class GroupManager extends AbstractService implements IGroupManager, Refr
             group.setDescr(LabelSanitizer.stripMarkup(group.getDescr()));
             this.getGroupDAO().addGroup(group);
             this.getCacheWrapper().addGroup(group);
+        } catch (DuplicateGroupException e) {
+            logger.debug("Group '{}' already present, skipping insert", group.getName());
+            throw new EntException("Group already exists: " + group.getName(), e);
         } catch (Throwable t) {
             logger.error("Error detected while adding a group", t);
             throw new EntException("Error detected while adding a group", t);

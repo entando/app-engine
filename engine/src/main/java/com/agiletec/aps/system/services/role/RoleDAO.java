@@ -28,6 +28,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.aps.system.common.AbstractDAO;
+import com.agiletec.aps.system.common.dao.DuplicateKeyDetector;
 
 /**
  * Data Access Object per gli oggetti ruolo (Role).
@@ -164,6 +165,11 @@ public class RoleDAO extends AbstractDAO implements IRoleDAO {
 			conn.commit();
 		} catch (Throwable t) {
 			this.executeRollback(conn);
+			if (DuplicateKeyDetector.isDuplicateKey(t)) {
+				_logger.debug("Role '{}' already exists; treating duplicate key as a recoverable race",
+						role.getName());
+				throw new DuplicateRoleException("Role already exists: " + role.getName(), t);
+			}
 			_logger.error("Error while adding a role",  t);
 			throw new RuntimeException("Error while adding a role", t);
 		} finally {

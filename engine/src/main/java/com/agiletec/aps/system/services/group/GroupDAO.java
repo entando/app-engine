@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.dao.DuplicateKeyDetector;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -94,7 +95,12 @@ public class GroupDAO extends AbstractSearcherDAO implements IGroupDAO {
 			conn.commit();
 		} catch (Throwable t) {
 			this.executeRollback(conn);
-            logger.error("Error while adding a group", t);
+			if (DuplicateKeyDetector.isDuplicateKey(t)) {
+				logger.debug("Group '{}' already exists; treating duplicate key as a recoverable race",
+						group.getName());
+				throw new DuplicateGroupException("Group already exists: " + group.getName(), t);
+			}
+			logger.error("Error while adding a group", t);
 			throw new RuntimeException("Error while adding a group", t);
 		} finally {
 			closeDaoResources(null, stat, conn);

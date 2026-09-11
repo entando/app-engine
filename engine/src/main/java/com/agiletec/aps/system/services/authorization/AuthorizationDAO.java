@@ -15,6 +15,7 @@ package com.agiletec.aps.system.services.authorization;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.dao.DuplicateKeyDetector;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
 
@@ -340,24 +341,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	}
 
 	private boolean isDuplicateKey(SQLException e) {
-		final String sqlState = e.getSQLState();
-
-		if (StringUtils.isNotBlank(sqlState)) {
-			// 23505: unique_violation (PostgreSQL, Derby)
-			// 23000: integrity constraint violation (MySQL, Oracle - need to check error code)
-			if ("23505".equals(sqlState)) {
-				return true;
-			}
-			if ("23000".equals(sqlState)) {
-				int errorCode = e.getErrorCode();
-				// MySQL: 1062 (ER_DUP_ENTRY), 1586 (ER_DUP_ENTRY_WITH_KEY_NAME)
-				// Oracle: 1 (ORA-00001: unique constraint violated)
-				if (errorCode == 1062 || errorCode == 1586 || errorCode == 1) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return DuplicateKeyDetector.isDuplicateKey(e);
 	}
 
 	private void deleteAuthorities(final Connection conn, final String username, final List<Authorization> list) {
