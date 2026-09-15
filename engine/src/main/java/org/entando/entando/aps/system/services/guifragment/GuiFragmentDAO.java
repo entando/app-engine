@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -32,6 +33,17 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 public class GuiFragmentDAO extends AbstractSearcherDAO implements IGuiFragmentDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(GuiFragmentDAO.class);
+
+    private static final String PLUGINCODE = "plugincode";
+
+    /** The columns of <code>guifragment</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            "code",
+            "widgettypecode",
+            PLUGINCODE,
+            "gui",
+            "defaultgui",
+            "locked");
 
     private static final String ADD_GUIFRAGMENT = "INSERT INTO guifragment (code, widgettypecode, plugincode, gui, locked ) VALUES (? , ? , ? , ? , ?)";
 
@@ -44,8 +56,8 @@ public class GuiFragmentDAO extends AbstractSearcherDAO implements IGuiFragmentD
     private static final String LOAD_GUIFRAGMENT_PLUGIN_CODES = "SELECT plugincode FROM guifragment";
 
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
     @Override
@@ -230,7 +242,7 @@ public class GuiFragmentDAO extends AbstractSearcherDAO implements IGuiFragmentD
             guiFragment = new GuiFragment();
             guiFragment.setCode(res.getString("code"));
             guiFragment.setWidgetTypeCode(res.getString("widgettypecode"));
-            guiFragment.setPluginCode(res.getString("plugincode"));
+            guiFragment.setPluginCode(res.getString(PLUGINCODE));
             guiFragment.setGui(res.getString("gui"));
             guiFragment.setDefaultGui(res.getString("defaultgui"));
             Integer locked = res.getInt("locked");
@@ -252,7 +264,7 @@ public class GuiFragmentDAO extends AbstractSearcherDAO implements IGuiFragmentD
             stat = conn.prepareStatement(LOAD_GUIFRAGMENT_PLUGIN_CODES);
             res = stat.executeQuery();
             while (res.next()) {
-                String code = res.getString("plugincode");
+                String code = res.getString(PLUGINCODE);
                 if (StringUtils.isNotEmpty(code) && !codes.contains(code)) {
                     codes.add(code);
                 }

@@ -33,6 +33,7 @@ import java.util.Set;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import com.agiletec.aps.system.services.group.Group;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +51,25 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
+
+    private static final String USERNAME = "username";
+    private static final String ACTIONDATE = "actiondate";
+    private static final String NAMESPACE = "namespace";
+    private static final String ACTIONNAME = "actionname";
+    private static final String PARAMETERS = "parameters";
+    private static final String ACTIVITYSTREAMINFO = "activitystreaminfo";
+    private static final String UPDATEDATE = "updatedate";
+
+    /** The columns of <code>actionlogrecords</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            "id",
+            USERNAME,
+            ACTIONDATE,
+            NAMESPACE,
+            ACTIONNAME,
+            PARAMETERS,
+            ACTIVITYSTREAMINFO,
+            UPDATEDATE);
 
     private static final String ADD_ACTION_RECORD
             = "INSERT INTO actionlogrecords ( id, username, actiondate, namespace, actionname, parameters, activitystreaminfo, updatedate) "
@@ -241,7 +261,7 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
         String query = (isSelectMax) ? this.createQueryStringForSelectMax(filters, groupCodes): this.createQueryString(filters, groupCodes);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query);
             int index = 0;
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
             index = this.addGroupStatementBlock(groupCodes, index, stat);
@@ -328,22 +348,22 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
             }
             String username = searchBean.getUsername();
             if (null != username && username.trim().length() > 0) {
-                FieldSearchFilter filter = new FieldSearchFilter("username", this.extractSearchValues(username), true);
+                FieldSearchFilter filter = new FieldSearchFilter(USERNAME, this.extractSearchValues(username), true);
                 filters = super.addFilter(filters, filter);
             }
             String namespace = searchBean.getNamespace();
             if (null != namespace && namespace.trim().length() > 0) {
-                FieldSearchFilter filter = new FieldSearchFilter("namespace", this.extractSearchValues(namespace), true);
+                FieldSearchFilter filter = new FieldSearchFilter(NAMESPACE, this.extractSearchValues(namespace), true);
                 filters = super.addFilter(filters, filter);
             }
             String actionName = searchBean.getActionName();
             if (null != actionName && actionName.trim().length() > 0) {
-                FieldSearchFilter filter = new FieldSearchFilter("actionname", this.extractSearchValues(actionName), true);
+                FieldSearchFilter filter = new FieldSearchFilter(ACTIONNAME, this.extractSearchValues(actionName), true);
                 filters = super.addFilter(filters, filter);
             }
             String parameters = searchBean.getParams();
             if (null != parameters && parameters.trim().length() > 0) {
-                FieldSearchFilter filter = new FieldSearchFilter("parameters", this.extractSearchValues(parameters), true);
+                FieldSearchFilter filter = new FieldSearchFilter(PARAMETERS, this.extractSearchValues(parameters), true);
                 filters = super.addFilter(filters, filter);
             }
             Date startCreation = searchBean.getStartCreation();
@@ -351,7 +371,7 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
             if (null != startCreation || null != endCreation) {
                 Timestamp tsStart = (null != startCreation) ? new Timestamp(startCreation.getTime()) : null;
                 Timestamp tsEnd = (null != endCreation) ? new Timestamp(endCreation.getTime()) : null;
-                FieldSearchFilter filter = new FieldSearchFilter("actiondate", tsStart, tsEnd);
+                FieldSearchFilter filter = new FieldSearchFilter(ACTIONDATE, tsStart, tsEnd);
                 filter.setOrder(FieldSearchFilter.Order.DESC);
                 filters = super.addFilter(filters, filter);
             }
@@ -360,12 +380,12 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
             if (null != startUpdate || null != endUpdate) {
                 Timestamp tsStart = (null != startUpdate) ? new Timestamp(startUpdate.getTime()) : null;
                 Timestamp tsEnd = (null != endUpdate) ? new Timestamp(endUpdate.getTime()) : null;
-                FieldSearchFilter filter = new FieldSearchFilter("updatedate", tsStart, tsEnd);
+                FieldSearchFilter filter = new FieldSearchFilter(UPDATEDATE, tsStart, tsEnd);
                 filter.setOrder(FieldSearchFilter.Order.DESC);
                 filters = super.addFilter(filters, filter);
             }
             if (searchBean instanceof IActivityStreamSearchBean) {
-                FieldSearchFilter filter = new FieldSearchFilter("activitystreaminfo");
+                FieldSearchFilter filter = new FieldSearchFilter(ACTIVITYSTREAMINFO);
                 filters = super.addFilter(filters, filter);
             }
         }
@@ -392,15 +412,15 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
             if (res.next()) {
                 actionRecord = new ActionLogRecord();
                 actionRecord.setId(id);
-                Timestamp actionDate = res.getTimestamp("actiondate");
+                Timestamp actionDate = res.getTimestamp(ACTIONDATE);
                 actionRecord.setActionDate(new Date(actionDate.getTime()));
-                Timestamp updateDate = res.getTimestamp("updatedate");
+                Timestamp updateDate = res.getTimestamp(UPDATEDATE);
                 actionRecord.setUpdateDate(new Date(updateDate.getTime()));
-                actionRecord.setActionName(res.getString("actionname"));
-                actionRecord.setNamespace(res.getString("namespace"));
-                actionRecord.setParameters(res.getString("parameters"));
-                actionRecord.setUsername(res.getString("username"));
-                String asiXml = res.getString("activitystreaminfo");
+                actionRecord.setActionName(res.getString(ACTIONNAME));
+                actionRecord.setNamespace(res.getString(NAMESPACE));
+                actionRecord.setParameters(res.getString(PARAMETERS));
+                actionRecord.setUsername(res.getString(USERNAME));
+                String asiXml = res.getString(ACTIVITYSTREAMINFO);
                 if (null != asiXml && asiXml.trim().length() > 0) {
                     ActivityStreamInfo asi = ActivityStreamInfoDOM.unmarshalInfo(asiXml);
                     actionRecord.setActivityStreamInfo(asi);
@@ -466,8 +486,8 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
     }
 
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
     @Override
@@ -520,9 +540,9 @@ public class ActionLogDAO extends AbstractSearcherDAO implements IActionLogDAO {
         ResultSet result = null;
         try {
             List<Integer> idList = new ArrayList<>();
-            FieldSearchFilter filter1 = new FieldSearchFilter("actiondate");
+            FieldSearchFilter filter1 = new FieldSearchFilter(ACTIONDATE);
             filter1.setOrder(FieldSearchFilter.Order.DESC);
-            FieldSearchFilter filter2 = new FieldSearchFilter("activitystreaminfo");
+            FieldSearchFilter filter2 = new FieldSearchFilter(ACTIVITYSTREAMINFO);
             FieldSearchFilter[] filters = {filter1, filter2};
             List<String> groupCodes = new ArrayList<>();
             groupCodes.add(groupName);

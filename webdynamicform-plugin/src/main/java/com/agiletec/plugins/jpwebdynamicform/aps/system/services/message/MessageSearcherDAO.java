@@ -21,6 +21,7 @@
  */
 package com.agiletec.plugins.jpwebdynamicform.aps.system.services.message;
 
+import com.agiletec.aps.system.common.SearchableFields;
 import com.agiletec.aps.system.common.entity.AbstractEntitySearcherDAO;
 import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
@@ -40,12 +41,22 @@ import java.util.List;
  */
 public class MessageSearcherDAO extends AbstractEntitySearcherDAO implements IMessageSearcherDAO {
 
+	private static final String MESSAGEID = "messageid";
+	private static final String MESSAGETYPE = "messagetype";
+
+	/** The search keys this searcher accepts. */
+	private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+			"username")
+			.alias(IEntityManager.ENTITY_ID_FILTER_KEY, MESSAGEID)
+			.alias(IEntityManager.ENTITY_TYPE_CODE_FILTER_KEY, MESSAGETYPE)
+			.alias(IMessageManager.CREATION_DATE_FILTER_KEY, "creationdate");
+
 	@Override
 	protected ApsEntityRecord createRecord(ResultSet result) throws Throwable {
 		MessageRecordVO record = new MessageRecordVO();
-		record.setId(result.getString("messageid"));
+		record.setId(result.getString(MESSAGEID));
 		record.setXml(result.getString("messagexml"));
-		record.setTypeCode(result.getString("messagetype"));
+		record.setTypeCode(result.getString(MESSAGETYPE));
 		record.setUsername(result.getString("username"));
 		record.setLangCode(result.getString("langcode"));
 		record.setCreationDate(result.getTimestamp("creationdate"));
@@ -95,7 +106,8 @@ public class MessageSearcherDAO extends AbstractEntitySearcherDAO implements IMe
 		boolean hasAppendWhereClause = this.appendFullAttributeFilterQueryBlocks(filters, query, false);
 		hasAppendWhereClause = this.appendMetadataFieldFilterQueryBlocks(filters, query, hasAppendWhereClause);
 		this.appendAnsweredFilterQueryBlocks(answered, query, hasAppendWhereClause);
-		appendOrderQueryBlocks(filters, query, false);
+		boolean grouped = this.appendGroupByQueryBlock(filters, query, selectAll);
+		appendOrderQueryBlocks(filters, query, false, grouped);
 		return query.toString();
 	}
 	
@@ -120,12 +132,12 @@ public class MessageSearcherDAO extends AbstractEntitySearcherDAO implements IMe
 
 	@Override
 	protected String getEntityMasterTableIdFieldName() {
-		return "messageid";
+		return MESSAGEID;
 	}
 
 	@Override
 	protected String getEntityMasterTableIdTypeFieldName() {
-		return "messagetype";
+		return MESSAGETYPE;
 	}
 
 	@Override
@@ -135,7 +147,7 @@ public class MessageSearcherDAO extends AbstractEntitySearcherDAO implements IMe
 
 	@Override
 	protected String getEntitySearchTableIdFieldName() {
-		return "messageid";
+		return MESSAGEID;
 	}
 	
 	@Override
@@ -145,20 +157,12 @@ public class MessageSearcherDAO extends AbstractEntitySearcherDAO implements IMe
 	
 	@Override
 	protected String getEntityAttributeRoleTableIdFieldName() {
-		return "messageid";
+		return MESSAGEID;
 	}
 	
 	@Override
-	protected String getTableFieldName(String metadataFieldKey) {
-		if (metadataFieldKey.equals(IEntityManager.ENTITY_ID_FILTER_KEY)) {
-			return this.getEntityMasterTableIdFieldName();
-		} else if (metadataFieldKey.equals(IEntityManager.ENTITY_TYPE_CODE_FILTER_KEY)) {
-			return this.getEntityMasterTableIdTypeFieldName();
-		} else if (metadataFieldKey.equals(IMessageManager.USERNAME_FILTER_KEY)) {
-			return "username";
-		} else if (metadataFieldKey.equals(IMessageManager.CREATION_DATE_FILTER_KEY)) {
-			return "creationdate";
-		} else throw new RuntimeException("Chiave di ricerca '" + metadataFieldKey + "' non riconosciuta");
+	protected SearchableFields getSearchableFields() {
+		return SEARCHABLE_FIELDS;
 	}
 	
 }
