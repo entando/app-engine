@@ -1928,4 +1928,88 @@
         </insert>
     </changeSet>
 
+    <changeSet id="esb1154-boolean-search-test-data" author="entando" context="test">
+        <insert tableName="contents">
+            <column name="contentid" value="BLT1" />
+            <column name="contenttype" value="BLT" />
+            <column name="descr" value="Flag on" />
+            <column name="status" value="PUBLIC" />
+            <column name="workxml" valueClobFile="clob/test/contents_50.xml" />
+            <column name="onlinexml" valueClobFile="clob/test/contents_50.xml" />
+            <column name="created" value="20260101000001" />
+            <column name="lastmodified" value="20260101000001" />
+            <column name="maingroup" value="free" />
+            <column name="currentversion" value="1.0" />
+            <column name="lasteditor" value="admin" />
+            <column name="published" value="20260101000001" />
+            <column name="sync" valueNumeric="1" />
+        </insert>
+        <insert tableName="contents">
+            <column name="contentid" value="BLT2" />
+            <column name="contenttype" value="BLT" />
+            <column name="descr" value="Flag off" />
+            <column name="status" value="PUBLIC" />
+            <column name="workxml" valueClobFile="clob/test/contents_51.xml" />
+            <column name="onlinexml" valueClobFile="clob/test/contents_51.xml" />
+            <column name="created" value="20260101000002" />
+            <column name="lastmodified" value="20260101000002" />
+            <column name="maingroup" value="free" />
+            <column name="currentversion" value="1.0" />
+            <column name="lasteditor" value="admin" />
+            <column name="published" value="20260101000002" />
+            <column name="sync" valueNumeric="1" />
+        </insert>
+        <insert tableName="contents">
+            <column name="contentid" value="BLT3" />
+            <column name="contenttype" value="BLT" />
+            <column name="descr" value="Mixed" />
+            <column name="status" value="PUBLIC" />
+            <column name="workxml" valueClobFile="clob/test/contents_52.xml" />
+            <column name="onlinexml" valueClobFile="clob/test/contents_52.xml" />
+            <column name="created" value="20260101000003" />
+            <column name="lastmodified" value="20260101000003" />
+            <column name="maingroup" value="free" />
+            <column name="currentversion" value="1.0" />
+            <column name="lasteditor" value="admin" />
+            <column name="published" value="20260101000003" />
+            <column name="sync" valueNumeric="1" />
+        </insert>
+        <insert tableName="contents">
+            <column name="contentid" value="BLT4" />
+            <column name="contenttype" value="BLT" />
+            <column name="descr" value="Composite only" />
+            <column name="status" value="PUBLIC" />
+            <column name="workxml" valueClobFile="clob/test/contents_53.xml" />
+            <column name="onlinexml" valueClobFile="clob/test/contents_53.xml" />
+            <column name="created" value="20260101000004" />
+            <column name="lastmodified" value="20260101000004" />
+            <column name="maingroup" value="free" />
+            <column name="currentversion" value="1.0" />
+            <column name="lasteditor" value="admin" />
+            <column name="published" value="20260101000004" />
+            <column name="sync" valueNumeric="1" />
+        </insert>
+
+        <insert tableName="contentattributeroles">
+            <column name="contentid" value="BLT1" />
+            <column name="attrname" value="Title" />
+            <column name="rolename" value="jacms:title" />
+        </insert>
+        <insert tableName="contentattributeroles">
+            <column name="contentid" value="BLT2" />
+            <column name="attrname" value="Title" />
+            <column name="rolename" value="jacms:title" />
+        </insert>
+        <insert tableName="contentattributeroles">
+            <column name="contentid" value="BLT3" />
+            <column name="attrname" value="Title" />
+            <column name="rolename" value="jacms:title" />
+        </insert>
+        <insert tableName="contentattributeroles">
+            <column name="contentid" value="BLT4" />
+            <column name="attrname" value="Title" />
+            <column name="rolename" value="jacms:title" />
+        </insert>
+    </changeSet>
+
 </databaseChangeLog>

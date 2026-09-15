@@ -37,7 +37,7 @@ class TestContentFinderViewerAction extends ApsAdminBaseTestCase {
 		
 		ContentFinderViewerAction action = (ContentFinderViewerAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(15, contentIds.size());//Contenuti pubblici liberi o non liberi con free gruppo extra
+		assertEquals(19, contentIds.size());//Contenuti pubblici liberi o non liberi con free gruppo extra
 		assertTrue(contentIds.contains("EVN25"));//Contenuto coach abilitato al gruppo free
 		assertTrue(contentIds.contains("ART121"));//Contenuto del gruppo "administrators" abilitato al gruppo free
 	}
@@ -49,7 +49,7 @@ class TestContentFinderViewerAction extends ApsAdminBaseTestCase {
 		
 		ContentFinderViewerAction action = (ContentFinderViewerAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(24, contentIds.size());//Tutti i contenuti pubblici
+		assertEquals(28, contentIds.size());//Tutti i contenuti pubblici
 	}
 	
 	@Test
@@ -59,7 +59,7 @@ class TestContentFinderViewerAction extends ApsAdminBaseTestCase {
 		
 		ContentFinderViewerAction action = (ContentFinderViewerAction) this.getAction();
 		List<String> contentIds = action.getContents();
-		assertEquals(20, contentIds.size());// Contenuti pubblici liberi o non liberi con customers gruppo extra
+		assertEquals(24, contentIds.size());// Contenuti pubblici liberi o non liberi con customers gruppo extra
 		assertTrue(contentIds.contains("ART122"));//Contenuto del gruppo "administrators" abilitato al gruppo customers
 		assertTrue(contentIds.contains("ART121"));//Contenuto del gruppo "administrators" abilitato al gruppo free
 		assertTrue(contentIds.contains("EVN25"));//Contenuto del gruppo "coach" abilitato al gruppo free
@@ -71,7 +71,7 @@ class TestContentFinderViewerAction extends ApsAdminBaseTestCase {
 		Map<String, String> params = new HashMap<String, String>();
 		this.executeParametrizedSearchContents("admin", "pagina_11", "1", null);//Pagina Free
 		ContentFinderViewerAction action = (ContentFinderViewerAction) this.getAction();
-		String[] order1 = {"ALL4", "ART121", "EVN21", "EVN20", "EVN25",
+		String[] order1 = {"BLT4", "BLT3", "BLT2", "BLT1", "ALL4", "ART121", "EVN21", "EVN20", "EVN25",
 				"EVN24", "EVN23", "EVN192", "EVN191", "RAH1",
 				"ART180", "EVN194", "EVN193", "ART1", "ART187"};
 		List<String> contents = action.getContents();

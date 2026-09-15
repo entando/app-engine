@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.agiletec.aps.system.services.group.Group;
+import com.agiletec.aps.system.services.role.Permission;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.dictionary.ContentModelDictionary;
@@ -39,6 +41,8 @@ import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -224,6 +228,54 @@ class ContentModelControllerUnitTest extends AbstractControllerTest {
         result.andExpect(jsonPath("$.payload.$content").exists());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {Permission.SUPERUSER, Permission.CONTENT_EDITOR, Permission.CONTENT_SUPERVISOR})
+    public void shouldAllowAccessToEveryEndpointForRelaxedPermissions(String permission) throws Exception {
+        UserDetails user = createUserWithPermission(permission);
+        ContentModelDto contentModelDto = buildContentModelDto(1l, "AAA");
+
+        performRequest(get(BASE_URI), null, user).andExpect(status().isOk());
+        performRequest(get(BASE_URI + "/{id}", 1), null, user).andExpect(status().isOk());
+        performRequest(post(BASE_URI), mapper.writeValueAsString(contentModelDto), user).andExpect(status().isOk());
+        performRequest(put(BASE_URI + "/{id}", 1), mapper.writeValueAsString(contentModelDto), user).andExpect(status().isOk());
+        performRequest(get(BASE_URI + "/{id}/pagereferences", 1), null, user).andExpect(status().isOk());
+        performRequest(get(BASE_URI + "/{id}/usage", 1), null, user).andExpect(status().isOk());
+        performRequest(get(BASE_URI + "/{id}/usage/details", 1), null, user).andExpect(status().isOk());
+        performRequest(get(BASE_URI + "/dictionary"), null, user).andExpect(status().isOk());
+        performRequest(delete(BASE_URI + "/{id}", 1), null, user).andExpect(status().isOk());
+    }
+
+    @Test
+    public void shouldForbidAccessToEveryEndpointForUnrelatedPermission() throws Exception {
+        UserDetails user = createUserWithPermission(Permission.MANAGE_PAGES);
+        ContentModelDto contentModelDto = buildContentModelDto(1l, "AAA");
+
+        performRequest(get(BASE_URI), null, user).andExpect(status().isForbidden());
+        performRequest(get(BASE_URI + "/{id}", 1), null, user).andExpect(status().isForbidden());
+        performRequest(post(BASE_URI), mapper.writeValueAsString(contentModelDto), user).andExpect(status().isForbidden());
+        performRequest(put(BASE_URI + "/{id}", 1), mapper.writeValueAsString(contentModelDto), user).andExpect(status().isForbidden());
+        performRequest(get(BASE_URI + "/{id}/pagereferences", 1), null, user).andExpect(status().isForbidden());
+        performRequest(get(BASE_URI + "/{id}/usage", 1), null, user).andExpect(status().isForbidden());
+        performRequest(get(BASE_URI + "/{id}/usage/details", 1), null, user).andExpect(status().isForbidden());
+        performRequest(get(BASE_URI + "/dictionary"), null, user).andExpect(status().isForbidden());
+        performRequest(delete(BASE_URI + "/{id}", 1), null, user).andExpect(status().isForbidden());
+    }
+
+    private UserDetails createUserWithPermission(String permission) {
+        return new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24")
+                .withAuthorization(Group.FREE_GROUP_NAME, "roletest", permission)
+                .build();
+    }
+
+    private ContentModelDto buildContentModelDto(long id, String contentType) {
+        ContentModelDto contentModelDto = new ContentModelDto();
+        contentModelDto.setId(id);
+        contentModelDto.setContentType(contentType);
+        contentModelDto.setContentShape("contentShape");
+        contentModelDto.setDescr("description");
+        return contentModelDto;
+    }
+
     private ResultActions performRequest(MockHttpServletRequestBuilder requestBuilder, ContentModelDto contentModelDto) throws Exception {
         String payload = mapper.writeValueAsString(contentModelDto);
         return performRequest(requestBuilder, payload);
@@ -234,8 +286,12 @@ class ContentModelControllerUnitTest extends AbstractControllerTest {
     }
 
     private ResultActions performRequest(MockHttpServletRequestBuilder requestBuilder, String payload) throws Exception {
-
         UserDetails user = new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build();
+        return performRequest(requestBuilder, payload, user);
+    }
+
+    private ResultActions performRequest(MockHttpServletRequestBuilder requestBuilder, String payload, UserDetails user) throws Exception {
+
         String accessToken = mockOAuthInterceptor(user);
 
         requestBuilder = requestBuilder

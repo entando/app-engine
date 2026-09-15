@@ -4,11 +4,8 @@ import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrField
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_NAME;
 import static org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFields.SOLR_FIELD_TYPE;
 
+import org.entando.entando.aps.system.common.entity.search.NestedSearchSupport;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
-import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
-import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.Lang;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,31 +92,45 @@ public class SolrFieldsChecker {
 
     private void checkAttribute(AttributeInterface attribute, Lang lang) {
         attribute.setRenderingLang(lang.getCode());
-        if (attribute instanceof IndexableAttributeInterface
-                || ((attribute instanceof DateAttribute || attribute instanceof NumberAttribute)
-                && attribute.isSearchable())) {
-            String type;
-            if (attribute instanceof DateAttribute) {
-                type = SolrFields.TYPE_PDATES;
-            } else if (attribute instanceof NumberAttribute) {
-                type = SolrFields.TYPE_PLONGS;
-            } else if (attribute instanceof BooleanAttribute) {
-                type = SolrFields.TYPE_BOOLEAN;
-            } else {
-                type = SolrFields.TYPE_TEXT_GEN_SORT;
-            }
-            String fieldName = lang.getCode().toLowerCase() + "_" + attribute.getName();
-            fieldName = fieldName.replace(":", "_");
+        if (!attribute.isSimple()) {
+            this.checkNestedSearchFields(attribute, lang);
+            return;
+        }
+        if (attribute.hasSearchField()) {
+            // The attribute declares its own field type; this class only translates it to Solr's
+            // vocabulary. No type ladder, and therefore no subclass-ordering hazard.
+            String type = SolrFields.solrType(attribute.getSearchFieldType());
+            String fieldName = this.buildFieldName(lang, attribute.getName());
             this.checkField(fieldName, type);
             if (null == attribute.getRoles()) {
                 return;
             }
             for (String role : attribute.getRoles()) {
-                String roleFieldName = lang.getCode().toLowerCase() + "_" + role;
-                roleFieldName = roleFieldName.replace(":", "_");
+                String roleFieldName = this.buildFieldName(lang, role);
                 this.checkField(roleFieldName, type);
             }
         }
+    }
+
+    private String buildFieldName(Lang lang, String name) {
+        return (lang.getCode().toLowerCase() + "_" + name).replace(":", "_");
+    }
+
+    /**
+     * Create the per-attribute field of every boolean-like attribute nested in this complex attribute
+     * that the engine path-indexes: the shared traversal decides which those are (Composite ancestry
+     * only, {@code searchable} set) and hands over the full path, e.g.
+     * {@code complexAttrName_boolAttrName}. Date/Number/Text children remain full-text-only, unchanged
+     * and matching the baseline Lucene engine.
+     */
+    private void checkNestedSearchFields(AttributeInterface attribute, Lang lang) {
+        NestedSearchSupport.forEachIndexableNested(attribute, (child, path) -> {
+            child.setRenderingLang(lang.getCode());
+            // Single-valued: a Composite occurs at most once per document per lang (the shared
+            // traversal never descends a List/Monolist), so the nested field is never repeated.
+            this.checkField(this.buildFieldName(lang, path),
+                    SolrFields.solrType(child.getSearchFieldType()), false);
+        });
     }
 
     private void checkField(String fieldName, String type) {

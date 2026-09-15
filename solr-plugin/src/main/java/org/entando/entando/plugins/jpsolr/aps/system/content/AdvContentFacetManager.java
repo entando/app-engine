@@ -34,6 +34,8 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.web.common.exceptions.ValidationConflictException;
 import org.entando.entando.web.common.model.Filter;
+import org.entando.entando.web.common.model.FilterOperator;
+import org.entando.entando.web.common.model.FilterType;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.ISolrSearchEngineManager;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrFacetedContentsResult;
 import org.entando.entando.plugins.jpsolr.aps.system.solr.model.SolrSearchEngineFilter;
@@ -55,6 +57,9 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
 
     private static final Pattern SAFE_IDENTIFIER = Pattern.compile("[a-zA-Z0-9_.:,-]+");
     private static final Pattern INJECTION_PATTERN = Pattern.compile("\\$\\{|%24%7B", Pattern.CASE_INSENSITIVE);
+
+    private static final String INVALID_PARAMETER_CODE = "INVALID_PARAMETER";
+    private static final String INVALID_PARAMETER_MESSAGE_KEY = "parameter.invalid";
 
     private final ICategoryManager categoryManager;
     private final ICmsSearchEngineManager searchEngineManager;
@@ -197,6 +202,45 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
                 rejectIfUnsafeIdentifier(solrFilter.getSearchOption(),
                         fieldPrefix + ".searchOption", bindingResult);
             }
+            rejectIfInvalidBooleanFilter(filter, fieldPrefix, bindingResult);
+        }
+    }
+
+    /**
+     * Booleans have no meaningful range and only two valid values. Without this check a range
+     * operator silently builds a nonsense query (SearcherDAO's string-range fallback), and
+     * {@code Boolean.parseBoolean} silently coerces any non-"true" string (including a
+     * three-state "none") to {@code false} instead of failing.
+     */
+    private void rejectIfInvalidBooleanFilter(Filter filter, String fieldPrefix,
+            BeanPropertyBindingResult bindingResult) {
+        if (!FilterType.BOOLEAN.getValue().equalsIgnoreCase(filter.getType())) {
+            return;
+        }
+        String operator = filter.getOperator();
+        if (FilterOperator.GREATER.getValue().equalsIgnoreCase(operator)
+                || FilterOperator.LOWER.getValue().equalsIgnoreCase(operator)) {
+            logger.warn("Rejected range operator '{}' on boolean filter in field '{}'", operator, fieldPrefix);
+            bindingResult.rejectValue(null, INVALID_PARAMETER_CODE,
+                    new Object[]{fieldPrefix + ".operator"}, INVALID_PARAMETER_MESSAGE_KEY);
+        }
+        rejectIfNotStrictBoolean(filter.getValue(), fieldPrefix + ".value", bindingResult);
+        if (null != filter.getAllowedValues()) {
+            for (String av : filter.getAllowedValues()) {
+                rejectIfNotStrictBoolean(av, fieldPrefix + ".allowedValues", bindingResult);
+            }
+        }
+    }
+
+    private static void rejectIfNotStrictBoolean(String value, String field,
+            BeanPropertyBindingResult bindingResult) {
+        if (StringUtils.isBlank(value)) {
+            return;
+        }
+        if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+            logger.warn("Rejected non-boolean value in field '{}': '{}'", field, value);
+            bindingResult.rejectValue(null, INVALID_PARAMETER_CODE,
+                    new Object[]{field}, INVALID_PARAMETER_MESSAGE_KEY);
         }
     }
 
@@ -207,8 +251,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
         }
         if (!SAFE_IDENTIFIER.matcher(value).matches()) {
             logger.warn("Rejected unsafe identifier in field '{}': '{}'", field, value);
-            bindingResult.rejectValue(null, "INVALID_PARAMETER",
-                    new Object[]{field}, "parameter.invalid");
+            bindingResult.rejectValue(null, INVALID_PARAMETER_CODE,
+                    new Object[]{field}, INVALID_PARAMETER_MESSAGE_KEY);
         }
     }
 
@@ -219,8 +263,8 @@ public class AdvContentFacetManager implements IAdvContentFacetManager {
         }
         if (INJECTION_PATTERN.matcher(value).find()) {
             logger.warn("Rejected injection pattern in field '{}': '{}'", field, value);
-            bindingResult.rejectValue(null, "INVALID_PARAMETER",
-                    new Object[]{field}, "parameter.invalid");
+            bindingResult.rejectValue(null, INVALID_PARAMETER_CODE,
+                    new Object[]{field}, INVALID_PARAMETER_MESSAGE_KEY);
         }
     }
 

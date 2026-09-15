@@ -96,6 +96,7 @@
                         <th class="table-w-20 "><s:text name="label.code" /></th>
                         <th class="table-w-20 "><s:text name="label.type" /></th>
                         <th class="text-center table-w-5 "><s:text name="Entity.attribute.flag.mandatory.full" /></th>
+                        <th class="text-center table-w-5 "><s:text name="label.filter" /></th>
                         <th class="text-center table-w-5"><s:text name="label.actions" /></th>
                     </tr>
 
@@ -103,14 +104,20 @@
                         <tr>
                             <td><s:property value="#attribute.name" /></td>
                             <td><s:property value="#attribute.type" /></td>
-                            <td class="text-center">
-                                <s:if test="#attribute.required">
-                                    <span class="icon fa fa-check-square-o" title="<s:text name="label.yes" />"></span>
-                                </s:if>
-                                <s:else>
-                                    <span class="icon fa fa-square-o" title="<s:text name="label.no" />"></span>
-                                </s:else>
-                            </td>
+                            <s:set var="flagValue" value="#attribute.required" />
+                            <s:set var="flagApplicable" value="true" />
+                            <s:set var="flagLabel" value="'Entity.attribute.flag.mandatory.full'" />
+                            <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-flag-cell.jsp" />
+
+                            <%-- The searchable flag survives only on boolean-like Composite children
+                                 (CompositeAttribute.extractAttributeCompositeElement forces every other
+                                 type non-searchable), and a Composite reached through a list is never
+                                 indexed per attribute: both cases render as "not applicable". --%>
+                            <s:set var="flagValue" value="#attribute.searchable" />
+                            <s:set var="flagApplicable" value="%{null == #listAttribute && isNestedSearchableOptionSupported(#attribute.type)}" />
+                            <s:set var="flagLabel" value="'label.filter'" />
+                            <s:set var="flagUnavailableKey" value="%{null == #listAttribute ? 'Entity.attribute.flag.searchable.notApplicable.type' : 'Entity.attribute.flag.searchable.notApplicable.list'}" />
+                            <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-flag-cell.jsp" />
                             <td class="text-center table-view-pf-actions">
                                 <div class="dropdown dropdown-kebab-pf">
                                     <button class="btn btn-menu-right dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

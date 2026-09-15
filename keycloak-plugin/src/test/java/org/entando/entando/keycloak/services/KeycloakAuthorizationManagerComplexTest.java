@@ -270,8 +270,12 @@ class KeycloakAuthorizationManagerComplexTest {
         assertThat(user.getAuthorizations()).anyMatch(a -> a.getRole().getName().equals("roleB") && a.getGroup().getName().equals("groupB"));
     }
 
+    /**
+     * The retired {@code <exclusions>} element must not break parsing of pre-existing configurations:
+     * a name that is only in {@code <exclusions>} is still discarded, but by the roles allowlist.
+     */
     @Test
-    void testExclusions() throws Exception {
+    void testLegacyExclusionsElementStillParses() throws Exception {
         String xml = "<dynamicMapping>"
                 + "  <enabled>true</enabled>"
                 + "  <persist>none</persist>"
@@ -297,6 +301,287 @@ class KeycloakAuthorizationManagerComplexTest {
 
         assertThat(user.getAuthorizations()).hasSize(1);
         assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+    }
+
+    /**
+     * Behaviour change: a name present in both the retired {@code <exclusions>} element and the
+     * allowlist used to be discarded (and revoked). The allowlist is now the only filter, so it is
+     * assigned.
+     */
+    @Test
+    void testLegacyExclusionsElementIsNotEnforced() throws Exception {
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>none</persist>"
+                + "  <mappings>"
+                + "    <mapping>"
+                + "      <enabled>true</enabled>"
+                + "      <attribute>kc_roles</attribute>"
+                + "      <kind>role</kind>"
+                + "    </mapping>"
+                + "  </mappings>"
+                + "  <exclusions>"
+                + "    <exclusion>role1</exclusion>"
+                + "  </exclusions>"
+                + "  <roles>"
+                + "   <role>role1</role>"
+                + "  </roles>"
+                + "</dynamicMapping>";
+        setMappingConfig(xml);
+
+        KeycloakUser user = createKeycloakUser("test-user", "kc_roles", List.of("role1"));
+
+        manager.processNewUser(user, null, false);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+    }
+
+    /**
+     * Allowlist entries are matched after trimming on both sides, so padding in the configuration
+     * cannot silently disable an entry.
+     */
+    @Test
+    void testAllowlistNamesAreTrimmed() throws Exception {
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>none</persist>"
+                + "  <mappings>"
+                + "    <mapping>"
+                + "      <enabled>true</enabled>"
+                + "      <path>realm_access.roles</path>"
+                + "      <kind>roleclaim</kind>"
+                + "    </mapping>"
+                + "  </mappings>"
+                + "  <roles>"
+                + "   <role>  role1  </role>"
+                + "   <role>   </role>"
+                + "  </roles>"
+                + "</dynamicMapping>";
+        setMappingConfig(xml);
+
+        String token = createToken("{\"iat\":123, \"realm_access\":{\"roles\":[\"  role1  \"]}}");
+        KeycloakUser user = createKeycloakUser("test-user", null, null);
+
+        manager.processNewUser(user, token, true);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+    }
+
+    /**
+     * Regression test: {@code DynamicMappingKind.fromValue} used to compare the raw XML text with
+     * no trimming, so a stray trailing newline in {@code <kind>} (easy to introduce via copy/paste
+     * or templating) threw during deserialization. That exception was only caught by the top-level
+     * handler in {@code initTenantAware}, which discarded the *entire* configuration for *every*
+     * mapping and every user, not just the offending one. The value must now be trimmed before
+     * matching, so the mapping keeps working.
+     */
+    @Test
+    void testMappingKindWithTrailingNewlineDoesNotBreakConfig() throws Exception {
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>none</persist>"
+                + "  <mappings>"
+                + "    <mapping>"
+                + "      <enabled>true</enabled>"
+                + "      <attribute>kc_roles</attribute>"
+                + "      <kind>role\n</kind>"
+                + "    </mapping>"
+                + "  </mappings>"
+                + "  <roles>"
+                + "   <role>role1</role>"
+                + "  </roles>"
+                + "</dynamicMapping>";
+        setMappingConfig(xml);
+
+        KeycloakUser user = createKeycloakUser("test-user", "kc_roles", List.of("role1"));
+
+        manager.processNewUser(user, null, false);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+    }
+
+    /**
+     * Same regression as {@link #testMappingKindWithTrailingNewlineDoesNotBreakConfig}, but for
+     * {@code PersistKind.fromValue} and the top-level {@code <persist>} element.
+     */
+    @Test
+    void testPersistKindWithTrailingNewlineDoesNotBreakConfig() throws Exception {
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>full\n</persist>"
+                + "  <mappings>"
+                + "    <mapping>"
+                + "      <enabled>true</enabled>"
+                + "      <attribute>kc_roles</attribute>"
+                + "      <kind>role</kind>"
+                + "    </mapping>"
+                + "  </mappings>"
+                + "  <roles>"
+                + "   <role>role1</role>"
+                + "  </roles>"
+                + "</dynamicMapping>";
+        setMappingConfig(xml);
+
+        Role role1 = new Role();
+        role1.setName("role1");
+        when(roleManager.getRole("role1")).thenReturn(role1);
+
+        KeycloakUser user = createKeycloakUser("test-user", "kc_roles", List.of("role1"));
+
+        manager.processNewUser(user, null, false);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+    }
+
+    /**
+     * {@code <attribute>} is a plain string used verbatim as a Keycloak profile-attribute key
+     * ({@code Map.containsKey}). Unlike {@code <kind>}/{@code <persist>} this never throws, but
+     * without trimming, surrounding whitespace makes the key lookup fail silently and the whole
+     * mapping produces no authorizations for any user.
+     */
+    @Test
+    void testMappingAttributeWithSurroundingWhitespaceIsTrimmed() throws Exception {
+        String xml = """
+                <dynamicMapping>
+                  <enabled>true</enabled>
+                  <persist>none</persist>
+                  <mappings>
+                    <mapping>
+                      <enabled>true</enabled>
+                      <attribute>
+                        kc_roles
+                      </attribute>
+                      <kind>role</kind>
+                    </mapping>
+                  </mappings>
+                  <roles>
+                    <role>role1</role>
+                  </roles>
+                </dynamicMapping>
+                """;
+        setMappingConfig(xml);
+
+        KeycloakUser user = createKeycloakUser("test-user", "kc_roles", List.of("role1"));
+
+        manager.processNewUser(user, null, false);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+    }
+
+    /**
+     * Same as {@link #testMappingAttributeWithSurroundingWhitespaceIsTrimmed} but for {@code <path>}
+     * on a JWT-claim mapping kind: an untrimmed path never resolves to a JSON pointer that exists in
+     * the token, so the claim lookup silently misses for every user.
+     */
+    @Test
+    void testMappingPathWithSurroundingWhitespaceIsTrimmed() throws Exception {
+        String xml = """
+                <dynamicMapping>
+                  <enabled>true</enabled>
+                  <persist>none</persist>
+                  <mappings>
+                    <mapping>
+                      <enabled>true</enabled>
+                      <path>
+                        realm_access.roles
+                      </path>
+                      <kind>roleclaim</kind>
+                    </mapping>
+                  </mappings>
+                  <roles>
+                    <role>jwt-role1</role>
+                  </roles>
+                </dynamicMapping>
+                """;
+        setMappingConfig(xml);
+
+        String token = createToken("{\"iat\":123, \"realm_access\":{\"roles\":[\"jwt-role1\"]}}");
+        KeycloakUser user = createKeycloakUser("test-user", null, null);
+
+        manager.processNewUser(user, token, true);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("jwt-role1");
+    }
+
+    /**
+     * Same as {@link #testMappingAttributeWithSurroundingWhitespaceIsTrimmed} but for
+     * {@code <separator>}: an untrimmed separator never matches inside a real token, so every
+     * rolegroup value falls through as unsplittable.
+     */
+    @Test
+    void testMappingSeparatorWithSurroundingWhitespaceIsTrimmed() throws Exception {
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>full</persist>"
+                + "  <mappings>"
+                + "    <mapping>"
+                + "      <enabled>true</enabled>"
+                + "      <attribute>kc_rolegroups</attribute>"
+                + "      <kind>rolegroup</kind>"
+                + "      <separator> _SEP_ </separator>"
+                + "    </mapping>"
+                + "  </mappings>"
+                + "  <roles>"
+                + "   <role>role1</role>"
+                + "  </roles>"
+                + "  <groups>"
+                + "   <group>group1</group>"
+                + "  </groups>"
+                + "</dynamicMapping>";
+        setMappingConfig(xml);
+
+        KeycloakUser user = createKeycloakUser("test-user", "kc_rolegroups", List.of("role1_SEP_group1"));
+
+        Group group1 = new Group();
+        group1.setName("group1");
+        Role role1 = new Role();
+        role1.setName("role1");
+        when(groupManager.getGroup("group1")).thenReturn(group1);
+        when(roleManager.getRole("role1")).thenReturn(role1);
+
+        manager.processNewUser(user, null, false);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+        assertThat(user.getAuthorizations().get(0).getGroup().getName()).isEqualTo("group1");
+    }
+
+    /**
+     * Blank claim values must not survive extraction: they cannot match an allowlist and would
+     * otherwise yield an authorization carrying neither a role nor a group.
+     */
+    @Test
+    void testBlankClaimValuesProduceNoAuthorization() throws Exception {
+        String xml = "<dynamicMapping>"
+                + "  <enabled>true</enabled>"
+                + "  <persist>none</persist>"
+                + "  <mappings>"
+                + "    <mapping>"
+                + "      <enabled>true</enabled>"
+                + "      <path>realm_access.roles</path>"
+                + "      <kind>roleclaim</kind>"
+                + "    </mapping>"
+                + "  </mappings>"
+                + "  <roles>"
+                + "   <role>role1</role>"
+                + "  </roles>"
+                + "</dynamicMapping>";
+        setMappingConfig(xml);
+
+        String token = createToken("{\"iat\":123, \"realm_access\":{\"roles\":[\"\", \"   \", \"role1\"]}}");
+        KeycloakUser user = createKeycloakUser("test-user", null, null);
+
+        manager.processNewUser(user, token, true);
+
+        assertThat(user.getAuthorizations()).hasSize(1);
+        assertThat(user.getAuthorizations().get(0).getRole().getName()).isEqualTo("role1");
+        assertThat(user.getAuthorizations()).noneMatch(a -> a.getRole() == null && a.getGroup() == null);
     }
 
     @Test

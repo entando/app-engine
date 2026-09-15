@@ -25,6 +25,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 
+import org.entando.entando.aps.system.common.entity.search.NestedSearchSupport;
+import org.entando.entando.aps.system.common.entity.search.SearchableAttributeRef;
 import com.agiletec.aps.system.common.entity.model.ApsEntity;
 import com.agiletec.aps.system.common.entity.model.AttributeFieldError;
 import com.agiletec.aps.system.common.entity.model.AttributeTracer;
@@ -33,10 +35,8 @@ import com.agiletec.aps.system.common.entity.model.IApsEntity;
 import com.agiletec.aps.system.common.entity.model.attribute.AbstractAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeRole;
-import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.DateAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.ITextAttribute;
-import com.agiletec.aps.system.common.entity.model.attribute.NumberAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.ThreeStateAttribute;
+import org.entando.entando.aps.system.common.entity.search.SearchFieldType;
 import com.agiletec.aps.util.CheckFormatUtil;
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.apsadmin.system.BaseActionHelper;
@@ -49,10 +49,15 @@ import org.apache.struts2.ActionSupport;
  * classes which handle elements built with the "ApsEntity' entries.
  * @author E.Santoboni
  */
+// NOTE: java:S2143 ("use the java.time API") is intentionally suppressed. Legacy java.util.Date is used
+// only to parse the date-range search form fields (via DateConverter); java.time migration is out of
+// scope for ESB-1133 (boolean search) and tracked separately.
+@SuppressWarnings("java:S2143")
 public class EntityActionHelper extends BaseActionHelper implements IEntityActionHelper, BeanFactoryAware {
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(EntityActionHelper.class);
-	
+
+
 	@Override
 	public void updateEntity(IApsEntity currentEntity, HttpServletRequest request) {
 		try {
@@ -192,36 +197,53 @@ public class EntityActionHelper extends BaseActionHelper implements IEntityActio
 		if (null == prototype) {
 			return filters;
 		}
-		List<AttributeInterface> contentAttributes = prototype.getAttributeList();
-		for (int i = 0; i < contentAttributes.size(); i++) {
-			AttributeInterface attribute = contentAttributes.get(i);
-			if (attribute.isActive() && attribute.isSearchable()) {
-				if (attribute instanceof ITextAttribute) {
-					String insertedText = entityFinderAction.getSearchFormFieldValue(attribute.getName() + "_textFieldName");
-					if (null != insertedText && insertedText.trim().length() > 0) {
-						EntitySearchFilter filterToAdd = new EntitySearchFilter(attribute.getName(), true, insertedText.trim(), true);
-						filters = this.addFilter(filters, filterToAdd);
-					}
-				} else if (attribute instanceof DateAttribute) {
-					Date dateStart = this.getDateSearchFormValue(entityFinderAction, attribute.getName(), "_dateStartFieldName", true);
-					Date dateEnd = this.getDateSearchFormValue(entityFinderAction, attribute.getName(), "_dateEndFieldName", false);
-					if (null != dateStart || null != dateEnd) {
-						EntitySearchFilter filterToAdd = new EntitySearchFilter(attribute.getName(), true, dateStart, dateEnd);
-						filters = this.addFilter(filters, filterToAdd);
-					}
-				} else if (attribute instanceof BooleanAttribute) {
-					String booleanValue = entityFinderAction.getSearchFormFieldValue(attribute.getName() + "_booleanFieldName");
-					if (null != booleanValue && booleanValue.trim().length() > 0) {
-						EntitySearchFilter filterToAdd = new EntitySearchFilter(attribute.getName(), true, booleanValue, false);
-						filters = this.addFilter(filters, filterToAdd);
-					}
-				} else if (attribute instanceof NumberAttribute) {
-					BigDecimal numberStart = this.getNumberSearchFormValue(entityFinderAction, attribute.getName(), "_numberStartFieldName", true);
-					BigDecimal numberEnd = this.getNumberSearchFormValue(entityFinderAction, attribute.getName(), "_numberEndFieldName", false);
-					if (null != numberStart || null != numberEnd) {
-						EntitySearchFilter filterToAdd = new EntitySearchFilter(attribute.getName(), true, numberStart, numberEnd);
-						filters = this.addFilter(filters, filterToAdd);
-					}
+		// Same list the search form is built from: searchable top-level attributes plus Composite-nested
+		// boolean-like attributes keyed by "<composite>_<boolean>". Iterating the identical list
+		// guarantees the parser resolves exactly the field names the form submitted. The eligibility
+		// gate (active/searchable, boolean-like when nested) is applied once, by collectSearchable; the
+		// dispatch below reads the REAL attribute, so the type is always the genuine one.
+		List<SearchableAttributeRef> searchableAttributes = NestedSearchSupport
+				.collectSearchable(prototype);
+		for (SearchableAttributeRef ref : searchableAttributes) {
+			String key = ref.key();
+			// One dispatch mechanism, the same one the finder JSPs use: the attribute's declared search
+			// field type, except for text. TEXT and isTextAttribute() happen to coincide for every type
+			// the platform ships, but they are different questions - TEXT is "indexable as free text",
+			// isTextAttribute() is "carries a per-language text a filter can match" - so the text branch
+			// keeps asking the narrower one it has always asked.
+			if (ref.isTextAttribute()) {
+				String insertedText = entityFinderAction.getSearchFormFieldValue(key + "_textFieldName");
+				if (null != insertedText && insertedText.trim().length() > 0) {
+					EntitySearchFilter filterToAdd = new EntitySearchFilter(key, true, insertedText.trim(), true);
+					filters = this.addFilter(filters, filterToAdd);
+				}
+			} else if (ref.isDate()) {
+				Date dateStart = this.getDateSearchFormValue(entityFinderAction, key, "_dateStartFieldName", true);
+				Date dateEnd = this.getDateSearchFormValue(entityFinderAction, key, "_dateEndFieldName", false);
+				if (null != dateStart || null != dateEnd) {
+					EntitySearchFilter filterToAdd = new EntitySearchFilter(key, true, dateStart, dateEnd);
+					filters = this.addFilter(filters, filterToAdd);
+				}
+			} else if (ref.isTristate()) {
+				// Three states: "true"/"false" filter by value; the "not set" literal matches the unset
+				// state, which on the DB search path is the ABSENCE of a record (a ThreeState writes no
+				// row when unset) - so it is queried via the null option, not a value; blank means "Any".
+				EntitySearchFilter filterToAdd = this.buildThreeStateFilter(entityFinderAction, key);
+				if (null != filterToAdd) {
+					filters = this.addFilter(filters, filterToAdd);
+				}
+			} else if (ref.isBooleanLike()) {
+				String booleanValue = entityFinderAction.getSearchFormFieldValue(key + "_booleanFieldName");
+				if (null != booleanValue && booleanValue.trim().length() > 0) {
+					EntitySearchFilter filterToAdd = new EntitySearchFilter(key, true, booleanValue, false);
+					filters = this.addFilter(filters, filterToAdd);
+				}
+			} else if (ref.isNumber()) {
+				BigDecimal numberStart = this.getNumberSearchFormValue(entityFinderAction, key, "_numberStartFieldName", true);
+				BigDecimal numberEnd = this.getNumberSearchFormValue(entityFinderAction, key, "_numberEndFieldName", false);
+				if (null != numberStart || null != numberEnd) {
+					EntitySearchFilter filterToAdd = new EntitySearchFilter(key, true, numberStart, numberEnd);
+					filters = this.addFilter(filters, filterToAdd);
 				}
 			}
 		}
@@ -231,18 +253,51 @@ public class EntityActionHelper extends BaseActionHelper implements IEntityActio
 	@Override
 	public String[] getAttributeFilterFieldName(ApsEntity prototype, String attrName) {
 		AbstractAttribute attr = (AbstractAttribute) prototype.getAttribute(attrName);
+		if (null == attr) {
+			// Not a top-level attribute: it may be a Composite-nested boolean addressed by its
+			// path key "<composite>_<boolean>". Resolve it so the remembered search round-trips.
+			attr = (AbstractAttribute) NestedSearchSupport.resolveNestedByKey(prototype, attrName);
+		}
+		if (null == attr) {
+			return new String[0];
+		}
+		// Same dispatch as getAttributeFilters, so the field names derived here are the ones parsed there.
+		// Null-safe on purpose: a searchable Composite/Monolist declares no search field type.
+		SearchFieldType searchFieldType = attr.getSearchFieldType();
 		if (attr.isTextAttribute()) {
 			return new String[] {attrName + "_textFieldName"};
-		} else if (attr instanceof DateAttribute) {
+		} else if (SearchFieldType.DATE == searchFieldType) {
 			return new String[] {attrName + "_dateStartFieldName", attrName + "_dateEndFieldName"};
-		} else if (attr instanceof NumberAttribute) {
+		} else if (SearchFieldType.NUMBER == searchFieldType) {
 			return new String[] {attrName + "_numberStartFieldName", attrName + "_numberEndFieldName"};
-		} else if (attr instanceof BooleanAttribute) {
+		} else if (null != searchFieldType && searchFieldType.isBooleanFamily()) {
+			// The whole boolean family shares one form field; ThreeState differs only in the values it
+			// offers, which buildThreeStateFilter handles.
 			return new String[] {attrName + "_booleanFieldName"};
 		}
-		return null;
+		return new String[0];
 	}
 	
+    /**
+     * Build the search filter for a ThreeState attribute from its {@code _booleanFieldName} form field.
+     * Blank -&gt; {@code null} ("Any", no filter). {@code "none"} ("Not set") -&gt; a null-option filter,
+     * because an unset ThreeState leaves no DB search record. {@code "true"}/{@code "false"} -&gt; a value
+     * filter, as for a plain boolean.
+     */
+    private EntitySearchFilter buildThreeStateFilter(AbstractApsEntityFinderAction entityFinderAction, String attrName) {
+        String value = entityFinderAction.getSearchFormFieldValue(attrName + "_booleanFieldName");
+        if (null == value || value.trim().isEmpty()) {
+            return null;
+        }
+        value = value.trim();
+        if (ThreeStateAttribute.NOT_SET_SEARCH_VALUE.equalsIgnoreCase(value)) {
+            EntitySearchFilter filter = new EntitySearchFilter(attrName, true);
+            filter.setNullOption(true);
+            return filter;
+        }
+        return new EntitySearchFilter(attrName, true, value, false);
+    }
+
     private Date getDateSearchFormValue(AbstractApsEntityFinderAction entityFinderAction,
             String fieldName, String dateFieldNameSuffix, boolean start) {
         String inputFormName = fieldName + dateFieldNameSuffix;

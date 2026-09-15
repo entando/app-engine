@@ -96,7 +96,7 @@ http://localhost:8080/PortalExample/do/Entity/search.action?entityManagerName=ja
 			
 			</s:if>
 			
-			<s:set var="searchableAttributesVar" value="searchableAttributes" ></s:set>
+			<s:set var="searchableAttributesVar" value="searchableAttributeRefs" ></s:set>
 			
 			<s:if test="null != #searchableAttributesVar && #searchableAttributesVar.size() > 0">
 				
@@ -111,7 +111,7 @@ http://localhost:8080/PortalExample/do/Entity/search.action?entityManagerName=ja
 						</p>
 					</s:if>
 					
-					<s:elseif test="#attribute.type == 'Date'">
+					<s:elseif test="#attribute.date">
 						<s:set var="dateStartInputFieldName" ><s:property value="#attribute.name" />_dateStartFieldName</s:set>
 						<s:set var="dateEndInputFieldName" ><s:property value="#attribute.name" />_dateEndFieldName</s:set>
 						<p>
@@ -124,7 +124,7 @@ http://localhost:8080/PortalExample/do/Entity/search.action?entityManagerName=ja
 						</p>
 					</s:elseif>
 					
-					<s:elseif test="#attribute.type == 'Number'">
+					<s:elseif test="#attribute.number">
 						<s:set var="numberStartInputFieldName" ><s:property value="#attribute.name" />_numberStartFieldName</s:set>
 						<s:set var="numberEndInputFieldName" ><s:property value="#attribute.name" />_numberEndFieldName</s:set>
 						<p>
@@ -137,14 +137,28 @@ http://localhost:8080/PortalExample/do/Entity/search.action?entityManagerName=ja
 						</p>
 					</s:elseif>
 					
-					<s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'"> 
+					<s:elseif test="#attribute.tristate">
 						<p>
-							<span class="important"><s:property value="#attribute.name" /></span><br />
+							<span class="important"><s:property value="#attribute.label" /></span><br />
+						</p>
+						<s:set var="booleanInputFieldName" ><s:property value="#attribute.name" />_booleanFieldName</s:set>
+						<s:set var="booleanInputFieldValue" ><s:property value="%{getSearchFormFieldValue(#booleanInputFieldName)}" /></s:set>
+						<%-- ThreeState: Any (no filter), Yes, No, Not set (the unset/none state). --%>
+						<ul class="noBullet">
+							<li><wpsf:radio useTabindexAutoIncrement="true" id="any_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="" checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}" cssClass="radio" /><label for="any_<s:property value="#booleanInputFieldName" />" class="normal" ><s:text name="label.any"/></label></li>
+							<li><wpsf:radio useTabindexAutoIncrement="true" id="true_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="true" checked="%{#booleanInputFieldValue == 'true'}" cssClass="radio" /><label for="true_<s:property value="#booleanInputFieldName" />" class="normal" ><s:text name="label.yes"/></label></li>
+							<li><wpsf:radio useTabindexAutoIncrement="true" id="false_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="false" checked="%{#booleanInputFieldValue == 'false'}" cssClass="radio" /><label for="false_<s:property value="#booleanInputFieldName" />" class="normal"><s:text name="label.no"/></label></li>
+							<li><wpsf:radio useTabindexAutoIncrement="true" id="none_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="none" checked="%{#booleanInputFieldValue == 'none'}" cssClass="radio" /><label for="none_<s:property value="#booleanInputFieldName" />" class="normal"><s:text name="label.notSet"/></label></li>
+						</ul>
+					</s:elseif>
+					<s:elseif test="#attribute.booleanLike && !#attribute.tristate">
+						<p>
+							<span class="important"><s:property value="#attribute.label" /></span><br />
 						</p>
 						<s:set var="booleanInputFieldName" ><s:property value="#attribute.name" />_booleanFieldName</s:set>
 						<s:set var="booleanInputFieldValue" ><s:property value="%{getSearchFormFieldValue(#booleanInputFieldName)}" /></s:set>
 						<ul class="noBullet">
-							<li><wpsf:radio useTabindexAutoIncrement="true" id="none_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="" checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" cssClass="radio" /><label for="none_<s:property value="#booleanInputFieldName" />" class="normal" ><s:text name="label.bothYesAndNo"/></label></li>
+							<li><wpsf:radio useTabindexAutoIncrement="true" id="none_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="" checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" cssClass="radio" /><label for="none_<s:property value="#booleanInputFieldName" />" class="normal" ><s:text name="label.any"/></label></li>
 							<li><wpsf:radio useTabindexAutoIncrement="true" id="true_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="true" checked="%{#booleanInputFieldValue == 'true'}" cssClass="radio" /><label for="true_<s:property value="#booleanInputFieldName" />" class="normal" ><s:text name="label.yes"/></label></li>
 							<li><wpsf:radio useTabindexAutoIncrement="true" id="false_%{#booleanInputFieldName}" name="%{#booleanInputFieldName}" value="false" checked="%{#booleanInputFieldValue == 'false'}" cssClass="radio" /><label for="false_<s:property value="#booleanInputFieldName" />" class="normal"><s:text name="label.no"/></label></li>
 						</ul>
@@ -167,19 +181,19 @@ http://localhost:8080/PortalExample/do/Entity/search.action?entityManagerName=ja
 				<s:set var="textInputFieldName" ><s:property value="#attribute.name" />_textFieldName</s:set>
 				<wpsf:hidden name="%{#textInputFieldName}" value="%{getSearchFormFieldValue(#textInputFieldName)}" />
 			</s:if>
-			<s:elseif test="#attribute.type == 'Date'">
+			<s:elseif test="#attribute.date">
 				<s:set var="dateStartInputFieldName" ><s:property value="#attribute.name" />_dateStartFieldName</s:set>
 				<s:set var="dateEndInputFieldName" ><s:property value="#attribute.name" />_dateEndFieldName</s:set>
 				<wpsf:hidden name="%{#dateStartInputFieldName}" value="%{getSearchFormFieldValue(#dateStartInputFieldName)}" />
 				<wpsf:hidden name="%{#dateEndInputFieldName}" value="%{getSearchFormFieldValue(#dateEndInputFieldName)}" />
 			</s:elseif>
-			<s:elseif test="#attribute.type == 'Number'">
+			<s:elseif test="#attribute.number">
 				<s:set var="numberStartInputFieldName" ><s:property value="#attribute.name" />_numberStartFieldName</s:set>
 				<s:set var="numberEndInputFieldName" ><s:property value="#attribute.name" />_numberEndFieldName</s:set>
 				<wpsf:hidden name="%{#numberStartInputFieldName}" value="%{getSearchFormFieldValue(#numberStartInputFieldName)}" />
 				<wpsf:hidden name="%{#numberEndInputFieldName}" value="%{getSearchFormFieldValue(#numberEndInputFieldName)}" />
 			</s:elseif>
-			<s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'"> 
+			<s:elseif test="#attribute.booleanLike"> 
 				<s:set var="booleanInputFieldName" ><s:property value="#attribute.name" />_booleanFieldName</s:set>
 				<wpsf:hidden name="%{#booleanInputFieldName}" value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
 			</s:elseif>

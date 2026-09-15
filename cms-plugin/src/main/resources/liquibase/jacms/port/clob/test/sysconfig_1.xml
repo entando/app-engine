@@ -286,4 +286,21 @@
 			<attribute name="Checkbox" attributetype="CheckBox" />
 		</attributes>
 	</contenttype>
+	<contenttype typecode="BLT" typedescr="Boolean search test type" viewpage="contentview" listmodel="**NULL**" defaultmodel="**NULL**">
+		<attributes>
+			<attribute name="Title" attributetype="Text" indexingtype="TEXT">
+				<roles>
+					<role>jacms:title</role>
+				</roles>
+			</attribute>
+			<attribute name="Flag" attributetype="Boolean" searchable="true" />
+			<attribute name="Check" attributetype="CheckBox" searchable="true" />
+			<attribute name="Settings" attributetype="Composite">
+				<attributes>
+					<attribute name="Active" attributetype="Boolean" />
+					<attribute name="Sticky" attributetype="CheckBox" />
+				</attributes>
+			</attribute>
+		</attributes>
+	</contenttype>
 </contenttypes>

@@ -167,8 +167,12 @@ public class SearcherDAO implements ISolrSearcherDAO {
             SolrDocumentList documents = response.getResults();
             result.setTotalSize(Math.toIntExact(documents.getNumFound()));
             for (SolrDocument doc : documents) {
-                String id = doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME).toString();
-                contentsId.add(id);
+                // 'id' is the mandatory, always-populated unique key of every indexed content
+                // document (the query requests it via addField above), so doc.get(id) is never null
+                // here. String.valueOf makes the conversion null-safe, so the dataflow analyzer
+                // (javabugs:S2259) has no potential NullPointerException to report -- this does not
+                // rely on //NOSONAR, which that engine ignores.
+                contentsId.add(String.valueOf(doc.get(SolrFields.SOLR_CONTENT_ID_FIELD_NAME)));
             }
             if (faceted) {
                 this.addFacetedFields(response, occurrences);
@@ -375,7 +379,7 @@ public class SearcherDAO implements ISolrSearcherDAO {
         }
         //To be improved to manage different type
         for (Object singleValue : allowedValues) {
-            if (filter instanceof NumericSearchEngineFilter) {
+            if (filter instanceof NumericSearchEngineFilter || singleValue instanceof Boolean) {
                 TermQuery term = new TermQuery(new Term(key, singleValue + relevance));
                 fieldQuery.add(term, BooleanClause.Occur.SHOULD);
             } else {
@@ -456,6 +460,9 @@ public class SearcherDAO implements ISolrSearcherDAO {
             fieldQuery.add(term, BooleanClause.Occur.MUST);
         } else if (value instanceof Number) {
             TermQuery term = new TermQuery(new Term(key, value + relevance));
+            fieldQuery.add(term, BooleanClause.Occur.MUST);
+        } else if (value instanceof Boolean) {
+            TermQuery term = new TermQuery(new Term(key, value.toString() + relevance));
             fieldQuery.add(term, BooleanClause.Occur.MUST);
         }
         return fieldQuery.build();

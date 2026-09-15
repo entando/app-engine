@@ -18,6 +18,7 @@ import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.util.ApsWebApplicationUtils;
 import jakarta.servlet.*;
 import org.entando.entando.aps.system.exception.CSRFProtectionException;
+import org.entando.entando.aps.system.init.InitializerManager;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService;
 import org.entando.entando.aps.system.services.tenants.ITenantInitializerService.InitializationTenantFilter;
 import org.entando.entando.aps.util.UrlUtils;
@@ -53,6 +54,14 @@ public class StartupListener extends org.springframework.web.context.ContextLoad
         super.contextInitialized(event);
         msg = this.getClass().getName() + ": INIT DONE " + svCtx.getServletContextName();
         ApsSystemUtils.directStdoutTrace(msg, true);
+
+        // Deferred from SystemPostProcessor: execute the post-init processes (self-REST seeding
+        // of default content types/models/contents) only now that the WebApplicationContext is fully
+        // refreshed and registered as current. Running them during refresh() exposed the seeding
+        // calls - and the background threads they trigger (e.g. Redis/lettuce deserialization,
+        // event notification) - to a half-initialized context.
+        InitializerManager initializerManager = ApsWebApplicationUtils.getBean(InitializerManager.class, svCtx);
+        initializerManager.executePostInitProcesses();
 
         boolean isActive = Objects.nonNull(System.getenv(SystemConstants.ENTANDO_CSRF_PROTECTION));
         String whiteList = System.getenv(SystemConstants.ENTANDO_CSRF_ALLOWED_DOMAINS);

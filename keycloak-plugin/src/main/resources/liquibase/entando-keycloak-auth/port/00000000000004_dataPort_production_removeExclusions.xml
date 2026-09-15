@@ -1,0 +1,99 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!--
+        The <exclusions> element of the dynamicAuthMapping seed value is retired : it is parsed
+        and ignored, never enforced.
+        Editing port/clob/production/sysconfig_kc.xml in place would NOT update databases that
+        already ran the 00000000000001_dataPort_production_v3 insert - Liquibase does not detect a
+        checksum change when only the referenced valueClobFile content changes - so the row would
+        silently keep the old value forever. This changeSet updates it explicitly instead.
+
+        The precondition matches only if the stored config is BYTE-FOR-BYTE identical to the exact,
+        unmodified value that changeSet 00000000000001_dataPort_production_v3 originally inserted.
+        This is deliberately conservative:
+          - fresh install: the insert changeSet writes the original value, this one then rewrites it
+            to the no-exclusions value in the same run;
+          - already-migrated, untouched environment: same rewrite happens on upgrade;
+          - ANY environment where the row differs in any way from the pristine shipped default
+            (an operator customized roles/groups/mappings, or even just re-saved it through the
+            admin UI) is left completely untouched - onFail="MARK_RAN" skips the update rather than
+            risk overwriting a customization. <exclusions> lingering there is harmless dead weight,
+            not a correctness issue (see DynamicMapping.java).
+        Uses Liquibase's own <update>/valueClobFile mechanism (not raw SQL string functions) so the
+        SET side is generated per-dialect by Liquibase itself - no REPLACE()/regex portability
+        concerns across Derby/PostgreSQL/MySQL/H2.
+        Re-running this changeSet is a no-op the second time: after the first successful run the
+        stored value no longer matches the precondition, so it cannot match again.
+    -->
+    <changeSet id="00000000000004_dataPort_production_removeExclusions" author="entando" context="production">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1"><![CDATA[
+SELECT COUNT(*) FROM sysconfig
+WHERE version = 'production' AND item = 'dynamicAuthMapping'
+AND CAST(config AS VARCHAR(4000)) = '<?xml version="1.0" encoding="UTF-8"?>
+<DynamicMapping>
+    <enabled>false</enabled>
+    <persist>FULL</persist>
+    <mappings>
+        <mapping>
+            <enabled>true</enabled>
+            <path>groups</path>
+            <kind>GROUPCLAIM</kind>
+        </mapping>
+        <mapping>
+            <enabled>true</enabled>
+            <path>realm_access.roles</path>
+            <kind>ROLECLAIM</kind>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <path>realm_access.roles</path>
+            <kind>ROLEGROUPCLAIM</kind>
+            <separator>_SEP_</separator>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <attribute>AD_ROLE</attribute>
+            <kind>ROLE</kind>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <attribute>AD_GROUP</attribute>
+            <kind>GROUP</kind>
+        </mapping>
+        <mapping>
+            <enabled>false</enabled>
+            <attribute>AD_GROUPROLE</attribute>
+            <kind>ROLEGROUP</kind>
+            <separator>_r_</separator>
+        </mapping>
+    </mappings>
+    <exclusions>
+        <exclusion>default-roles-entando-development</exclusion>
+        <exclusion>offline_access</exclusion>
+        <exclusion>uma_authorization</exclusion>
+    </exclusions>
+    <roles>
+        <role>imported_role</role>
+        <role>imported_role2</role>
+    </roles>
+    <groups>
+        <group>imported_group</group>
+        <group>imported_group2</group>
+    </groups>
+</DynamicMapping>
+'
+            ]]></sqlCheck>
+        </preConditions>
+        <update tableName="sysconfig">
+            <column name="config" valueClobFile="clob/production/sysconfig_kc_no_exclusions.xml" />
+            <where>version = 'production' AND item = 'dynamicAuthMapping'</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

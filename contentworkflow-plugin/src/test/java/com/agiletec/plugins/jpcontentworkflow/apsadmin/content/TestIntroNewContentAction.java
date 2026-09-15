@@ -67,7 +67,7 @@ public class TestIntroNewContentAction extends ApsAdminBaseTestCase {
 		assertEquals(Action.SUCCESS, result);
 		JpCwIntroNewContentAction action = (JpCwIntroNewContentAction) this.getAction();
 		List<SmallContentType> contentTypes = action.getContentTypes();
-		assertEquals(3, contentTypes.size());
+		assertEquals(4, contentTypes.size());
 		for (int i=0; i<contentTypes.size(); i++) {
 			assertFalse("EVN".equals(contentTypes.get(i).getCode()));
 		}

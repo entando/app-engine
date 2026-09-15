@@ -53,7 +53,7 @@
                     </p>
 
                     <div class="form-group">
-                        <label class="control-label col-sm-2" for="text" class="sr-only"><s:text
+                        <label class="control-label col-sm-2" for="text"><s:text
                                 name="label.description" /></label>
                         <div class="col-sm-9">
                             <wpsf:textfield name="text" id="text" cssClass="form-control" placeholder="%{getText('label.description')}" title="%{getText('label.search.by')} %{getText('label.description')}" />
@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="control-label col-sm-2" for="contentIdToken" class="control-label col-sm-2 text-right"><s:text name="label.code" />
+                        <label class="control-label col-sm-2" for="contentIdToken"><s:text name="label.code" />
                         </label>
                         <div class="col-sm-9">
                             <wpsf:textfield name="contentIdToken" id="contentIdToken" cssClass="form-control" placeholder="CNG12" />
@@ -93,7 +93,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <s:set var="searchableAttributes" value="searchableAttributes" />
+                                        <s:set var="searchableAttributes" value="searchableAttributeRefs" />
                                         <s:if test="null != #searchableAttributes && #searchableAttributes.size() > 0">
 
                                             <s:iterator var="attribute" value="#searchableAttributes">
@@ -103,8 +103,8 @@
                                                     <div class="form-group">
                                                         <s:set var="textInputFieldName">
                                                             <s:property value="#attribute.name" />_textFieldName</s:set>
-                                                        <label class="control-label col-sm-2" for="<s:property value="currentFieldId" />" class="control-label col-sm-3 text-right">
-                                                            <s:property value="#attribute.name" />
+                                                        <label class="control-label col-sm-2" for="<s:property value="currentFieldId" />">
+                                                            <s:property value="#attribute.label" />
                                                         </label>
                                                         <div class="col-sm-9">
                                                             <wpsf:textfield id="%{currentFieldId}"  name="%{#textInputFieldName}" value="%{getSearchFormFieldValue(#textInputFieldName)}"
@@ -112,7 +112,7 @@
                                                         </div>
                                                     </div>
                                                 </s:if>
-                                                <s:elseif test="#attribute.type == 'Date'">
+                                                <s:elseif test="#attribute.date">
                                                     <s:set var="dateStartInputFieldName">
                                                         <s:property value="#attribute.name" />_dateStartFieldName</s:set>
                                                     <s:set var="dateEndInputFieldName">
@@ -121,10 +121,9 @@
                                                         <div class="form-group">
                                                             <label
                                                                 class="control-label col-sm-2"
-                                                                for="<s:property value="%{currentFieldId}" />_dateStartFieldName_cal"
-                                                            class="control-label col-sm-9 text-right">
+                                                                for="<s:property value="%{currentFieldId}" />_dateStartFieldName_cal">
                                                             <s:text name="note.range.from.attribute" />&#32;
-                                                            <s:property value="#attribute.name" />
+                                                            <s:property value="#attribute.label" />
                                                         </label>
                                                         <div class="col-sm-9">
                                                             <wpsf:textfield
@@ -136,12 +135,11 @@
                                                         </div>
                                                     </div>
                                                     <div class="form-group">
-                                                        <label 
+                                                        <label
                                                             class="control-label col-sm-2"
-                                                            for="<s:property value="%{currentFieldId}" />_dateEndFieldName_cal"
-                                                            class="control-label col-sm-9 text-right">
+                                                            for="<s:property value="%{currentFieldId}" />_dateEndFieldName_cal">
                                                             <s:text name="note.range.to.attribute" />&#32;
-                                                            <s:property value="#attribute.name" />
+                                                            <s:property value="#attribute.label" />
                                                         </label>
                                                         <div class="col-sm-9">
                                                             <wpsf:textfield
@@ -153,7 +151,7 @@
                                                         </div>
                                                     </div>
                                                 </s:elseif>
-                                                <s:elseif test="#attribute.type == 'Number'">
+                                                <s:elseif test="#attribute.number">
                                                     <s:set var="numberStartInputFieldName">
                                                         <s:property value="#attribute.name" />_numberStartFieldName</s:set>
                                                     <s:set var="numberEndInputFieldName">
@@ -162,7 +160,7 @@
                                                             <label class="control-label col-sm-2"
                                                                    for="<s:property value="currentFieldId" />_start"><s:text
                                                                 name="note.range.from.attribute" />&#32;<s:property
-                                                                value="#attribute.name" />:</label>
+                                                                value="#attribute.label" />:</label>
                                                         <div class="col-sm-9">
                                                             <wpsf:textfield 
                                                                 id="%{currentFieldId}_start"
@@ -172,11 +170,11 @@
                                                         </div>
                                                     </div>
                                                     <div class="form-group">
-                                                        <label 
+                                                        <label
                                                             class="control-label col-sm-2"
                                                             for="<s:property value="currentFieldId" />_end">
                                                             <s:text  name="note.range.to.attribute" />&#32;
-                                                            <s:property value="#attribute.name" />:
+                                                            <s:property value="#attribute.label" />:
                                                         </label>
                                                         <div class="col-sm-9">
                                                             <wpsf:textfield
@@ -188,50 +186,80 @@
                                                     </div>
 
                                                 </s:elseif>
-                                                <s:elseif test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
-                                                    <p>
-                                                        <span class="important">
-                                                            <s:property value="#attribute.name" />
-                                                        </span>
-                                                        <br />
-                                                    </p>
+                                                <s:elseif test="#attribute.tristate">
                                                     <s:set var="booleanInputFieldName">
                                                         <s:property value="#attribute.name" />_booleanFieldName</s:set>
                                                     <s:set var="booleanInputFieldValue">
                                                         <s:property
                                                             value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
                                                     </s:set>
-                                                    <ul class="noBullet radiocheck">
-                                                        <li>
-                                                            <wpsf:radio 
-                                                                id="none_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value=""
-                                                                checked="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" /><label
-                                                                for="none_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.bothYesAndNo" />
+                                                    <%-- ThreeState has three stored states plus "don't filter": Any (no
+                                                         filter), Yes (true), No (false) and Not set (the unset/none state). --%>
+                                                    <s:set var="isAnyVar" value="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false') && !#booleanInputFieldValue.equals('none')}" />
+                                                    <div class="form-group">
+                                                        <label class="control-label col-sm-2"
+                                                               id="label_<s:property value="#booleanInputFieldName" />">
+                                                            <s:property value="#attribute.label" />
+                                                        </label>
+                                                        <div class="btn-group col-sm-9" data-toggle="buttons"
+                                                             role="radiogroup"
+                                                             aria-labelledby="label_<s:property value="#booleanInputFieldName" />">
+                                                            <label class="btn btn-default<s:if test="#isAnyVar"> active</s:if>">
+                                                                <input type="radio" id="any_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value=""
+                                                                       <s:if test="#isAnyVar">checked="checked"</s:if> />&#32;<s:text name="label.any" />
                                                             </label>
-                                                        </li>
-                                                        <li>
-                                                            <wpsf:radio 
-                                                                id="true_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value="true"
-                                                                checked="%{#booleanInputFieldValue == 'true'}" />
-                                                            <label
-                                                                for="true_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.yes" />
+                                                            <label class="btn btn-default<s:if test="#booleanInputFieldValue == 'true'"> active</s:if>">
+                                                                <input type="radio" id="true_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value="true"
+                                                                       <s:if test="#booleanInputFieldValue == 'true'">checked="checked"</s:if> />&#32;<s:text name="label.yes" />
                                                             </label>
-                                                        </li>
-                                                        <li>
-                                                            <wpsf:radio 
-                                                                id="false_%{#booleanInputFieldName}"
-                                                                name="%{#booleanInputFieldName}" value="false"
-                                                                checked="%{#booleanInputFieldValue == 'false'}" />
-                                                            <label
-                                                                for="false_<s:property value="#booleanInputFieldName" />"
-                                                                class="normal"><s:text name="label.no" />
+                                                            <label class="btn btn-default<s:if test="#booleanInputFieldValue == 'false'"> active</s:if>">
+                                                                <input type="radio" id="false_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value="false"
+                                                                       <s:if test="#booleanInputFieldValue == 'false'">checked="checked"</s:if> />&#32;<s:text name="label.no" />
                                                             </label>
-                                                        </li>
-                                                    </ul>
+                                                            <label class="btn btn-default<s:if test="#booleanInputFieldValue == 'none'"> active</s:if>">
+                                                                <input type="radio" id="none_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value="none"
+                                                                       <s:if test="#booleanInputFieldValue == 'none'">checked="checked"</s:if> />&#32;<s:text name="label.notSet" />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </s:elseif>
+                                                <s:elseif test="#attribute.booleanLike && !#attribute.tristate">
+                                                    <s:set var="booleanInputFieldName">
+                                                        <s:property value="#attribute.name" />_booleanFieldName</s:set>
+                                                    <s:set var="booleanInputFieldValue">
+                                                        <s:property
+                                                            value="%{getSearchFormFieldValue(#booleanInputFieldName)}" />
+                                                    </s:set>
+                                                    <s:set var="isAnyVar" value="%{!#booleanInputFieldValue.equals('true') && !#booleanInputFieldValue.equals('false')}" />
+                                                    <div class="form-group">
+                                                        <label class="control-label col-sm-2"
+                                                               id="label_<s:property value="#booleanInputFieldName" />">
+                                                            <s:property value="#attribute.label" />
+                                                        </label>
+                                                        <div class="btn-group col-sm-9" data-toggle="buttons"
+                                                             role="radiogroup"
+                                                             aria-labelledby="label_<s:property value="#booleanInputFieldName" />">
+                                                            <label class="btn btn-default<s:if test="#isAnyVar"> active</s:if>">
+                                                                <input type="radio" id="none_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value=""
+                                                                       <s:if test="#isAnyVar">checked="checked"</s:if> />&#32;<s:text name="label.any" />
+                                                            </label>
+                                                            <label class="btn btn-default<s:if test="#booleanInputFieldValue == 'true'"> active</s:if>">
+                                                                <input type="radio" id="true_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value="true"
+                                                                       <s:if test="#booleanInputFieldValue == 'true'">checked="checked"</s:if> />&#32;<s:text name="label.yes" />
+                                                            </label>
+                                                            <label class="btn btn-default<s:if test="#booleanInputFieldValue == 'false'"> active</s:if>">
+                                                                <input type="radio" id="false_<s:property value="#booleanInputFieldName" />"
+                                                                       name="<s:property value="#booleanInputFieldName" />" value="false"
+                                                                       <s:if test="#booleanInputFieldValue == 'false'">checked="checked"</s:if> />&#32;<s:text name="label.no" />
+                                                            </label>
+                                                        </div>
+                                                    </div>
                                                 </s:elseif>
                                             </s:iterator>
                                         </s:if>
@@ -357,7 +385,7 @@
                         <wpsf:hidden name="%{#textInputFieldName}"
                                      value="%{getSearchFormFieldValue(#textInputFieldName)}" />
                     </s:if>
-                    <s:elseif test="#attribute.type == 'Date'">
+                    <s:elseif test="#attribute.date">
                         <s:set var="dateStartInputFieldName">
                             <s:property value="#attribute.name" />_dateStartFieldName</s:set>
                         <s:set var="dateEndInputFieldName">
@@ -367,7 +395,7 @@
                         <wpsf:hidden name="%{#dateEndInputFieldName}"
                                      value="%{getSearchFormFieldValue(#dateEndInputFieldName)}" />
                     </s:elseif>
-                    <s:elseif test="#attribute.type == 'Number'">
+                    <s:elseif test="#attribute.number">
                         <s:set var="numberStartInputFieldName">
                             <s:property value="#attribute.name" />_numberStartFieldName</s:set>
                         <s:set var="numberEndInputFieldName">
@@ -378,7 +406,7 @@
                                      value="%{getSearchFormFieldValue(#numberEndInputFieldName)}" />
                     </s:elseif>
                     <s:elseif
-                        test="#attribute.type == 'Boolean' || #attribute.type == 'ThreeState'">
+                        test="#attribute.booleanLike">
                         <s:set var="booleanInputFieldName">
                             <s:property value="#attribute.name" />_booleanFieldName</s:set>
                         <wpsf:hidden name="%{#booleanInputFieldName}"

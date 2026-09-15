@@ -120,6 +120,7 @@ public class CompositeAttributeConfigAction extends AbstractBaseEntityAttributeC
 				AttributeInterface attribute = this.getAttributePrototype(this.getAttributeTypeCode());
 				attribute.setName(this.getAttributeName());
 				super.fillAttributeFields(attribute);
+				this.clearSearchableWithinList(attribute);
 				composite.getAttributes().add(attribute);
 				composite.getAttributeMap().put(attribute.getName(), attribute);
 			}
@@ -155,6 +156,21 @@ public class CompositeAttributeConfigAction extends AbstractBaseEntityAttributeC
 		return SUCCESS;
 	}
 	
+	/**
+	 * Force the {@code searchable} flag off when the Composite being edited is the nested type of a
+	 * List/Monolist. A boolean reached through a list is never indexed as a per-attribute filter by
+	 * either search engine, so the flag would be inert; the form does not offer it in that case, but
+	 * this also covers a stale or forged submission.
+	 * @param attribute the composite child being saved.
+	 */
+	private void clearSearchableWithinList(AttributeInterface attribute) {
+		if (null != this.getListAttribute() && attribute.isSearchable()) {
+			_logger.debug("Ignoring the searchable flag on '{}': the composite is nested in the list '{}'",
+					attribute.getName(), this.getListAttribute().getName());
+			attribute.setSearchable(false);
+		}
+	}
+
 	public List<AttributeInterface> getAllowedAttributeElementTypes() {
 		List<AttributeInterface> attributes = new ArrayList<AttributeInterface>();
 		try {

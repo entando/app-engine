@@ -28,13 +28,13 @@ public class WidgetConfigPropertiesDeserializer extends StdConverter<Map<String,
 
         for (Entry<String, Object> property : json.entrySet()) {
             if (property.getKey().equals("categories")) {
-                logger.warn("Serializing WidgetConfig.config.categories from JSON Format to custom persistence format");
+                logger.debug("Serializing WidgetConfig.config.categories from JSON Format to custom persistence format");
                 properties.put(property.getKey(), readCategories((List<String>) property.getValue()));
             } else if (property.getKey().toLowerCase().contains("filters")) {
-                logger.warn("Serializing WidgetConfig.config.filters from JSON Format to custom persistence format");
+                logger.debug("Serializing WidgetConfig.config.filters from JSON Format to custom persistence format");
                 properties.put(property.getKey(), readFilters((List<Map<String, Object>>) property.getValue()));
             } else if (property.getKey().equals("contents")) {
-                logger.warn("Serializing WidgetConfig.config.contents from JSON Format to custom persistence format");
+                logger.debug("Serializing WidgetConfig.config.contents from JSON Format to custom persistence format");
                 properties.put(property.getKey(), readContents((List<Map<String, Object>>) property.getValue()));
             } else {
                 properties.put(property.getKey(), property.getValue().toString());

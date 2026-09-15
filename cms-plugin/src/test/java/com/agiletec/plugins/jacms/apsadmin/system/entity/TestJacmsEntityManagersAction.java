@@ -57,13 +57,13 @@ class TestJacmsEntityManagersAction extends ApsAdminBaseTestCase {
 		IEntityTypesAction action = (IEntityTypesAction) this.getAction();
 		List<IApsEntity> entityPrototypes = action.getEntityPrototypes();
 		assertNotNull(entityPrototypes);
-		assertEquals(4, entityPrototypes.size());
-		
+		assertEquals(5, entityPrototypes.size());
+
 		IApsEntity firstType = entityPrototypes.get(0);
 		assertEquals("ART", firstType.getTypeCode());
 		assertEquals("Articolo rassegna stampa", firstType.getTypeDescr());
-		
-		IApsEntity lastType = entityPrototypes.get(3);
+
+		IApsEntity lastType = entityPrototypes.get(4);
 		assertEquals("RAH", lastType.getTypeCode());
 		assertEquals("Tipo_Semplice", lastType.getTypeDescr());
 	}

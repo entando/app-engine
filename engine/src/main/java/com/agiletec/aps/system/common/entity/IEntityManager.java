@@ -24,6 +24,8 @@ import com.agiletec.aps.system.common.entity.model.SmallEntityType;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeRole;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchKeys;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchSchema;
 
 /**
  * Base interface for the entity managers.
@@ -69,6 +71,33 @@ public interface IEntityManager extends IManager {
      * @throws EntException
      */
     public List<ApsEntityRecord> searchRecords(EntitySearchFilter[] filters) throws EntException;
+
+    /**
+     * The width of this manager's {@code attrname} column, i.e. the longest search key it can store.
+     * Each manager owns its own search table, so the bound is a property of <i>this</i> manager rather
+     * than of the platform: the default matches the tables the platform ships, and a manager whose table
+     * differs - including one in a custom project - returns its own.
+     *
+     * @return the maximum search key length, in characters.
+     */
+    default int getMaxSearchKeyLength() {
+        return EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH;
+    }
+
+    /**
+     * What the given entity type offers to a search: the attributes a form can filter on, their labels,
+     * the key each is addressed by, and the defects of that key set.
+     *
+     * <p>All of it is a pure function of the type, so an implementation is expected to compute it once
+     * per type and keep it - {@link ApsEntityManager} does. The default computes it on demand, which
+     * keeps any other implementation of this interface working.</p>
+     *
+     * @param typeCode the entity type code.
+     * @return the schema; never null, empty when the type does not exist.
+     */
+    default EntitySearchSchema getSearchSchema(String typeCode) {
+        return EntitySearchSchema.build(this.getEntityPrototype(typeCode), this.getMaxSearchKeyLength());
+    }
 
     /**
      * Create an object from the prototype.

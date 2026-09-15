@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ class TestContentManager extends BaseTestCase {
     void testSearchContents_1_1() throws Throwable {
         List<String> contentIds = this._contentManager.searchId(null);
         assertNotNull(contentIds);
-        assertEquals(25, contentIds.size());
+        assertEquals(29, contentIds.size());
 
         EntitySearchFilter creationOrder = new EntitySearchFilter(IContentManager.CONTENT_CREATION_DATE_FILTER_KEY, false);
         creationOrder.setOrder(EntitySearchFilter.ASC_ORDER);
@@ -163,14 +164,14 @@ class TestContentManager extends BaseTestCase {
         EntitySearchFilter[] filters4 = {versionFilter};
         contentIds = this._contentManager.searchId(filters4);
         assertNotNull(contentIds);
-        assertEquals(22, contentIds.size());
+        assertEquals(26, contentIds.size());
     }
 
     @Test
     void testSearchContents_1_4() throws Throwable {
         List<String> contentIds = this._contentManager.searchId(null);
         assertNotNull(contentIds);
-        assertEquals(25, contentIds.size());
+        assertEquals(29, contentIds.size());
 
         EntitySearchFilter creationOrder = new EntitySearchFilter(IContentManager.CONTENT_CREATION_DATE_FILTER_KEY, false);
         creationOrder.setOrder(EntitySearchFilter.ASC_ORDER);
@@ -198,7 +199,7 @@ class TestContentManager extends BaseTestCase {
         EntitySearchFilter[] filters1 = {creationOrder, descrFilter};
         List<String> contentIds = this._contentManager.searchId(filters1);
         assertNotNull(contentIds);
-        String[] expected1 = {"ART1", "RAH1", "ART187", "RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122"};
+        String[] expected1 = {"ART1", "RAH1", "ART187", "RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122", "BLT4"};
         assertEquals(expected1.length, contentIds.size());
         this.verifyOrder(contentIds, expected1);
 
@@ -206,7 +207,7 @@ class TestContentManager extends BaseTestCase {
         EntitySearchFilter[] filters2 = {creationOrder, descrFilter};
         contentIds = this._contentManager.searchId(filters2);
         assertNotNull(contentIds);
-        String[] expected2 = {"RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122"};
+        String[] expected2 = {"RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122", "BLT4"};
         assertEquals(expected2.length, contentIds.size());
         this.verifyOrder(contentIds, expected2);
 
@@ -236,7 +237,7 @@ class TestContentManager extends BaseTestCase {
         EntitySearchFilter[] filters1 = {creationOrder, descrFilter, paginationFilter};
         SearcherDaoPaginatedResult<String> paginatedContentsId1 = this._contentManager.getPaginatedWorkContentsId(null, true, filters1, groupCodes);
         assertNotNull(paginatedContentsId1);
-        String[] totalExpected1 = {"ART1", "RAH1", "ART187", "RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122"};
+        String[] totalExpected1 = {"ART1", "RAH1", "ART187", "RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122", "BLT4"};
         assertEquals(totalExpected1.length, paginatedContentsId1.getCount().intValue());
         assertEquals(4, paginatedContentsId1.getList().size());
         for (int i = 0; i < 4; i++) {
@@ -248,7 +249,7 @@ class TestContentManager extends BaseTestCase {
         EntitySearchFilter[] filters2 = {creationOrder, descrFilter, paginationFilter2};
         SearcherDaoPaginatedResult<String> paginatedContentsId2 = this._contentManager.getPaginatedWorkContentsId(null, true, filters2, groupCodes);
         assertNotNull(paginatedContentsId2);
-        String[] totalExpected2 = {"RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122"};
+        String[] totalExpected2 = {"RAH101", "ART102", "EVN103", "ART104", "ART111", "ART112", "EVN23", "ART120", "ART121", "ART122", "BLT4"};
         assertEquals(totalExpected2.length, paginatedContentsId2.getCount().intValue());
         assertEquals(6, paginatedContentsId2.getList().size());
         for (int i = 3; i < (6+3); i++) {
@@ -295,7 +296,9 @@ class TestContentManager extends BaseTestCase {
         assertNotNull(contentIds);
         String[] expected = {"ART187", "ART1", "EVN193", "EVN194", "ART180", "RAH1",
                 "EVN191", "EVN192", "RAH101", "EVN103", "ART104", "ART102", "EVN23",
-                "EVN24", "EVN25", "EVN41", "EVN20", "EVN21", "ART111", "ART120", "ART121", "ART122", "ART112", "ALL4"};
+                "EVN24", "EVN25", "EVN41", "EVN20", "EVN21", "ART111", "ART120", "ART121", "ART122", "ART112", "ALL4",
+                "BLT1", "BLT2", "BLT3", "BLT4"};
+        assertEquals(expected.length, contentIds.size());
         this.verifyOrder(contentIds, expected);
     }
 
@@ -352,7 +355,7 @@ class TestContentManager extends BaseTestCase {
         groupCodes.add(Group.ADMINS_GROUP_NAME);
         contents = this._contentManager.loadWorkContentsId(null, groupCodes);
         assertNotNull(contents);
-        assertEquals(25, contents.size());
+        assertEquals(29, contents.size());
     }
 
     @Test
@@ -592,7 +595,7 @@ class TestContentManager extends BaseTestCase {
     @Test
     void testGetContentTypes() {
         Map<String, SmallContentType> smallContentTypes = _contentManager.getSmallContentTypesMap();
-        assertEquals(4, smallContentTypes.size());
+        assertEquals(5, smallContentTypes.size());
     }
 
     @Test
@@ -642,7 +645,7 @@ class TestContentManager extends BaseTestCase {
     @Test
     void testLoadPublicContents() throws EntException {
         List<String> contents = _contentManager.loadPublicContentsId(null, null, freeGroup);
-        assertEquals(15, contents.size());
+        assertEquals(19, contents.size());
     }
     
     @Test
@@ -1613,6 +1616,222 @@ class TestContentManager extends BaseTestCase {
             BooleanAttribute booleanAttribute = (BooleanAttribute) content.getAttribute(attributeCodes[i]);
             booleanAttribute.setBooleanValue(value);
         }
+    }
+
+    /**
+     * End-to-end DB-search test for a plain Boolean nested inside a Composite: once the child is
+     * flagged searchable, it must be indexed under the path key "Composite_Boolean" and be filterable
+     * through both the work ({@code workcontentsearch}) and public ({@code contentsearch}) searchers -
+     * the Solr-disabled counterpart of the AdvContentSearch nested-boolean capability.
+     */
+    @Test
+    void testLoadContentsByNestedCompositeBooleanAttribute() throws Throwable {
+        this.setCompositeChildrenSearchable(true);
+        List<String> addedContents = new ArrayList<>();
+        try {
+            // After the type-config round-trip, every boolean-like composite child (Boolean, CheckBox,
+            // ThreeState) keeps its inherited searchable flag; non-boolean children are forced false.
+            Content reloaded = this._contentManager.createContentType("ALL");
+            CompositeAttribute reloadedComposite = (CompositeAttribute) reloaded.getAttribute("Composite");
+            assertTrue(reloadedComposite.getAttribute("Boolean").isSearchable());
+            assertTrue(reloadedComposite.getAttribute("CheckBox").isSearchable());
+            assertTrue(reloadedComposite.getAttribute("ThreeState").isSearchable());
+
+            // feature: the nested boolean, made searchable purely through the content type, is indexed
+            // under the path key "Composite_Boolean" and filterable through both DB searchers.
+            String trueId = this.createAllCloneWithNestedBoolean(Boolean.TRUE, addedContents);
+            String falseId = this.createAllCloneWithNestedBoolean(Boolean.FALSE, addedContents);
+
+            // work table (workcontentsearch)
+            List<String> workTrue = this.searchByNestedComposite(true, false);
+            assertTrue(workTrue.contains(trueId));
+            assertFalse(workTrue.contains(falseId));
+            List<String> workFalse = this.searchByNestedComposite(false, false);
+            assertTrue(workFalse.contains(falseId));
+            assertFalse(workFalse.contains(trueId));
+
+            // public table (contentsearch)
+            List<String> onlineTrue = this.searchByNestedComposite(true, true);
+            assertTrue(onlineTrue.contains(trueId));
+            assertFalse(onlineTrue.contains(falseId));
+            List<String> onlineFalse = this.searchByNestedComposite(false, true);
+            assertTrue(onlineFalse.contains(falseId));
+            assertFalse(onlineFalse.contains(trueId));
+        } finally {
+            for (String id : addedContents) {
+                this._contentManager.deleteContent(id);
+                assertNull(this._contentManager.loadContent(id, false));
+            }
+            this.setCompositeChildrenSearchable(false);
+        }
+    }
+
+    /**
+     * The path key of a realistically named Composite child exceeds the 30 characters the
+     * {@code attrname} column of the search tables historically allowed - every fixture in this suite
+     * is short enough ({@code Composite_Boolean}) to hide it. This pins the widened column end to end:
+     * save, publish and filter by a 36-character key.
+     */
+    @Test
+    void testLoadContentsByLongNestedCompositeBooleanKey() throws Throwable {
+        String typeCode = "LNG";
+        String compositeName = "productSpecifications";
+        String childName = "isDiscontinued";
+        String searchKey = compositeName + "_" + childName;
+        assertEquals(36, searchKey.length());
+        String contentId = null;
+        try {
+            ((IEntityTypesConfigurer) this._contentManager)
+                    .addEntityPrototype(this.buildLongKeyType(typeCode, compositeName, childName));
+            Content content = this._contentManager.createContentType(typeCode);
+            content.setDescription("content with a long nested boolean key");
+            content.setMainGroup(Group.FREE_GROUP_NAME);
+            CompositeAttribute composite = (CompositeAttribute) content.getAttribute(compositeName);
+            ((BooleanAttribute) composite.getAttribute(childName)).setBooleanValue(Boolean.TRUE);
+            this._contentManager.saveContent(content);
+            contentId = content.getId();
+            this._contentManager.insertOnLineContent(content);
+
+            List<String> groups = new ArrayList<>();
+            groups.add(Group.ADMINS_GROUP_NAME);
+            EntitySearchFilter<String> typeFilter = new EntitySearchFilter<>(
+                    IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, typeCode, false);
+            EntitySearchFilter<String> keyFilter = new EntitySearchFilter<>(searchKey, true, "true", false);
+            EntitySearchFilter[] filters = {typeFilter, keyFilter};
+            assertTrue(this._contentManager.loadWorkContentsId(filters, groups).contains(contentId));
+            assertTrue(this._contentManager.loadPublicContentsId(typeCode, null, filters, groups)
+                    .contains(contentId));
+
+            EntitySearchFilter<String> missFilter = new EntitySearchFilter<>(searchKey, true, "false", false);
+            assertFalse(this._contentManager
+                    .loadWorkContentsId(new EntitySearchFilter[]{typeFilter, missFilter}, groups)
+                    .contains(contentId));
+        } finally {
+            if (null != contentId) {
+                this._contentManager.removeOnLineContent(this._contentManager.loadContent(contentId, false));
+                this._contentManager.deleteContent(contentId);
+                assertNull(this._contentManager.loadContent(contentId, false));
+            }
+            if (null != this._contentManager.getEntityPrototype(typeCode)) {
+                ((IEntityTypesConfigurer) this._contentManager).removeEntityPrototype(typeCode);
+            }
+        }
+    }
+
+    /**
+     * The persist-time choke point: a type whose attribute paths flatten to the same search key is
+     * refused outright, because neither search path can tell the two attributes apart afterwards.
+     * Nothing is written - the catalog keeps the previous definition.
+     */
+    @Test
+    void testSavingTypeWithCollidingNestedBooleanKeyIsRejected() throws Throwable {
+        Content prototype = this._contentManager.createContentType("ALL");
+        ((CompositeAttribute) prototype.getAttribute("Composite")).getAttribute("Boolean").setSearchable(true);
+        BooleanAttribute clashing = (BooleanAttribute) this._contentManager
+                .getEntityAttributePrototypes().get("Boolean").getAttributePrototype();
+        clashing.setName("Composite_Boolean");
+        clashing.setSearchable(true);
+        prototype.addAttribute(clashing);
+
+        EntException exception = assertThrows(EntException.class, () ->
+                ((IEntityTypesConfigurer) this._contentManager).updateEntityPrototype(prototype));
+        assertTrue(exception.getMessage().contains("Composite_Boolean"));
+        assertTrue(exception.getMessage().contains("Composite > Boolean"));
+
+        Content reloaded = this._contentManager.createContentType("ALL");
+        assertNull(reloaded.getAttribute("Composite_Boolean"));
+        assertFalse(((CompositeAttribute) reloaded.getAttribute("Composite")).getAttribute("Boolean").isSearchable());
+    }
+
+    private Content buildLongKeyType(String typeCode, String compositeName, String childName) {
+        Map<String, AttributeInterface> prototypes = this._contentManager.getEntityAttributePrototypes();
+        Content type = new Content();
+        type.setTypeCode(typeCode);
+        type.setTypeDescription("Long nested key type");
+        type.setDefaultLang("it");
+        CompositeAttribute composite = (CompositeAttribute) prototypes.get("Composite").getAttributePrototype();
+        composite.setName(compositeName);
+        BooleanAttribute child = (BooleanAttribute) prototypes.get("Boolean").getAttributePrototype();
+        child.setName(childName);
+        child.setSearchable(true);
+        composite.getAttributes().add(child);
+        composite.getAttributeMap().put(childName, child);
+        type.addAttribute(composite);
+        return type;
+    }
+
+    @Test
+    void testBooleanSearchableConfigParityTopLevelAndComposite() throws Throwable {
+        // A boolean-like is configured the SAME WAY top-level and as a Composite child: the searchable
+        // flag set on the content type is reported in the type XML (proven by surviving the
+        // serialize->reload of updateEntityPrototype) and inherited by content instances - identically
+        // at both nesting levels. No auto-forcing: an unflagged boolean-like stays non-searchable.
+        Content prototype = this._contentManager.createContentType("ALL");
+        prototype.getAttribute("Boolean").setSearchable(true);
+        ((CompositeAttribute) prototype.getAttribute("Composite")).getAttribute("Boolean").setSearchable(true);
+        try {
+            ((IEntityTypesConfigurer) this._contentManager).updateEntityPrototype(prototype);
+            this._contentManager.reloadEntitiesReferences("ALL");
+            super.waitThreads(ApsEntityManager.RELOAD_REFERENCES_THREAD_NAME_PREFIX);
+
+            // reloaded TYPE keeps the flag at both levels -> the type XML reported searchable="true"
+            Content reloadedType = this._contentManager.createContentType("ALL");
+            CompositeAttribute reloadedComposite = (CompositeAttribute) reloadedType.getAttribute("Composite");
+            assertTrue(reloadedType.getAttribute("Boolean").isSearchable(), "top-level boolean searchable preserved");
+            assertTrue(reloadedComposite.getAttribute("Boolean").isSearchable(), "composite boolean searchable preserved");
+            // parity (negative): a boolean-like left unflagged is non-searchable at both levels
+            assertFalse(reloadedType.getAttribute("CheckBox").isSearchable());
+            assertFalse(reloadedComposite.getAttribute("CheckBox").isSearchable());
+
+            // a CONTENT instance inherits the flag from the type, at both levels
+            Content content = this._contentManager.loadContent("ALL4", false);
+            CompositeAttribute contentComposite = (CompositeAttribute) content.getAttribute("Composite");
+            assertTrue(content.getAttribute("Boolean").isSearchable(), "top-level boolean inherited by content");
+            assertTrue(contentComposite.getAttribute("Boolean").isSearchable(), "composite boolean inherited by content");
+        } finally {
+            Content restore = this._contentManager.createContentType("ALL");
+            restore.getAttribute("Boolean").setSearchable(false);
+            ((CompositeAttribute) restore.getAttribute("Composite")).getAttribute("Boolean").setSearchable(false);
+            ((IEntityTypesConfigurer) this._contentManager).updateEntityPrototype(restore);
+            this._contentManager.reloadEntitiesReferences("ALL");
+            super.waitThreads(ApsEntityManager.RELOAD_REFERENCES_THREAD_NAME_PREFIX);
+        }
+    }
+
+    private void setCompositeChildrenSearchable(boolean searchable) throws Throwable {
+        Content prototype = this._contentManager.createContentType("ALL");
+        CompositeAttribute composite = (CompositeAttribute) prototype.getAttribute("Composite");
+        composite.getAttribute("Boolean").setSearchable(searchable);
+        composite.getAttribute("CheckBox").setSearchable(searchable);
+        composite.getAttribute("ThreeState").setSearchable(searchable);
+        ((IEntityTypesConfigurer) this._contentManager).updateEntityPrototype(prototype);
+        this._contentManager.reloadEntitiesReferences("ALL");
+        super.waitThreads(ApsEntityManager.RELOAD_REFERENCES_THREAD_NAME_PREFIX);
+    }
+
+    private String createAllCloneWithNestedBoolean(Boolean value, List<String> addedContents) throws Throwable {
+        Content clone = this._contentManager.loadContent("ALL4", false);
+        clone.setId(null);
+        CompositeAttribute composite = (CompositeAttribute) clone.getAttribute("Composite");
+        BooleanAttribute nestedBoolean = (BooleanAttribute) composite.getAttribute("Boolean");
+        nestedBoolean.setBooleanValue(value);
+        this._contentManager.saveContent(clone);
+        addedContents.add(clone.getId());
+        this._contentManager.insertOnLineContent(clone);
+        return clone.getId();
+    }
+
+    private List<String> searchByNestedComposite(boolean value, boolean online) throws Exception {
+        List<String> groups = new ArrayList<>();
+        groups.add(Group.ADMINS_GROUP_NAME);
+        EntitySearchFilter<String> typeFilter = new EntitySearchFilter<>(
+                IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, "ALL", false);
+        EntitySearchFilter<String> nestedFilter = new EntitySearchFilter<>(
+                "Composite_Boolean", true, Boolean.toString(value), false);
+        EntitySearchFilter[] filters = {typeFilter, nestedFilter};
+        return online
+                ? this._contentManager.loadPublicContentsId("ALL", null, filters, groups)
+                : this._contentManager.loadWorkContentsId(filters, groups);
     }
     
     private void testBooleanAttribute_test4(String booleanAttribute, String[] nullResults, String[] falseResults, String[] trueResults) throws Exception {

@@ -17,6 +17,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.AbstractJAXBAttribu
 import com.agiletec.aps.system.common.entity.model.attribute.TextAttribute;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.Lang;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.CmsAttributeReference;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
@@ -30,8 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.jdom2.Element;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 
 /**
  * Classe astratta di appoggio agli attributi di tipo Risorsa.
@@ -386,7 +385,7 @@ public abstract class AbstractResourceAttribute extends TextAttribute
             return;
         }
         try {
-            ResourceInterface resource = this.getResourceManager().loadResource(resourceId.toString());
+            ResourceInterface resource = this.getResourceManager().loadResource(resourceId.toString()); //NOSONAR
             if (null != resource) {
                 this.setResource(resource, this.getDefaultLangCode());
             }
@@ -419,6 +418,7 @@ public abstract class AbstractResourceAttribute extends TextAttribute
     }
 
     protected IResourceManager getResourceManager() {
+        this.resourceManager = ApplicationContextProvider.resolveIfNull(this.resourceManager, IResourceManager.class);
         return resourceManager;
     }
 
@@ -430,11 +430,9 @@ public abstract class AbstractResourceAttribute extends TextAttribute
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
-        if (ctx == null) {
+        this.resourceManager = ApplicationContextProvider.resolveBean(IResourceManager.class);
+        if (this.resourceManager == null) {
             logger.warn("Null WebApplicationContext during deserialization");
-            return;
         }
-        this.resourceManager = ctx.getBean(IResourceManager.class);
     }
 }

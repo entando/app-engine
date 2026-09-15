@@ -100,3 +100,38 @@ INSERT INTO DATABASECHANGELOG (id, author, filename, dateexecuted, orderexecuted
 
 INSERT INTO DATABASECHANGELOG (id, author, filename, dateexecuted, orderexecuted, exectype, md5sum, description, comments, tag, liquibase, contexts, labels, deployment_id)
   VALUES('00000000000001_jpcontentscheduler_dataPort_production', 'entando', 'liquibase/jpcontentscheduler/port/00000000000001_dataPort_production.xml', '2022-03-03 15:44:33.948', 8, 'EXECUTED', '8:ea617c252a9fd7ef7158ce075325969b', 'insert tableName=sysconfig', '', NULL, '4.4.3', 'production', NULL, '6318673902');
+
+-- content templates (7.x compatibility)
+-- Add a CSP nonce to inline <script> tags and migrate Velocity $velocityCount to $foreach.count
+
+-- UPDATE pagemodels
+-- SET templategui = REPLACE(templategui, '<script', '<script nonce="<@wp.cspNonce />"')
+-- WHERE templategui LIKE '%<script%' AND templategui NOT LIKE '%nonce=%';
+--
+-- UPDATE guifragment
+-- SET gui = REPLACE(gui, '<script', '<script nonce="<@wp.cspNonce />"')
+-- WHERE gui LIKE '%<script%' AND gui NOT LIKE '%nonce=%';
+--
+-- UPDATE guifragment
+-- SET defaultgui = REPLACE(defaultgui, '<script', '<script nonce="<@wp.cspNonce />"')
+-- WHERE defaultgui LIKE '%<script%' AND defaultgui NOT LIKE '%nonce=%';
+--
+-- UPDATE pagemodels
+-- SET templategui = CONCAT('<#assign wp=JspTaglibs["/aps-core"]>', CHAR(10 USING utf8mb4), templategui)
+-- WHERE templategui LIKE '%cspNonce%' AND templategui NOT LIKE '%/aps-core%';
+--
+-- UPDATE guifragment
+-- SET gui = CONCAT('<#assign wp=JspTaglibs["/aps-core"]>', CHAR(10 USING utf8mb4), gui)
+-- WHERE gui LIKE '%cspNonce%' AND gui NOT LIKE '%/aps-core%';
+--
+-- UPDATE guifragment
+-- SET defaultgui = CONCAT('<#assign wp=JspTaglibs["/aps-core"]>', CHAR(10 USING utf8mb4), defaultgui)
+-- WHERE defaultgui LIKE '%cspNonce%' AND defaultgui NOT LIKE '%/aps-core%';
+--
+-- UPDATE contentmodels
+-- SET model = REPLACE(model, '<script', '<script nonce="$content.nonce"')
+-- WHERE model LIKE '%<script%' AND model NOT LIKE '%nonce=%';
+--
+-- UPDATE contentmodels
+-- SET model = REPLACE(model, '$velocityCount', '$foreach.count')
+-- WHERE model LIKE '%$velocityCount%';

@@ -61,7 +61,7 @@ public class TestContentFinderAction extends ApsAdminBaseTestCase {
 			this.executeSearch("admin", params);
 			ContentFinderAction action = (ContentFinderAction) this.getAction();
             SearcherDaoPaginatedResult<String> result = action.getPaginatedContentsId(10);
-			assertEquals(25, result.getCount().intValue());
+			assertEquals(29, result.getCount().intValue());
 			assertEquals(10, result.getList().size());
 			this.executeSearch("editorCoach", params);
 			action = (ContentFinderAction) this.getAction();
@@ -102,7 +102,7 @@ public class TestContentFinderAction extends ApsAdminBaseTestCase {
 			this.executeSearch("admin", params);
 			ContentFinderAction action = (ContentFinderAction) this.getAction();
 			List<String> contents = action.getContents();
-			assertEquals(25, contents.size());
+			assertEquals(29, contents.size());
 			this.executeSearch("editorCoach", params);
 			action = (ContentFinderAction) this.getAction();
 			contents = action.getContents();

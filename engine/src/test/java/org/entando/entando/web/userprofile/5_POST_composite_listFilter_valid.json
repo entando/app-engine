@@ -1,0 +1,37 @@
+{
+  "code": "TST",
+  "name": "Profile Type TST",
+  "attributes": [
+    {
+      "code": "compo",
+      "type": "Composite",
+      "name": "A composite carrying a nestable searchable child",
+      "roles": [],
+      "mandatory": false,
+      "listFilter": false,
+      "indexable": false,
+      "validationRules": null,
+      "nestedAttribute": null,
+      "compositeAttributes": [
+        {
+          "code": "flag",
+          "type": "Boolean",
+          "name": "A boolean child that may be a list filter",
+          "roles": [],
+          "mandatory": false,
+          "listFilter": true,
+          "indexable": false
+        },
+        {
+          "code": "note",
+          "type": "Monotext",
+          "name": "A text child that does not ask for it",
+          "roles": [],
+          "mandatory": false,
+          "listFilter": false,
+          "indexable": false
+        }
+      ]
+    }
+  ]
+}

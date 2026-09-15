@@ -113,7 +113,10 @@ public class WorkflowNotifierManager extends AbstractService implements IWorkflo
 			String contentId = currentContent.getId();
 			if (null != contentId) {
 				Content previousContent = this.getContentManager().loadContent(contentId, false);
-				if (previousContent.getStatus().equals(currentContent.getStatus())) {
+				// previousContent is null when the content is being created with a caller-supplied id
+				// (e.g. a bundle install that preserves content ids): there is no prior work copy to
+				// compare against, so it IS a status change — keep notify = true rather than NPE.
+				if (previousContent != null && previousContent.getStatus().equals(currentContent.getStatus())) {
 					notify = false;
 				}
 			}

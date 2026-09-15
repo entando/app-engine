@@ -297,7 +297,17 @@ public class ContentListViewerWidgetAction extends SimpleWidgetConfigAction {
 				}
 
 			} else if (filterKey.startsWith(UserFilterOptionBean.TYPE_ATTRIBUTE + "_")) {
-				properties.put(UserFilterOptionBean.PARAM_KEY, filterKey.substring((UserFilterOptionBean.TYPE_ATTRIBUTE + "_").length()));
+				String attributeKey = filterKey.substring((UserFilterOptionBean.TYPE_ATTRIBUTE + "_").length());
+				// The key arrives as a request parameter, so it is not necessarily one of the keys
+				// getAllowedUserFilterTypes() offered. UserFilterOptionBean resolves it with a
+				// top-level lookup and throws when it finds nothing - at render time, on the public
+				// page, once per visitor. Refuse it here instead, while there is someone to tell.
+				if (!this.existsTopLevelAttribute(attributeKey)) {
+					_logger.warn("Rejected user filter on unknown attribute key '{}' of type '{}'",
+							attributeKey, this.getContentTypeCodeFromConfig());
+					return null;
+				}
+				properties.put(UserFilterOptionBean.PARAM_KEY, attributeKey);
 				properties.put(UserFilterOptionBean.PARAM_IS_ATTRIBUTE_FILTER, String.valueOf(true));
 			}
 			if (properties.isEmpty()) {
@@ -308,6 +318,25 @@ public class ContentListViewerWidgetAction extends SimpleWidgetConfigAction {
 			throw new EntException("Error creating user filter", t);
 		}
 		return properties;
+	}
+
+	private String getContentTypeCodeFromConfig() {
+		return this.getWidget().getConfig().getProperty(IContentListWidgetHelper.WIDGET_PARAM_CONTENT_TYPE);
+	}
+
+	/**
+	 * Whether the configured content type declares this attribute at top level - the only place
+	 * {@link UserFilterOptionBean} looks it up. A Composite-nested path key such as
+	 * {@code cardBody_highlighted} is therefore refused: the runtime cannot resolve it, and storing
+	 * it would only move the failure to the public page.
+	 */
+	private boolean existsTopLevelAttribute(String attributeKey) throws EntException {
+		String contentType = this.getContentTypeCodeFromConfig();
+		if (null == contentType) {
+			return false;
+		}
+		Content prototype = this.getContentManager().createContentType(contentType);
+		return null != prototype && null != prototype.getAttribute(attributeKey);
 	}
 
 	public String moveUserFilter() {

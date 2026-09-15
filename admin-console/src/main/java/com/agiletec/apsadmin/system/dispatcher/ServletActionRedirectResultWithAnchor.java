@@ -19,6 +19,8 @@ import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.dispatcher.mapper.ActionMapping;
 import org.apache.struts2.result.ServletRedirectResult;
 
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -128,6 +130,29 @@ public class ServletActionRedirectResultWithAnchor extends ServletRedirectResult
         }
         setLocation(tmpLocation.toString());
         super.execute(invocation);
+    }
+
+    /**
+     * Jetty 12 (ee10) {@link HttpServletResponse#sendRedirect(String)} throws
+     * {@code IllegalArgumentException: Fragment} for any redirect location containing a URL fragment
+     * ({@code #anchor}). A fragment in the {@code Location} header is valid per RFC 7231 §7.1.2 and is
+     * honoured by browsers, so when the target carries an anchor we set the status + {@code Location}
+     * header directly — mirroring the superclass's own non-302 branch — instead of calling
+     * {@code sendRedirect}. Fragment-free locations keep the standard behaviour.
+     */
+    @Override
+    protected void sendRedirect(HttpServletResponse response, String finalLocation) throws IOException {
+        if (null != finalLocation && finalLocation.indexOf('#') >= 0) {
+            response.setStatus(statusCode);
+            response.setHeader("Location", finalLocation);
+            try {
+                response.getWriter().write(finalLocation);
+            } finally {
+                response.getWriter().close();
+            }
+            return;
+        }
+        super.sendRedirect(response, finalLocation);
     }
     
     /**

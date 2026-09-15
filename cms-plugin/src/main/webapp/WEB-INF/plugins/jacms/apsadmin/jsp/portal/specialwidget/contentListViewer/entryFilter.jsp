@@ -244,19 +244,35 @@
                                 </p>
                                 <fieldset class="margin-base-top"><legend><s:text name="label.settings"/></legend>
 
+                                    <%-- The 'active' class drives what the button group looks like and 'checked'
+                                         drives what is submitted: they must agree, or the group opens showing one
+                                         option highlighted while a different one is selected. Both are derived from
+                                         the same value here.
+
+                                         That value is read from the request parameter rather than from the action:
+                                         this page is rendered by BaseFilterAction on the normal path
+                                         (newFilter/setFilterType), which has no 'booleanValue' property, and only by
+                                         BooleanAttributeFilterAction on the 'input' result of saveBooleanFilter. The
+                                         parameter is available on both, so the choice also survives a validation
+                                         re-render. --%>
+                                    <s:set var="booleanValueVar" value="%{#parameters['booleanValue'] != null ? #parameters['booleanValue'][0] : ''}" />
+                                    <s:set var="isBooleanAllVar" value="%{#booleanValueVar != 'true' && #booleanValueVar != 'false'}" />
                                     <div class="form-group">
                                         <div class="btn-group col-sm-5" data-toggle="buttons">
 
-                                            <label class="btn btn-default active">
-                                                <input type="radio" name="booleanValue" id="booleanValue_true" value="true" />&#32;
+                                            <label class="btn btn-default<s:if test="%{#booleanValueVar == 'true'}"> active</s:if>">
+                                                <input type="radio" name="booleanValue" id="booleanValue_true" value="true"
+                                                       <s:if test="%{#booleanValueVar == 'true'}">checked="checked"</s:if> />&#32;
                                                 <s:text name="label.yes" />
                                             </label>
-                                            <label class="btn btn-default">
-                                                <input type="radio" name="booleanValue" id="booleanValue_false" value="false" />&#32;
+                                            <label class="btn btn-default<s:if test="%{#booleanValueVar == 'false'}"> active</s:if>">
+                                                <input type="radio" name="booleanValue" id="booleanValue_false" value="false"
+                                                       <s:if test="%{#booleanValueVar == 'false'}">checked="checked"</s:if> />&#32;
                                                 <s:text name="label.no" />
                                             </label>
-                                            <label class="btn btn-default">
-                                                <input type="radio" name="booleanValue" id="booleanValue_none" checked="checked" value="" />
+                                            <label class="btn btn-default<s:if test="#isBooleanAllVar"> active</s:if>">
+                                                <input type="radio" name="booleanValue" id="booleanValue_none" value=""
+                                                       <s:if test="#isBooleanAllVar">checked="checked"</s:if> />&#32;
                                                 <s:text name="label.all" />
                                             </label>
                                         </div>
@@ -422,17 +438,22 @@
 
                         <fieldset class="margin-base-top"><legend><s:text name="label.order" /></legend>
                             <div class="form-group">
+                                <%-- Same rule as the Boolean picker above: 'active' and 'checked' are derived
+                                     from one value so they cannot disagree. The "none" option used to carry an
+                                     unconditional checked="checked", which put two checked radios in the group
+                                     whenever the order was ASC or DESC. --%>
+                                <s:set var="isOrderNoneVar" value="%{'ASC' != order && 'DESC' != order}" />
                                 <div class="btn-group col-sm-5" data-toggle="buttons">
 
-                                    <label class="btn btn-default active">
-                                        <input type="radio" name="order" checked="checked" value="" />&#32;
+                                    <label class="btn btn-default<s:if test="#isOrderNoneVar"> active</s:if>">
+                                        <input type="radio" name="order" value="" <s:if test="#isOrderNoneVar">checked="checked"</s:if> />&#32;
                                         <s:text name="label.none" />
                                     </label>
-                                    <label class="btn btn-default">
+                                    <label class="btn btn-default<s:if test="('ASC' == order)"> active</s:if>">
                                         <input type="radio" name="order" value="ASC" <s:if test="('ASC' == order)">checked="checked"</s:if> />&#32;
                                         <s:text name="label.order.ascendant" />
                                     </label>
-                                    <label class="btn btn-default">
+                                    <label class="btn btn-default<s:if test="('DESC' == order)"> active</s:if>">
                                         <input type="radio" name="order" value="DESC" <s:if test="('DESC' == order)">checked="checked"</s:if> />&#32;<s:text name="label.order.descendant" />
                                         </label>
                                     </div>

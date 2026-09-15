@@ -14,6 +14,8 @@
 package org.entando.entando.aps.system.services.entity;
 
 import com.agiletec.aps.system.common.entity.*;
+import org.entando.entando.aps.system.common.entity.search.EntitySearchKeys;
+import org.entando.entando.aps.system.common.entity.search.NestedSearchSupport;
 import com.agiletec.aps.system.common.entity.model.*;
 import com.agiletec.aps.system.common.entity.model.attribute.*;
 import com.agiletec.aps.system.common.entity.model.attribute.util.*;
@@ -213,12 +215,16 @@ public abstract class AbstractEntityTypeService<I extends IApsEntity, O extends 
                 if (existing != null) {
                     response = builder.convert(existing);
                 } else {
+                    this.checkNestedSearchKeys(entityManager, bodyRequest.getCode(), entityPrototype,
+                            bindingResult);
                     ((IEntityTypesConfigurer) entityManager).addEntityPrototype(entityPrototype);
                     response = builder.convert(entityPrototype);
                 }
             }
         } catch (ValidationConflictException vce) {
             throw vce;
+        } catch (ValidationGenericException vge) {
+            throw vge;
         } catch (Throwable e) {
             logger.error("Error adding entity type", e);
             throw new RestServerError("error add entity type", e);
@@ -239,12 +245,16 @@ public abstract class AbstractEntityTypeService<I extends IApsEntity, O extends 
             if (bindingResult.hasErrors()) {
                 return null;
             } else {
+                this.checkNestedSearchKeys(entityManager, request.getCode(), entityPrototype,
+                        bindingResult);
                 ((IEntityTypesConfigurer) entityManager).updateEntityPrototype(entityPrototype);
                 I newPrototype = (I) entityManager.getEntityPrototype(request.getCode());
                 O newType = builder.convert(newPrototype);
                 newType.setStatus(String.valueOf(entityManager.getStatus(request.getCode())));
                 return newType;
             }
+        } catch (ValidationGenericException vge) {
+            throw vge;
         } catch (Throwable e) {
             logger.error(ERROR_UPDATING_ENTITY_TYPE, e);
             throw new RestServerError(ERROR_UPDATING_ENTITY_TYPE, e);
@@ -253,6 +263,80 @@ public abstract class AbstractEntityTypeService<I extends IApsEntity, O extends 
 
     protected void addError(String errorCode, BindingResult bindingResult, String[] args, String message) {
         bindingResult.reject(errorCode, args, message);
+    }
+
+    /**
+     * Reject a type whose nested boolean search keys would be unusable - duplicated (two attribute
+     * paths flattening to the same key) or longer than the {@code attrname} column that stores them.
+     * The engine rejects both at persist time with a plain {@code EntException}, which the callers of
+     * this class would surface as a 500; validating here instead turns them into the structured 400 the
+     * REST contract expects.
+     *
+     * @param entityManager the manager that will store the type - it declares the {@code attrname} width
+     * the keys have to fit, so the bound is read from it rather than from a constant.
+     * @param typeCode the code of the type being saved, reported in the message.
+     * @param entityType the prototype about to be persisted.
+     * @param bindingResult the binding result collecting the errors.
+     * @throws ValidationGenericException if any key is duplicated or too long.
+     */
+    protected void checkNestedSearchKeys(IEntityManager entityManager, String typeCode,
+            IApsEntity entityType, BindingResult bindingResult) {
+        this.checkNestedSearchableFlags(typeCode, entityType, bindingResult);
+        List<NestedSearchSupport.KeyProblem> problems = NestedSearchSupport
+                .validateNestedSearchKeys(entityType, entityManager.getMaxSearchKeyLength());
+        if (problems.isEmpty()) {
+            return;
+        }
+        for (NestedSearchSupport.KeyProblem problem : problems) {
+            if (NestedSearchSupport.KeyProblemType.DUPLICATED == problem.type()) {
+                this.addError(AbstractEntityTypeValidator.ERRCODE_NESTED_SEARCH_KEY_DUPLICATED, bindingResult,
+                        new String[]{typeCode, problem.key(), problem.getJoinedPaths()},
+                        "entityType.nestedBoolean.key.duplicated");
+            } else if (NestedSearchSupport.KeyProblemType.AMBIGUOUS_SEGMENT == problem.type()) {
+                this.addError(AbstractEntityTypeValidator.ERRCODE_NESTED_SEARCH_KEY_AMBIGUOUS_SEGMENT,
+                        bindingResult,
+                        new String[]{typeCode, problem.getJoinedPaths(),
+                            EntitySearchKeys.KEY_SEPARATOR},
+                        "entityType.nestedBoolean.key.ambiguousSegment");
+            } else {
+                this.addError(AbstractEntityTypeValidator.ERRCODE_NESTED_SEARCH_KEY_TOO_LONG, bindingResult,
+                        new String[]{typeCode, problem.key(), String.valueOf(problem.key().length()),
+                            String.valueOf(problem.maxKeyLength())},
+                        "entityType.nestedBoolean.key.tooLong");
+            }
+        }
+        throw new ValidationGenericException(bindingResult);
+    }
+
+    /**
+     * Reject {@code listFilter} on a Composite child that cannot carry it, instead of letting the engine
+     * drop it silently at persist time. Detection <b>is</b> the normalizer, run on the throw-away
+     * prototype, so what REST rejects is exactly what the engine would clear. Runs before the key
+     * validation, for the same ordering reason.
+     *
+     * @throws ValidationGenericException if any Composite child asked for a flag it cannot carry.
+     */
+    private void checkNestedSearchableFlags(String typeCode, IApsEntity entityType,
+            BindingResult bindingResult) {
+        List<NestedSearchSupport.ClearedSearchableFlag> cleared =
+                NestedSearchSupport.normalizeSearchableFlags(entityType);
+        if (cleared.isEmpty()) {
+            return;
+        }
+        for (NestedSearchSupport.ClearedSearchableFlag flag : cleared) {
+            if (NestedSearchSupport.ClearedFlagReason.TYPE_NOT_SUPPORTED == flag.reason()) {
+                this.addError(AbstractEntityTypeValidator.ERRCODE_COMPOSITE_LIST_FILTER_NOT_SUPPORTED,
+                        bindingResult,
+                        new String[]{typeCode, flag.getJoinedPath(), flag.getAttributeType()},
+                        "entityType.attribute.composite.listFilter.notSupported");
+            } else {
+                this.addError(AbstractEntityTypeValidator.ERRCODE_COMPOSITE_LIST_FILTER_WITHIN_LIST,
+                        bindingResult,
+                        new String[]{typeCode, flag.getJoinedPath()},
+                        "entityType.attribute.composite.listFilter.withinList");
+            }
+        }
+        throw new ValidationGenericException(bindingResult);
     }
 
     protected I createEntityType(IEntityManager entityManager, EntityTypeDtoRequest dto, BindingResult bindingResult) throws Throwable {
@@ -489,10 +573,13 @@ public abstract class AbstractEntityTypeService<I extends IApsEntity, O extends 
 
         try {
             entityType.addAttribute(attribute);
+            this.checkNestedSearchKeys(entityManager, entityTypeCode, entityType, bindingResult);
             ((IEntityTypesConfigurer) entityManager).updateEntityPrototype(entityType);
             IApsEntity newEntityType = entityManager.getEntityPrototype(entityTypeCode);
             AttributeInterface newAttribute = newEntityType.getAttribute(bodyRequest.getCode());
             return new EntityTypeAttributeFullDto(newAttribute, entityManager.getAttributeRoles());
+        } catch (ValidationGenericException vge) {
+            throw vge;
         } catch (Throwable e) {
             logger.error(ERROR_UPDATING_ENTITY_TYPE, e);
             throw new RestServerError(ERROR_UPDATING_ENTITY_TYPE, e);
@@ -526,10 +613,13 @@ public abstract class AbstractEntityTypeService<I extends IApsEntity, O extends 
         try {
             this.removeAttribute(entityType, bodyRequest.getCode());
             entityType.addAttribute(attribute);
+            this.checkNestedSearchKeys(entityManager, entityTypeCode, entityType, bindingResult);
             ((IEntityTypesConfigurer) entityManager).updateEntityPrototype(entityType);
             IApsEntity newEntityType = entityManager.getEntityPrototype(entityTypeCode);
             AttributeInterface newAttribute = newEntityType.getAttribute(bodyRequest.getCode());
             return new EntityTypeAttributeFullDto(newAttribute, entityManager.getAttributeRoles());
+        } catch (ValidationGenericException vge) {
+            throw vge;
         } catch (Throwable e) {
             logger.error(ERROR_UPDATING_ENTITY_TYPE, e);
             throw new RestServerError(ERROR_UPDATING_ENTITY_TYPE, e);

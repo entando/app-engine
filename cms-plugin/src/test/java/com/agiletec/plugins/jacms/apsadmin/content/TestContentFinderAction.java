@@ -14,12 +14,19 @@
 package com.agiletec.plugins.jacms.apsadmin.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.agiletec.aps.system.common.entity.ApsEntityManager;
+import com.agiletec.aps.system.common.entity.IEntityTypesConfigurer;
+import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.CompositeAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.ThreeStateAttribute;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.apsadmin.content.util.AbstractBaseTestContentAction;
@@ -36,7 +43,7 @@ class TestContentFinderAction extends AbstractBaseTestContentAction {
 		String result = this.executeGetList("admin");
 		assertEquals(Action.SUCCESS, result);
 		List<String> contents = (List<String>) ((ContentFinderAction)this.getAction()).getContents();
-		assertEquals(25, contents.size());
+		assertEquals(29, contents.size());
 		
 		result = this.executeGetList("editorCoach");
 		assertEquals(Action.SUCCESS, result);
@@ -63,7 +70,7 @@ class TestContentFinderAction extends AbstractBaseTestContentAction {
 		Map<String, String> params = new HashMap<String, String>();
 		this.executeSearch("admin", params);
 		ContentFinderAction action = (ContentFinderAction) this.getAction();
-		String[] order1 = {"ALL4", "ART112","ART122","ART121","ART120","ART111","ART179","EVN21",
+		String[] order1 = {"BLT4", "BLT3", "BLT2", "BLT1", "ALL4", "ART112","ART122","ART121","ART120","ART111","ART179","EVN21",
 				"EVN20","EVN41","EVN25","EVN24","EVN23","ART102","ART104","EVN103",
 				"RAH101","EVN192","EVN191","RAH1","ART180","EVN194","EVN193","ART1","ART187"};
 		List<String> contents = action.getContents();
@@ -362,6 +369,128 @@ class TestContentFinderAction extends AbstractBaseTestContentAction {
 		assertEquals(Action.SUCCESS, result);
 		ContentFinderAction action = (ContentFinderAction) this.getAction();
 		action.getPaginatedContentsId(10);
+	}
+
+	/**
+	 * End-to-end: a Composite-nested boolean made searchable through the content type is (a) offered by
+	 * the search form as a path-keyed criterion and (b) usable to restrict the search - the submitted
+	 * form field "<composite>_<boolean>_booleanFieldName" reaches the DB searcher and filters the list.
+	 */
+	@Test
+	void testPerformSearchByNestedCompositeBoolean() throws Throwable {
+		this.setNestedBooleanSearchable("ALL", true);
+		List<String> added = new ArrayList<>();
+		try {
+			String trueId = this.createAllCloneWithNestedBoolean(Boolean.TRUE, added);
+			String falseId = this.createAllCloneWithNestedBoolean(Boolean.FALSE, added);
+
+			// (a) the form now offers the nested boolean under its path key
+			Map<String, String> setType = new HashMap<>();
+			setType.put("contentType", "ALL");
+			this.executeSearch("admin", setType);
+			ContentFinderAction action = (ContentFinderAction) this.getAction();
+			assertTrue(this.offersAttribute(action, "Composite_Boolean"),
+					"the search form should expose the nested boolean 'Composite_Boolean'");
+
+			// (b) submitting the nested boolean field restricts the results
+			Map<String, String> params = new HashMap<>();
+			params.put("contentType", "ALL");
+			params.put("Composite_Boolean_booleanFieldName", "true");
+			this.executeSearch("admin", params);
+			List<String> contents = ((ContentFinderAction) this.getAction()).getContents();
+			assertTrue(contents.contains(trueId));
+			assertFalse(contents.contains(falseId));
+
+			params.put("Composite_Boolean_booleanFieldName", "false");
+			this.executeSearch("admin", params);
+			contents = ((ContentFinderAction) this.getAction()).getContents();
+			assertTrue(contents.contains(falseId));
+			assertFalse(contents.contains(trueId));
+		} finally {
+			for (String id : added) {
+				this.getContentManager().deleteContent(id);
+			}
+			this.setNestedBooleanSearchable("ALL", false);
+		}
+	}
+
+	private boolean offersAttribute(ContentFinderAction action, String name) {
+		return action.getSearchableAttributeRefs().stream()
+				.anyMatch(ref -> name.equals(ref.key()));
+	}
+
+	private void setNestedBooleanSearchable(String typeCode, boolean searchable) throws Throwable {
+		Content prototype = this.getContentManager().createContentType(typeCode);
+		((CompositeAttribute) prototype.getAttribute("Composite")).getAttribute("Boolean").setSearchable(searchable);
+		((IEntityTypesConfigurer) this.getContentManager()).updateEntityPrototype(prototype);
+		this.getContentManager().reloadEntitiesReferences(typeCode);
+		waitThreads(ApsEntityManager.RELOAD_REFERENCES_THREAD_NAME_PREFIX);
+	}
+
+	private String createAllCloneWithNestedBoolean(Boolean value, List<String> added) throws Throwable {
+		Content clone = this.getContentManager().loadContent("ALL4", false);
+		clone.setId(null);
+		BooleanAttribute nested = (BooleanAttribute) ((CompositeAttribute) clone.getAttribute("Composite")).getAttribute("Boolean");
+		nested.setBooleanValue(value);
+		this.getContentManager().saveContent(clone);
+		added.add(clone.getId());
+		this.getContentManager().insertOnLineContent(clone);
+		return clone.getId();
+	}
+
+	/**
+	 * End-to-end for the ThreeState "Not set" search option: submitting
+	 * {@code <attr>_booleanFieldName=none} restricts the list to contents whose ThreeState is unset
+	 * (no search record), distinct from "true"/"false" and from "Any" (no filter).
+	 */
+	@Test
+	void testPerformSearchByThreeStateNotSet() throws Throwable {
+		this.setThreeStateSearchable("ALL", true);
+		List<String> added = new ArrayList<>();
+		try {
+			String trueId = this.createAllCloneWithThreeState(Boolean.TRUE, added);
+			String falseId = this.createAllCloneWithThreeState(Boolean.FALSE, added);
+			String unsetId = this.createAllCloneWithThreeState(null, added);
+
+			Map<String, String> params = new HashMap<>();
+			params.put("contentType", "ALL");
+			params.put("ThreeState_booleanFieldName", "none");
+			this.executeSearch("admin", params);
+			List<String> contents = ((ContentFinderAction) this.getAction()).getContents();
+			assertTrue(contents.contains(unsetId));
+			assertFalse(contents.contains(trueId));
+			assertFalse(contents.contains(falseId));
+
+			params.put("ThreeState_booleanFieldName", "true");
+			this.executeSearch("admin", params);
+			contents = ((ContentFinderAction) this.getAction()).getContents();
+			assertTrue(contents.contains(trueId));
+			assertFalse(contents.contains(unsetId));
+			assertFalse(contents.contains(falseId));
+		} finally {
+			for (String id : added) {
+				this.getContentManager().deleteContent(id);
+			}
+			this.setThreeStateSearchable("ALL", false);
+		}
+	}
+
+	private void setThreeStateSearchable(String typeCode, boolean searchable) throws Throwable {
+		Content prototype = this.getContentManager().createContentType(typeCode);
+		prototype.getAttribute("ThreeState").setSearchable(searchable);
+		((IEntityTypesConfigurer) this.getContentManager()).updateEntityPrototype(prototype);
+		this.getContentManager().reloadEntitiesReferences(typeCode);
+		waitThreads(ApsEntityManager.RELOAD_REFERENCES_THREAD_NAME_PREFIX);
+	}
+
+	private String createAllCloneWithThreeState(Boolean value, List<String> added) throws Throwable {
+		Content clone = this.getContentManager().loadContent("ALL4", false);
+		clone.setId(null);
+		((ThreeStateAttribute) clone.getAttribute("ThreeState")).setBooleanValue(value);
+		this.getContentManager().saveContent(clone);
+		added.add(clone.getId());
+		this.getContentManager().insertOnLineContent(clone);
+		return clone.getId();
 	}
 
 	private void executeSearch(String currentUserName, Map<String, String> params) throws Throwable {

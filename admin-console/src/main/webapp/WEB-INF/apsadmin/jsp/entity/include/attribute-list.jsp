@@ -65,55 +65,54 @@
                         </td>
                     </s:else>
 
-                    <td class="text-center"><s:if test="#attribute.required">
-                        <span class="icon fa fa-check-square-o"  title="<s:text name="label.yes" />">
-                    </span>
-                </s:if> <s:else>
-                    <span class="icon fa fa-square-o" title="<s:text name="label.no" />">
-                </span>
-            </s:else></td>
-            <td class="text-center"><s:if test="#attribute.searchable">
-                <span class="icon fa fa-check-square-o" title="<s:text name="label.yes" />">
-            </span>
-        </s:if> <s:else>
-            <span class="icon fa fa-square-o" title="<s:text name="label.no" />">
-        </span>
-    </s:else></td>
-    <td class="text-center">
-        <div class="dropdown dropdown-kebab-pf">
-            <button class="btn btn-menu-right dropdown-toggle" type="button"
-                    data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="true">
-                <span class="fa fa-ellipsis-v"></span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-right"
-                aria-labelledby="dropdownKebabRight">
-                <li>
-                <wpsa:actionParam action="editAttribute" var="actionName">
-                    <wpsa:actionSubParam name="attributeName" value="%{#attribute.name}" />
-                </wpsa:actionParam>
-                <wpsf:submit action="%{#actionName}" type="button"  title="%{getText('label.edit')}: %{#attribute.name}"
-                             cssClass="btn-no-button">
-                    <span class="sr-only">
-                        <s:text name="label.edit" />:
-                        <s:property value="#attribute.name" />
-                    </span>
-                    <s:text name="label.edit" />
-                </wpsf:submit>
-                </li>
+                    <s:set var="flagValue" value="#attribute.required" />
+                    <s:set var="flagApplicable" value="true" />
+                    <s:set var="flagLabel" value="'Entity.attribute.flag.mandatory.full'" />
+                    <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-flag-cell.jsp" />
 
-                <s:set var="elementIndex" value="#elementStatus.index" />
-                <s:include
-                    value="/WEB-INF/apsadmin/jsp/entity/include/attribute-operations-misc.jsp" />
-            </ul>
+                    <%-- Complex containers (Composite, List, Monolist) are never searchable
+                         themselves - only their children can be - so they render as "not applicable"
+                         rather than as an unchecked box. --%>
+                    <s:set var="flagValue" value="#attribute.searchable" />
+                    <s:set var="flagApplicable" value="%{#attribute.searchableOptionSupported || #attribute.searchable}" />
+                    <s:set var="flagLabel" value="'label.filter'" />
+                    <s:set var="flagUnavailableKey" value="'Entity.attribute.flag.searchable.notApplicable.type'" />
+                    <s:include value="/WEB-INF/apsadmin/jsp/entity/include/attribute-flag-cell.jsp" />
+
+                    <td class="text-center">
+                        <div class="dropdown dropdown-kebab-pf">
+                            <button class="btn btn-menu-right dropdown-toggle" type="button"
+                                    data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="true">
+                                <span class="fa fa-ellipsis-v"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right"
+                                aria-labelledby="dropdownKebabRight">
+                                <li>
+                                <wpsa:actionParam action="editAttribute" var="actionName">
+                                    <wpsa:actionSubParam name="attributeName" value="%{#attribute.name}" />
+                                </wpsa:actionParam>
+                                <wpsf:submit action="%{#actionName}" type="button"  title="%{getText('label.edit')}: %{#attribute.name}"
+                                             cssClass="btn-no-button">
+                                    <span class="sr-only">
+                                        <s:text name="label.edit" />:
+                                        <s:property value="#attribute.name" />
+                                    </span>
+                                    <s:text name="label.edit" />
+                                </wpsf:submit>
+                                </li>
+
+                                <s:set var="elementIndex" value="#elementStatus.index" />
+                                <s:include
+                                    value="/WEB-INF/apsadmin/jsp/entity/include/attribute-operations-misc.jsp" />
+                            </ul>
+                        </div>
+                    </td>
+                    </tr>
+                </s:iterator>
+
+            </table>
         </div>
-    </td>
-    </tr>
-</s:iterator>
-
-</table>
-</div>
-</div>
-
+    </div>
 
 </s:if>

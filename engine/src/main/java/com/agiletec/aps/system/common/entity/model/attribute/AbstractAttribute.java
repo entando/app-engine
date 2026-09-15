@@ -22,6 +22,7 @@ import com.agiletec.aps.system.common.entity.model.attribute.util.IAttributeVali
 import com.agiletec.aps.system.common.entity.parse.attribute.AttributeHandlerInterface;
 import com.agiletec.aps.system.common.searchengine.IndexableAttributeInterface;
 import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.util.ApplicationContextProvider;
 import com.agiletec.aps.util.ApsProperties;
 import com.agiletec.aps.util.ApsPropertiesDOM;
 import java.io.IOException;
@@ -38,8 +39,6 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.jdom2.Element;
 import org.jdom2.output.XMLOutputter;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 
 /**
  * This abstract class must be used when implementing Entity Attributes.
@@ -606,6 +605,7 @@ public abstract class AbstractAttribute implements AttributeInterface, Serializa
 
     @Deprecated
     protected ILangManager getLangManager() {
+        this._langManager = ApplicationContextProvider.resolveIfNull(this._langManager, ILangManager.class);
         return _langManager;
     }
 
@@ -617,9 +617,9 @@ public abstract class AbstractAttribute implements AttributeInterface, Serializa
     private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        WebApplicationContext ctx = ContextLoader.getCurrentWebApplicationContext();
-        if (ctx != null) {
-            this.setLangManager(ctx.getBean(ILangManager.class));
+        ILangManager langManager = ApplicationContextProvider.resolveBean(ILangManager.class);
+        if (langManager != null) {
+            this.setLangManager(langManager);
         } else {
             _logger.warn("Null WebApplicationContext during deserialization of Attribute '{}'", this.getName());
         }

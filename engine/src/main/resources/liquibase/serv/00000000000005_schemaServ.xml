@@ -1,0 +1,23 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!--
+        The profile search table stores the search key of an attribute in 'attrname'. Since a boolean
+        nested in a Composite is indexed under the path key '<composite>_<boolean>', 30 characters are
+        no longer enough: widened to 255, the bound the engine validates at content-type save time
+        (EntitySearchKeys.DEFAULT_MAX_KEY_LENGTH). Widening a VARCHAR keeps the existing
+        non-unique index on the column and is supported by PostgreSQL, MySQL and Derby alike.
+    -->
+    <changeSet id="00000000000005_schemaServ" author="entando">
+
+        <modifyDataType tableName="authuserprofilesearch"
+                columnName="attrname"
+                newDataType="varchar(255)"/>
+
+    </changeSet>
+
+</databaseChangeLog>

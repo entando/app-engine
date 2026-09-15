@@ -55,6 +55,17 @@ public abstract class AbstractEntityTypeValidator extends AbstractPaginationVali
     public static final String ERRCODE_INVALID_LIST = "36";
     public static final String ERRCODE_INVALID_COMPOSITE = "37";
 
+    // The code values are part of the REST contract: never renumber them. Their message keys still read
+    // "nestedBoolean" deliberately - renaming a bundle key changes nothing a client can observe.
+    public static final String ERRCODE_NESTED_SEARCH_KEY_DUPLICATED = "38";
+    public static final String ERRCODE_NESTED_SEARCH_KEY_TOO_LONG = "39";
+    public static final String ERRCODE_NESTED_SEARCH_KEY_AMBIGUOUS_SEGMENT = "40";
+
+    /** {@code listFilter} set on a Composite child whose type does not support nested search. */
+    public static final String ERRCODE_COMPOSITE_LIST_FILTER_NOT_SUPPORTED = "41";
+    /** {@code listFilter} set on a Composite child whose Composite is nested in a list. */
+    public static final String ERRCODE_COMPOSITE_LIST_FILTER_WITHIN_LIST = "42";
+
     @Override
     public boolean supports(Class<?> paramClass) {
         return EntityTypeDtoRequest.class.equals(paramClass);

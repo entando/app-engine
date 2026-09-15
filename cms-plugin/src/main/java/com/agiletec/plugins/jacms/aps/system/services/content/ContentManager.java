@@ -145,7 +145,7 @@ public class ContentManager extends ApsEntityManager
     @Override
     public String getViewPage(String contentId) {
         Content type = this.getTypeById(contentId);
-        return type.getViewPage();
+        return (null != type) ? type.getViewPage() : null;
     }
 
     /**
@@ -157,7 +157,7 @@ public class ContentManager extends ApsEntityManager
     @Override
     public String getDefaultModel(String contentId) {
         Content type = this.getTypeById(contentId);
-        return type.getDefaultModel();
+        return (null != type) ? type.getDefaultModel() : null;
     }
 
     /**
@@ -170,7 +170,7 @@ public class ContentManager extends ApsEntityManager
     @Override
     public String getListModel(String contentId) {
         Content type = this.getTypeById(contentId);
-        return type.getListModel();
+        return (null != type) ? type.getListModel() : null;
     }
 
     /**

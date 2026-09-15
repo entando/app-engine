@@ -256,15 +256,17 @@ public class UserFilterOptionBean implements Serializable {
 			} else if (attribute instanceof BooleanAttribute) {
 				String value = this.getFormFieldValues().get(this.getFormFieldNames()[0]);
 				String ignore = this.getFormFieldValues().get(this.getFormFieldNames()[1]);
-				if (null != ignore) {
-					return null;
-				} else if (null == value
+				// "Ignore" ticked, nothing selected, or the three-state "both": the user is not
+				// filtering on this attribute, and null is the caller's "no filter" signal.
+				// This used to build a nullOption filter, i.e. "contents with NO indexed value for
+				// this attribute", which for a boolean is always the empty set: BooleanAttribute
+				// always writes a 'true'/'false' search row. The widget therefore returned nothing
+				// as soon as a boolean user filter was rendered and left untouched.
+				if (null != ignore || null == value
 						|| value.equals("both")) {//special option for three state Attribute
-					filter = new EntitySearchFilter(attribute.getName(), true);
-					filter.setNullOption(true);
-				} else {
-					filter = new EntitySearchFilter<String>(attribute.getName(), true, value, false);
+					return null;
 				}
+				filter = new EntitySearchFilter<String>(attribute.getName(), true, value, false);
 			} else if (attribute instanceof NumberAttribute) {
 				String start = this.getFormFieldValues().get(this.getFormFieldNames()[0]);
 				String end = this.getFormFieldValues().get(this.getFormFieldNames()[1]);
