@@ -6,10 +6,9 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_config_test" author="entando" context="test">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM SYSCONFIG
+                FROM sysconfig
                 WHERE item = 'jpwebdynamicform_messageTypes'
                 and version = 'test'
             </sqlCheck>

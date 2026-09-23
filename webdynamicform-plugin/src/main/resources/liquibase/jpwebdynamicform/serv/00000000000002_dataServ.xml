@@ -6,10 +6,9 @@
     <changeSet id="00000000000002_jpwebdynamicform_dataServ" author="entando">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM AUTHPERMISSIONS
+                FROM authpermissions
                 WHERE permissionname = 'jpwebdynamicform_manageForms'
             </sqlCheck>
         </preConditions>
