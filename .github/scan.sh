@@ -4,9 +4,9 @@
 # quality gate of the Compute Engine task THIS run creates.
 #
 # The analysis always runs and always waits for the gate result. The gate is
-# enforced on pull requests, tags and direct pushes. On a push that is the merge
-# commit of a PR into the pushed branch the PR was already gated, so the result
-# is reported as a warning and never fails the step.
+# enforced on pull requests, tags and direct pushes. On a push that only lands
+# merged PRs (PUSH_ORIGIN, see .github/push-origin.sh) the PRs were already
+# gated, so the result is reported as a warning and never fails the step.
 #
 # Wired in the workflow with `if: always()` so a failed test/build step can
 # never prevent the scan (requirement: always update Sonar regardless of test
@@ -54,26 +54,23 @@ else
 fi
 
 # --- gate enforcement --------------------------------------------------------
-# Not enforced only when the pushed commit is the merge commit of a PR merged into
-# the pushed branch. A failed lookup leaves the gate enforced.
+# Not enforced only when every commit the push adds was landed by a PR merged into
+# the pushed branch (PUSH_ORIGIN=pr-merge, set by .github/configure through
+# .github/push-origin.sh). Any other or missing origin leaves the gate enforced.
 GATE_ENFORCED=true
-MERGED_PR=""
 if [ "${GITHUB_EVENT_NAME:-}" = "push" ] && [[ "${GITHUB_REF:-}" == refs/heads/* ]]; then
-  MERGED_PR=$(gh api "repos/${GITHUB_REPOSITORY:-}/commits/${GITHUB_SHA:-}/pulls" \
-    --jq "[.[] | select(.merged_at != null
-                        and .merge_commit_sha == \"${GITHUB_SHA:-}\"
-                        and .base.ref == \"${GITHUB_REF_NAME:-}\")][0].number // empty" \
-    2>/dev/null)
-  LOOKUP_RC=$?
-  if [ "$LOOKUP_RC" -ne 0 ]; then
-    MERGED_PR=""
-    echo "::warning title=PR lookup failed::Could not determine whether ${GITHUB_SHA:-HEAD} is a PR merge commit (gh exit $LOOKUP_RC); the quality gate is enforced."
-  elif [ -n "$MERGED_PR" ]; then
-    GATE_ENFORCED=false
-    echo "~> Merge commit of PR #$MERGED_PR (already gated on the PR): the quality gate result is reported, not enforced."
-  else
-    echo "~> Direct push to ${GITHUB_REF_NAME:-the branch} (no merged PR for ${GITHUB_SHA:-HEAD}): the quality gate is enforced."
-  fi
+  case "${PUSH_ORIGIN:-unknown}" in
+    pr-merge)
+      GATE_ENFORCED=false
+      echo "~> Push lands PR #${PUSH_MERGED_PRS//,/, #} (already gated on the PR): the quality gate result is reported, not enforced."
+      ;;
+    direct)
+      echo "~> Direct push to ${GITHUB_REF_NAME:-the branch} (commits no merged PR accounts for: ${PUSH_DIRECT_COMMITS:-?}): the quality gate is enforced."
+      ;;
+    *)
+      echo "::warning title=Push origin unknown::Could not determine whether this push only lands merged PRs; the quality gate is enforced."
+      ;;
+  esac
 fi
 
 mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar \
@@ -137,7 +134,7 @@ fi
 if $GATE_ENFORCED; then
   LEVEL=error; TAG=FAIL; SUFFIX=""
 else
-  LEVEL=warning; TAG=WARN; SUFFIX=" (not enforced — merge of PR #$MERGED_PR, already gated on the PR)"
+  LEVEL=warning; TAG=WARN; SUFFIX=" (not enforced — lands PR #${PUSH_MERGED_PRS//,/, #}, already gated on the PR)"
 fi
 
 case "$RESULT" in
