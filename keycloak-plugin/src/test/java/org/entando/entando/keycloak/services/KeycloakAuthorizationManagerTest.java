@@ -783,6 +783,229 @@ class KeycloakAuthorizationManagerTest {
         assertThat(captured.get(0).getRole().getName()).isEqualTo("conflict_role");
     }
 
+    @Test
+    void testAuthAssignmentWhenGroupExistsAndAddGroupFailsWithPersistAuth() throws Exception {
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_GROUP</attribute>"
+                + "  <kind>GROUP</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "  <groups>"
+                + "   <group>conflict_group</group>"
+                + "  </groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        Group existingGroup = new Group();
+        existingGroup.setName("conflict_group");
+
+        // First returns null (not cached), then after addGroup error returns the concurrently created group
+        when(groupManager.getGroup("conflict_group"))
+                .thenReturn(null)
+                .thenReturn(existingGroup);
+
+        // Simulate a conflict on addGroup
+        org.mockito.Mockito.doThrow(new EntException("Conflict"))
+                .when(groupManager).addGroup(any(Group.class));
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUP", List.of("conflict_group")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getGroup().getName()).isEqualTo("conflict_group");
+    }
+
+    @Test
+    void testAuthAssignmentWhenGroupAddFailsAndStillNotFound() throws Exception {
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_GROUP</attribute>"
+                + "  <kind>GROUP</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "  <groups>"
+                + "   <group>failing_group</group>"
+                + "  </groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        // Always returns null
+        when(groupManager.getGroup("failing_group")).thenReturn(null);
+
+        // Simulate a fatal error on addGroup
+        org.mockito.Mockito.doThrow(new EntException("Database unavailable"))
+                .when(groupManager).addGroup(any(Group.class));
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+        userRepresentation.setAttributes(Map.of("AD_GROUP", List.of("failing_group")));
+        when(userDetails.getUserRepresentation()).thenReturn(userRepresentation);
+
+        when(userDetails.getAuthorizations()).thenReturn(new ArrayList<>());
+
+        manager.init();
+        manager.processNewUser(userDetails, null, false);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Authorization>> listCaptor = ArgumentCaptor.forClass(List.class);
+        verify(userDetails, times(1)).addAuthorizations(listCaptor.capture());
+        List<Authorization> captured = listCaptor.getValue();
+        assertThat(captured).hasSize(1);
+        assertThat(captured.get(0).getGroup()).isNull();
+    }
+
+    @Test
+    void testConcurrentGroupCreationInSingleJvmCallsAddGroupOnce() throws Exception {
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_GROUP</attribute>"
+                + "  <kind>GROUP</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "  <groups>"
+                + "   <group>concurrent_group</group>"
+                + "  </groups>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        java.util.concurrent.atomic.AtomicReference<Group> createdGroup = new java.util.concurrent.atomic.AtomicReference<>(null);
+        org.mockito.Mockito.doAnswer(inv -> {
+            Group g = inv.getArgument(0);
+            Thread.sleep(50);
+            createdGroup.set(g);
+            return null;
+        }).when(groupManager).addGroup(any(Group.class));
+
+        org.mockito.Mockito.when(groupManager.getGroup("concurrent_group")).thenAnswer(inv -> createdGroup.get());
+
+        manager.init();
+
+        int threadCount = 10;
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+        java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(threadCount);
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            executor.submit(() -> {
+                try {
+                    barrier.await();
+                    KeycloakUser user = org.mockito.Mockito.mock(KeycloakUser.class);
+                    when(user.getUsername()).thenReturn("user" + index);
+                    UserRepresentation rep = new UserRepresentation();
+                    rep.setAttributes(Map.of("AD_GROUP", List.of("concurrent_group")));
+                    when(user.getUserRepresentation()).thenReturn(rep);
+                    when(user.getAuthorizations()).thenReturn(new ArrayList<>());
+
+                    manager.processNewUser(user, null, false);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        assertThat(latch.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+        executor.shutdown();
+
+        // Due to per-group synchronization in JVM, addGroup is executed exactly once
+        verify(groupManager, times(1)).addGroup(any(Group.class));
+    }
+
+    @Test
+    void testConcurrentRoleCreationInSingleJvmCallsAddRoleOnce() throws Exception {
+        String xmlConf = "<DynamicMapping>"
+                + " <persist>AUTH</persist>"
+                + " <enabled>true</enabled>"
+                + "<mappings>"
+                + " <mapping>"
+                + "  <enabled>true</enabled>"
+                + "  <attribute>AD_ROLE</attribute>"
+                + "  <kind>ROLE</kind>"
+                + " </mapping>"
+                + "</mappings>"
+                + "  <roles>"
+                + "   <role>concurrent_role</role>"
+                + "  </roles>"
+                + "</DynamicMapping>";
+
+        when(configuration.getDefaultAuthorizations()).thenReturn(null);
+        when(configManager.getConfigItem(anyString())).thenReturn(xmlConf);
+
+        java.util.concurrent.atomic.AtomicReference<Role> createdRole = new java.util.concurrent.atomic.AtomicReference<>(null);
+        org.mockito.Mockito.doAnswer(inv -> {
+            Role r = inv.getArgument(0);
+            Thread.sleep(50);
+            createdRole.set(r);
+            return null;
+        }).when(roleManager).addRole(any(Role.class));
+
+        org.mockito.Mockito.when(roleManager.getRole("concurrent_role")).thenAnswer(inv -> createdRole.get());
+
+        manager.init();
+
+        int threadCount = 10;
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+        java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(threadCount);
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            executor.submit(() -> {
+                try {
+                    barrier.await();
+                    KeycloakUser user = org.mockito.Mockito.mock(KeycloakUser.class);
+                    when(user.getUsername()).thenReturn("user" + index);
+                    UserRepresentation rep = new UserRepresentation();
+                    rep.setAttributes(Map.of("AD_ROLE", List.of("concurrent_role")));
+                    when(user.getUserRepresentation()).thenReturn(rep);
+                    when(user.getAuthorizations()).thenReturn(new ArrayList<>());
+
+                    manager.processNewUser(user, null, false);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        assertThat(latch.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+        executor.shutdown();
+
+        // Due to per-role synchronization in JVM, addRole is executed exactly once
+        verify(roleManager, times(1)).addRole(any(Role.class));
+    }
+
 
 
     @Test

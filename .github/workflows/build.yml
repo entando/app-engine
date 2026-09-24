@@ -27,6 +27,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+    - name: Force DNS resolution for Nexus
+      run: echo "162.19.239.148 nexus-jx.apps.serv.run" | sudo tee -a /etc/hosts
+
     - uses: actions/checkout@v5
 
     - name: Set up JDK 17
@@ -150,6 +153,8 @@ jobs:
     needs: [build, test-and-scan]
 
     steps:
+    - name: Force DNS resolution for Nexus
+      run: echo "162.19.239.148 nexus-jx.apps.serv.run" | sudo tee -a /etc/hosts
     - uses: actions/checkout@v5
 
     - name: Restore the build output

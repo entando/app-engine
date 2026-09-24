@@ -14,7 +14,9 @@ configure.start "$1"
 if [[ "$GITHUB_REF" == refs/tags/* ]]; then
   . .github/github-tools/base.configure --tag "$GITHUB_REF"
 else
+  set -x
   . .github/github-tools/base.configure "$GH_PR_TITLE" "$GH_PR_NUMBER"
+  set +x
 fi
 
 configure.complete
