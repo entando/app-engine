@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -46,6 +47,7 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(AbstractSearcherDAO.class);
     private static final String DEFAULT_LIKE_CLAUSE = "LIKE ? ";
+    private static final Pattern COLUMN_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_$#]*");
 
     /**
      * The two halves wrapping the body of a count query, so that the count always matches the number of
@@ -58,6 +60,7 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
 
     private String likeClause;
     private String dataSourceClassName;
+    private transient Boolean tableFieldNameOverridden;
 
     protected List<String> searchId(FieldSearchFilter[] filters) {
         Connection conn = null;
@@ -112,7 +115,7 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
         String query = this.createQueryString(filters, isCount, selectAll);
         PreparedStatement stat = null;
         try {
-            stat = this.prepareStatement(conn, query);
+            stat = this.prepareStatement(conn, query, isCount);
             int index = 0;
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
         } catch (Throwable t) {
@@ -132,8 +135,24 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
      * @throws SQLException In case of error.
      */
     protected final PreparedStatement prepareStatement(Connection conn, String query) throws SQLException {
+        return this.prepareStatement(conn, query, false);
+    }
+
+    /**
+     * As {@link #prepareStatement(Connection, String)}, for a query that is expected to be a count when
+     * <code>isCount</code> is true: a count not built by {@link #toQueryString} is reported by DAO name.
+     *
+     * @param conn The connection.
+     * @param query The query to prepare.
+     * @param isCount True when the query is expected to count.
+     * @return The prepared statement.
+     * @throws SQLException In case of error.
+     */
+    protected final PreparedStatement prepareStatement(Connection conn, String query, boolean isCount) throws SQLException {
         logger.trace("{}", query);
-        this.checkCountQueryBlockBalance(query);
+        if (this.checkCountQueryBlockBalance(query) && isCount) {
+            this.checkCountQueryShape(query);
+        }
         return conn.prepareStatement(query);
     }
 
@@ -143,13 +162,33 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
      * syntax error naming no source. The query is left untouched: this names the DAO that built it.
      *
      * @param query The query about to be prepared.
+     * @return True when the markers are balanced.
      */
-    private void checkCountQueryBlockBalance(String query) {
+    private boolean checkCountQueryBlockBalance(String query) {
         int opened = StringUtils.countMatches(query, COUNT_QUERY_PREFIX);
         int closed = StringUtils.countMatches(query, COUNT_QUERY_SUFFIX);
         if (opened != closed) {
             logger.error("Unbalanced count query block built by {}: {} opening and {} closing markers - query: {}",
                     this.getClass().getName(), opened, closed, query);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Report a count query in the shapes a subclass written against the previous API produces: one that
+     * {@link #toQueryString} did not wrap, which selects ids instead of counting them, and one whose body
+     * already counts, which the wrapper then counts as a single row. The query is left untouched.
+     *
+     * @param query The count query about to be prepared.
+     */
+    private void checkCountQueryShape(String query) {
+        if (!query.startsWith(COUNT_QUERY_PREFIX)) {
+            logger.warn("Count query built by {} is not wrapped by toQueryString(StringBuffer, boolean): createQueryString has to return through it",
+                    this.getClass().getName());
+        } else if (StringUtils.startsWithIgnoreCase(query.substring(COUNT_QUERY_PREFIX.length()).trim(), "SELECT COUNT(")) {
+            logger.warn("Count query built by {} counts an already counted body: createMasterCountQueryBlock() has to return the body, not SELECT COUNT(*)",
+                    this.getClass().getName());
         }
     }
 
@@ -527,25 +566,92 @@ public abstract class AbstractSearcherDAO extends AbstractDAO {
      * comes back is the column as {@link #getSearchableFields()} declares it, never as the caller
      * spelled it.</p>
      *
+     * <p>A subclass that still overrides the deprecated {@link #getTableFieldName(String)} is resolved
+     * through that override, as before, and a warning names it.</p>
+     *
      * @param metadataFieldKey The key supplied by the caller.
      * @return The column it names, in the spelling this searcher declares.
      */
     protected final String resolveTableFieldName(String metadataFieldKey) {
-        String column = this.getSearchableFields().columnFor(metadataFieldKey);
+        if (this.overridesTableFieldName()) {
+            logger.warn("{} overrides the deprecated getTableFieldName(String): declare its search keys in getSearchableFields() instead",
+                    this.getClass().getName());
+            String column = this.getTableFieldName(metadataFieldKey);
+            if (null == column || !COLUMN_NAME.matcher(column).matches()) {
+                throw this.unrecognizedSearchKey(metadataFieldKey);
+            }
+            return column;
+        }
+        return this.declaredColumnFor(metadataFieldKey);
+    }
+
+    private String declaredColumnFor(String metadataFieldKey) {
+        SearchableFields fields = this.getSearchableFields();
+        if (null == fields) {
+            logger.error("{} declares no search keys: override getSearchableFields()", this.getClass().getName());
+            throw new EntRuntimeException("No search keys declared by " + this.getClass().getName());
+        }
+        String column = fields.columnFor(metadataFieldKey);
         if (null == column) {
-            logger.error("Unrecognized search key '{}' for {}", metadataFieldKey, this.getClass().getName());
-            throw new EntRuntimeException("Unrecognized search key for " + this.getClass().getName());
+            throw this.unrecognizedSearchKey(metadataFieldKey);
         }
         return column;
+    }
+
+    private EntRuntimeException unrecognizedSearchKey(String metadataFieldKey) {
+        logger.error("Unrecognized search key '{}' for {}", metadataFieldKey, this.getClass().getName());
+        return new EntRuntimeException("Unrecognized search key for " + this.getClass().getName());
+    }
+
+    private boolean overridesTableFieldName() {
+        Boolean overrides = this.tableFieldNameOverridden;
+        if (null == overrides) {
+            overrides = false;
+            for (Class<?> type = this.getClass(); !AbstractSearcherDAO.class.equals(type); type = type.getSuperclass()) {
+                try {
+                    type.getDeclaredMethod("getTableFieldName", String.class);
+                    overrides = true;
+                    break;
+                } catch (NoSuchMethodException e) {
+                    // not declared at this level
+                }
+            }
+            this.tableFieldNameOverridden = overrides;
+        }
+        return overrides;
+    }
+
+    /**
+     * The column a metadata key names.
+     *
+     * <p>Kept so that searchers written against the previous API still compile and run. An override is
+     * still honoured and decides which keys are accepted; its result must be a plain column name, or the
+     * key is refused. Calling it resolves the key through {@link #getSearchableFields()}.</p>
+     *
+     * @param metadataFieldKey The key supplied by the caller.
+     * @return The column it names.
+     * @deprecated Declare the accepted keys in {@link #getSearchableFields()}; to resolve a key, call
+     * {@link #resolveTableFieldName(String)}.
+     */
+    @Deprecated(since = "7.5.3")
+    protected String getTableFieldName(String metadataFieldKey) {
+        logger.warn("Deprecated getTableFieldName(String) called on {}: use resolveTableFieldName(String) instead",
+                this.getClass().getName());
+        return this.declaredColumnFor(metadataFieldKey);
     }
 
     /**
      * The search keys this searcher accepts and the column each one names, as literals - never caller
      * input. A key outside them is refused.
      *
-     * @return The accepted fields.
+     * <p>Not abstract only so that searchers written before it existed still compile; those resolve their
+     * keys through the deprecated {@link #getTableFieldName(String)}. Every searcher should declare it.</p>
+     *
+     * @return The accepted fields, or null when this searcher declares none.
      */
-    protected abstract SearchableFields getSearchableFields();
+    protected SearchableFields getSearchableFields() {
+        return null;
+    }
 
     /**
      * Return the name of the entities master table.

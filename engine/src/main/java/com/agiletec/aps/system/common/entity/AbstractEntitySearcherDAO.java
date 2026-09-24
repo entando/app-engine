@@ -143,7 +143,7 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         String query = this.createQueryString(filters, isCount, selectAll);
         PreparedStatement stat = null;
         try {
-            stat = this.prepareStatement(conn, query);
+            stat = this.prepareStatement(conn, query, isCount);
             int index = 0;
             index = this.addAttributeFilterStatementBlock(filters, index, stat);
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
@@ -572,8 +572,18 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
      * Order a body that does not group. Kept for callers that build an un-grouped query; a caller that
      * appended a GROUP BY must use the four-argument form, or the attribute term would name a column
      * that is neither grouped nor aggregated.
+     *
+     * @param filters The filters of the query.
+     * @param query The query under construction.
+     * @param ordered Whether an ORDER BY block was already opened.
+     * @return Whether an ORDER BY block is open.
+     * @deprecated Use {@link #appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean, boolean)},
+     * passing as <code>grouped</code> the value {@link #appendGroupByQueryBlock} returned for the same body.
      */
+    @Deprecated(since = "7.5.3")
     protected boolean appendOrderQueryBlocks(EntitySearchFilter[] filters, StringBuffer query, boolean ordered) {
+        _logger.warn("Deprecated appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean) called on {}: use appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean, boolean) instead",
+                this.getClass().getName());
         return this.appendOrderQueryBlocks(filters, query, ordered, false);
     }
 

@@ -376,7 +376,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         String query = this.createQueryString(filters, categories, isCount);
         PreparedStatement stat = null;
         try {
-            stat = this.prepareStatement(conn, query);
+            stat = this.prepareStatement(conn, query, isCount);
             int index = 0;
             if (null != categories && categories.size() > 0) {
                 for (String category : categories) {

@@ -97,7 +97,7 @@ public class PublicContentSearcherDAO extends AbstractContentSearcherDAO impleme
 		String query = this.createQueryString(filters, groupsArr, categories, orClauseCategoryFilter, groupsForSelect, isCount, selectAll);
 		PreparedStatement stat = null;
 		try {
-			stat = this.prepareStatement(conn, query);
+			stat = this.prepareStatement(conn, query, isCount);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);

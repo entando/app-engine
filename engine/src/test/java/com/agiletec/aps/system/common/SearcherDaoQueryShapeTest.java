@@ -22,9 +22,12 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.agiletec.aps.system.common.entity.AbstractEntitySearcherDAO;
 import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.services.group.GroupDAO;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -478,6 +481,214 @@ class SearcherDaoQueryShapeTest {
                 () -> "a query was still handed to the driver: " + this.capture.getQueries());
     }
 
+    // ---------------------------------------------------------------- the deprecated key hook
+
+    @Test
+    void getTableFieldName_isStillAnOverridableDeprecatedHook() throws NoSuchMethodException {
+        Method hook = AbstractSearcherDAO.class.getDeclaredMethod("getTableFieldName", String.class);
+        Method declaration = AbstractSearcherDAO.class.getDeclaredMethod("getSearchableFields");
+
+        assertTrue(Modifier.isProtected(hook.getModifiers()));
+        assertFalse(Modifier.isFinal(hook.getModifiers()));
+        assertFalse(Modifier.isAbstract(hook.getModifiers()));
+        assertEquals(String.class, hook.getReturnType());
+        assertTrue(hook.isAnnotationPresent(Deprecated.class));
+        assertFalse(Modifier.isAbstract(declaration.getModifiers()));
+    }
+
+    @Test
+    void aSearcherOverridingOnlyTheDeprecatedHook_isResolvedThroughIt() {
+        LegacySearcherDAO dao = this.capture.wire(new LegacySearcherDAO(), DERBY);
+        FieldSearchFilter[] filters = {ordered(new FieldSearchFilter<>("title", "x", true), FieldSearchFilter.ASC_ORDER)};
+
+        List<String> warnings = warningsWhile(() -> dao.search(filters));
+
+        String query = SqlShape.normalize(this.capture.single());
+        assertTrue(query.contains("UPPER(legacytable.titlecol)"), query);
+        assertTrue(query.contains("ORDER BY legacytable.titlecol ASC"), query);
+        assertFalse(warnings.isEmpty());
+        warnings.forEach(warning -> {
+            assertTrue(warning.contains(LegacySearcherDAO.class.getName()), warning);
+            assertTrue(warning.contains("getTableFieldName(String)"), warning);
+            assertTrue(warning.contains("getSearchableFields()"), warning);
+            assertFalse(warning.contains("\n"), warning);
+        });
+    }
+
+    @Test
+    void aKeyTheDeprecatedHookDoesNotMap_neverReachesTheDriver() {
+        LegacySearcherDAO dao = this.capture.wire(new LegacySearcherDAO(), DERBY);
+        FieldSearchFilter[] filters = {new FieldSearchFilter<>("unknown", "x", true)};
+
+        assertThrows(RuntimeException.class, () -> dao.search(filters));
+        assertTrue(this.capture.getQueries().isEmpty(),
+                () -> "a query was still handed to the driver: " + this.capture.getQueries());
+    }
+
+    @Test
+    void aPassThroughOverride_stillAcceptsAPlainColumnName() {
+        PassThroughSearcherDAO dao = this.capture.wire(new PassThroughSearcherDAO(), DERBY);
+
+        warningsWhile(() -> dao.search(new FieldSearchFilter[]{new FieldSearchFilter<>("descr", "x", true)}));
+
+        assertTrue(SqlShape.normalize(this.capture.single()).contains("UPPER(passthrough.descr)"),
+                this.capture.single());
+    }
+
+    @ParameterizedTest
+    @MethodSource("injectedKeys")
+    void aPassThroughOverride_neverHandsAnInjectedKeyToTheDriver(String key) {
+        PassThroughSearcherDAO dao = this.capture.wire(new PassThroughSearcherDAO(), DERBY);
+        FieldSearchFilter[] filters = {ordered(new FieldSearchFilter<>(key, "x", true), FieldSearchFilter.ASC_ORDER)};
+
+        assertThrows(RuntimeException.class, () -> dao.search(filters));
+        assertTrue(this.capture.getQueries().isEmpty(),
+                () -> "a query was still handed to the driver: " + this.capture.getQueries());
+    }
+
+    private static Stream<String> injectedKeys() {
+        return Stream.of("descr) OR 1=1 --", "descr; DROP TABLE passthrough", "descr, (SELECT 1)",
+                "passthrough.descr", "\"descr\"", "1descr");
+    }
+
+    @Test
+    void aSearcherDeclaringNoKeys_refusesEveryKeyBeforeTheDriver() {
+        NoKeysSearcherDAO dao = this.capture.wire(new NoKeysSearcherDAO(), DERBY);
+        FieldSearchFilter[] filters = {new FieldSearchFilter<>("id", "x", false)};
+
+        assertThrows(RuntimeException.class, () -> dao.search(filters));
+        assertTrue(this.capture.getQueries().isEmpty(),
+                () -> "a query was still handed to the driver: " + this.capture.getQueries());
+    }
+
+    @Test
+    void anOverrideOnADeclaringSearcher_isStillHonoured() {
+        LegacyGroupDAO dao = this.capture.wire(new LegacyGroupDAO(), DERBY);
+
+        warningsWhile(() -> dao.searchGroups(new FieldSearchFilter[]{
+                new FieldSearchFilter<>("title", "x", true), descriptionLike()}));
+
+        String query = SqlShape.normalize(this.capture.single());
+        assertEquals(2, SqlShape.occurrences(query, "UPPER(authgroups.descr)"), query);
+    }
+
+    @Test
+    void callingTheDeprecatedHook_resolvesThroughTheDeclaredKeysAndWarnsOnce() {
+        ProbeGroupDAO dao = new ProbeGroupDAO();
+        String[] column = new String[1];
+
+        List<String> warnings = warningsWhile(() -> column[0] = dao.legacyColumnFor("DESCR"));
+
+        assertEquals("descr", column[0]);
+        assertEquals(1, warnings.size(), () -> "expected one warning, got " + warnings);
+        assertTrue(warnings.get(0).contains(ProbeGroupDAO.class.getName()), warnings.get(0));
+        assertTrue(warnings.get(0).contains("resolveTableFieldName(String)"), warnings.get(0));
+        assertFalse(warnings.get(0).contains("\n"), warnings.get(0));
+        assertThrows(RuntimeException.class, () -> dao.legacyColumnFor("descr) OR 1=1 --"));
+    }
+
+    @Test
+    void aSearcherUsingOnlyTheDeclaredKeys_logsNoDeprecationWarning() {
+        GroupDAO dao = this.capture.wire(new GroupDAO(), DERBY);
+
+        List<String> warnings = warningsWhile(() -> dao.searchGroups(
+                new FieldSearchFilter[]{ordered(descriptionLike(), FieldSearchFilter.ASC_ORDER)}));
+
+        assertTrue(warnings.isEmpty(), () -> "unexpected warnings: " + warnings);
+    }
+
+    // ---------------------------------------------------------------- count queries in the previous API's shapes
+
+    @Test
+    void aCountBlockThatAlreadyCounts_isReportedByName() {
+        CountingBlockGroupDAO dao = this.capture.wire(new CountingBlockGroupDAO(), DERBY);
+
+        List<String> warnings = warningsWhile(() -> dao.countGroups(new FieldSearchFilter[]{descriptionLike()}));
+
+        assertEquals("SELECT COUNT(*) FROM ( SELECT COUNT(*) FROM authgroups WHERE UPPER(authgroups.descr) LIKE ? ) counter",
+                SqlShape.normalize(this.capture.single()));
+        assertEquals(1, warnings.size(), () -> "expected one warning, got " + warnings);
+        assertTrue(warnings.get(0).contains(CountingBlockGroupDAO.class.getName()), warnings.get(0));
+        assertTrue(warnings.get(0).contains("createMasterCountQueryBlock()"), warnings.get(0));
+        assertFalse(warnings.get(0).contains("\n"), warnings.get(0));
+    }
+
+    @Test
+    void aCountQueryNotWrappedByToQueryString_isReportedByName() {
+        UnwrappedCountGroupDAO dao = this.capture.wire(new UnwrappedCountGroupDAO(), DERBY);
+
+        List<String> warnings = warningsWhile(() -> dao.countGroups(new FieldSearchFilter[]{descriptionLike()}));
+
+        assertEquals("SELECT authgroups.groupname FROM authgroups WHERE UPPER(authgroups.descr) LIKE ?",
+                SqlShape.normalize(this.capture.single()));
+        assertEquals(1, warnings.size(), () -> "expected one warning, got " + warnings);
+        assertTrue(warnings.get(0).contains(UnwrappedCountGroupDAO.class.getName()), warnings.get(0));
+        assertTrue(warnings.get(0).contains("toQueryString(StringBuffer, boolean)"), warnings.get(0));
+        assertFalse(warnings.get(0).contains("\n"), warnings.get(0));
+    }
+
+    @Test
+    void anInTreeCountAndList_logNoCountShapeWarning() {
+        GroupDAO groups = this.capture.wire(new GroupDAO(), DERBY);
+        ProbeProfileSearcherDAO profiles = this.capture.wire(new ProbeProfileSearcherDAO(), DERBY);
+        EntitySearchFilter[] entityFilters = {attributeLike(), orderedMetadata()};
+
+        List<String> warnings = warningsWhile(() -> {
+            groups.countGroups(new FieldSearchFilter[]{descriptionLike()});
+            groups.searchGroups(new FieldSearchFilter[]{descriptionLike()});
+            profiles.count(entityFilters);
+            profiles.searchId(entityFilters);
+        });
+
+        assertTrue(warnings.isEmpty(), () -> "unexpected warnings: " + warnings);
+    }
+
+    @Test
+    void anUnbalancedCountBlock_isReportedOnlyAsUnbalanced() {
+        UnbalancedGroupDAO dao = this.capture.wire(new UnbalancedGroupDAO(), DERBY);
+
+        List<String> warnings = warningsWhile(() -> dao.countGroups(new FieldSearchFilter[]{descriptionLike()}));
+
+        assertTrue(warnings.isEmpty(), () -> "unexpected warnings: " + warnings);
+    }
+
+    // ---------------------------------------------------------------- the deprecated order overload
+
+    @Test
+    void theDeprecatedOrderOverload_ordersAsTheUngroupedFormAndWarnsOnce() {
+        OrderProbeProfileSearcherDAO dao = new OrderProbeProfileSearcherDAO();
+        EntitySearchFilter[] filters = {orderedMetadata(),
+                ordered(new EntitySearchFilter<>("Nome", true, "abc", true), FieldSearchFilter.ASC_ORDER)};
+        String[] deprecatedBlock = new String[1];
+
+        List<String> warnings = warningsWhile(() -> deprecatedBlock[0] = dao.deprecatedOrderBlock(filters));
+
+        assertEquals(dao.ungroupedOrderBlock(filters), deprecatedBlock[0]);
+        assertEquals(1, warnings.size(), () -> "expected one warning, got " + warnings);
+        assertTrue(warnings.get(0).contains(OrderProbeProfileSearcherDAO.class.getName()), warnings.get(0));
+        assertTrue(warnings.get(0).contains("appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean, boolean)"),
+                warnings.get(0));
+        assertFalse(warnings.get(0).contains("\n"), warnings.get(0));
+    }
+
+    private static List<String> warningsWhile(Runnable action) {
+        List<Logger> loggers = List.of((Logger) LoggerFactory.getLogger(AbstractSearcherDAO.class),
+                (Logger) LoggerFactory.getLogger(AbstractEntitySearcherDAO.class));
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        loggers.forEach(logger -> logger.addAppender(appender));
+        try {
+            action.run();
+        } finally {
+            loggers.forEach(logger -> logger.detachAppender(appender));
+        }
+        appender.list.forEach(event -> assertEquals(null, event.getThrowableProxy()));
+        return appender.list.stream()
+                .filter(event -> Level.WARN.equals(event.getLevel()))
+                .map(ILoggingEvent::getFormattedMessage)
+                .toList();
+    }
+
     // ---------------------------------------------------------------- fixtures
 
     private static FieldSearchFilter sortOnly(String key) {
@@ -515,6 +726,130 @@ class SearcherDaoQueryShapeTest {
 
         Integer count(EntitySearchFilter[] filters) {
             return this.countId(filters);
+        }
+    }
+
+    /** Written against the previous API: maps its keys in the deprecated hook and declares none. */
+    @SuppressWarnings("deprecation")
+    private static class LegacySearcherDAO extends AbstractSearcherDAO {
+
+        List<String> search(FieldSearchFilter[] filters) {
+            return this.searchId(filters);
+        }
+
+        @Override
+        protected String getTableFieldName(String metadataFieldKey) {
+            return "title".equals(metadataFieldKey) ? "titlecol" : null;
+        }
+
+        @Override
+        protected String getMasterTableName() {
+            return "legacytable";
+        }
+
+        @Override
+        protected String getMasterTableIdFieldName() {
+            return "id";
+        }
+    }
+
+    /** The override most client searchers carry: the caller's key, returned as the column. */
+    @SuppressWarnings("deprecation")
+    private static class PassThroughSearcherDAO extends AbstractSearcherDAO {
+
+        List<String> search(FieldSearchFilter[] filters) {
+            return this.searchId(filters);
+        }
+
+        @Override
+        protected String getTableFieldName(String metadataFieldKey) {
+            return metadataFieldKey;
+        }
+
+        @Override
+        protected String getMasterTableName() {
+            return "passthrough";
+        }
+
+        @Override
+        protected String getMasterTableIdFieldName() {
+            return "id";
+        }
+    }
+
+    /** Declares no keys and does not override the deprecated hook. */
+    private static class NoKeysSearcherDAO extends AbstractSearcherDAO {
+
+        List<String> search(FieldSearchFilter[] filters) {
+            return this.searchId(filters);
+        }
+
+        @Override
+        protected String getMasterTableName() {
+            return "nokeystable";
+        }
+
+        @Override
+        protected String getMasterTableIdFieldName() {
+            return "id";
+        }
+    }
+
+    /** Extends an in-tree searcher, adding a key through the deprecated hook and falling back on it. */
+    @SuppressWarnings("deprecation")
+    private static class LegacyGroupDAO extends GroupDAO {
+
+        @Override
+        protected String getTableFieldName(String metadataFieldKey) {
+            return "title".equals(metadataFieldKey) ? "descr" : super.getTableFieldName(metadataFieldKey);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static class ProbeGroupDAO extends GroupDAO {
+
+        String legacyColumnFor(String key) {
+            return this.getTableFieldName(key);
+        }
+    }
+
+    private static class OrderProbeProfileSearcherDAO extends UserProfileSearcherDAO {
+
+        @SuppressWarnings("deprecation")
+        String deprecatedOrderBlock(EntitySearchFilter[] filters) {
+            StringBuffer query = new StringBuffer();
+            this.appendOrderQueryBlocks(filters, query, false);
+            return query.toString();
+        }
+
+        String ungroupedOrderBlock(EntitySearchFilter[] filters) {
+            StringBuffer query = new StringBuffer();
+            this.appendOrderQueryBlocks(filters, query, false, false);
+            return query.toString();
+        }
+    }
+
+    /** Returns the count block the previous API expected: a counting query, not the body to count. */
+    private static class CountingBlockGroupDAO extends GroupDAO {
+
+        @Override
+        protected StringBuffer createMasterCountQueryBlock() {
+            return new StringBuffer("SELECT COUNT(*) FROM ").append(this.getMasterTableName()).append(" ");
+        }
+    }
+
+    /** Assembles its query as the previous API did, without returning through toQueryString. */
+    private static class UnwrappedCountGroupDAO extends GroupDAO {
+
+        @Override
+        protected String createQueryString(FieldSearchFilter[] filters, boolean isCount, boolean selectAll) {
+            StringBuffer query = this.createBaseQueryBlock(filters, isCount, selectAll);
+            this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
+            if (!isCount) {
+                this.appendOrderQueryBlocks(filters, query, false);
+                this.appendLimitQueryBlock(filters, query);
+            }
+            return query.toString();
         }
     }
 

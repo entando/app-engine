@@ -154,7 +154,7 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 		//System.out.println("QUERY : " + query);
 		PreparedStatement stat = null;
 		try {
-			stat = this.prepareStatement(conn, query);
+			stat = this.prepareStatement(conn, query, isCount);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);

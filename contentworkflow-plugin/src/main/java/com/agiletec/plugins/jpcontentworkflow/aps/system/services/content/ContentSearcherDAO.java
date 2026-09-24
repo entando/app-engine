@@ -106,7 +106,7 @@ public class ContentSearcherDAO extends com.agiletec.plugins.jacms.aps.system.se
 		String query = this.createQueryString(workflowFilters, filters, categories, orClauseCategoryFilter, groupsForSelect, isCount, selectAll);
         PreparedStatement stat = null;
 		try {
-			stat = this.prepareStatement(conn, query);
+			stat = this.prepareStatement(conn, query, isCount);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
