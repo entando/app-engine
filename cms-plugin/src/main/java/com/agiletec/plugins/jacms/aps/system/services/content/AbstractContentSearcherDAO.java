@@ -14,6 +14,7 @@
 package com.agiletec.plugins.jacms.aps.system.services.content;
 
 import com.agiletec.aps.system.SystemConstants;
+import com.agiletec.aps.system.common.SearchableFields;
 import com.agiletec.aps.system.common.entity.AbstractEntitySearcherDAO;
 import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
@@ -40,6 +41,31 @@ import org.entando.entando.ent.util.EntLogging.EntLogger;
 public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherDAO implements IContentSearcherDAO {
 
 	private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(AbstractContentSearcherDAO.class);
+
+	private static final String CONTENTID = "contentid";
+	private static final String CONTENTTYPE = "contenttype";
+
+	/**
+	 * The search keys this searcher accepts. Most name their column directly; the entity keys and the
+	 * two whose column is spelled differently are declared as aliases. <code>group</code> is accepted
+	 * because the chain this replaced accepted it - it is a code literal, not caller input, and keeping
+	 * it makes this an exact translation of that chain rather than a silent correction to it.
+	 */
+	private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+			"descr",
+			"status",
+			"created",
+			"published",
+			"maingroup",
+			"currentversion",
+			"firsteditor",
+			"lasteditor",
+			"restriction",
+			"group")
+			.alias(IContentManager.ENTITY_ID_FILTER_KEY, CONTENTID)
+			.alias(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, CONTENTTYPE)
+			.alias(IContentManager.CONTENT_MODIFY_DATE_FILTER_KEY, "lastmodified")
+			.alias(IContentManager.CONTENT_ONLINE_FILTER_KEY, "onlinexml");
     
     @Override
     public int countContents(String[] categories, boolean orClauseCategoryFilter, 
@@ -105,36 +131,8 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 	}
 	
 	@Override
-	protected String getTableFieldName(String metadataFieldKey) {
-		if (metadataFieldKey.equals(IContentManager.ENTITY_ID_FILTER_KEY)) {
-			return this.getEntityMasterTableIdFieldName();
-		} else if (metadataFieldKey.equals(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY)) {
-			return this.getEntityMasterTableIdTypeFieldName();
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_DESCR_FILTER_KEY)) {
-			return "descr";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_STATUS_FILTER_KEY)) {
-			return "status";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_CREATION_DATE_FILTER_KEY)) {
-			return "created";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_MODIFY_DATE_FILTER_KEY)) {
-			return "lastmodified";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_PUBLISH_DATE_FILTER_KEY)) {
-			return "published";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_ONLINE_FILTER_KEY)) {
-			return "onlinexml";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_MAIN_GROUP_FILTER_KEY)) {
-			return "maingroup";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_CURRENT_VERSION_FILTER_KEY)) {
-			return "currentversion";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_FIRST_EDITOR_FILTER_KEY)) {
-			return "firsteditor";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_LAST_EDITOR_FILTER_KEY)) {
-			return "lasteditor";
-		} else if (metadataFieldKey.equals(IContentManager.CONTENT_RESTRICTION_FILTER_KEY)) {
-			return "restriction";
-		}else if (metadataFieldKey.equals(IContentManager.CONTENT_GROUP_FILTER_KEY)) {
-			return "group";
-		} else throw new RuntimeException("Chiave di ricerca '" + metadataFieldKey + "' non riconosciuta");
+	protected SearchableFields getSearchableFields() {
+		return SEARCHABLE_FIELDS;
 	}
 	
 	protected PreparedStatement buildStatement(EntitySearchFilter[] filters,
@@ -156,7 +154,7 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 		//System.out.println("QUERY : " + query);
 		PreparedStatement stat = null;
 		try {
-			stat = conn.prepareStatement(query);
+			stat = this.prepareStatement(conn, query, isCount);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
@@ -217,12 +215,12 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 			hasAppendWhereClause = this.verifyWhereClauseAppend(query, hasAppendWhereClause);
 			this.addGroupsQueryBlock(query, groups);
 		}
+		boolean grouped = this.appendGroupByQueryBlock(filters, query, selectAll);
         if (!isCount) {
-            boolean ordered = this.appendOrderQueryBlocks(filters, query, false);
+            this.appendOrderQueryBlocks(filters, query, false, grouped);
             this.appendLimitQueryBlock(filters, query);
-        }
-		//System.out.println("********** " + query.toString());
-		return query.toString();
+		}
+		return this.toQueryString(query, isCount);
 	}
 	
 	protected void addGroupsQueryBlock(StringBuffer query, Collection<String> userGroupCodes) {
@@ -282,8 +280,8 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 	@Override
 	protected ApsEntityRecord createRecord(ResultSet result) throws Throwable {
 		ContentRecordVO contentVo = new ContentRecordVO();
-		contentVo.setId(result.getString("contentid"));
-		contentVo.setTypeCode(result.getString("contenttype"));
+		contentVo.setId(result.getString(CONTENTID));
+		contentVo.setTypeCode(result.getString(CONTENTTYPE));
 		contentVo.setDescription(result.getString("descr"));
 		contentVo.setStatus(result.getString("status"));
 		String xmlWork = result.getString("workxml");
@@ -309,11 +307,11 @@ public abstract class AbstractContentSearcherDAO extends AbstractEntitySearcherD
 	}
 	@Override
 	protected String getEntityMasterTableIdFieldName() {
-		return "contentid";
+		return CONTENTID;
 	}
 	@Override
 	protected String getEntityMasterTableIdTypeFieldName() {
-		return "contenttype";
+		return CONTENTTYPE;
 	}
 	
 	protected abstract String getContentRelationsTableName();

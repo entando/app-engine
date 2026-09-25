@@ -20,9 +20,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
+import com.agiletec.aps.system.common.FieldSearchFilter;
 import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
@@ -36,6 +39,8 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO implements IEntitySearcherDAO {
 
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(AbstractEntitySearcherDAO.class);
+    private static final String TEXTVALUE = "textvalue";
+
 
     @Override
     public List<ApsEntityRecord> searchRecords(EntitySearchFilter[] filters) {
@@ -138,7 +143,7 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         String query = this.createQueryString(filters, isCount, selectAll);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query, isCount);
             int index = 0;
             index = this.addAttributeFilterStatementBlock(filters, index, stat);
             index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
@@ -216,11 +221,12 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         StringBuffer query = this.createBaseQueryBlock(filters, isCount, selectAll);
         boolean hasAppendWhereClause = this.appendFullAttributeFilterQueryBlocks(filters, query, false);
         this.appendMetadataFieldFilterQueryBlocks(filters, query, hasAppendWhereClause);
+        boolean grouped = this.appendGroupByQueryBlock(filters, query, selectAll);
         if (!isCount) {
-            boolean ordered = this.appendOrderQueryBlocks(filters, query, false);
+            this.appendOrderQueryBlocks(filters, query, false, grouped);
             this.appendLimitQueryBlock(filters, query);
         }
-        return query.toString();
+        return this.toQueryString(query, isCount);
     }
 
     /**
@@ -236,7 +242,10 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
     protected StringBuffer createBaseQueryBlock(EntitySearchFilter[] filters, boolean isCount, boolean selectAll) {
         StringBuffer query = null;
         if (isCount) {
-            query = this.createMasterCountQueryBlock();
+            // count the rows of the very select block the list query pages over, so that the two can
+            // never disagree: an attribute filter joins the search table and can match several rows
+            // per entity, and LIMIT/OFFSET is applied to whatever that block returns
+            query = this.createMasterSelectQueryBlock(filters, false);
         } else {
             query = this.createMasterSelectQueryBlock(filters, selectAll);
         }
@@ -246,31 +255,177 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
 
     protected StringBuffer createMasterSelectQueryBlock(EntitySearchFilter[] filters, boolean selectAll) {
         String masterTableName = this.getEntityMasterTableName();
-        StringBuffer query = new StringBuffer("SELECT ").append(masterTableName).append(".");
+        boolean grouped = this.isGroupedByMasterId(filters, selectAll);
+        StringBuffer query = new StringBuffer("SELECT ");
+        if (!selectAll && !grouped) {
+            // GROUP BY on the master id already returns one row per entity
+            query.append("DISTINCT ");
+        }
+        query.append(masterTableName).append(".");
         if (selectAll) {
             query.append("* ");
         } else {
             query.append(this.getEntityMasterTableIdFieldName());
         }
         if (filters != null) {
-            String searchTableName = this.getEntitySearchTableName();
-            for (int i = 0; i < filters.length; i++) {
-                EntitySearchFilter filter = filters[i];
-                if (!filter.isAttributeFilter() && filter.isLikeOption()) {
-                    String tableFieldName = this.getTableFieldName(filter.getKey());
-                    //check for id column already present
-                    if (!tableFieldName.equals(this.getMasterTableIdFieldName())) {
-                        query.append(", ").append(masterTableName).append(".").append(tableFieldName);
-                    }
-                } else if (filter.isAttributeFilter() && filter.isLikeOption()) {
-                    String columnName = this.getAttributeFieldColunm(filter);
-                    query.append(", ").append(searchTableName).append(i).append(".").append(columnName);
-                    query.append(" AS ").append(columnName).append(i).append(" ");
-                }
+            if (selectAll) {
+                this.appendLikeFieldsSelectBlock(filters, query);
+            } else {
+                this.appendOrderFieldsSelectBlock(filters, query, grouped);
             }
         }
         query.append(" FROM ").append(masterTableName).append(" ");
         return query;
+    }
+
+    /**
+     * Whether the body collapses the entity in SQL rather than with DISTINCT.
+     *
+     * <p>DISTINCT cannot collapse an entity that is ordered <em>by</em> an attribute: the ORDER BY
+     * names a column of the joined search table, that column has to be projected, and an entity
+     * holding one value per language then produces rows that are genuinely distinct. Grouping on the
+     * master id collapses it, and the attribute is reached through an aggregate instead.</p>
+     *
+     * <p>Deliberately scoped to that case. Ordering on metadata alone cannot multiply a row, so those
+     * searches - the large majority - keep the plan, the totals and the row order they have.</p>
+     *
+     * @param filters The filters of the query.
+     * @param selectAll True when the query loads whole records; that path has no count paired with it
+     * and projects the master table's CLOB columns, so it is never grouped.
+     * @return True when the body must group by the master id.
+     */
+    protected boolean isGroupedByMasterId(EntitySearchFilter[] filters, boolean selectAll) {
+        if (selectAll || null == filters) {
+            return false;
+        }
+        for (EntitySearchFilter filter : filters) {
+            if (this.isOrderFilter(filter) && filter.isAttributeFilter()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The filters the ORDER BY block will emit a term for. Every method that has to stay aligned with
+     * that block - the projection, the GROUP BY - asks this rather than repeating the condition.
+     *
+     * @param filter The filter to test.
+     * @return True when the filter carries an order the query builder honours.
+     */
+    private boolean isOrderFilter(EntitySearchFilter filter) {
+        return (null != filter.getKey() || null != filter.getRoleName())
+                && null != filter.getOrder() && !filter.isNullOption();
+    }
+
+    /**
+     * The master-table columns the ORDER BY block references, de-duplicated and in the order the
+     * filters declare them. They are projected, and when the body groups they are also grouped on:
+     * Derby and Oracle both reject an un-aggregated column that is not in the GROUP BY, even one
+     * functionally dependent on the grouping key that MySQL and PostgreSQL accept.
+     *
+     * @param filters The filters of the query.
+     * @return The column names, without the table prefix.
+     */
+    private List<String> metadataOrderColumns(EntitySearchFilter[] filters) {
+        List<String> columns = new ArrayList<>();
+        if (null == filters) {
+            return columns;
+        }
+        for (EntitySearchFilter filter : filters) {
+            if (!this.isOrderFilter(filter) || filter.isAttributeFilter()) {
+                continue;
+            }
+            String fieldName = this.resolveTableFieldName(filter.getKey());
+            // two filters can order on the same column; a count wraps this block in a derived table,
+            // and a derived table may not repeat a column name
+            if (!columns.contains(fieldName) && !fieldName.equals(this.getEntityMasterTableIdFieldName())) {
+                columns.add(fieldName);
+            }
+        }
+        return columns;
+    }
+
+    /**
+     * Group the body on the master id so that an entity holding several values for the ordered
+     * attribute collapses to one row. Part of the body, not of the order block: the count wraps the
+     * same block, so it counts groups and its total becomes exact.
+     *
+     * @param filters The filters of the query.
+     * @param query The query under construction.
+     * @param selectAll True when the query loads whole records.
+     * @return True when the clause was appended, to be handed to
+     * {@link #appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean, boolean)} - the two
+     * cannot disagree because one produces what the other consumes.
+     */
+    protected boolean appendGroupByQueryBlock(EntitySearchFilter[] filters, StringBuffer query, boolean selectAll) {
+        if (!this.isGroupedByMasterId(filters, selectAll)) {
+            return false;
+        }
+        String masterTableName = this.getEntityMasterTableName();
+        query.append("GROUP BY ").append(masterTableName).append(".")
+                .append(this.getEntityMasterTableIdFieldName());
+        for (String column : this.metadataOrderColumns(filters)) {
+            query.append(", ").append(masterTableName).append(".").append(column);
+        }
+        query.append(" ");
+        return true;
+    }
+
+    private void appendLikeFieldsSelectBlock(EntitySearchFilter[] filters, StringBuffer query) {
+        String masterTableName = this.getEntityMasterTableName();
+        String searchTableName = this.getEntitySearchTableName();
+        for (int i = 0; i < filters.length; i++) {
+            EntitySearchFilter filter = filters[i];
+            if (!filter.isAttributeFilter() && filter.isLikeOption()) {
+                String tableFieldName = this.resolveTableFieldName(filter.getKey());
+                //check for id column already present
+                if (!tableFieldName.equals(this.getMasterTableIdFieldName())) {
+                    query.append(", ").append(masterTableName).append(".").append(tableFieldName);
+                }
+            } else if (filter.isAttributeFilter() && filter.isLikeOption()) {
+                String columnName = this.getAttributeFieldColunm(filter);
+                query.append(", ").append(searchTableName).append(i).append(".").append(columnName);
+                query.append(" AS ").append(columnName).append(i).append(" ");
+            }
+        }
+    }
+
+    /**
+     * Project the columns the ORDER BY block will reference. Under DISTINCT they have to appear in the
+     * select list, and they are the only extra columns allowed to: any other column of the joined
+     * search table would make the entity distinct again, row by row.
+     *
+     * <p>When the body groups, the attribute column is deliberately <em>not</em> projected. Projecting
+     * it is what stops DISTINCT collapsing the entity, and the ORDER BY reaches it through an
+     * aggregate instead, which needs no projection.</p>
+     *
+     * @param filters The filters of the query.
+     * @param query The query under construction.
+     * @param grouped True when the body groups by the master id.
+     */
+    private void appendOrderFieldsSelectBlock(EntitySearchFilter[] filters, StringBuffer query, boolean grouped) {
+        for (String column : this.metadataOrderColumns(filters)) {
+            query.append(", ").append(this.getEntityMasterTableName()).append(".").append(column);
+        }
+        if (grouped) {
+            return;
+        }
+        for (int i = 0; i < filters.length; i++) {
+            EntitySearchFilter filter = filters[i];
+            if (!this.isOrderFilter(filter) || !filter.isAttributeFilter()) {
+                continue;
+            }
+            String searchTableNameAlias = this.getEntitySearchTableName() + i;
+            String columnName = this.getAttributeFieldColunm(this.getOrderReferenceValue(filter));
+            if (null == columnName) {
+                query.append(", ").append(searchTableNameAlias).append(".textvalue");
+                query.append(", ").append(searchTableNameAlias).append(".datevalue");
+                query.append(", ").append(searchTableNameAlias).append(".numvalue");
+            } else {
+                query.append(", ").append(searchTableNameAlias).append(".").append(columnName);
+            }
+        }
     }
 
     protected void appendJoinSearchTableQueryBlock(EntitySearchFilter[] filters, StringBuffer query) {
@@ -413,13 +568,43 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         return hasAppendWhereClause;
     }
 
+    /**
+     * Order a body that does not group. Kept for callers that build an un-grouped query; a caller that
+     * appended a GROUP BY must use the four-argument form, or the attribute term would name a column
+     * that is neither grouped nor aggregated.
+     *
+     * @param filters The filters of the query.
+     * @param query The query under construction.
+     * @param ordered Whether an ORDER BY block was already opened.
+     * @return Whether an ORDER BY block is open.
+     * @deprecated Use {@link #appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean, boolean)},
+     * passing as <code>grouped</code> the value {@link #appendGroupByQueryBlock} returned for the same body.
+     */
+    @Deprecated(since = "7.5.3")
     protected boolean appendOrderQueryBlocks(EntitySearchFilter[] filters, StringBuffer query, boolean ordered) {
+        _logger.warn("Deprecated appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean) called on {}: use appendOrderQueryBlocks(EntitySearchFilter[], StringBuffer, boolean, boolean) instead",
+                this.getClass().getName());
+        return this.appendOrderQueryBlocks(filters, query, ordered, false);
+    }
+
+    /**
+     * @param filters The filters of the query.
+     * @param query The query under construction.
+     * @param ordered Whether an ORDER BY block was already opened.
+     * @param grouped True when the body groups by the master id, as reported by
+     * {@link #appendGroupByQueryBlock}.
+     * @return Whether an ORDER BY block is open.
+     */
+    protected boolean appendOrderQueryBlocks(EntitySearchFilter[] filters, StringBuffer query, boolean ordered,
+            boolean grouped) {
         if (filters == null) {
             return ordered;
         }
+        Set<String> orderedFields = new HashSet<>();
+        Object lastOrder = null;
         for (int i = 0; i < filters.length; i++) {
             EntitySearchFilter filter = filters[i];
-            if ((null != filter.getKey() || null != filter.getRoleName()) && null != filter.getOrder() && !filter.isNullOption()) {
+            if (this.isOrderFilter(filter)) {
                 if (!ordered) {
                     query.append("ORDER BY ");
                     ordered = true;
@@ -428,13 +613,16 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
                 }
                 if (filter.isAttributeFilter()) {
                     String tableName = this.getEntitySearchTableName() + i;
-                    this.addAttributeOrderQueryBlock(tableName, query, filter, filter.getOrder().toString());
+                    this.addAttributeOrderQueryBlock(tableName, query, filter, filter.getOrder().toString(), grouped);
                 } else {
-                    String fieldName = this.getTableFieldName(filter.getKey());
+                    String fieldName = this.resolveTableFieldName(filter.getKey());
                     query.append(this.getEntityMasterTableName()).append(".").append(fieldName).append(" ").append(filter.getOrder());
+                    orderedFields.add(fieldName);
                 }
+                lastOrder = filter.getOrder();
             }
         }
+        this.appendOrderTieBreaker(query, ordered, orderedFields, this.getEntityMasterTableIdFieldName(), lastOrder);
         return ordered;
     }
 
@@ -470,10 +658,49 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         return hasAppendWhereClause;
     }
 
-    private void addAttributeOrderQueryBlock(String searchTableNameAlias, StringBuffer query, EntitySearchFilter filter, String order) {
+    private void addAttributeOrderQueryBlock(String searchTableNameAlias, StringBuffer query,
+            EntitySearchFilter filter, String order, boolean grouped) {
         if (order == null) {
             order = "";
         }
+        Object object = this.getOrderReferenceValue(filter);
+        if (null == object) {
+            query.append(this.orderTerm(searchTableNameAlias, TEXTVALUE, order, grouped)).append(", ")
+                 .append(this.orderTerm(searchTableNameAlias, "datevalue", order, grouped)).append(", ")
+                 .append(this.orderTerm(searchTableNameAlias, "numvalue", order, grouped));
+            return;
+        }
+        query.append(this.orderTerm(searchTableNameAlias, this.getAttributeFieldColunm(object), order, grouped));
+    }
+
+    /**
+     * One ORDER BY term over an attribute column. When the body groups, the column belongs to the
+     * joined search table and is not part of the grouping key, so it is reached through an aggregate:
+     * an entity holding several values sorts on the one the requested direction asks for - the lowest
+     * ascending, the highest descending.
+     *
+     * @param searchTableNameAlias The alias of the joined search table.
+     * @param columnName The column holding the attribute value.
+     * @param order The requested direction.
+     * @param grouped True when the body groups by the master id.
+     * @return The term, direction included.
+     */
+    private String orderTerm(String searchTableNameAlias, String columnName, String order, boolean grouped) {
+        StringBuilder term = new StringBuilder();
+        if (grouped) {
+            String aggregate = FieldSearchFilter.DESC_ORDER.equalsIgnoreCase(order) ? "MAX" : "MIN";
+            term.append(aggregate).append("(").append(searchTableNameAlias).append(".").append(columnName).append(")");
+        } else {
+            term.append(searchTableNameAlias).append(".").append(columnName);
+        }
+        return term.append(" ").append(order).toString();
+    }
+
+    /**
+     * The value an ORDER BY on an attribute filter is resolved against. Shared with the select block so
+     * that the projected column and the ordered column are always the same one.
+     */
+    private Object getOrderReferenceValue(EntitySearchFilter filter) {
         Object object = filter.getValue();
         if (object == null) {
             object = filter.getStart();
@@ -481,14 +708,7 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         if (object == null) {
             object = filter.getEnd();
         }
-        if (null == object) {
-            query.append(searchTableNameAlias).append(".textvalue ").append(order).append(", ")
-                 .append(searchTableNameAlias).append(".datevalue ").append(order).append(", ")
-                 .append(searchTableNameAlias).append(".numvalue ").append(order);
-            return;
-        }
-        query.append(searchTableNameAlias).append(".").append(this.getAttributeFieldColunm(object)).append(" ");
-        query.append(order);
+        return object;
     }
 
     private String getAttributeFieldColunm(EntitySearchFilter filter) {
@@ -512,13 +732,13 @@ public abstract class AbstractEntitySearcherDAO extends AbstractSearcherDAO impl
         if (null == attributeValue) {
             columnName = null;
         } else if (attributeValue instanceof String) {
-            columnName = "textvalue";
+            columnName = TEXTVALUE;
         } else if (attributeValue instanceof Date) {
             columnName = "datevalue";
         } else if (attributeValue instanceof BigDecimal) {
             columnName = "numvalue";
         } else if (attributeValue instanceof Boolean) {
-            columnName = "textvalue";
+            columnName = TEXTVALUE;
         }
         return columnName;
     }

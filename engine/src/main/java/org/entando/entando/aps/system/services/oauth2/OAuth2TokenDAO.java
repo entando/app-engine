@@ -15,6 +15,7 @@ package org.entando.entando.aps.system.services.oauth2;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
@@ -41,6 +42,21 @@ public class OAuth2TokenDAO extends AbstractSearcherDAO implements IOAuth2TokenD
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(OAuth2TokenDAO.class);
 
+    private static final String CLIENTID = "clientid";
+    private static final String EXPIRESIN = "expiresin";
+    private static final String REFRESHTOKEN = "refreshtoken";
+    private static final String GRANTTYPE = "granttype";
+    private static final String LOCALUSER = "localuser";
+
+    /** The columns of <code>api_oauth_tokens</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            "accesstoken",
+            CLIENTID,
+            EXPIRESIN,
+            REFRESHTOKEN,
+            GRANTTYPE,
+            LOCALUSER);
+
     private static final String ERROR_REMOVE_ACCESS_TOKEN = "Error while remove access token";
 
     private static final String INSERT_TOKEN = "INSERT INTO api_oauth_tokens (accesstoken, clientid, expiresin, refreshtoken, granttype, localuser)  VALUES (? , ? , ? , ? , ?, ?)";
@@ -60,8 +76,8 @@ public class OAuth2TokenDAO extends AbstractSearcherDAO implements IOAuth2TokenD
     private static final String DELETE_TOKEN_BY_REFRESH = DELETE_TOKEN_PREFIX + "WHERE refreshtoken = ? ";
 
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
     @Override
@@ -79,15 +95,15 @@ public class OAuth2TokenDAO extends AbstractSearcherDAO implements IOAuth2TokenD
         if (StringUtils.isBlank(clientId) && StringUtils.isBlank(username)) {
             throw new RuntimeException("clientId and username cannot both be null");
         }
-        FieldSearchFilter expirationFilter = new FieldSearchFilter("expiresin");
+        FieldSearchFilter expirationFilter = new FieldSearchFilter(EXPIRESIN);
         expirationFilter.setOrder(FieldSearchFilter.Order.ASC);
         FieldSearchFilter[] filters = {expirationFilter};
         if (!StringUtils.isBlank(clientId)) {
-            FieldSearchFilter clientIdFilter = new FieldSearchFilter("clientid", clientId, true);
+            FieldSearchFilter clientIdFilter = new FieldSearchFilter(CLIENTID, clientId, true);
             filters = ArrayUtils.add(filters, clientIdFilter);
         }
         if (!StringUtils.isBlank(username)) {
-            FieldSearchFilter usernameFilter = new FieldSearchFilter("localuser", username, true);
+            FieldSearchFilter usernameFilter = new FieldSearchFilter(LOCALUSER, username, true);
             filters = ArrayUtils.add(filters, usernameFilter);
         }
         List<OAuth2AccessToken> accessTokens = new ArrayList<>();
@@ -122,20 +138,20 @@ public class OAuth2TokenDAO extends AbstractSearcherDAO implements IOAuth2TokenD
             stat.setString(1, token);
             res = stat.executeQuery();
             if (res.next()) {
-                String refreshTokenValue = res.getString("refreshtoken");
+                String refreshTokenValue = res.getString(REFRESHTOKEN);
                 OAuth2RefreshToken refreshToken = refreshTokenValue != null ?
                     new OAuth2RefreshToken(refreshTokenValue, java.time.Instant.now()) : null;
 
-                Timestamp timestamp = res.getTimestamp("expiresin");
+                Timestamp timestamp = res.getTimestamp(EXPIRESIN);
                 Date expiration = new Date(timestamp.getTime());
 
                 // Use the immutable constructor pattern
                 accessToken = new OAuth2AccessTokenImpl(
                     token,
                     expiration.toInstant(),
-                    res.getString("clientid"),
-                    res.getString("granttype"),
-                    res.getString("localuser"),
+                    res.getString(CLIENTID),
+                    res.getString(GRANTTYPE),
+                    res.getString(LOCALUSER),
                     refreshToken
                 );
             }
@@ -283,7 +299,7 @@ public class OAuth2TokenDAO extends AbstractSearcherDAO implements IOAuth2TokenD
     
     @Override
     public OAuth2RefreshToken readRefreshToken(String tokenValue) {
-        FieldSearchFilter filter = new FieldSearchFilter("refreshtoken", tokenValue, true);
+        FieldSearchFilter filter = new FieldSearchFilter(REFRESHTOKEN, tokenValue, true);
         FieldSearchFilter[] filters = {filter};
         List<String> accessTokens = super.searchId(filters);
         if (null != accessTokens && accessTokens.size() > 0) {
@@ -304,9 +320,9 @@ public class OAuth2TokenDAO extends AbstractSearcherDAO implements IOAuth2TokenD
             stat.setString(1, refreshToken.getTokenValue());
             res = stat.executeQuery();
             if (res.next()) {
-                String username = res.getString("localuser");
-                String clientId = res.getString("clientid");
-                String grantType = res.getString("granttype");
+                String username = res.getString(LOCALUSER);
+                String clientId = res.getString(CLIENTID);
+                String grantType = res.getString(GRANTTYPE);
 
                 // In Spring Security 6.x OAuth2Authorization, we need to build a more complete structure
                 // For now, we'll return null and log a warning since this method should be handled

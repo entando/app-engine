@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 
 import org.entando.entando.aps.system.services.userprofile.model.UserProfileRecord;
 
+import com.agiletec.aps.system.common.SearchableFields;
 import com.agiletec.aps.system.common.entity.AbstractEntitySearcherDAO;
 import com.agiletec.aps.system.common.entity.IEntityManager;
 import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
@@ -27,12 +28,22 @@ import com.agiletec.aps.system.common.entity.model.ApsEntityRecord;
  */
 public class UserProfileSearcherDAO extends AbstractEntitySearcherDAO {
 
+	private static final String USERNAME = "username";
+	private static final String PROFILETYPE = "profiletype";
+
+	/** The search keys this searcher accepts. <code>username</code> is the master table's id column. */
+	private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+			USERNAME,
+			"publicprofile")
+			.alias(IEntityManager.ENTITY_ID_FILTER_KEY, USERNAME)
+			.alias(IEntityManager.ENTITY_TYPE_CODE_FILTER_KEY, PROFILETYPE);
+
 	@Override
 	protected ApsEntityRecord createRecord(ResultSet result) throws Throwable {
 		UserProfileRecord record = new UserProfileRecord();
-		record.setId(result.getString("username"));
+		record.setId(result.getString(USERNAME));
 		record.setXml(result.getString("profilexml"));
-		record.setTypeCode(result.getString("profiletype"));
+		record.setTypeCode(result.getString(PROFILETYPE));
 		record.setPublicProfile(result.getInt("publicprofile") == 1);
 		return record;
 	}
@@ -44,12 +55,12 @@ public class UserProfileSearcherDAO extends AbstractEntitySearcherDAO {
 	
 	@Override
 	protected String getEntityMasterTableIdFieldName() {
-		return "username";
+		return USERNAME;
 	}
 	
 	@Override
 	protected String getEntityMasterTableIdTypeFieldName() {
-		return "profiletype";
+		return PROFILETYPE;
 	}
 	
 	@Override
@@ -59,7 +70,7 @@ public class UserProfileSearcherDAO extends AbstractEntitySearcherDAO {
 	
 	@Override
 	protected String getEntitySearchTableIdFieldName() {
-		return "username";
+		return USERNAME;
 	}
 	
 	@Override
@@ -69,22 +80,12 @@ public class UserProfileSearcherDAO extends AbstractEntitySearcherDAO {
 	
 	@Override
 	protected String getEntityAttributeRoleTableIdFieldName() {
-		return "username";
+		return USERNAME;
 	}
 	
 	@Override
-	protected String getTableFieldName(String metadataFieldKey) {
-		if (metadataFieldKey.equalsIgnoreCase("username")) {
-			return this.getEntityMasterTableIdFieldName();
-		} else if (metadataFieldKey.equals(IEntityManager.ENTITY_ID_FILTER_KEY)) {
-			return this.getEntityMasterTableIdFieldName();
-		} else if (metadataFieldKey.equals(IEntityManager.ENTITY_TYPE_CODE_FILTER_KEY)) {
-			return this.getEntityMasterTableIdTypeFieldName();
-		} else if (metadataFieldKey.equals(IUserProfileManager.PUBLIC_PROFILE_FILTER_KEY)) {
-			return "publicprofile";
-		} else {
-			throw new RuntimeException("Key '" + metadataFieldKey + "' not recognized");
-		}
+	protected SearchableFields getSearchableFields() {
+		return SEARCHABLE_FIELDS;
 	}
 	
 }

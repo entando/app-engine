@@ -82,6 +82,23 @@ class GuiFragmentControllerIntegrationTest extends AbstractControllerIntegration
         testCors("/fragments");
     }
 
+    /**
+     * <code>pluginCode</code> is an inherited <code>GuiFragmentDtoSmall</code> field, so the REST
+     * validator accepts it as a sort key, and <code>GuiFragmentService</code> passes the filters to the
+     * searcher without remapping. The searcher's allowlist holds the column, <code>plugincode</code>,
+     * so it has to match the key without regard to case or this endpoint refuses a sort it advertises.
+     */
+    @Test
+    void shouldSortOnAFieldWhoseColumnDiffersOnlyByCase() throws Exception {
+        String accessToken = getAccessToken();
+        mockMvc.perform(get("/fragments").param("sort", "pluginCode")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/fragments").param("sort", "pluginCode").param("direction", "DESC")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+    }
+
     @Test
     void testGetFragments_2() throws Exception {
         String accessToken = getAccessToken();

@@ -41,8 +41,7 @@ public class PublicContentSearcherDAO extends AbstractContentSearcherDAO impleme
 		} else {
 			groupCodes.addAll(userGroupCodes);
 		}
-		EntitySearchFilter onLineFilter = new EntitySearchFilter(IContentManager.CONTENT_ONLINE_FILTER_KEY, false);
-		filters = this.addFilter(filters, onLineFilter);
+		// the online filter is added by buildStatement, which the count goes through too - see there
 		List<String> contentsId = new ArrayList<String>();
 		Connection conn = null;
 		PreparedStatement stat = null;
@@ -66,10 +65,23 @@ public class PublicContentSearcherDAO extends AbstractContentSearcherDAO impleme
 		return contentsId;
 	}
 	
+	/**
+	 * Restrict the search to published contents.
+	 *
+	 * <p>Applied here because this is the one method both sides pass through: <code>countContents</code>
+	 * and <code>loadContentsId</code> of the base class each call it, so the count and the list are built
+	 * from the same filter set and cannot report different row sets. Adding the filter in the list method
+	 * alone - which is what this class did - made the total count drafts the list would never return.</p>
+	 *
+	 * <p>The filter carries no value, so it emits <code>contents.onlinexml IS NOT NULL</code> with no
+	 * placeholder and binds nothing: the parameter positions below are unaffected by it.</p>
+	 */
 	@Override
 	protected PreparedStatement buildStatement(EntitySearchFilter[] filters,
 			String[] categories, boolean orClauseCategoryFilter, 
 			Collection<String> userGroupCodes, boolean isCount, boolean selectAll, Connection conn) {
+		filters = this.addFilter(filters,
+				new EntitySearchFilter(IContentManager.CONTENT_ONLINE_FILTER_KEY, false));
 		ArrayList<String> groups = new ArrayList<>();
 		ArrayList<EntitySearchFilter> remainingFilters = new ArrayList<>();
 		for (EntitySearchFilter filter : filters) {
@@ -85,7 +97,7 @@ public class PublicContentSearcherDAO extends AbstractContentSearcherDAO impleme
 		String query = this.createQueryString(filters, groupsArr, categories, orClauseCategoryFilter, groupsForSelect, isCount, selectAll);
 		PreparedStatement stat = null;
 		try {
-			stat = conn.prepareStatement(query);
+			stat = this.prepareStatement(conn, query, isCount);
 			int index = 0;
 			index = super.addAttributeFilterStatementBlock(filters, index, stat);
 			index = this.addMetadataFieldFilterStatementBlock(filters, index, stat);
