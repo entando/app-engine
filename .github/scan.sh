@@ -3,11 +3,16 @@
 # Step B of the CI gate — submit the SonarCloud analysis and BLOCK on the
 # quality gate of the Compute Engine task THIS run creates.
 #
+# The analysis always runs and always waits for the gate result. The gate is
+# enforced on pull requests, tags and direct pushes. On a push that only lands
+# merged PRs (PUSH_ORIGIN, see .github/push-origin.sh) the PRs were already
+# gated, so the result is reported as a warning and never fails the step.
+#
 # Wired in the workflow with `if: always()` so a failed test/build step can
 # never prevent the scan (requirement: always update Sonar regardless of test
 # results). `sonar.qualitygate.wait=true` ties the pass/fail decision to this
 # run's ceTaskId (recorded in target/sonar/report-task.txt), so:
-#   - a red quality gate exits non-zero -> the job fails;
+#   - a red quality gate exits non-zero where the gate is enforced -> the job fails;
 #   - the decision can never be satisfied by a stale server-side analysis.
 #
 set -uo pipefail
@@ -48,6 +53,26 @@ else
   find . -type f -path '*/target/site/jacoco*/jacoco.xml' 2>/dev/null | sed 's/^/     /'
 fi
 
+# --- gate enforcement --------------------------------------------------------
+# Not enforced only when every commit the push adds was landed by a PR merged into
+# the pushed branch (PUSH_ORIGIN=pr-merge, set by .github/configure through
+# .github/push-origin.sh). Any other or missing origin leaves the gate enforced.
+GATE_ENFORCED=true
+if [ "${GITHUB_EVENT_NAME:-}" = "push" ] && [[ "${GITHUB_REF:-}" == refs/heads/* ]]; then
+  case "${PUSH_ORIGIN:-unknown}" in
+    pr-merge)
+      GATE_ENFORCED=false
+      echo "~> Push lands PR #${PUSH_MERGED_PRS//,/, #} (already gated on the PR): the quality gate result is reported, not enforced."
+      ;;
+    direct)
+      echo "~> Direct push to ${GITHUB_REF_NAME:-the branch} (commits no merged PR accounts for: ${PUSH_DIRECT_COMMITS:-?}): the quality gate is enforced."
+      ;;
+    *)
+      echo "::warning title=Push origin unknown::Could not determine whether this push only lands merged PRs; the quality gate is enforced."
+      ;;
+  esac
+fi
+
 mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar \
   -Dsonar.verbose=true \
   -Dsonar.qualitygate.wait=true \
@@ -62,7 +87,9 @@ RT=$(find . -path '*/target/sonar/report-task.txt' 2>/dev/null | head -n1)
 DASH=""
 [ -n "$RT" ] && DASH=$(grep -E '^dashboardUrl=' "$RT" | head -1 | cut -d= -f2-)
 
-# --- case 1: the scan did not run / produced no analysis -> stale-analysis guard
+# --- no analysis submitted -> stale-analysis guard ----------------------------
+# Fails whether or not the gate is enforced: without a fresh analysis the branch
+# baseline that PR analyses compare against goes stale.
 if [ -z "$RT" ]; then
   echo "::error title=Sonar scan did not run::No report-task.txt was produced — refusing to treat the quality gate as passed (stale-analysis guard)."
   {
@@ -73,27 +100,91 @@ if [ -z "$RT" ]; then
   exit "$([ "$SONAR_RC" -ne 0 ] && echo "$SONAR_RC" || echo 1)"
 fi
 
-# --- case 2: the analysis ran but the quality gate is RED
-if grep -q "QUALITY GATE STATUS: FAILED" "$SCAN_LOG" || [ "$SONAR_RC" -ne 0 ]; then
-  echo "::error title=Sonar quality gate FAILED::The SonarCloud quality gate did not pass for this run's analysis. Details: ${DASH:-see the scan log}"
-  {
-    echo "### [FAIL] Sonar quality gate — FAILED"
-    echo ""
-    [ -n "$DASH" ] && echo "[View the failing quality gate on SonarCloud]($DASH)"
-    echo ""
-    echo "Failing conditions (from the scan log):"
-    echo '```'
-    grep -iE 'QUALITY GATE STATUS|condition|new coverage|duplicated|reliability|security|maintainability' "$SCAN_LOG" | tail -n 30 || true
-    echo '```'
-  } >> "$SUMMARY"
-  exit "$([ "$SONAR_RC" -ne 0 ] && echo "$SONAR_RC" || echo 1)"
+# --- classify the gate result -------------------------------------------------
+#   PASSED       the scanner reported the gate as passed
+#   NONE         the scanner reported FAILED and SonarCloud says NONE: no New Code
+#                period, no condition evaluated (a SonarCloud setting, not code)
+#   FAILED       the scanner reported FAILED (a red gate)
+#   UNAVAILABLE  the analysis was submitted but no gate result came back
+#                (timeout or Compute Engine error)
+if grep -q "QUALITY GATE STATUS: FAILED" "$SCAN_LOG"; then
+  RESULT=FAILED
+elif [ "$SONAR_RC" -ne 0 ]; then
+  RESULT=UNAVAILABLE
+else
+  RESULT=PASSED
 fi
 
-# --- case 3: analysis ran and the quality gate passed
-{
-  echo "### [OK] Sonar quality gate — PASSED"
-  echo ""
-  [ -n "$DASH" ] && echo "[View the analysis on SonarCloud]($DASH)"
-} >> "$SUMMARY"
-echo "~> Quality gate PASSED for this run's analysis. ${DASH}"
-exit 0
+if [ "$RESULT" = "FAILED" ]; then
+  CE_URL=$(grep -E '^ceTaskUrl=' "$RT" | head -1 | cut -d= -f2-)
+  ANALYSIS_ID=""
+  QG_STATUS=""
+  if [ -n "$CE_URL" ]; then
+    ANALYSIS_ID=$(curl -fsS -u "${SONAR_TOKEN:-}:" "$CE_URL" 2>/dev/null | jq -r '.task.analysisId // empty' 2>/dev/null || true)
+  fi
+  if [ -n "$ANALYSIS_ID" ]; then
+    QG_STATUS=$(curl -fsS -u "${SONAR_TOKEN:-}:" \
+      "${SONAR_URL:-https://sonarcloud.io}/api/qualitygates/project_status?analysisId=$ANALYSIS_ID" 2>/dev/null \
+      | jq -r '.projectStatus.status // empty' 2>/dev/null || true)
+  fi
+  [ "$QG_STATUS" = "NONE" ] && RESULT=NONE
+fi
+
+# --- report -------------------------------------------------------------------
+if $GATE_ENFORCED; then
+  LEVEL=error; TAG=FAIL; SUFFIX=""
+else
+  LEVEL=warning; TAG=WARN; SUFFIX=" (not enforced — lands PR #${PUSH_MERGED_PRS//,/, #}, already gated on the PR)"
+fi
+
+case "$RESULT" in
+  PASSED)
+    {
+      echo "### [OK] Sonar quality gate — PASSED${SUFFIX}"
+      echo ""
+      [ -n "$DASH" ] && echo "[View the analysis on SonarCloud]($DASH)"
+    } >> "$SUMMARY"
+    echo "~> Quality gate PASSED for this run's analysis. ${DASH}"
+    exit 0
+    ;;
+  NONE)
+    echo "::${LEVEL} title=Sonar quality gate NOT COMPUTED::No New Code period is defined for '${GITHUB_REF_NAME:-this branch}' on SonarCloud, so no quality gate condition could be evaluated. This is a SonarCloud project setting (Administration > New Code), not a code problem. Details: ${DASH:-see the scan log}"
+    {
+      echo "### [${TAG}] Sonar quality gate — NOT COMPUTED (no New Code period)${SUFFIX}"
+      echo ""
+      [ -n "$DASH" ] && echo "[View the analysis on SonarCloud]($DASH)"
+      echo ""
+      echo "The quality gate status is \`NONE\`: every gate condition is on new code, and SonarCloud"
+      echo "has no New Code period for this branch, so nothing was evaluated. The scanner reports this"
+      echo "as FAILED. Fix it in SonarCloud under **Administration > New Code**; the code is not at fault."
+    } >> "$SUMMARY"
+    $GATE_ENFORCED && exit 1
+    exit 0
+    ;;
+  FAILED)
+    echo "::${LEVEL} title=Sonar quality gate FAILED::The SonarCloud quality gate did not pass for this run's analysis${SUFFIX}. Details: ${DASH:-see the scan log}"
+    {
+      echo "### [${TAG}] Sonar quality gate — FAILED${SUFFIX}"
+      echo ""
+      [ -n "$DASH" ] && echo "[View the failing quality gate on SonarCloud]($DASH)"
+      echo ""
+      echo "Failing conditions (from the scan log):"
+      echo '```'
+      grep -iE 'QUALITY GATE STATUS|condition|new coverage|duplicated|reliability|security|maintainability' "$SCAN_LOG" | tail -n 30 || true
+      echo '```'
+    } >> "$SUMMARY"
+    $GATE_ENFORCED && exit "$([ "$SONAR_RC" -ne 0 ] && echo "$SONAR_RC" || echo 1)"
+    exit 0
+    ;;
+  UNAVAILABLE)
+    echo "::${LEVEL} title=Sonar quality gate result UNAVAILABLE::The analysis was submitted but the scanner returned no gate result (exit $SONAR_RC: timeout or Compute Engine error)${SUFFIX}. Details: ${DASH:-see the scan log}"
+    {
+      echo "### [${TAG}] Sonar quality gate — RESULT UNAVAILABLE (scanner exit $SONAR_RC)${SUFFIX}"
+      echo ""
+      echo "The analysis was submitted, but no gate result came back (wait timeout or Compute Engine error). See the scan log."
+      [ -n "$DASH" ] && echo "[View the analysis on SonarCloud]($DASH)"
+    } >> "$SUMMARY"
+    $GATE_ENFORCED && exit "$SONAR_RC"
+    exit 0
+    ;;
+esac
