@@ -131,6 +131,31 @@ class TestBaseCommonAction extends ApsAdminBaseTestCase {
         }
     }
 
+    @Test
+    void testDeprecatedFrontActions() throws Throwable {
+        this.setUserOnSession("admin");
+        this.initAction("/do/Front/CurrentUser", "edit");
+        assertEquals(Action.SUCCESS, this.executeAction());
+        this.initAction("/do/Front/CurrentUser", "editPassword");
+        assertEquals(Action.SUCCESS, this.executeAction());
+    }
+
+    @Test
+    void testDeprecatedFrontChangePassword() throws Throwable {
+        String username = "editorCoach";
+        this.setUserOnSession(username);
+        try {
+            this.initAction("/do/Front/CurrentUser", "changePassword");
+            this.addParameter("oldPassword", username);
+            this.addParameter("password", "newPassword");
+            this.addParameter("passwordConfirm", "newPassword");
+            assertEquals(Action.SUCCESS, this.executeAction());
+            assertNotNull(this._userManager.getUser(username, "newPassword"));
+        } finally {
+            this._userManager.changePassword(username, username);
+        }
+    }
+
     private String executeUpdate(String oldPassword, String password, String passwordConfirm) throws Throwable {
         this.initAction("/do/CurrentUser", "changePassword");
         this.addParameter("oldPassword", oldPassword);
