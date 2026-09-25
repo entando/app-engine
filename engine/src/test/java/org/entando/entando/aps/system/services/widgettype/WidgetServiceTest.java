@@ -201,6 +201,27 @@ class WidgetServiceTest {
     }
 
     @Test
+    void shouldReturnEveryWidgetWhoseCodeIsPartOfAStockCode() {
+        useStockWidgetCodesAndLockedCoreWidgets();
+        assertThat(codesOf(widgetService.getWidgets(new RestListRequest())))
+                .containsExactlyInAnyOrder("formAction", "login_form", "form", "login", "apis");
+    }
+
+    @Test
+    void shouldClassifyCodeThatIsPartOfAStockCodeAsCustom() {
+        useStockWidgetCodesAndLockedCoreWidgets();
+        assertThat(codesOf(widgetService.getWidgets(typologyRequest(WidgetDto.CUSTOM_TYPOLOGY_CODE))))
+                .containsExactlyInAnyOrder("form", "login", "apis");
+    }
+
+    @Test
+    void shouldClassifyOnlyListedCodesAsStock() {
+        useStockWidgetCodesAndLockedCoreWidgets();
+        assertThat(codesOf(widgetService.getWidgets(typologyRequest(WidgetDto.STOCK_TYPOLOGY_CODE))))
+                .containsExactlyInAnyOrder("formAction", "login_form");
+    }
+
+    @Test
     void shouldFilterByGroup() {
 
         RestListRequest requestList = new RestListRequest();
@@ -340,6 +361,34 @@ class WidgetServiceTest {
         verify(guiFragmentManager).updateGuiFragment(fragmentCaptor.capture());
 
         assertThat(fragmentCaptor.getValue().getGui()).isEqualTo(expectedCustomUi);
+    }
+
+    private void useStockWidgetCodesAndLockedCoreWidgets() {
+        WidgetDtoBuilder dtoBuilder = new WidgetDtoBuilder();
+        dtoBuilder.setPageManager(pageManager);
+        dtoBuilder.setComponentManager(componentManager);
+        dtoBuilder.setStockWidgetCodes("formAction,login_form,messages_system,entando_apis");
+        widgetService.setDtoBuilder(dtoBuilder);
+        when(widgetManager.getWidgetTypes()).thenReturn(Arrays.asList("formAction", "login_form", "form", "login", "apis")
+                .stream().map(code -> {
+                    WidgetType type = new WidgetType();
+                    type.setCode(code);
+                    type.setLocked(true);
+                    return type;
+                }).collect(Collectors.toList()));
+    }
+
+    private RestListRequest typologyRequest(String typology) {
+        RestListRequest requestList = new RestListRequest();
+        Filter filter = new Filter();
+        filter.setAttribute("typology");
+        filter.setValue(typology);
+        requestList.addFilter(filter);
+        return requestList;
+    }
+
+    private List<String> codesOf(PagedMetadata<WidgetDto> result) {
+        return result.getBody().stream().map(WidgetDto::getCode).collect(Collectors.toList());
     }
 
     private WidgetType getWidget1() throws JsonProcessingException {

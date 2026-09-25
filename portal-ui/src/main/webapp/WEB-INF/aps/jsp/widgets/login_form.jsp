@@ -32,7 +32,7 @@
 		</wp:ifauthorized>
 		<p class="pull-right"><a href="<wp:info key="systemParam" paramName="applicationBaseURL" />do/logout.action" class="btn"><wp:i18n key="LOGOUT" /></a></p>
 		
-		<wp:pageWithWidget widgetTypeCode="userprofile_editCurrentUser" var="userprofileEditingPageVar" listResult="false" />
+		<wp:pageWithWidget widgetTypeCode="userprofile_editCurrentUser_profile" var="userprofileEditingPageVar" listResult="false" />
 		<c:if test="${null != userprofileEditingPageVar}" >
 		<p><a href="<wp:url page="${userprofileEditingPageVar.code}" />" ><wp:i18n key="userprofile_CONFIGURATION" /></a></p>
 		</c:if>

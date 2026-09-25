@@ -14,7 +14,9 @@
 package com.agiletec.apsadmin.system.entity.attribute.manager;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -82,7 +84,25 @@ public abstract class AbstractAttributeManager implements AttributeManagerInterf
      */
     protected String getValueFromForm(AttributeInterface attribute, AttributeTracer tracer, HttpServletRequest request) {
         String formFieldName = tracer.getFormFieldName(attribute);
-        return request.getParameter(formFieldName);
+        return unwrapParameter(request, formFieldName);
+    }
+
+    // Jetty 12 IncludeRequest does not propagate original POST parameters upward through
+    // the wrapper chain, so we walk it to find the first layer that has the value.
+    protected String unwrapParameter(HttpServletRequest request, String name) {
+        String value = request.getParameter(name);
+        if (!StringUtils.isEmpty(value)) {
+            return value;
+        }
+        HttpServletRequest r = request;
+        while (r instanceof HttpServletRequestWrapper) {
+            r = (HttpServletRequest) ((HttpServletRequestWrapper) r).getRequest();
+            value = r.getParameter(name);
+            if (!StringUtils.isEmpty(value)) {
+                return value;
+            }
+        }
+        return value;
     }
 	
 	protected AttributeManagerInterface getManager(AttributeInterface attribute) {

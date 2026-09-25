@@ -1,0 +1,29 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+           http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="20260707000000_remove_editCurrentUser_widgets" author="entando" context="production">
+
+        <!-- Remove the "userprofile_editCurrentUser" (combined edit) and
+             "userprofile_editCurrentUser_password" widgets. The profile-only widget
+             "userprofile_editCurrentUser_profile" is intentionally kept.
+             Delete the gui fragment first: guifragment.widgettypecode references
+             widgetcatalog.code. -->
+
+        <delete tableName="guifragment">
+            <where>code='userprofile_editCurrentUser_password'</where>
+        </delete>
+
+        <delete tableName="widgetcatalog">
+            <where>code='userprofile_editCurrentUser_password'</where>
+        </delete>
+
+        <delete tableName="widgetcatalog">
+            <where>code='userprofile_editCurrentUser'</where>
+        </delete>
+
+    </changeSet>
+</databaseChangeLog>
