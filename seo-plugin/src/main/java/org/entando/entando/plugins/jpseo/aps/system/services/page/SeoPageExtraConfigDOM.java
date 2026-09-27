@@ -34,6 +34,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.jdom2.input.SAXBuilder;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -175,7 +176,7 @@ public class SeoPageExtraConfigDOM extends PageExtraConfigDOM {
 
     private Document decodeComplexParameterDOM(String xml) {
         Document doc = null;
-        SAXBuilder builder = new SAXBuilder();
+        SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
         builder.setValidation(false);
         StringReader reader = new StringReader(xml);
         try {

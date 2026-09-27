@@ -39,6 +39,7 @@ import org.jdom2.CDATA;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 
@@ -444,7 +445,7 @@ public class ContentThreadConfigDOM {
 	 * In case of parsing exceptions.
 	 */
 	private Element getRootElement(String xmlText) throws EntException {
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		Element root = null;

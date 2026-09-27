@@ -28,7 +28,7 @@ services:
     networks:
       - app-tier
   redis-sentinel:
-    image: 'bitnami/redis-sentinel:latest'
+    image: 'bitnamilegacy/redis-sentinel:7.0.8-debian-11-r11'
     environment:
       - REDIS_MASTER_PASSWORD=str0ng_passw0rd
       - ALLOW_EMPTY_PASSWORD=yes

@@ -15,6 +15,7 @@
 package org.entando.entando.ent.util;
 
 import org.entando.entando.ent.exception.EntRuntimeException;
+import org.jdom2.input.SAXBuilder;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
@@ -41,6 +42,7 @@ public class EntSafeXmlUtils {
     private static final String HTTP_XML_ORG_SAX_FEATURES_EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities";
     private static final String HTTP_APACHE_ORG_XML_FEATURES_NONVALIDATING_LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
     public static final String XMLSCHEMA_FACTORY_CLASS = "com.sun.org.apache.xerces.internal.jaxp.validation.XMLSchemaFactory";
+    public static final String HTTP_APACHE_ORG_XML_FEATURES_DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
 
     private static SAXParserFactory newSaxParserFactory() {
         SAXParserFactory parseFactory = SAXParserFactory.newInstance();
@@ -74,6 +76,16 @@ public class EntSafeXmlUtils {
         SchemaFactory factory = EntSafeXmlUtils.newSafeSchemaFactory(schemaLanguage);
         StreamSource schemaSource = new StreamSource(resourceAsStream);
         return factory.newSchema(schemaSource);
+    }
+
+    public static SAXBuilder newSafeSAXBuilder() {
+        SAXBuilder builder = new SAXBuilder();
+        builder.setFeature(HTTP_APACHE_ORG_XML_FEATURES_DISALLOW_DOCTYPE_DECL, true);
+        builder.setFeature(HTTP_XML_ORG_SAX_FEATURES_EXTERNAL_GENERAL_ENTITIES, false);
+        builder.setFeature(HTTP_XML_ORG_SAX_FEATURES_EXTERNAL_PARAMETER_ENTITIES, false);
+        builder.setFeature(HTTP_APACHE_ORG_XML_FEATURES_NONVALIDATING_LOAD_EXTERNAL_DTD, false);
+        builder.setExpandEntities(false);
+        return builder;
     }
 
     private EntSafeXmlUtils() {
