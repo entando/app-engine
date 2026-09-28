@@ -10,19 +10,25 @@
         <!-- Remove the "userprofile_editCurrentUser" (combined edit) and
              "userprofile_editCurrentUser_password" widgets. The profile-only widget
              "userprofile_editCurrentUser_profile" is intentionally kept.
-             Delete the gui fragment first: guifragment.widgettypecode references
-             widgetcatalog.code. -->
+             The update halts, without changing any data, while the widgets are still in use:
+             widgetconfig, widgetconfig_draft and guifragment reference widgetcatalog.code,
+             and user widgets reference it through parenttypecode. Only the stock
+             "userprofile_editCurrentUser_password" gui fragment is removed with the widgets. -->
+
+        <preConditions onFail="HALT"
+                onFailMessage="Cannot remove the deprecated widgets 'userprofile_editCurrentUser' and 'userprofile_editCurrentUser_password' because they are still in use. Before restarting, remove every use of them, replacing them with 'userprofile_editCurrentUser_profile' where needed. Run these queries to find the uses; each must return no rows: (1) placed on published pages: SELECT pagecode, framepos, widgetcode FROM widgetconfig WHERE widgetcode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password'); (2) placed on draft pages: SELECT pagecode, framepos, widgetcode FROM widgetconfig_draft WHERE widgetcode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password'); (3) custom GUI fragments attached to them: SELECT code, widgettypecode FROM guifragment WHERE widgettypecode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password') AND code &lt;&gt; 'userprofile_editCurrentUser_password'; (4) user widgets derived from them: SELECT code, parenttypecode FROM widgetcatalog WHERE parenttypecode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password'). No data has been changed.">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM widgetconfig WHERE widgetcode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password')</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM widgetconfig_draft WHERE widgetcode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password')</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM guifragment WHERE widgettypecode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password') AND code &lt;&gt; 'userprofile_editCurrentUser_password'</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM widgetcatalog WHERE parenttypecode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password')</sqlCheck>
+        </preConditions>
 
         <delete tableName="guifragment">
-            <where>code='userprofile_editCurrentUser_password'</where>
+            <where>widgettypecode IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password')</where>
         </delete>
 
         <delete tableName="widgetcatalog">
-            <where>code='userprofile_editCurrentUser_password'</where>
-        </delete>
-
-        <delete tableName="widgetcatalog">
-            <where>code='userprofile_editCurrentUser'</where>
+            <where>code IN ('userprofile_editCurrentUser', 'userprofile_editCurrentUser_password')</where>
         </delete>
 
     </changeSet>

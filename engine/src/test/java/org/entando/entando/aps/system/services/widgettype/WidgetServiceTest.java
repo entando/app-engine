@@ -375,7 +375,7 @@ class WidgetServiceTest {
                     type.setCode(code);
                     type.setLocked(true);
                     return type;
-                }).collect(Collectors.toList()));
+                }).toList());
     }
 
     private RestListRequest typologyRequest(String typology) {
@@ -388,7 +388,7 @@ class WidgetServiceTest {
     }
 
     private List<String> codesOf(PagedMetadata<WidgetDto> result) {
-        return result.getBody().stream().map(WidgetDto::getCode).collect(Collectors.toList());
+        return result.getBody().stream().map(WidgetDto::getCode).toList();
     }
 
     private WidgetType getWidget1() throws JsonProcessingException {
