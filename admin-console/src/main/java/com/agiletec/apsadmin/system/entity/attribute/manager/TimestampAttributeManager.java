@@ -105,7 +105,14 @@ public class TimestampAttributeManager extends DateAttributeManager {
     
 	protected String getValueFromForm(AttributeInterface attribute, AttributeTracer tracer, String suffix, HttpServletRequest request) {
         String formFieldName = tracer.getFormFieldName(attribute) + suffix;
-        return request.getParameter(formFieldName);
+        String value = unwrapParameter(request, formFieldName);
+        if (value == null) {
+            Object attr = request.getAttribute(formFieldName);
+            if (attr != null) {
+                value = attr.toString();
+            }
+        }
+        return value;
     }
     
 	private static final String VALUE_HOUR = "h";

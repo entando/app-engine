@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.init.IComponentManager;
 import org.entando.entando.aps.system.init.model.Component;
 import org.entando.entando.aps.system.services.DtoBuilder;
+import org.entando.entando.aps.system.services.widgettype.WidgetTypeUtils;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.aps.system.services.widgettype.WidgetTypeParameter;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -78,7 +79,7 @@ public class WidgetDtoBuilder extends DtoBuilder<WidgetType, WidgetDto> {
             dest.setTypology(pluginCode);
         } else if (src.isUserType()) {
             dest.setTypology(WidgetDto.USER_TYPOLOGY_CODE);
-        } else if (this.getStockWidgetCodes().contains(src.getCode())) {
+        } else if (WidgetTypeUtils.isStockWidget(this.getStockWidgetCodes(), src.getCode())) {
             dest.setTypology(WidgetDto.STOCK_TYPOLOGY_CODE);
         } else {
             dest.setTypology(WidgetDto.CUSTOM_TYPOLOGY_CODE);

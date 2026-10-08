@@ -5,10 +5,15 @@
 
 <struts>
 
+	<!-- DEPRECATED, to be removed in a future release. No widget uses these actions and they
+		have no default view: they render only a GUI fragment with the matching code.
+		Each invocation logs a WARN (BaseCommonAction.front* methods).
+		Use /do/Front/CurrentUser/Profile for the current user's profile. -->
 	<package name="core_do/Front/CurrentUser" namespace="/do/Front/CurrentUser"
 		extends="entando-front-default">
 
-		<action name="edit">
+		<!-- DEPRECATED -->
+		<action name="edit" class="baseCommonAction" method="frontEdit">
 			<!-- <result type="dispatcher">/WEB-INF/aps/jsp/internalservlet/user/editCurrentUser.jsp</result> -->
 			<result type="guiFragment">
 				<param name="code">userprofile_editCurrentUser</param>
@@ -18,7 +23,8 @@
 			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
 		</action>
 
-		<action name="editPassword" class="baseCommonAction" method="editPassword">
+		<!-- DEPRECATED -->
+		<action name="editPassword" class="baseCommonAction" method="frontEditPassword">
 			<!-- <result type="dispatcher">/WEB-INF/aps/jsp/internalservlet/user/entryUserPassword.jsp</result> -->
 			<result type="guiFragment">
 				<param name="code">userprofile_editCurrentUser_password</param>
@@ -27,7 +33,8 @@
 			<interceptor-ref name="entandoFrontEndFreeStack"></interceptor-ref>
 		</action>
 
-		<action name="changePassword" class="baseCommonAction" method="changePassword">
+		<!-- DEPRECATED -->
+		<action name="changePassword" class="baseCommonAction" method="frontChangePassword">
 			<!--
 			<result name="input" type="dispatcher">/WEB-INF/aps/jsp/internalservlet/user/entryUserPassword.jsp</result> 
 			<result type="dispatcher">/WEB-INF/aps/jsp/internalservlet/user/passwordChangingConfirm.jsp</result>

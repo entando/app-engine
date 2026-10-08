@@ -16,6 +16,9 @@ package com.agiletec.apsadmin.common;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.util.List;
 import java.util.Map;
@@ -129,6 +132,54 @@ class TestBaseCommonAction extends ApsAdminBaseTestCase {
         } finally {
             this._userManager.changePassword(oldUser.getUsername(), oldUser.getUsername());
         }
+    }
+
+    @Test
+    void testDeprecatedFrontActions() throws Throwable {
+        this.setUserOnSession("admin");
+        this.initAction("/do/Front/CurrentUser", "edit");
+        assertEquals(Action.SUCCESS, this.executeAction());
+        this.initAction("/do/Front/CurrentUser", "editPassword");
+        assertEquals(Action.SUCCESS, this.executeAction());
+    }
+
+    @Test
+    void testDeprecatedFrontChangePassword() throws Throwable {
+        String username = "editorCoach";
+        this.setUserOnSession(username);
+        try {
+            this.initAction("/do/Front/CurrentUser", "changePassword");
+            this.addParameter("oldPassword", username);
+            this.addParameter("password", "newPassword");
+            this.addParameter("passwordConfirm", "newPassword");
+            assertEquals(Action.SUCCESS, this.executeAction());
+            assertNotNull(this._userManager.getUser(username, "newPassword"));
+        } finally {
+            this._userManager.changePassword(username, username);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void testFrontEditReturnsSuccess() {
+        assertEquals(Action.SUCCESS, new BaseCommonAction().frontEdit());
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void testFrontEditPasswordDelegatesToEditPassword() {
+        BaseCommonAction action = spy(new BaseCommonAction());
+        assertEquals(Action.SUCCESS, action.frontEditPassword());
+        verify(action).editPassword();
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void testFrontChangePasswordDelegatesToChangePassword() {
+        BaseCommonAction action = spy(new BaseCommonAction());
+        doReturn(Action.ERROR).when(action).changePassword();
+        assertEquals(Action.ERROR, action.frontChangePassword());
+        verify(action).changePassword();
     }
 
     private String executeUpdate(String oldPassword, String password, String passwordConfirm) throws Throwable {
