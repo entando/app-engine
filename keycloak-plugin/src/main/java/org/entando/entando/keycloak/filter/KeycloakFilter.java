@@ -356,13 +356,23 @@ public class KeycloakFilter implements Filter {
         Long issued = (matched != null) ? states.remove(matched) : null;
         session.setAttribute(SESSION_PARAM_STATES, states);
         session.removeAttribute(SESSION_PARAM_STATE);
-        String reason = (stateParameter == null) ? "missing"
-                : (matched == null) ? "unknown"
-                : (issued != null && System.currentTimeMillis() - issued > STATE_TTL_MILLIS) ? "expired"
-                : null;
+        String reason = stateRejectionReason(stateParameter, matched, issued);
         if (reason != null) {
             throw new EntandoTokenException("invalid state (" + reason + ")", request, SystemConstants.GUEST_USER_NAME);
         }
+    }
+
+    private String stateRejectionReason(String stateParameter, String matched, Long issued) {
+        if (stateParameter == null) {
+            return "missing";
+        }
+        if (matched == null) {
+            return "unknown";
+        }
+        if (issued != null && System.currentTimeMillis() - issued > STATE_TTL_MILLIS) {
+            return "expired";
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -373,8 +383,8 @@ public class KeycloakFilter implements Filter {
             states.putAll((Map<String, Long>) current);
         }
         Object legacy = session.getAttribute(SESSION_PARAM_STATE);
-        if (legacy instanceof String) {
-            states.putIfAbsent((String) legacy, null);
+        if (legacy instanceof String legacyState) {
+            states.putIfAbsent(legacyState, null);
         }
         long now = System.currentTimeMillis();
         states.values().removeIf(issued -> issued != null && now - issued > STATE_TTL_MILLIS);
