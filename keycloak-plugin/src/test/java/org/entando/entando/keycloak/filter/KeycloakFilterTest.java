@@ -857,9 +857,9 @@ class KeycloakFilterTest {
     }
 
     private void stubSuccessfulTokenExchange(String code, String username) throws EntException {
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setAccessToken("<token>");
-        when(oidcService.requestToken(eq(code), any())).thenReturn(ResponseEntity.ok().body(authResponse));
+        AuthResponse tokenExchangeBody = new AuthResponse();
+        tokenExchangeBody.setAccessToken("<token>");
+        when(oidcService.requestToken(eq(code), any())).thenReturn(ResponseEntity.ok().body(tokenExchangeBody));
 
         AccessToken token = new AccessToken();
         token.setActive(true);
