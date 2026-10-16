@@ -141,6 +141,11 @@ public class KeycloakFilter implements Filter {
                     chain.doFilter(request, response);
             }
 
+        } catch (EntandoTokenException e) {
+            // Report the rejected authentication as a single log line instead of letting the
+            // exception propagate to the container, which would log a full stack trace.
+            log.warn("Login rejected: {}", e.getMessage());
+            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             // moved here to clean context everytime also if we have an exception
             EntThreadLocal.destroy();
@@ -356,8 +361,7 @@ public class KeycloakFilter implements Filter {
                 : (issued != null && System.currentTimeMillis() - issued > STATE_TTL_MILLIS) ? "expired"
                 : null;
         if (reason != null) {
-            log.warn("Login callback rejected: state {}", reason);
-            throw new EntandoTokenException("invalid state", request, SystemConstants.GUEST_USER_NAME);
+            throw new EntandoTokenException("invalid state (" + reason + ")", request, SystemConstants.GUEST_USER_NAME);
         }
     }
 
