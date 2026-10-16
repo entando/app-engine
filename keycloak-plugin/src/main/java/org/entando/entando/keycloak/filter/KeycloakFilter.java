@@ -24,13 +24,6 @@ import com.agiletec.aps.system.services.user.User;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -40,6 +33,13 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.KeycloakWiki;
 import org.entando.entando.aps.servlet.security.GuestAuthentication;
@@ -127,7 +127,14 @@ public class KeycloakFilter implements Filter {
                 case "/do/doLogin":
                 case "/do/login.action":
                 case "/do/doLogin.action":
-                    doLogin(request, response, chain);
+                    try {
+                        doLogin(request, response, chain);
+                    } catch (EntandoTokenException e) {
+                        // Report the rejected authentication as a single log line instead of letting the
+                        // exception propagate to the container, which would log a full stack trace.
+                        log.warn("Login rejected: {}", e.getMessage());
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
                     break;
                 case "/do/logout":
                 case "/do/logout.action":
@@ -141,11 +148,6 @@ public class KeycloakFilter implements Filter {
                     chain.doFilter(request, response);
             }
 
-        } catch (EntandoTokenException e) {
-            // Report the rejected authentication as a single log line instead of letting the
-            // exception propagate to the container, which would log a full stack trace.
-            log.warn("Login rejected: {}", e.getMessage());
-            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             // moved here to clean context everytime also if we have an exception
             EntThreadLocal.destroy();

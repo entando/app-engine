@@ -40,6 +40,7 @@ import org.entando.entando.keycloak.services.KeycloakConfiguration;
 import org.entando.entando.keycloak.services.oidc.OpenIDConnectService;
 import org.entando.entando.keycloak.services.oidc.model.AccessToken;
 import org.entando.entando.keycloak.services.oidc.model.AuthResponse;
+import org.entando.entando.web.common.exceptions.EntandoTokenException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -626,6 +627,23 @@ class KeycloakFilterTest {
         verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         verify(oidcService, never()).requestToken(any(), any());
         verify(session, never()).removeAttribute(KeycloakFilter.SESSION_PARAM_STATE);
+    }
+
+    @Test
+    void tokenExceptionFromDownstreamApiShouldPropagate() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/api");
+        EntandoTokenException downstream = new EntandoTokenException("no token found", request, "guest");
+        Mockito.doThrow(downstream).when(filterChain).doFilter(any(), any());
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            EntandoTokenException thrown = org.junit.jupiter.api.Assertions.assertThrows(EntandoTokenException.class,
+                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            assertThat(thrown).isSameAs(downstream);
+        }
+
+        verify(response, never()).sendError(Mockito.anyInt());
     }
 
     @Test
