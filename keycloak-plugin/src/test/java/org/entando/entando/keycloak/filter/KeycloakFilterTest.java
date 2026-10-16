@@ -93,6 +93,7 @@ class KeycloakFilterTest {
         keycloakFilter = new KeycloakFilter(configuration, oidcService, providerManager, keycloakGroupManager, userManager);
         Mockito.lenient().when(request.getSession()).thenReturn(session);
         Mockito.lenient().when(session.getServletContext()).thenReturn(svCtx);
+        Mockito.lenient().when(request.getServletContext()).thenReturn(svCtx);
         Mockito.lenient().when(wac.getBean(ITenantManager.class)).thenReturn(tenantManager);
         Mockito.lenient().when(request.getServerName()).thenReturn("dev.entando.org");
         Mockito.lenient().when(request.getScheme()).thenReturn("https");
@@ -421,7 +422,7 @@ class KeycloakFilterTest {
         }
 
         verify(filterChain, times(1)).doFilter(any(), any());
-        verify(request, times(1)).getSession();
+        verify(request, never()).getSession();
     }
 
     @Test

@@ -71,7 +71,7 @@ public class BaseTestCase {
             refresh = true;
         }
         reqCtx = createRequestContext(applicationContext, servletContext);
-        request = createRequest();
+        request = createRequest(servletContext);
         request.setAttribute(RequestContext.REQCTX, reqCtx);
         request.setSession(new MockHttpSession(servletContext));
         reqCtx.setRequest(request);
@@ -96,7 +96,11 @@ public class BaseTestCase {
     }
 
     public static MockHttpServletRequest createRequest() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        return createRequest(null);
+    }
+
+    public static MockHttpServletRequest createRequest(ServletContext servletContext) {
+        MockHttpServletRequest request = new MockHttpServletRequest(servletContext);
         request.setScheme("http");
         request.setServerName("www.entando.com");
         request.addHeader("Host", "www.entando.com");

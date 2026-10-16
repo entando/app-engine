@@ -24,14 +24,28 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.entando.entando.aps.system.services.tenants.ITenantManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -212,6 +226,95 @@ class KeycloakSecurityConfigTest {
         verify(httpSecurity).csrf(any(Customizer.class));
         verify(httpSecurity).cors(any(Customizer.class));
         verify(httpSecurity).build();
+    }
+
+    @Test
+    void healthProbeShouldNotCreateSession() throws Exception {
+        try (AnnotationConfigWebApplicationContext context = securityChainsContext()) {
+            MockHttpServletRequest request = apiRequest(context, "/health");
+            MockFilterChain chain = new MockFilterChain();
+
+            context.getBean("springSecurityFilterChain", Filter.class).doFilter(request, new MockHttpServletResponse(), chain);
+
+            assertNotNull(chain.getRequest());
+            assertNull(request.getSession(false));
+        }
+    }
+
+    @Test
+    void healthPostWithoutCsrfTokenShouldBeRejected() throws Exception {
+        try (AnnotationConfigWebApplicationContext context = securityChainsContext()) {
+            MockHttpServletRequest request = apiRequest(context, "/health");
+            request.setMethod("POST");
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain chain = new MockFilterChain();
+
+            context.getBean("springSecurityFilterChain", Filter.class).doFilter(request, response, chain);
+
+            assertNull(chain.getRequest());
+            assertEquals(403, response.getStatus());
+        }
+    }
+
+    @Test
+    void otherApiPathShouldStillCreateSession() throws Exception {
+        try (AnnotationConfigWebApplicationContext context = securityChainsContext()) {
+            MockHttpServletRequest request = apiRequest(context, "/other");
+            MockFilterChain chain = new MockFilterChain();
+
+            context.getBean("springSecurityFilterChain", Filter.class).doFilter(request, new MockHttpServletResponse(), chain);
+
+            assertNotNull(chain.getRequest());
+            assertNotNull(request.getSession(false));
+        }
+    }
+
+    private static AnnotationConfigWebApplicationContext securityChainsContext() {
+        MockServletContext servletContext = new MockServletContext();
+        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+        context.setServletContext(servletContext);
+        context.register(SecurityChainsConfig.class);
+        context.refresh();
+        servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, context);
+        return context;
+    }
+
+    private static MockHttpServletRequest apiRequest(WebApplicationContext context, String pathInfo) {
+        MockHttpServletRequest request = new MockHttpServletRequest(context.getServletContext(), "GET", "/api" + pathInfo);
+        request.setServletPath("/api");
+        request.setPathInfo(pathInfo);
+        return request;
+    }
+
+    @EnableWebSecurity
+    @EnableWebMvc
+    static class SecurityChainsConfig {
+
+        private final KeycloakSecurityConfig securityConfig = keycloakDisabledSecurityConfig();
+
+        @Bean
+        ITenantManager tenantManager() {
+            return mock(ITenantManager.class);
+        }
+
+        @Bean
+        @Order(60)
+        SecurityFilterChain healthChain(HttpSecurity http) throws Exception {
+            return securityConfig.healthSecurityFilterChain(http);
+        }
+
+        @Bean
+        @Order(70)
+        SecurityFilterChain defaultChain(HttpSecurity http) throws Exception {
+            return securityConfig.keycloakSecurityFilterChain(http);
+        }
+
+        private static KeycloakSecurityConfig keycloakDisabledSecurityConfig() {
+            KeycloakSecurityConfig config = new KeycloakSecurityConfig(mock(KeycloakAuthenticationFilter.class),
+                    mock(KeycloakConfiguration.class), mock(IUserManager.class), mock(IAuthenticationProviderManager.class));
+            config.corsConfiguration = new CorsConfiguration();
+            return config;
+        }
     }
 
 }

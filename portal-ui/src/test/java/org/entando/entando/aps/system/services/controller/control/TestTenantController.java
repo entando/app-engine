@@ -127,7 +127,7 @@ class TestTenantController extends BaseTestCase {
 
     public RequestContext createExtRequestContext(String serverName, ApplicationContext applicationContext) {
         RequestContext reqCtx = this.getRequestContext();
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletRequest request = new MockHttpServletRequest(reqCtx.getRequest().getServletContext());
         request.setScheme("http");
         request.setServerName(serverName);
         request.addHeader("Host", serverName);
