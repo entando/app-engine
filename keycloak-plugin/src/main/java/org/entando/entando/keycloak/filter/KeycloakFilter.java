@@ -25,6 +25,10 @@ import com.agiletec.aps.system.services.user.UserDetails;
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import jakarta.servlet.Filter;
@@ -60,7 +64,11 @@ public class KeycloakFilter implements Filter {
 
     private static final EntLogger log = EntLogFactory.getSanitizedLogger(KeycloakFilter.class);
 
+    private static final int MAX_PENDING_STATES = 5;
+    private static final long STATE_TTL_MILLIS = 10 * 60 * 1000L;
+
     public static final String SESSION_PARAM_STATE = "keycloak-plugin-state";
+    public static final String SESSION_PARAM_STATES = "keycloak-plugin-states";
     public static final String SESSION_PARAM_REDIRECT = "keycloak-plugin-redirectTo";
     public static final String SESSION_PARAM_ACCESS_TOKEN = "keycloak-plugin-access-token";
     public static final String SESSION_PARAM_ID_TOKEN = "keycloak-plugin-id-token";
@@ -238,7 +246,7 @@ public class KeycloakFilter implements Filter {
         checkNoErrorOrThrow(request, error, errorDescription);
 
         if (authorizationCode != null) {
-            checkAndLogStateParameter(stateParameter, session);
+            consumeStateOrThrow(request, stateParameter, session);
 
             try {
                 final ResponseEntity<AuthResponse> responseEntity = oidcService.requestToken(authorizationCode, redirectUri);
@@ -295,7 +303,7 @@ public class KeycloakFilter implements Filter {
             final String state = UUID.randomUUID().toString();
             final String redirectUrl = oidcService.getRedirectUrl(redirectUri, state, fetchSuggestedIdp(request));
 
-            session.setAttribute(SESSION_PARAM_STATE, state);
+            addPendingState(session, state);
             log.debug("doLogin sendRedirect redirectUrl:'{}'", redirectUrl);
             response.sendRedirect(redirectUrl);
         }
@@ -319,13 +327,54 @@ public class KeycloakFilter implements Filter {
 
     }
 
-    private void checkAndLogStateParameter(String stateParameter, HttpSession session){
-        if (stateParameter == null) {
-            log.warn("State parameter not provided");
-        } else if (!stateParameter.equals(session.getAttribute(SESSION_PARAM_STATE))) {
-            log.warn("State parameter '{}' is different than generated '{}'", stateParameter, session.getAttribute(SESSION_PARAM_STATE));
+    private void addPendingState(HttpSession session, String state) {
+        LinkedHashMap<String, Long> states = readPendingStates(session);
+        states.put(state, System.currentTimeMillis());
+        while (states.size() > MAX_PENDING_STATES) {
+            states.remove(states.keySet().iterator().next());
         }
+        session.setAttribute(SESSION_PARAM_STATES, states);
+        session.removeAttribute(SESSION_PARAM_STATE);
+    }
 
+    private void consumeStateOrThrow(HttpServletRequest request, String stateParameter, HttpSession session) {
+        LinkedHashMap<String, Long> states = readPendingStates(session);
+        String matched = null;
+        if (stateParameter != null) {
+            byte[] received = stateParameter.getBytes(StandardCharsets.UTF_8);
+            for (String pending : states.keySet()) {
+                if (MessageDigest.isEqual(received, pending.getBytes(StandardCharsets.UTF_8))) {
+                    matched = pending;
+                }
+            }
+        }
+        Long issued = (matched != null) ? states.remove(matched) : null;
+        session.setAttribute(SESSION_PARAM_STATES, states);
+        session.removeAttribute(SESSION_PARAM_STATE);
+        String reason = (stateParameter == null) ? "missing"
+                : (matched == null) ? "unknown"
+                : (issued != null && System.currentTimeMillis() - issued > STATE_TTL_MILLIS) ? "expired"
+                : null;
+        if (reason != null) {
+            log.warn("Login callback rejected: state {}", reason);
+            throw new EntandoTokenException("invalid state", request, SystemConstants.GUEST_USER_NAME);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private LinkedHashMap<String, Long> readPendingStates(HttpSession session) {
+        LinkedHashMap<String, Long> states = new LinkedHashMap<>();
+        Object current = session.getAttribute(SESSION_PARAM_STATES);
+        if (current instanceof Map) {
+            states.putAll((Map<String, Long>) current);
+        }
+        Object legacy = session.getAttribute(SESSION_PARAM_STATE);
+        if (legacy instanceof String) {
+            states.putIfAbsent((String) legacy, null);
+        }
+        long now = System.currentTimeMillis();
+        states.values().removeIf(issued -> issued != null && now - issued > STATE_TTL_MILLIS);
+        return states;
     }
 
     private void buildAndSaveInSessionRedirectPath(String redirectTo, HttpServletRequest request, HttpSession session){
