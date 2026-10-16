@@ -40,8 +40,6 @@ import org.entando.entando.keycloak.services.KeycloakConfiguration;
 import org.entando.entando.keycloak.services.oidc.OpenIDConnectService;
 import org.entando.entando.keycloak.services.oidc.model.AccessToken;
 import org.entando.entando.keycloak.services.oidc.model.AuthResponse;
-import org.entando.entando.web.common.exceptions.EntandoTokenException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -175,7 +173,7 @@ class KeycloakFilterTest {
     }
 
     @Test
-    void testAuthenticationFlowWithError() {
+    void testAuthenticationFlowWithError() throws IOException, ServletException {
         final String state = "0ca97afd-f0b0-4860-820a-b7cd1414f69c";
         final String authorizationCode = "the-authorization-code-from-keycloak";
 
@@ -201,8 +199,9 @@ class KeycloakFilterTest {
         Mockito.lenient().when(auth.getRefreshToken()).thenReturn("refresh-token-over-here");
         try ( MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class, () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     @Test
@@ -481,7 +480,7 @@ class KeycloakFilterTest {
     }
 
     @Test
-    void stateMismatchShouldThrowAndNotRequestToken() throws Exception {
+    void stateMismatchShouldBeRejectedAndNotRequestToken() throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter("code")).thenReturn("<code>");
@@ -490,16 +489,16 @@ class KeycloakFilterTest {
 
         try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class,
-                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
 
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         verify(oidcService, never()).requestToken(any(), any());
         verify(session, never()).setAttribute(eq("user"), any());
     }
 
     @Test
-    void stateMissingShouldThrowAndNotRequestToken() throws Exception {
+    void stateMissingShouldBeRejectedAndNotRequestToken() throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter("code")).thenReturn("<code>");
@@ -507,16 +506,16 @@ class KeycloakFilterTest {
 
         try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class,
-                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
 
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         verify(oidcService, never()).requestToken(any(), any());
         verify(session, never()).setAttribute(eq("user"), any());
     }
 
     @Test
-    void noPendingStateShouldThrowAndNotRequestToken() throws Exception {
+    void noPendingStateShouldBeRejectedAndNotRequestToken() throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter("code")).thenReturn("<code>");
@@ -524,16 +523,16 @@ class KeycloakFilterTest {
 
         try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class,
-                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
 
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         verify(oidcService, never()).requestToken(any(), any());
         verify(session, never()).setAttribute(eq("user"), any());
     }
 
     @Test
-    void replayOfSameCallbackShouldThrowSecondTime() throws Exception {
+    void replayOfSameCallbackShouldBeRejectedSecondTime() throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter("code")).thenReturn("<code>");
@@ -544,12 +543,12 @@ class KeycloakFilterTest {
         try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
             keycloakFilter.doFilter(request, response, filterChain);
-            Assertions.assertThrows(EntandoTokenException.class,
-                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
 
         verify(oidcService, times(1)).requestToken(eq("<code>"), any());
         verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     @Test
@@ -612,7 +611,7 @@ class KeycloakFilterTest {
     }
 
     @Test
-    void keycloakErrorCallbackShouldThrowBeforeStateCheck() throws Exception {
+    void keycloakErrorCallbackShouldBeRejectedBeforeStateCheck() throws Exception {
         when(configuration.isEnabled()).thenReturn(true);
         when(request.getServletPath()).thenReturn("/do/login");
         when(request.getParameter("code")).thenReturn("<code>");
@@ -622,10 +621,10 @@ class KeycloakFilterTest {
 
         try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class,
-                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
 
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         verify(oidcService, never()).requestToken(any(), any());
         verify(session, never()).removeAttribute(KeycloakFilter.SESSION_PARAM_STATE);
     }
