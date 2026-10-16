@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -28,6 +29,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.assertj.core.api.AbstractBooleanAssert;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
@@ -38,11 +41,11 @@ import org.entando.entando.keycloak.services.oidc.OpenIDConnectService;
 import org.entando.entando.keycloak.services.oidc.model.AccessToken;
 import org.entando.entando.keycloak.services.oidc.model.AuthResponse;
 import org.entando.entando.web.common.exceptions.EntandoTokenException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -170,7 +173,7 @@ class KeycloakFilterTest {
     }
 
     @Test
-    void testAuthenticationFlowWithError() {
+    void testAuthenticationFlowWithError() throws IOException, ServletException {
         final String state = "0ca97afd-f0b0-4860-820a-b7cd1414f69c";
         final String authorizationCode = "the-authorization-code-from-keycloak";
 
@@ -196,8 +199,9 @@ class KeycloakFilterTest {
         Mockito.lenient().when(auth.getRefreshToken()).thenReturn("refresh-token-over-here");
         try ( MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
-            Assertions.assertThrows(EntandoTokenException.class, () -> keycloakFilter.doFilter(request, response, filterChain));
+            keycloakFilter.doFilter(request, response, filterChain);
         }
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     @Test
@@ -433,6 +437,7 @@ class KeycloakFilterTest {
         when(request.getServletPath()).thenReturn(path);
         when(request.getParameter("state")).thenReturn("<state>");
         when(request.getParameter("code")).thenReturn("<code>");
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATES)).thenReturn(pendingStates("<state>"));
 
         AuthResponse authResponse = new AuthResponse();
         authResponse.setAccessToken("<token>");
@@ -450,6 +455,195 @@ class KeycloakFilterTest {
         }
 
         verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
+    }
+
+    @Test
+    void stateMatchingShouldConsumeStateAndSaveUser() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        when(request.getParameter("state")).thenReturn("S");
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATES)).thenReturn(pendingStates("S"));
+        stubSuccessfulTokenExchange("<code>", "<username>");
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(oidcService, times(1)).requestToken(eq("<code>"), any());
+        verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
+
+        ArgumentCaptor<LinkedHashMap> captor = ArgumentCaptor.forClass(LinkedHashMap.class);
+        verify(session).setAttribute(eq(KeycloakFilter.SESSION_PARAM_STATES), captor.capture());
+        assertThat((Map<String, Long>) captor.getValue()).doesNotContainKey("S");
+    }
+
+    @Test
+    void stateMismatchShouldBeRejectedAndNotRequestToken() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        when(request.getParameter("state")).thenReturn("X");
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATES)).thenReturn(pendingStates("S"));
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        verify(oidcService, never()).requestToken(any(), any());
+        verify(session, never()).setAttribute(eq("user"), any());
+    }
+
+    @Test
+    void stateMissingShouldBeRejectedAndNotRequestToken() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATES)).thenReturn(pendingStates("S"));
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        verify(oidcService, never()).requestToken(any(), any());
+        verify(session, never()).setAttribute(eq("user"), any());
+    }
+
+    @Test
+    void noPendingStateShouldBeRejectedAndNotRequestToken() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        when(request.getParameter("state")).thenReturn("S");
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        verify(oidcService, never()).requestToken(any(), any());
+        verify(session, never()).setAttribute(eq("user"), any());
+    }
+
+    @Test
+    void replayOfSameCallbackShouldBeRejectedSecondTime() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        when(request.getParameter("state")).thenReturn("S");
+        stubStatefulPendingStates(pendingStates("S"));
+        stubSuccessfulTokenExchange("<code>", "<username>");
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(oidcService, times(1)).requestToken(eq("<code>"), any());
+        verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    @Test
+    void twoTabsShouldBothLogin() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        when(request.getParameter("state")).thenReturn("S1", "S2");
+        stubStatefulPendingStates(pendingStates("S1", "S2"));
+        stubSuccessfulTokenExchange("<code>", "<username>");
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(oidcService, times(2)).requestToken(eq("<code>"), any());
+        verify(session, times(2)).setAttribute(eq("user"), same(userDetails));
+    }
+
+    @Test
+    void sixLoginStartsShouldKeepOnlyFivePendingStates() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(oidcService.getRedirectUrl(any(), any(), any())).thenReturn("redirect");
+        final Object[] holder = {null};
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATES)).thenAnswer(i -> holder[0]);
+        Mockito.lenient().doAnswer(i -> {
+            holder[0] = i.getArgument(1);
+            return null;
+        }).when(session).setAttribute(eq(KeycloakFilter.SESSION_PARAM_STATES), any());
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            for (int i = 0; i < 6; i++) {
+                keycloakFilter.doFilter(request, response, filterChain);
+            }
+        }
+
+        assertThat((Map<String, Long>) holder[0]).hasSize(5);
+    }
+
+    @Test
+    void legacyStateAttributeShouldLoginAndBeRemoved() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        when(request.getParameter("state")).thenReturn("S");
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATE)).thenReturn("S");
+        stubSuccessfulTokenExchange("<code>", "<username>");
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(session, times(1)).setAttribute(eq("user"), same(userDetails));
+        verify(session, times(1)).removeAttribute(KeycloakFilter.SESSION_PARAM_STATE);
+    }
+
+    @Test
+    void keycloakErrorCallbackShouldBeRejectedBeforeStateCheck() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/do/login");
+        when(request.getParameter("code")).thenReturn("<code>");
+        Mockito.lenient().when(request.getParameter("state")).thenReturn("X");
+        Mockito.lenient().when(request.getParameter("error")).thenReturn("access_denied");
+        Mockito.lenient().when(request.getParameter("error_description")).thenReturn("User denied access");
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            keycloakFilter.doFilter(request, response, filterChain);
+        }
+
+        verify(response, times(1)).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        verify(oidcService, never()).requestToken(any(), any());
+        verify(session, never()).removeAttribute(KeycloakFilter.SESSION_PARAM_STATE);
+    }
+
+    @Test
+    void tokenExceptionFromDownstreamApiShouldPropagate() throws Exception {
+        when(configuration.isEnabled()).thenReturn(true);
+        when(request.getServletPath()).thenReturn("/api");
+        EntandoTokenException downstream = new EntandoTokenException("no token found", request, "guest");
+        Mockito.doThrow(downstream).when(filterChain).doFilter(any(), any());
+
+        try (MockedStatic<WebApplicationContextUtils> wacUtil = Mockito.mockStatic(WebApplicationContextUtils.class)) {
+            wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
+            EntandoTokenException thrown = org.junit.jupiter.api.Assertions.assertThrows(EntandoTokenException.class,
+                    () -> keycloakFilter.doFilter(request, response, filterChain));
+            assertThat(thrown).isSameAs(downstream);
+        }
+
+        verify(response, never()).sendError(Mockito.anyInt());
     }
 
     @Test
@@ -661,6 +855,35 @@ class KeycloakFilterTest {
         verify(session,times(1)).setAttribute(KeycloakFilter.SESSION_PARAM_REDIRECT, "/pages/en/mypage");
         verify(response).sendRedirect(redirect);
 
+    }
+
+    private static LinkedHashMap<String, Long> pendingStates(String... states) {
+        LinkedHashMap<String, Long> map = new LinkedHashMap<>();
+        for (String state : states) {
+            map.put(state, System.currentTimeMillis());
+        }
+        return map;
+    }
+
+    private void stubStatefulPendingStates(LinkedHashMap<String, Long> initial) {
+        final Object[] holder = {initial};
+        Mockito.lenient().when(session.getAttribute(KeycloakFilter.SESSION_PARAM_STATES)).thenAnswer(i -> holder[0]);
+        Mockito.lenient().doAnswer(i -> {
+            holder[0] = i.getArgument(1);
+            return null;
+        }).when(session).setAttribute(eq(KeycloakFilter.SESSION_PARAM_STATES), any());
+    }
+
+    private void stubSuccessfulTokenExchange(String code, String username) throws EntException {
+        AuthResponse tokenExchangeBody = new AuthResponse();
+        tokenExchangeBody.setAccessToken("<token>");
+        when(oidcService.requestToken(eq(code), any())).thenReturn(ResponseEntity.ok().body(tokenExchangeBody));
+
+        AccessToken token = new AccessToken();
+        token.setActive(true);
+        token.setUsername(username);
+        when(oidcService.validateToken("<token>")).thenReturn(ResponseEntity.ok().body(token));
+        when(providerManager.getUser(username)).thenReturn(userDetails);
     }
 
     static class ServletOutputStreamWrapper extends ServletOutputStream {
