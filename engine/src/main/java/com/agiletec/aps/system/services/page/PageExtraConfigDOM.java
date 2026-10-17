@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
@@ -112,7 +113,7 @@ public class PageExtraConfigDOM {
 	
 	private Document decodeDOM(String xml) throws EntException {
 		Document doc = null;
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xml);
 		try {

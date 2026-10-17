@@ -93,7 +93,7 @@ public class ComponentDefDOM {
     }
 	
     private void decodeDOM(String xmlText) throws EntException {
-        SAXBuilder builder = new SAXBuilder();
+        SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
         builder.setValidation(false);
         StringReader reader = new StringReader(xmlText);
         try {

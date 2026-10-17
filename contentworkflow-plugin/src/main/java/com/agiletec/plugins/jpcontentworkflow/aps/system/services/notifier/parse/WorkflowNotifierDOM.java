@@ -30,6 +30,7 @@ import java.util.Date;
 import org.jdom2.CDATA;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 
@@ -135,7 +136,7 @@ public class WorkflowNotifierDOM {
 	}
 	
 	protected Element getRootElement(String xmlText) throws ApsSystemException {
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		Element root = null;
@@ -150,7 +151,7 @@ public class WorkflowNotifierDOM {
 	}
 	
 	protected Document decodeDOM(String xmlText) throws ApsSystemException {
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		try {

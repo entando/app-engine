@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
 import org.jdom2.input.SAXBuilder;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -85,7 +86,7 @@ public class ImageDimensionDOM {
 	}
 
 	private void decodeDOM(String xmlText) throws EntException {
-		SAXBuilder builder = new SAXBuilder();
+		SAXBuilder builder = EntSafeXmlUtils.newSafeSAXBuilder();
 		builder.setValidation(false);
 		StringReader reader = new StringReader(xmlText);
 		try {
