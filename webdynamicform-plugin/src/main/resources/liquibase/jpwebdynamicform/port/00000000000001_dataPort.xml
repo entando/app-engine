@@ -6,10 +6,9 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_config" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM SYSCONFIG
+                FROM sysconfig
                 WHERE item = 'jpwebdynamicform_messageTypes'
             </sqlCheck>
         </preConditions>
@@ -33,10 +32,9 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_widgetcatalog" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM WIDGETCATALOG
+                FROM widgetcatalog
                 WHERE code = 'jpwebdynamicform_message_form'
             </sqlCheck>
         </preConditions>
@@ -65,10 +63,9 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_labels" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM LOCALSTRINGS
+                FROM localstrings
                 WHERE keycode LIKE 'jpwebdynamicform_%'
             </sqlCheck>
         </preConditions>
@@ -276,12 +273,11 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_guifragments" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM GUIFRAGMENT
+                FROM guifragment
                 WHERE code LIKE 'jpwebdynform_%'
-                   OR code LIKE 'jpwebdynamicform_%'
+                OR code LIKE 'jpwebdynamicform_%'
             </sqlCheck>
         </preConditions>
 
@@ -433,10 +429,9 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_guifragments_email" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM GUIFRAGMENT
+                FROM guifragment
                 WHERE code = 'jpwebdynform_is_front-EmailAttribute'
             </sqlCheck>
         </preConditions>
@@ -454,10 +449,9 @@
     <changeSet id="00000000000001_jpwebdynamicform_dataPort_guifragments_dateSubmitHandler" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM GUIFRAGMENT
+                FROM guifragment
                 WHERE code = 'jpwebdynform_is_front-DateSubmitHandler'
             </sqlCheck>
         </preConditions>

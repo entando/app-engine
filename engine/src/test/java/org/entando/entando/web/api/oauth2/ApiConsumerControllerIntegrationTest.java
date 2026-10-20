@@ -257,6 +257,20 @@ class ApiConsumerControllerIntegrationTest extends AbstractControllerIntegration
         return DateConverter.parseDate(date, SystemConstants.API_DATE_FORMAT);
     }
 
+    /**
+     * <code>issuedDate</code> is an <code>ApiConsumer</code> field, so the REST validator accepts it as
+     * a sort key, and <code>reMapFilterKeys</code> forwards it unchanged - only <code>key</code> is
+     * remapped. The searcher's allowlist holds the column, <code>issueddate</code>, so it has to match
+     * the key without regard to case or this endpoint refuses a sort it advertises.
+     */
+    @Test
+    void shouldSortOnAFieldWhoseColumnDiffersOnlyByCase() throws Exception {
+        authRequest(get(BASE_URL).param("sort", "issuedDate"))
+                .andExpect(status().isOk());
+        authRequest(get(BASE_URL).param("sort", "expirationDate").param("direction", "DESC"))
+                .andExpect(status().isOk());
+    }
+
     private ResultActions authRequest(MockHttpServletRequestBuilder requestBuilder) throws Exception {
         return mockMvc.perform(requestBuilder
                 .header("Authorization", "Bearer " + accessToken)

@@ -23,6 +23,7 @@ import org.apache.commons.beanutils.BeanComparator;
 import org.entando.entando.aps.system.services.api.IApiCatalogManager;
 import org.entando.entando.aps.system.services.api.model.ApiMethod;
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
+import org.entando.entando.aps.system.services.widgettype.WidgetTypeUtils;
 import org.entando.entando.aps.system.services.widgettype.WidgetType;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -91,7 +92,7 @@ public abstract class AbstractPortalAction extends BaseAction {
 				this.addFlavourWidgetType(USER_WIDGETS_CODE, type, mapping);
 			} else // is a core widgets
 			{
-				if (this.getStockWidgetCodes().contains(type.getCode())) {
+				if (WidgetTypeUtils.isStockWidget(this.getStockWidgetCodes(), type.getCode())) {
 					this.addFlavourWidgetType(STOCK_WIDGETS_CODE, type, mapping);
 				} else {
 					this.addFlavourWidgetType(CUSTOM_WIDGETS_CODE, type, mapping);

@@ -36,6 +36,7 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import org.entando.entando.ent.exception.EntException;
 
 /**
@@ -44,6 +45,13 @@ import org.entando.entando.ent.exception.EntException;
 public class SeoMappingDAO extends AbstractSearcherDAO implements ISeoMappingDAO {
 
 	private static final EntLogger _logger =  EntLogFactory.getSanitizedLogger(SeoMappingDAO.class);
+
+	/** The columns of <code>jpseo_friendlycode</code> a search key may name. */
+	private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+			"friendlycode",
+			"pagecode",
+			"contentid",
+			"langcode");
     
     private static final String TABLE_NAME = "jpseo_friendlycode";
 
@@ -169,8 +177,8 @@ public class SeoMappingDAO extends AbstractSearcherDAO implements ISeoMappingDAO
 	}
 
 	@Override
-	protected String getTableFieldName(String metadataFieldKey) {
-		return metadataFieldKey;
+	protected SearchableFields getSearchableFields() {
+		return SEARCHABLE_FIELDS;
 	}
 	
 	@Override

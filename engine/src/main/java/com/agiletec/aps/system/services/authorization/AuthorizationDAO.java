@@ -15,6 +15,7 @@ package com.agiletec.aps.system.services.authorization;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.role.Role;
 
@@ -42,6 +43,15 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	public static final int BATCH_SIZE_FLUSH = 50;
 
 	private static final EntLogger _logger =  EntLogFactory.getSanitizedLogger(AuthorizationDAO.class);
+
+	private static final String USERNAME = "username";
+
+	/** The columns of <code>authusergrouprole</code> a search key may name. */
+	private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+			"id",
+			USERNAME,
+			"groupname",
+			"rolename");
 	
 	@Override
 	public void addUserAuthorization(String username, Authorization authorization) {
@@ -234,7 +244,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 				try (ResultSet rs = selectStmt.executeQuery()) {
 					if (rs.next()) {
-						userId = rs.getString("username");
+						userId = rs.getString(USERNAME);
 						lastSyncedIat = rs.getLong("iat");
 					}
 				}
@@ -274,7 +284,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 				try (ResultSet rs = selectStmt.executeQuery()) {
 					if (rs.next()) {
-						usernameTracked = rs.getString("username");
+						usernameTracked = rs.getString(USERNAME);
 						oldIat = rs.getLong("iat");
 					}
 				}
@@ -494,8 +504,8 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 
 
 	@Override
-	protected String getTableFieldName(String metadataFieldKey) {
-		return metadataFieldKey;
+	protected SearchableFields getSearchableFields() {
+		return SEARCHABLE_FIELDS;
 	}
 	
 	@Override
@@ -505,7 +515,7 @@ public class AuthorizationDAO extends AbstractSearcherDAO implements IAuthorizat
 	
 	@Override
 	protected String getMasterTableIdFieldName() {
-		return "username";
+		return USERNAME;
 	}
 	
 	private final String ADD_AUTHORIZATION =

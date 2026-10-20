@@ -9,10 +9,58 @@ git config --global advice.detachedHead false
 
 . .github/github-tools/lib.sh
 
+# Configuration of a push that no merged PR accounts for (see .github/push-origin.sh).
+# base.configure derives the version from a PR, so a direct push gets
+# <x.y.z>-<branch>-<short sha>, published as a snapshot, with no label-driven skips.
+_configure_direct_push() {
+  GH_CONFIG_SRC="push"
+  GH_COMMIT_ID="$GITHUB_SHA"
+  GH_PR_TITLE="(direct push)"
+  GH_PR_NUMBER=""
+  GH_PR_LABELS=""
+
+  PRJ_VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+  echo "~> Version on POM: $PRJ_VERSION"
+  local base
+  base=$(sed -nE 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' <<<"$PRJ_VERSION")
+  [ -z "$base" ] && {
+    echo "::error::Unable to determine the artifact version from the POM version \"$PRJ_VERSION\""
+    exit 99
+  }
+  ARTIFACT_VERSION="${base}-${GITHUB_REF_NAME//\//-}-${GITHUB_SHA:0:9}"
+  ARTIFACT_PUB_TYPE="snapshot"
+
+  SKIP_TESTS=false
+  SKIP_SCANS=false
+  VERBOSE=false
+
+  echo "~> Direct push: ARTIFACT_VERSION=$ARTIFACT_VERSION"
+  CONFIGURED_VARS+=("PRJ_VERSION" "ARTIFACT_VERSION" "ARTIFACT_PUB_TYPE" "SKIP_TESTS" "SKIP_SCANS" "GH_PR_LABELS" "VERBOSE" "GH_CONFIG_SRC" "GH_PR_TITLE" "GH_PR_NUMBER" "GH_COMMIT_ID")
+}
+
 configure.start "$1"
 
 if [[ "$GITHUB_REF" == refs/tags/* ]]; then
   . .github/github-tools/base.configure --tag "$GITHUB_REF"
+elif [ "${GITHUB_EVENT_NAME:-}" = "push" ]; then
+  PUSH_ORIGIN=unknown PUSH_HEAD_PR="" PUSH_MERGED_PRS="" PUSH_DIRECT_COMMITS=""
+  while IFS='=' read -r _k _v; do
+    case "$_k" in
+      PUSH_ORIGIN|PUSH_HEAD_PR|PUSH_MERGED_PRS|PUSH_DIRECT_COMMITS) printf -v "$_k" '%s' "$_v" ;;
+    esac
+  done < <(.github/push-origin.sh)
+  echo "~> Push origin: $PUSH_ORIGIN (PRs: ${PUSH_MERGED_PRS:-none}; direct commits: ${PUSH_DIRECT_COMMITS:-none})"
+  CONFIGURED_VARS+=("PUSH_ORIGIN" "PUSH_HEAD_PR" "PUSH_MERGED_PRS" "PUSH_DIRECT_COMMITS")
+
+  _pr_title=""
+  if [ "$PUSH_ORIGIN" = "pr-merge" ]; then
+    _pr_title=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PUSH_HEAD_PR" --jq '.title' 2>/dev/null || true)
+  fi
+  if [ -n "$_pr_title" ]; then
+    . .github/github-tools/base.configure "$_pr_title" "$PUSH_HEAD_PR"
+  else
+    _configure_direct_push
+  fi
 else
   . .github/github-tools/base.configure "$GH_PR_TITLE" "$GH_PR_NUMBER"
 fi

@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import org.entando.entando.ent.exception.EntException;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -39,6 +40,20 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class OAuthConsumerDAO extends AbstractSearcherDAO implements IOAuthConsumerDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(OAuthConsumerDAO.class);
+
+    private static final String CONSUMERKEY = "consumerkey";
+
+    /** The columns of <code>api_oauth_consumers</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            CONSUMERKEY,
+            "consumersecret",
+            "name",
+            "description",
+            "callbackurl",
+            "scope",
+            "authorizedgranttypes",
+            "expirationdate",
+            "issueddate");
 
     private static final String SELECT_CONSUMER
             = "SELECT consumerkey, consumersecret, name, description, callbackurl, scope, authorizedgranttypes, expirationdate, issueddate "
@@ -134,7 +149,7 @@ public class OAuthConsumerDAO extends AbstractSearcherDAO implements IOAuthConsu
 
     private ConsumerRecordVO consumerFromResultSet(ResultSet res) throws SQLException {
         ConsumerRecordVO consumer = new ConsumerRecordVO();
-        consumer.setKey(res.getString("consumerkey"));
+        consumer.setKey(res.getString(CONSUMERKEY));
         consumer.setSecret(res.getString("consumersecret"));
         consumer.setCallbackUrl(res.getString("callbackurl"));
         consumer.setName(res.getString("name"));
@@ -237,7 +252,7 @@ public class OAuthConsumerDAO extends AbstractSearcherDAO implements IOAuthConsu
 
     @Override
     protected String getMasterTableIdFieldName() {
-        return "consumerkey";
+        return CONSUMERKEY;
     }
 
     @Override
@@ -246,8 +261,8 @@ public class OAuthConsumerDAO extends AbstractSearcherDAO implements IOAuthConsu
     }
 
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
 }

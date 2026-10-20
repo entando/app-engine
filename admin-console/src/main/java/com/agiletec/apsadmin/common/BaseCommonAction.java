@@ -66,7 +66,45 @@ public class BaseCommonAction extends BaseAction {
 		}
 		return SUCCESS;
 	}
-	
+
+	/**
+	 * Portal action {@code /do/Front/CurrentUser/edit}.
+	 * @deprecated no widget uses this action; use {@code /do/Front/CurrentUser/Profile/edit}.
+	 * To be removed in a future release.
+	 */
+	@Deprecated(forRemoval = true)
+	public String frontEdit() {
+		logDeprecatedFrontAction("edit", "/do/Front/CurrentUser/Profile/edit");
+		return SUCCESS;
+	}
+
+	/**
+	 * Portal action {@code /do/Front/CurrentUser/editPassword}.
+	 * @deprecated no widget uses this action; the password is changed in the identity provider.
+	 * To be removed in a future release.
+	 */
+	@Deprecated(forRemoval = true)
+	public String frontEditPassword() {
+		logDeprecatedFrontAction("editPassword", "the identity provider");
+		return this.editPassword();
+	}
+
+	/**
+	 * Portal action {@code /do/Front/CurrentUser/changePassword}.
+	 * @deprecated no widget uses this action; the password is changed in the identity provider.
+	 * To be removed in a future release.
+	 */
+	@Deprecated(forRemoval = true)
+	public String frontChangePassword() {
+		logDeprecatedFrontAction("changePassword", "the identity provider");
+		return this.changePassword();
+	}
+
+	private static void logDeprecatedFrontAction(String actionName, String replacement) {
+		_logger.warn("Deprecated action '/do/Front/CurrentUser/{}' invoked; it will be removed in a future release. Use {} instead.",
+				actionName, replacement);
+	}
+
 	public String getUsername() {
 		return this.getCurrentUser().getUsername();
 	}

@@ -2,8 +2,8 @@ package org.entando.entando.plugins.jpredis.aps.system.redis.session;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
-import java.util.List;
 import jakarta.servlet.Filter;
+import java.util.List;
 import org.entando.entando.TestEntandoJndiUtils;
 import org.entando.entando.aps.system.services.cache.RedisEnvironmentVariables;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
@@ -14,8 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.SessionRepository;
-import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.session.data.redis.RedisSessionRepository;
+import org.springframework.session.web.http.CookieHttpSessionIdResolver;
+import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.SessionRepositoryFilter;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -50,6 +51,9 @@ class RedisSessionActiveTest {
     @Autowired
     private RedisClient redisClient;
 
+    @Autowired
+    private CookieSerializer cookieSerializer;
+
     @Test
     void testRedisSessionActive(GenericContainer redisContainer) throws Exception {
         Assertions.assertTrue(springSessionRepositoryFilter instanceof SessionRepositoryFilter);
@@ -67,5 +71,12 @@ class RedisSessionActiveTest {
                 connection.sync().del(key);
             }
         }
+    }
+
+    @Test
+    void testSessionFilterUsesCookieSerializerBean() {
+        Object resolver = ReflectionTestUtils.getField(springSessionRepositoryFilter, "httpSessionIdResolver");
+        Assertions.assertTrue(resolver instanceof CookieHttpSessionIdResolver);
+        Assertions.assertSame(cookieSerializer, ReflectionTestUtils.getField(resolver, "cookieSerializer"));
     }
 }

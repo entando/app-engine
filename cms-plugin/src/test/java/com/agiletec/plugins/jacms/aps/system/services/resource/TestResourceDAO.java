@@ -45,6 +45,9 @@ class TestResourceDAO extends BaseTestCase {
     	resource.setMainGroup(Group.FREE_GROUP_NAME);
     	resource.setType("Image");
     	resource.setFolder("/temp");
+    	// masterfilename is NOT NULL: AbstractResource defaults it to "", which Oracle stores as NULL,
+    	// and the manager would never hand the DAO a resource without the uploaded file's name
+    	resource.setMasterFileName("temp.jpg");
     	//resource.setBaseURL("temp");
     	ResourceRecordVO resourceRecordVO = null;  
         try {
@@ -55,6 +58,7 @@ class TestResourceDAO extends BaseTestCase {
     	_resourceDao.addResource(resource); 
     	resourceRecordVO = _resourceDao.loadResourceVo(resource.getId());
     	assertEquals(resourceRecordVO.getDescr().equals("temp"), true);
+    	assertEquals("temp.jpg", resourceRecordVO.getMasterFileName());
     	_resourceDao.deleteResource(resource.getId(), null);
     	resourceRecordVO = _resourceDao.loadResourceVo(resource.getId());
     	assertNull(resourceRecordVO);

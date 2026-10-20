@@ -15,6 +15,7 @@ package com.agiletec.plugins.jacms.aps.system.services.resource;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
@@ -48,6 +49,20 @@ import org.springframework.cache.annotation.Caching;
 public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
 
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(ResourceDAO.class);
+
+    /** The columns of <code>resources</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            "resid",
+            "restype",
+            "descr",
+            "maingroup",
+            "resourcexml",
+            "masterfilename",
+            "creationdate",
+            "lastmodified",
+            "owner",
+            "folderpath",
+            "correlationcode");
     
     private ICategoryManager categoryManager;
 
@@ -361,7 +376,7 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         String query = this.createQueryString(filters, categories, isCount);
         PreparedStatement stat = null;
         try {
-            stat = conn.prepareStatement(query);
+            stat = this.prepareStatement(conn, query, isCount);
             int index = 0;
             if (null != categories && categories.size() > 0) {
                 for (String category : categories) {
@@ -377,17 +392,19 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
     }
 
     private String createQueryString(FieldSearchFilter[] filters, List<String> categories, boolean isCount) {
-        StringBuffer query = this.createBaseQueryBlock(filters, false, isCount, categories);
+        StringBuffer query = this.createBaseQueryBlock(filters, false, categories);
         this.appendMetadataFieldFilterQueryBlocks(filters, query, false);
         if (!isCount) {
             super.appendOrderQueryBlocks(filters, query, false);
             this.appendLimitQueryBlock(filters, query);
         }
-        return query.toString();
+        return this.toQueryString(query, isCount);
     }
 
-    private StringBuffer createBaseQueryBlock(FieldSearchFilter[] filters, boolean selectAll, boolean isCount, List<String> categories) {
-        StringBuffer query = super.createBaseQueryBlock(filters, isCount, selectAll);
+    private StringBuffer createBaseQueryBlock(FieldSearchFilter[] filters, boolean selectAll, List<String> categories) {
+        // count and list share one body: the category joins are the only thing that can return several
+        // rows per resource, and both sides have to see the same set
+        StringBuffer query = this.createMasterSelectQueryBlock(filters, selectAll);
         if (categories != null) {
             for (int i = 0; i < categories.size(); i++) {
                 query.append(String.format(
@@ -561,6 +578,25 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
         }
     }
 
+    /**
+     * A resource holds one <code>resourcerelations</code> row per category, and nothing in the schema
+     * forbids the same pair twice, so the joined query can return the resource more than once. Both the
+     * list and the count select distinct ids; the columns the ORDER BY references have to be projected
+     * as well, since Derby and PostgreSQL reject an ORDER BY outside the select list under DISTINCT.
+     */
+    @Override
+    protected StringBuffer createMasterSelectQueryBlock(FieldSearchFilter[] filters, boolean selectAll) {
+        if (selectAll) {
+            return super.createMasterSelectQueryBlock(filters, selectAll);
+        }
+        String masterTableName = this.getMasterTableName();
+        StringBuffer query = new StringBuffer("SELECT DISTINCT ").append(masterTableName).append(".")
+                .append(this.getMasterTableIdFieldName());
+        this.appendOrderFieldsSelectBlock(filters, query);
+        query.append(" FROM ").append(masterTableName).append(" ");
+        return query;
+    }
+
     @Override
     protected String getMasterTableName() {
         return "resources";
@@ -572,8 +608,8 @@ public class ResourceDAO extends AbstractSearcherDAO implements IResourceDAO {
     }
 
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
 }

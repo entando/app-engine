@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.agiletec.aps.system.common.AbstractSearcherDAO;
 import com.agiletec.aps.system.common.FieldSearchFilter;
+import com.agiletec.aps.system.common.SearchableFields;
 import org.entando.entando.ent.exception.EntException;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.widgettype.IWidgetTypeManager;
@@ -36,6 +37,14 @@ import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 public class PageModelDAO extends AbstractSearcherDAO implements IPageModelDAO {
 	
     private static final EntLogger logger = EntLogFactory.getSanitizedLogger(PageModelDAO.class);
+
+    /** The columns of <code>pagemodels</code> a search key may name. */
+    private static final SearchableFields SEARCHABLE_FIELDS = SearchableFields.columns(
+            "code",
+            "descr",
+            "frames",
+            "plugincode",
+            "templategui");
 	
     @Override
     public int count(FieldSearchFilter[] filters) {
@@ -191,8 +200,8 @@ public class PageModelDAO extends AbstractSearcherDAO implements IPageModelDAO {
 	}
 	
     @Override
-    protected String getTableFieldName(String metadataFieldKey) {
-        return metadataFieldKey;
+    protected SearchableFields getSearchableFields() {
+        return SEARCHABLE_FIELDS;
     }
 
     @Override

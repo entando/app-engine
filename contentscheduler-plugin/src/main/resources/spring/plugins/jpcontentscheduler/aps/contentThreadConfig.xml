@@ -7,8 +7,10 @@
     <bean id="jpcontentschedulerContentSchedulerManager"
               class="org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.ContentSchedulerManager" parent="abstractService">
         <property name="contentSchedulerDAO" >
-            <bean class="org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.ContentSchedulerDAO">
+            <bean class="org.entando.entando.plugins.jpcontentscheduler.aps.system.services.content.ContentSchedulerDAO"
+                      parent="abstractEntityDAO">
                 <property name="dataSource" ref="portDataSource" />
+                <property name="categoryManager" ref="CategoryManager" />
             </bean>
         </property>
         <property name="workContentSearcherDAO" ref="jacmsWorkContentSearcherDAO" />

@@ -6,10 +6,9 @@
     <changeSet id="20260212100000_jpwebdynamicform_dataPort_captcha" author="entando" context="production">
 
         <preConditions onFail="MARK_RAN">
-            <!-- Use uppercase table name to avoid MySQL issue -->
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*)
-                FROM GUIFRAGMENT
+                FROM guifragment
                 WHERE code = 'jpwebdynamicform_is_captchaInclude'
             </sqlCheck>
         </preConditions>
