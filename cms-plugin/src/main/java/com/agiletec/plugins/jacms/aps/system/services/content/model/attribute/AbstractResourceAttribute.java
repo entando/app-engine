@@ -265,7 +265,7 @@ public abstract class AbstractResourceAttribute extends TextAttribute
         Element metadatasElement = new Element("metadatas");
         this.getMetadatas().keySet().stream().filter(key -> key != null).forEach(key -> {
             Map<String, String> map = this.getMetadatas().get(key);
-            map.keySet().stream().forEach(langCode -> {
+            map.keySet().stream().filter(langCode -> null != map.get(langCode)).forEach(langCode -> {
                 Element metadataElement = new Element("metadata");
                 metadataElement.setAttribute("key", key);
                 metadataElement.setAttribute("lang", langCode);
