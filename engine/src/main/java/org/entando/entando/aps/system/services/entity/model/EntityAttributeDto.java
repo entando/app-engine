@@ -98,11 +98,22 @@ public class EntityAttributeDto {
         }
     }
 
+    private void fillText(AttributeInterface attribute, ITextAttribute textAttribute, String langCode) {
+        Object langValue = this.getValues().get(langCode);
+        if (null == langValue) {
+            if (attribute instanceof TextAttribute) {
+                ((TextAttribute) attribute).getTextMap().remove(langCode);
+            }
+        } else if (!(langValue instanceof Map)) {
+            textAttribute.setText(langValue.toString(), langCode);
+        }
+    }
+
     public void fillEntityAttribute(AttributeInterface attribute, BindingResult bindingResult) {
         if (attribute instanceof ITextAttribute) {
             ITextAttribute textAttribute = (ITextAttribute) attribute;
             if (attribute.isMultilingual() && this.getValues() != null && !this.getValues().isEmpty()) {
-                this.getValues().keySet().stream().forEach(langCode -> textAttribute.setText(this.getValues().get(langCode).toString(), langCode));
+                this.getValues().keySet().stream().forEach(langCode -> this.fillText(attribute, textAttribute, langCode));
             } else if (null != this.getValue()) {
                 textAttribute.setText(this.getValue().toString(), null);
             }

@@ -14,6 +14,7 @@
 package com.agiletec.plugins.jacms.aps.system.services.content.parse.attribute;
 
 import com.agiletec.aps.system.common.entity.parse.attribute.TextAttributeHandler;
+import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.util.ApplicationContextProvider;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ResourceAttributeInterface;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
@@ -35,6 +36,7 @@ public class ResourceAttributeHandler extends TextAttributeHandler {
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(ResourceAttributeHandler.class);
 
     private transient IResourceManager resourceManager;
+    private transient ILangManager langManager;
     private boolean intoMetadatas;
     private String metadataKey;
 
@@ -42,6 +44,7 @@ public class ResourceAttributeHandler extends TextAttributeHandler {
     public Object getAttributeHandlerPrototype() {
         ResourceAttributeHandler handler = (ResourceAttributeHandler) super.getAttributeHandlerPrototype();
         handler.setResourceManager(this.getResourceManager());
+        handler.setLangManager(this.getLangManager());
         return handler;
     }
 
@@ -108,10 +111,22 @@ public class ResourceAttributeHandler extends TextAttributeHandler {
     private void endMetadata(String metadataKey, StringBuffer textBuffer) {
         if (null != textBuffer && null != this.getCurrentAttr()) {
             ResourceAttributeInterface resourceAttribute = (ResourceAttributeInterface) this.getCurrentAttr();
-            resourceAttribute.setMetadata(metadataKey, this.getCurrentLangId(), textBuffer.toString());
+            String langCode = this.getCurrentLangId();
+            if (this.isLangCode(metadataKey) && !this.isLangCode(langCode)) {
+                if (null == resourceAttribute.getMetadataForLang(langCode, metadataKey)) {
+                    resourceAttribute.setMetadata(langCode, metadataKey, textBuffer.toString());
+                }
+            } else {
+                resourceAttribute.setMetadata(metadataKey, langCode, textBuffer.toString());
+            }
         }
         this.setCurrentLangId(null);
         this.setMetadataKey(null);
+    }
+
+    private boolean isLangCode(String code) {
+        ILangManager currentLangManager = this.getLangManager();
+        return null != code && null != currentLangManager && null != currentLangManager.getLang(code);
     }
 
     private void endResource() {
@@ -151,6 +166,15 @@ public class ResourceAttributeHandler extends TextAttributeHandler {
 
     protected void setIntoMetadatas(boolean intoMetadatas) {
         this.intoMetadatas = intoMetadatas;
+    }
+
+    protected ILangManager getLangManager() {
+        this.langManager = ApplicationContextProvider.resolveIfNull(this.langManager, ILangManager.class);
+        return this.langManager;
+    }
+
+    public void setLangManager(ILangManager langManager) {
+        this.langManager = langManager;
     }
 
     protected String getMetadataKey() {
