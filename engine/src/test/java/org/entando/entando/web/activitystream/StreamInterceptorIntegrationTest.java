@@ -13,6 +13,7 @@
  */
 package org.entando.entando.web.activitystream;
 
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageManager;
 import com.agiletec.aps.system.services.page.Page;
@@ -22,10 +23,14 @@ import com.agiletec.aps.system.services.page.Widget;
 import com.agiletec.aps.system.services.pagemodel.PageModel;
 import com.agiletec.aps.system.services.user.UserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import org.entando.entando.aps.system.services.actionlog.IActionLogManager;
 import org.entando.entando.aps.system.services.actionlog.model.IActionLogRecordSearchBean;
+import org.entando.entando.aps.system.services.actionlog.model.ActionLogRecord;
 import org.entando.entando.web.AbstractControllerIntegrationTest;
+import org.entando.entando.web.common.interceptor.ActivityStreamInterceptor;
+import org.entando.entando.web.page.PageConfigurationController;
 import org.entando.entando.web.page.model.PageStatusRequest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +48,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.agiletec.aps.system.services.pagemodel.IPageModelManager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.method.HandlerMethod;
 
 /**
  * @author E.Santoboni
@@ -92,6 +104,58 @@ class StreamInterceptorIntegrationTest extends AbstractControllerIntegrationTest
         } finally {
             this.pageManager.deletePage(code);
         }
+    }
+
+    @Test
+    void shouldLogWithRequestUserWhenResponseIsCommittedAndNoSessionExists() throws Exception {
+        MockHttpServletRequest request = committedResponseRequest();
+        request.setAttribute("user", new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build());
+
+        Assertions.assertEquals("jack_bauer", this.logAndGetUsername(request));
+    }
+
+    @Test
+    void shouldLogWithSessionUserWhenRequestHasNoUser() throws Exception {
+        MockHttpServletRequest request = committedResponseRequest();
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("user", new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build());
+        request.setSession(session);
+
+        Assertions.assertEquals("jack_bauer", this.logAndGetUsername(request));
+    }
+
+    @Test
+    void shouldLogAsGuestWithoutCreatingSessionWhenNoUserIsKnown() throws Exception {
+        MockHttpServletRequest request = committedResponseRequest();
+
+        Assertions.assertEquals(SystemConstants.GUEST_USER_NAME, this.logAndGetUsername(request));
+        Assertions.assertNull(request.getSession(false));
+    }
+
+    private static MockHttpServletRequest committedResponseRequest() {
+        return new MockHttpServletRequest("DELETE", "/pages/news/widgets/4") {
+            @Override
+            public HttpSession getSession(boolean create) {
+                if (create) {
+                    throw new IllegalStateException("Cannot create a session after the response has been committed");
+                }
+                return super.getSession(false);
+            }
+        };
+    }
+
+    private String logAndGetUsername(MockHttpServletRequest request) throws Exception {
+        IActionLogManager manager = Mockito.mock(IActionLogManager.class);
+        ActivityStreamInterceptor interceptor = new ActivityStreamInterceptor();
+        ReflectionTestUtils.setField(interceptor, "actionLogManager", manager);
+        HandlerMethod handler = new HandlerMethod(Mockito.mock(PageConfigurationController.class),
+                PageConfigurationController.class.getMethod("deletePageWidget", UserDetails.class, String.class, String.class));
+
+        interceptor.postHandle(request, new MockHttpServletResponse(), handler, null);
+
+        ArgumentCaptor<ActionLogRecord> captor = ArgumentCaptor.forClass(ActionLogRecord.class);
+        Mockito.verify(manager).addActionRecord(captor.capture());
+        return captor.getValue().getUsername();
     }
 
     protected void waitActionLoggerThread() throws InterruptedException {

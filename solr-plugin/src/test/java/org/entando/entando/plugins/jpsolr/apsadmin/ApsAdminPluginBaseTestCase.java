@@ -83,7 +83,7 @@ public abstract class ApsAdminPluginBaseTestCase {
             refresh = true;
         }
         RequestContext reqCtx = BaseTestCase.createRequestContext(applicationContext, servletContext);
-        request = new MockHttpServletRequest();
+        request = new MockHttpServletRequest(servletContext);
         request.setAttribute(RequestContext.REQCTX, reqCtx);
         response = new MockHttpServletResponse();
         request.setSession(new MockHttpSession(servletContext));

@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -45,6 +46,21 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
         this.configuration = configuration;
         this.userManager = userManager;
         this.authenticationProviderManager = authenticationProviderManager;
+    }
+
+    @Bean
+    @Order(60)
+    public SecurityFilterChain healthSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher(new AntPathRequestMatcher("/api/health"))
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .requestCache(RequestCacheConfigurer::disable)
+                .headers(headers -> headers.frameOptions(iframeDisabled
+                        ? HeadersConfigurer.FrameOptionsConfig::disable
+                        : HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                .anonymous(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        return http.build();
     }
 
     @Bean
