@@ -13,6 +13,7 @@
  */
 package org.entando.entando.web.activitystream;
 
+import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.page.IPage;
 import com.agiletec.aps.system.services.page.IPageManager;
 import com.agiletec.aps.system.services.page.Page;
@@ -51,6 +52,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.method.HandlerMethod;
 
@@ -106,10 +108,32 @@ class StreamInterceptorIntegrationTest extends AbstractControllerIntegrationTest
 
     @Test
     void shouldLogWithRequestUserWhenResponseIsCommittedAndNoSessionExists() throws Exception {
-        IActionLogManager manager = Mockito.mock(IActionLogManager.class);
-        ActivityStreamInterceptor interceptor = new ActivityStreamInterceptor();
-        ReflectionTestUtils.setField(interceptor, "actionLogManager", manager);
-        MockHttpServletRequest request = new MockHttpServletRequest("DELETE", "/pages/news/widgets/4") {
+        MockHttpServletRequest request = committedResponseRequest();
+        request.setAttribute("user", new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build());
+
+        Assertions.assertEquals("jack_bauer", this.logAndGetUsername(request));
+    }
+
+    @Test
+    void shouldLogWithSessionUserWhenRequestHasNoUser() throws Exception {
+        MockHttpServletRequest request = committedResponseRequest();
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("user", new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build());
+        request.setSession(session);
+
+        Assertions.assertEquals("jack_bauer", this.logAndGetUsername(request));
+    }
+
+    @Test
+    void shouldLogAsGuestWithoutCreatingSessionWhenNoUserIsKnown() throws Exception {
+        MockHttpServletRequest request = committedResponseRequest();
+
+        Assertions.assertEquals(SystemConstants.GUEST_USER_NAME, this.logAndGetUsername(request));
+        Assertions.assertNull(request.getSession(false));
+    }
+
+    private static MockHttpServletRequest committedResponseRequest() {
+        return new MockHttpServletRequest("DELETE", "/pages/news/widgets/4") {
             @Override
             public HttpSession getSession(boolean create) {
                 if (create) {
@@ -118,7 +142,12 @@ class StreamInterceptorIntegrationTest extends AbstractControllerIntegrationTest
                 return super.getSession(false);
             }
         };
-        request.setAttribute("user", new OAuth2TestUtils.UserBuilder("jack_bauer", "0x24").grantedToRoleAdmin().build());
+    }
+
+    private String logAndGetUsername(MockHttpServletRequest request) throws Exception {
+        IActionLogManager manager = Mockito.mock(IActionLogManager.class);
+        ActivityStreamInterceptor interceptor = new ActivityStreamInterceptor();
+        ReflectionTestUtils.setField(interceptor, "actionLogManager", manager);
         HandlerMethod handler = new HandlerMethod(Mockito.mock(PageConfigurationController.class),
                 PageConfigurationController.class.getMethod("deletePageWidget", UserDetails.class, String.class, String.class));
 
@@ -126,7 +155,7 @@ class StreamInterceptorIntegrationTest extends AbstractControllerIntegrationTest
 
         ArgumentCaptor<ActionLogRecord> captor = ArgumentCaptor.forClass(ActionLogRecord.class);
         Mockito.verify(manager).addActionRecord(captor.capture());
-        Assertions.assertEquals("jack_bauer", captor.getValue().getUsername());
+        return captor.getValue().getUsername();
     }
 
     protected void waitActionLoggerThread() throws InterruptedException {

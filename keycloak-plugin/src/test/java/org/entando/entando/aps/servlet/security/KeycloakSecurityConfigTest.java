@@ -36,6 +36,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.cors.CorsConfiguration;
@@ -257,6 +258,18 @@ class KeycloakSecurityConfigTest {
     }
 
     @Test
+    void healthResponseShouldHaveNoFrameOptionsWhenIframeIsDisabled() throws Exception {
+        try (AnnotationConfigWebApplicationContext context = securityChainsContext(IframeDisabledSecurityChainsConfig.class)) {
+            MockHttpServletRequest request = apiRequest(context, "/health");
+            MockHttpServletResponse response = new MockHttpServletResponse();
+
+            context.getBean("springSecurityFilterChain", Filter.class).doFilter(request, response, new MockFilterChain());
+
+            assertNull(response.getHeader("X-Frame-Options"));
+        }
+    }
+
+    @Test
     void otherApiPathShouldStillCreateSession() throws Exception {
         try (AnnotationConfigWebApplicationContext context = securityChainsContext()) {
             MockHttpServletRequest request = apiRequest(context, "/other");
@@ -270,10 +283,14 @@ class KeycloakSecurityConfigTest {
     }
 
     private static AnnotationConfigWebApplicationContext securityChainsContext() {
+        return securityChainsContext(SecurityChainsConfig.class);
+    }
+
+    private static AnnotationConfigWebApplicationContext securityChainsContext(Class<? extends SecurityChainsConfig> config) {
         MockServletContext servletContext = new MockServletContext();
         AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
         context.setServletContext(servletContext);
-        context.register(SecurityChainsConfig.class);
+        context.register(config);
         context.refresh();
         servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, context);
         return context;
@@ -290,7 +307,11 @@ class KeycloakSecurityConfigTest {
     @EnableWebMvc
     static class SecurityChainsConfig {
 
-        private final KeycloakSecurityConfig securityConfig = keycloakDisabledSecurityConfig();
+        private final KeycloakSecurityConfig securityConfig = keycloakDisabledSecurityConfig(iframeDisabled());
+
+        boolean iframeDisabled() {
+            return false;
+        }
 
         @Bean
         ITenantManager tenantManager() {
@@ -309,11 +330,22 @@ class KeycloakSecurityConfigTest {
             return securityConfig.keycloakSecurityFilterChain(http);
         }
 
-        private static KeycloakSecurityConfig keycloakDisabledSecurityConfig() {
+        private static KeycloakSecurityConfig keycloakDisabledSecurityConfig(boolean iframeDisabled) {
             KeycloakSecurityConfig config = new KeycloakSecurityConfig(mock(KeycloakAuthenticationFilter.class),
                     mock(KeycloakConfiguration.class), mock(IUserManager.class), mock(IAuthenticationProviderManager.class));
             config.corsConfiguration = new CorsConfiguration();
+            ReflectionTestUtils.setField(config, "iframeDisabled", iframeDisabled);
             return config;
+        }
+    }
+
+    @EnableWebSecurity
+    @EnableWebMvc
+    static class IframeDisabledSecurityChainsConfig extends SecurityChainsConfig {
+
+        @Override
+        boolean iframeDisabled() {
+            return true;
         }
     }
 
