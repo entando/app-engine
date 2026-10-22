@@ -201,6 +201,24 @@ class ContentDtoTest {
         Assertions.assertEquals("Alt 44", second.getMetadataForLang("alt", "en"));
     }
 
+    @Test
+    void fillEntityShouldKeepStoredMetadataOfEachAttributeSharingTheSameResource() {
+        ImageAttribute thumbnail = new ImageAttribute();
+        thumbnail.setName("thumbnail");
+        thumbnail.setType("Image");
+        this.prototype.addAttribute(thumbnail);
+        this.storeImage(this.imageAttribute, "44", "Big banner", null);
+        this.storeImage(thumbnail, "44", "Small thumb", null);
+        ContentDto dto = this.createDto(Map.of("en", this.createResourceValue("44", "Image 44", null)));
+        dto.getAttributes().add(this.createElementDto("thumbnail", "44"));
+
+        dto.fillEntity(this.prototype, null, this.bindingResult);
+
+        Assertions.assertFalse(this.bindingResult.hasErrors());
+        Assertions.assertEquals("Big banner", this.imageAttribute.getMetadataForLang("alt", "en"));
+        Assertions.assertEquals("Small thumb", thumbnail.getMetadataForLang("alt", "en"));
+    }
+
     private void storeImage(ImageAttribute attribute, String resourceId, String alt, String title) {
         attribute.setDefaultLangCode("en");
         attribute.setResource(this.createResource(resourceId), "en");
