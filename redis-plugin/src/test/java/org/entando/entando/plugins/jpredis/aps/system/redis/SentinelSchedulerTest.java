@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import io.lettuce.core.RedisClient;
-import io.lettuce.core.StatefulRedisConnectionImpl;
 import io.lettuce.core.sentinel.api.StatefulRedisSentinelConnection;
 import io.lettuce.core.sentinel.api.sync.RedisSentinelCommands;
 import io.lettuce.core.support.caching.CacheFrontend;
@@ -30,7 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
-import org.entando.entando.ent.exception.EntRuntimeException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,14 +73,14 @@ class SentinelSchedulerTest {
 
     @Test
     void getInitScheduler() throws Exception {
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
         Mockito.verify(master, Mockito.times(1)).get("ip");
     }
 
     @Test
     void runScheduler_1() throws Exception {
         when(master.get("ip")).thenReturn("myMaster");
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
         scheduler.run();
         Mockito.verify(master, Mockito.times(2)).get("ip");
         Mockito.verify(cacheFrontendManager, Mockito.never()).rebuildCacheFrontend();
@@ -91,18 +89,17 @@ class SentinelSchedulerTest {
 
     @Test
     void runScheduler_2() throws Exception {
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
         scheduler.run();
         Mockito.verify(master, Mockito.times(2)).get("ip");
         Mockito.verify(cacheFrontendManager, Mockito.times(1)).rebuildCacheFrontend();
-        Mockito.verify(cacheManager, Mockito.times(1)).updateCacheFrontend(Mockito.any());
         scheduler.cancel();
     }
 
     @Test
     void runScheduler_3() throws Exception {
         when(commands.masters()).thenReturn(new ArrayList<>());
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
         scheduler.run();
         Mockito.verify(master, Mockito.never()).get("ip");
         Mockito.verify(cacheFrontendManager, Mockito.never()).rebuildCacheFrontend();
@@ -111,29 +108,37 @@ class SentinelSchedulerTest {
 
     @Test
     void runScheduler_4() throws Exception {
-        when(cacheManager.getCacheNames()).thenReturn(Arrays.asList("cache1", "cache2"));
-        LettuceCache cache = Mockito.mock(LettuceCache.class);
-        when(cacheManager.getCache(Mockito.anyString())).thenReturn(cache);
-        StatefulRedisConnectionImpl connection = Mockito.mock(StatefulRedisConnectionImpl.class);
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
         scheduler.run();
         Mockito.verify(master, Mockito.times(2)).get("ip");
-        Mockito.verify(cache, Mockito.times(2)).setFrontendCache(Mockito.any());
+        Mockito.verify(cacheFrontendManager, Mockito.times(1)).rebuildCacheFrontend();
+        scheduler.cancel();
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void deprecatedConstructorShouldRebuildThroughCacheFrontendManager() throws Exception {
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        scheduler.run();
+        Mockito.verify(cacheFrontendManager, Mockito.times(1)).rebuildCacheFrontend();
+        Mockito.verifyNoInteractions(cacheManager);
         scheduler.cancel();
     }
 
     @Test
     void failRunScheduler() throws Exception {
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
-        Mockito.doThrow(RuntimeException.class).when(this.cacheFrontendManager).rebuildCacheFrontend();
-        Assertions.assertThrows(EntRuntimeException.class, () -> scheduler.run());
-        Mockito.verify(master, Mockito.times(2)).get("ip");
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
+        Mockito.doThrow(RuntimeException.class).doReturn(null).when(this.cacheFrontendManager).rebuildCacheFrontend();
+        Assertions.assertDoesNotThrow(() -> scheduler.run());
+        scheduler.run();
+        Mockito.verify(master, Mockito.times(3)).get("ip");
+        Mockito.verify(cacheFrontendManager, Mockito.times(2)).rebuildCacheFrontend();
         scheduler.cancel();
     }
 
     @Test
     void failedRebuildShouldNotStopPolling() throws Exception {
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
         Mockito.doThrow(new RuntimeException("injected")).doReturn(null)
                 .when(this.cacheFrontendManager).rebuildCacheFrontend();
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -163,8 +168,7 @@ class SentinelSchedulerTest {
             realCacheManager.afterPropertiesSet();
             Cache primaryCache = realCacheManager.getCache("Entando_Cache");
             Cache tenantCache = realCacheManager.getCache("tenant1_Entando_Cache");
-            SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, realCacheManager,
-                    realCacheFrontendManager);
+            SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, realCacheFrontendManager);
 
             ApsTenantApplicationUtils.setTenant("tenant1");
             try {
