@@ -79,6 +79,9 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
     @JsonIgnore
     private transient Map<String, Map<String, Map<String, String>>> storedMetadatas = new HashMap<>();
 
+    @JsonIgnore
+    private transient String currentRootAttributeName;
+
     public ContentDto() {
         super();
     }
@@ -271,9 +274,19 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
     @Override
     protected void fillAttribute(AttributeInterface attribute, EntityAttributeDto attributeDto,
             BindingResult bindingResult) {
-        super.fillAttribute(attribute, attributeDto, bindingResult);
-        fillAbstractResourceAttribute(attribute, attributeDto, bindingResult);
-        fillLinkAttribute(attribute, attributeDto);
+        boolean isRoot = null == this.currentRootAttributeName;
+        if (isRoot) {
+            this.currentRootAttributeName = attribute.getName();
+        }
+        try {
+            super.fillAttribute(attribute, attributeDto, bindingResult);
+            fillAbstractResourceAttribute(attribute, attributeDto, bindingResult);
+            fillLinkAttribute(attribute, attributeDto);
+        } finally {
+            if (isRoot) {
+                this.currentRootAttributeName = null;
+            }
+        }
     }
 
     @Override
@@ -328,7 +341,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         resourceAttribute.setResource(resourceInterface, langCode);
         Object metadata = resource.get("metadata");
         if (null == metadata) {
-            Map<String, String> storedMetadata = this.getStoredMetadata(resourceId, correlationCode, langCode);
+            Map<String, String> storedMetadata = this.getStoredMetadata(this.currentRootAttributeName, resourceId, correlationCode, langCode);
             storedMetadata.forEach((key, value) -> resourceAttribute.setMetadata(key, langCode, value));
         } else if (metadata instanceof Map) {
             for (Entry<?, ?> entry : ((Map<?, ?>) metadata).entrySet()) {
@@ -353,14 +366,15 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         }
     }
 
-    private Map<String, String> getStoredMetadata(String resourceId, String correlationCode, String langCode) {
+    private Map<String, String> getStoredMetadata(String rootName, String resourceId, String correlationCode,
+            String langCode) {
         Map<String, Map<String, String>> metadataByLang = null;
         if (null == this.storedMetadatas) {
             return new HashMap<>();
         } else if (null != resourceId) {
-            metadataByLang = this.storedMetadatas.get(RESOURCE_ID_PREFIX + resourceId);
+            metadataByLang = this.storedMetadatas.get(this.storedKey(rootName, RESOURCE_ID_PREFIX + resourceId));
         } else if (null != correlationCode) {
-            metadataByLang = this.storedMetadatas.get(CORRELATION_CODE_PREFIX + correlationCode);
+            metadataByLang = this.storedMetadatas.get(this.storedKey(rootName, CORRELATION_CODE_PREFIX + correlationCode));
         }
         if (null == metadataByLang || null == metadataByLang.get(langCode)) {
             return new HashMap<>();
@@ -371,16 +385,20 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
     private Map<String, Map<String, Map<String, String>>> collectStoredMetadatas(List<AttributeInterface> attributes) {
         Map<String, Map<String, Map<String, String>>> collected = new HashMap<>();
         for (AttributeInterface attribute : attributes) {
-            this.collectStoredMetadatas(attribute, collected);
+            this.collectStoredMetadatas(attribute.getName(), attribute, collected);
         }
         return collected;
     }
 
-    private void collectStoredMetadatas(AttributeInterface attribute,
+    private String storedKey(String rootName, String resourceKey) {
+        return rootName + "/" + resourceKey;
+    }
+
+    private void collectStoredMetadatas(String rootName, AttributeInterface attribute,
             Map<String, Map<String, Map<String, String>>> collected) {
         if (attribute instanceof AbstractComplexAttribute) {
             for (AttributeInterface element : ((AbstractComplexAttribute) attribute).getAttributes()) {
-                this.collectStoredMetadatas(element, collected);
+                this.collectStoredMetadatas(rootName, element, collected);
             }
         } else if (attribute instanceof AbstractResourceAttribute) {
             AbstractResourceAttribute resourceAttribute = (AbstractResourceAttribute) attribute;
@@ -397,11 +415,11 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
                     continue;
                 }
                 if (null != resource.getId()) {
-                    collected.computeIfAbsent(RESOURCE_ID_PREFIX + resource.getId(), k -> new HashMap<>())
+                    collected.computeIfAbsent(this.storedKey(rootName, RESOURCE_ID_PREFIX + resource.getId()), k -> new HashMap<>())
                             .putIfAbsent(langCode, metadata);
                 }
                 if (null != resource.getCorrelationCode()) {
-                    collected.computeIfAbsent(CORRELATION_CODE_PREFIX + resource.getCorrelationCode(),
+                    collected.computeIfAbsent(this.storedKey(rootName, CORRELATION_CODE_PREFIX + resource.getCorrelationCode()),
                             k -> new HashMap<>()).putIfAbsent(langCode, metadata);
                 }
             }
