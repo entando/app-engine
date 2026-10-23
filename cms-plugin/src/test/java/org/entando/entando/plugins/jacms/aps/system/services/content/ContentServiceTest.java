@@ -20,6 +20,8 @@ import static org.mockito.Mockito.when;
 import com.agiletec.aps.system.RequestContext;
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.model.dao.SearcherDaoPaginatedResult;
+import com.agiletec.aps.system.common.entity.model.attribute.ListAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.MonoListAttribute;
 import com.agiletec.aps.system.services.authorization.IAuthorizationManager;
 import com.agiletec.aps.system.services.category.CategoryUtilizer;
 import com.agiletec.aps.system.services.group.Group;
@@ -35,11 +37,16 @@ import com.agiletec.plugins.jacms.aps.system.services.content.helper.PublicConte
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentDto;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO;
+import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ImageAttribute;
+import com.agiletec.plugins.jacms.aps.system.services.content.parse.attribute.ResourceAttributeHandler;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.ContentModel;
 import com.agiletec.plugins.jacms.aps.system.services.contentmodel.IContentModelManager;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.ContentRenderizationInfo;
 import com.agiletec.plugins.jacms.aps.system.services.dispenser.IContentDispenser;
 import com.agiletec.plugins.jacms.aps.system.services.resource.ResourceUtilizer;
+import com.agiletec.plugins.jacms.aps.system.services.resource.model.AttachResource;
+import com.agiletec.plugins.jacms.aps.system.services.resource.model.ImageResource;
+import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInterface;
 import com.agiletec.plugins.jacms.aps.system.services.searchengine.ICmsSearchEngineManager;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +60,10 @@ import org.entando.entando.aps.system.exception.ResourceNotFoundException;
 import org.entando.entando.aps.system.exception.RestServerError;
 import org.entando.entando.aps.system.services.component.IComponentDto;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.plugins.jacms.aps.system.services.resource.ResourcesService;
 import org.entando.entando.plugins.jacms.web.content.validator.RestContentListRequest;
+import org.entando.entando.plugins.jacms.web.resource.model.FileAssetDto;
+import org.entando.entando.plugins.jacms.web.resource.model.ImageAssetDto;
 import org.entando.entando.web.common.exceptions.ValidationGenericException;
 import org.entando.entando.web.common.model.Filter;
 import org.entando.entando.web.common.model.PagedMetadata;
@@ -71,6 +81,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
 
 /**
  * @author E.Santoboni
@@ -99,6 +111,8 @@ class ContentServiceTest {
     private ApplicationContext applicationContext;
     @Mock
     private ICmsSearchEngineManager searchEngineManager;
+    @Mock
+    private ResourcesService resourcesService;
     @InjectMocks
     private ContentService contentService;
 
@@ -588,4 +602,226 @@ class ContentServiceTest {
         Mockito.verify(contentManager, Mockito.times(1)).deleteContent(Mockito.any(Content.class));
     }
     
+
+    @Test
+    void getDtoBuilderShouldReturnResourceMetadataOfTheLanguage() {
+        ImageResource resource = Mockito.mock(ImageResource.class);
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(resource, "en");
+        imageAttribute.setText("Image EN", "en");
+        imageAttribute.setMetadata("alt", "en", "Alt EN");
+        imageAttribute.setMetadata("title", "en", "Title EN");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        when(this.resourcesService.convertResourceToDto(resource))
+                .thenReturn(ImageAssetDto.builder().id("44").build());
+
+        ContentDto dto = this.contentService.getDtoBuilder().convert(content);
+
+        ImageAssetDto value = (ImageAssetDto) dto.getAttributes().get(0).getValues().get("en");
+        Assertions.assertEquals(Map.of("alt", "Alt EN", "title", "Title EN"), value.getMetadata());
+        Assertions.assertEquals("Image EN", value.getName());
+    }
+
+    @Test
+    void scanResourceElementShouldRejectResourceOfAnotherType() {
+        ResourceInterface resource = new AttachResource();
+        resource.setId("7");
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(resource, "en");
+        imageAttribute.setText("Document", "en");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        when(this.resourcesService.getAsset("7", null))
+                .thenReturn(FileAssetDto.builder().id("7").group(Group.FREE_GROUP_NAME).build());
+        Mockito.lenient().when(this.resourcesService.convertResourceType(FileAssetDto.RESOURCE_TYPE)).thenReturn("Attach");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, imageAttribute);
+
+        Assertions.assertTrue(bindingResult.hasErrors());
+    }
+
+    @Test
+    void scanResourceElementShouldAcceptResourceOfTheAttributeType() {
+        ResourceInterface resource = new AttachResource();
+        resource.setId("44");
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(resource, "en");
+        imageAttribute.setText("Image", "en");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        when(this.resourcesService.getAsset("44", null))
+                .thenReturn(ImageAssetDto.builder().id("44").group(Group.FREE_GROUP_NAME).build());
+        Mockito.lenient().when(this.resourcesService.convertResourceType(ImageAssetDto.RESOURCE_TYPE)).thenReturn("Image");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, imageAttribute);
+
+        Assertions.assertFalse(bindingResult.hasErrors());
+    }
+
+    @Test
+    void scanResourceElementShouldRejectResourceMissingInDefaultLanguage() {
+        ResourceInterface resource = new AttachResource();
+        resource.setId("44");
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(resource, "it");
+        imageAttribute.setText("Image IT", "it");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        when(this.resourcesService.getAsset("44", null))
+                .thenReturn(ImageAssetDto.builder().id("44").group(Group.FREE_GROUP_NAME).build());
+        Mockito.lenient().when(this.resourcesService.convertResourceType(ImageAssetDto.RESOURCE_TYPE)).thenReturn("Image");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, imageAttribute);
+
+        Assertions.assertTrue(bindingResult.hasErrors());
+    }
+
+    @Test
+    void scanResourceElementShouldUseResourceDescriptionWhenTextIsMissing() {
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        ResourceInterface resourceEn = new AttachResource();
+        resourceEn.setId("44");
+        imageAttribute.setResource(resourceEn, "en");
+        ResourceInterface resourceIt = new AttachResource();
+        resourceIt.setId("44");
+        imageAttribute.setResource(resourceIt, "it");
+        imageAttribute.setText("Image IT", "it");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        when(this.resourcesService.getAsset("44", null))
+                .thenReturn(ImageAssetDto.builder().id("44").description("Photo description").group(Group.FREE_GROUP_NAME).build());
+        Mockito.lenient().when(this.resourcesService.convertResourceType(ImageAssetDto.RESOURCE_TYPE)).thenReturn("Image");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, imageAttribute);
+
+        Assertions.assertFalse(bindingResult.hasErrors());
+        Assertions.assertEquals("Photo description", imageAttribute.getTextForLang("en"));
+        Assertions.assertEquals("Image IT", imageAttribute.getTextForLang("it"));
+    }
+
+    @Test
+    void scanResourceElementShouldUseResourceDescriptionInNonDefaultLanguage() {
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(this.createPlaceholder("44"), "en");
+        imageAttribute.setText("Image EN", "en");
+        imageAttribute.setResource(this.createPlaceholder("44"), "it");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        this.mockImageAsset("44", "Photo description");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, imageAttribute);
+
+        Assertions.assertFalse(bindingResult.hasErrors());
+        Assertions.assertEquals("Image EN", imageAttribute.getTextForLang("en"));
+        Assertions.assertEquals("Photo description", imageAttribute.getTextForLang("it"));
+    }
+
+    @Test
+    void scanResourceElementShouldAcceptResourceInDefaultAndOtherLanguage() {
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(this.createPlaceholder("44"), "en");
+        imageAttribute.setText("Image EN", "en");
+        imageAttribute.setResource(this.createPlaceholder("44"), "it");
+        imageAttribute.setText("Image IT", "it");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        this.mockImageAsset("44", "Photo description");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, imageAttribute);
+
+        Assertions.assertFalse(bindingResult.hasErrors());
+    }
+
+    @Test
+    void scanEntityShouldFillMissingTextBeforeValidatingAttributes() {
+        ImageAttribute imageAttribute = this.createImageAttribute();
+        imageAttribute.setResource(this.createPlaceholder("44"), "en");
+        Content content = this.createContentWithAttribute(imageAttribute);
+        this.mockImageAsset("44", "Photo description");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanEntity(content, bindingResult);
+
+        Assertions.assertFalse(bindingResult.hasErrors());
+        Assertions.assertEquals("Photo description", imageAttribute.getTextForLang("en"));
+    }
+
+    @Test
+    void scanResourceElementShouldAcceptListElementResourceInItsListLanguage() {
+        ImageAttribute nestedType = this.createImageAttribute();
+        nestedType.setHandler(new ResourceAttributeHandler());
+        ListAttribute list = new ListAttribute();
+        list.setName("images");
+        list.setType("List");
+        list.setDefaultLangCode("en");
+        list.setNestedAttributeType(nestedType);
+        ImageAttribute element = (ImageAttribute) list.addAttribute("it");
+        element.setResource(this.createPlaceholder("44"), "it");
+        element.setText("Image IT", "it");
+        Content content = new Content();
+        content.setTypeCode("BNR");
+        content.setMainGroup(Group.FREE_GROUP_NAME);
+        content.addAttribute(list);
+        this.mockImageAsset("44", "Photo description");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, list);
+
+        Assertions.assertEquals("en", element.getDefaultLangCode());
+        Assertions.assertFalse(bindingResult.hasErrors());
+    }
+
+    @Test
+    void scanResourceElementShouldRejectMonolistElementResourceMissingInDefaultLanguage() {
+        ImageAttribute nestedType = this.createImageAttribute();
+        nestedType.setHandler(new ResourceAttributeHandler());
+        MonoListAttribute gallery = new MonoListAttribute();
+        gallery.setName("gallery");
+        gallery.setType("Monolist");
+        gallery.setDefaultLangCode("en");
+        gallery.setNestedAttributeType(nestedType);
+        ImageAttribute element = (ImageAttribute) gallery.addAttribute();
+        element.setResource(this.createPlaceholder("44"), "it");
+        element.setText("Image IT", "it");
+        Content content = new Content();
+        content.setTypeCode("BNR");
+        content.setMainGroup(Group.FREE_GROUP_NAME);
+        content.addAttribute(gallery);
+        this.mockImageAsset("44", "Photo description");
+        BindingResult bindingResult = new BeanPropertyBindingResult(content, "content");
+
+        this.contentService.scanResourceElement(content, bindingResult, gallery);
+
+        Assertions.assertTrue(bindingResult.hasErrors());
+    }
+
+    private ResourceInterface createPlaceholder(String id) {
+        ResourceInterface resource = new AttachResource();
+        resource.setId(id);
+        return resource;
+    }
+
+    private void mockImageAsset(String id, String description) {
+        Mockito.lenient().when(this.resourcesService.getAsset(id, null))
+                .thenReturn(ImageAssetDto.builder().id(id).description(description).group(Group.FREE_GROUP_NAME).build());
+        Mockito.lenient().when(this.resourcesService.convertResourceType(ImageAssetDto.RESOURCE_TYPE)).thenReturn("Image");
+    }
+
+    private ImageAttribute createImageAttribute() {
+        ImageAttribute imageAttribute = new ImageAttribute();
+        imageAttribute.setName("image");
+        imageAttribute.setType("Image");
+        imageAttribute.setDefaultLangCode("en");
+        return imageAttribute;
+    }
+
+    private Content createContentWithAttribute(ImageAttribute attribute) {
+        Content content = new Content();
+        content.setId("BNR1");
+        content.setTypeCode("BNR");
+        content.setMainGroup(Group.FREE_GROUP_NAME);
+        content.addAttribute(attribute);
+        return content;
+    }
+
 }

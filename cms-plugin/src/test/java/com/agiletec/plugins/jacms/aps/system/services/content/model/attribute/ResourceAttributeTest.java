@@ -13,12 +13,14 @@
  */
 package com.agiletec.plugins.jacms.aps.system.services.content.model.attribute;
 
+import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ImageResource;
 import java.util.List;
 import org.jdom2.Element;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Assertions;
@@ -47,8 +49,8 @@ class ResourceAttributeTest {
         this.imageAttribute.setName("ImageKey");
         imageAttribute.setText("Text EN", "en");
         imageAttribute.setText("Text IT", "it");
-        when(resource.getId()).thenReturn("idResource");
-        when(resource.getType()).thenReturn("Image");
+        lenient().when(resource.getId()).thenReturn("idResource");
+        lenient().when(resource.getType()).thenReturn("Image");
         imageAttribute.getResources().put("en", this.resource);
     }
 
@@ -62,6 +64,23 @@ class ResourceAttributeTest {
     @Test
     public void getJDOMElement_2() throws Exception {
         this.testGetJDOMElement(false);
+    }
+
+    @Test
+    void getJDOMElementShouldSkipNullMetadataValue() {
+        this.imageAttribute.setMetadata("alt", "en", null);
+        this.imageAttribute.setMetadata("title", "en", "Title EN");
+        Element element = Assertions.assertDoesNotThrow(() -> this.imageAttribute.getJDOMElement());
+        List<Element> metadataElements = element.getChild("metadatas").getChildren("metadata");
+        Assertions.assertEquals(1, metadataElements.size());
+        Assertions.assertEquals("title", metadataElements.get(0).getAttributeValue("key"));
+        Assertions.assertEquals("Title EN", metadataElements.get(0).getText());
+    }
+
+    @Test
+    void getStatusShouldBeValuedWhenResourceIsInDefaultLanguage() {
+        this.imageAttribute.setDefaultLangCode("en");
+        Assertions.assertEquals(AttributeInterface.Status.VALUED, this.imageAttribute.getStatus());
     }
 
     private void testGetJDOMElement(boolean hasMetadata) throws Exception {

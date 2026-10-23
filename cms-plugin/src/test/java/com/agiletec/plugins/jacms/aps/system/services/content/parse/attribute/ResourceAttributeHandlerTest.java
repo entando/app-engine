@@ -13,6 +13,8 @@
  */
 package com.agiletec.plugins.jacms.aps.system.services.content.parse.attribute;
 
+import com.agiletec.aps.system.services.lang.ILangManager;
+import com.agiletec.aps.system.services.lang.Lang;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.attribute.ImageAttribute;
 import com.agiletec.plugins.jacms.aps.system.services.resource.IResourceManager;
 import com.agiletec.plugins.jacms.aps.system.services.resource.model.ImageResource;
@@ -173,6 +175,53 @@ class ResourceAttributeHandlerTest {
         handler.endAttribute("text", buffer);
         Mockito.verify(currentAttr, Mockito.times(1)).setText(ArgumentMatchers.eq("new text"), ArgumentMatchers.eq("pl"));
         Assertions.assertNull(handler.getCurrentLangId());
+    }
+
+
+    @Test
+    void endAttributeShouldReadSwappedMetadataInTheCorrectOrder() throws SAXException {
+        ImageAttribute imageAttribute = this.createImageAttributeHandledWithLangs();
+        this.endMetadata("en", "alt", "Alt EN");
+        Assertions.assertEquals("Alt EN", imageAttribute.getMetadataForLang("alt", "en"));
+        Assertions.assertFalse(imageAttribute.getMetadatas().containsKey("en"));
+    }
+
+    @Test
+    void endAttributeShouldPreferCorrectMetadataReadAfterSwappedOne() throws SAXException {
+        ImageAttribute imageAttribute = this.createImageAttributeHandledWithLangs();
+        this.endMetadata("en", "alt", "Swapped");
+        this.endMetadata("alt", "en", "Correct");
+        Assertions.assertEquals("Correct", imageAttribute.getMetadataForLang("alt", "en"));
+        Assertions.assertFalse(imageAttribute.getMetadatas().containsKey("en"));
+    }
+
+    @Test
+    void endAttributeShouldPreferCorrectMetadataReadBeforeSwappedOne() throws SAXException {
+        ImageAttribute imageAttribute = this.createImageAttributeHandledWithLangs();
+        this.endMetadata("alt", "en", "Correct");
+        this.endMetadata("en", "alt", "Swapped");
+        this.endMetadata("title", "it", "Title IT");
+        Assertions.assertEquals("Correct", imageAttribute.getMetadataForLang("alt", "en"));
+        Assertions.assertEquals("Title IT", imageAttribute.getMetadataForLang("title", "it"));
+        Assertions.assertFalse(imageAttribute.getMetadatas().containsKey("en"));
+    }
+
+    private ImageAttribute createImageAttributeHandledWithLangs() {
+        ILangManager langManager = Mockito.mock(ILangManager.class);
+        Mockito.lenient().when(langManager.getLang(ArgumentMatchers.anyString())).thenReturn(null);
+        Mockito.lenient().when(langManager.getLang("en")).thenReturn(new Lang());
+        Mockito.lenient().when(langManager.getLang("it")).thenReturn(new Lang());
+        handler.setLangManager(langManager);
+        ImageAttribute imageAttribute = new ImageAttribute();
+        handler.setCurrentAttr(imageAttribute);
+        handler.setIntoMetadatas(true);
+        return imageAttribute;
+    }
+
+    private void endMetadata(String key, String langCode, String value) {
+        handler.setMetadataKey(key);
+        handler.setCurrentLangId(langCode);
+        handler.endAttribute("metadata", new StringBuffer(value));
     }
 
 }
