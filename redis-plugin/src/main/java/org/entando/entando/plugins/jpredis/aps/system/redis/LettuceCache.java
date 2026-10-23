@@ -17,6 +17,7 @@ import io.lettuce.core.support.caching.CacheFrontend;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +34,12 @@ public class LettuceCache extends RedisCache {
     
     private static final Logger logger = LoggerFactory.getLogger(LettuceCache.class);
     
-    private volatile Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier;
+    private final AtomicReference<Supplier<CacheFrontend<String, Object>>> cacheFrontendSupplier = new AtomicReference<>();
 
     protected LettuceCache(String name, RedisCacheWriter cacheWriter, RedisCacheConfiguration cacheConfig,
             Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier) {
         super(name, cacheWriter, cacheConfig);
-        this.cacheFrontendSupplier = cacheFrontendSupplier;
+        this.cacheFrontendSupplier.set(cacheFrontendSupplier);
     }
 
     /**
@@ -54,7 +55,7 @@ public class LettuceCache extends RedisCache {
      */
     @Deprecated(since = "7.5.4")
     protected void setFrontendCache(CacheFrontend<String, Object> cacheFrontend) {
-        this.cacheFrontendSupplier = () -> cacheFrontend;
+        this.cacheFrontendSupplier.set(() -> cacheFrontend);
     }
     
     @Override
@@ -75,8 +76,7 @@ public class LettuceCache extends RedisCache {
     }
 
     private Object getFromLocalCache(Object key) {
-        Object value = this.cacheFrontendSupplier.get().get(super.getName() + "::" + key.toString());
-        return value;
+        return this.cacheFrontendSupplier.get().get().get(super.getName() + "::" + key.toString());
     }
     
     @Override

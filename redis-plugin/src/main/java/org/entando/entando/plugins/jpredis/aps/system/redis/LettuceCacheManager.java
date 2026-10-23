@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.springframework.cache.Cache;
@@ -59,7 +60,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	private final RedisCacheConfiguration defaultCacheConfig;
 	private final Map<String, RedisCacheConfiguration> initialCacheConfiguration;
 	private final boolean allowInFlightCacheCreation;
-    private volatile Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier;
+    private final AtomicReference<Supplier<CacheFrontend<String, Object>>> cacheFrontendSupplier = new AtomicReference<>();
 
 	/**
 	 * Creates new {@link RedisCacheManager} using given {@link RedisCacheWriter} and default
@@ -80,7 +81,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 		this.defaultCacheConfig = defaultCacheConfiguration;
 		this.initialCacheConfiguration = new LinkedHashMap<>();
 		this.allowInFlightCacheCreation = allowInFlightCacheCreation;
-        this.cacheFrontendSupplier = cacheFrontendSupplier;
+        this.cacheFrontendSupplier.set(cacheFrontendSupplier);
 	}
 
 	/**
@@ -180,7 +181,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	 * @return never {@literal null}.
 	 */
 	protected RedisCache createRedisCache(String name, @Nullable RedisCacheConfiguration cacheConfig) {
-		return new LettuceCache(name, cacheWriter, cacheConfig != null ? cacheConfig : defaultCacheConfig, this.cacheFrontendSupplier);
+		return new LettuceCache(name, cacheWriter, cacheConfig != null ? cacheConfig : defaultCacheConfig, this.cacheFrontendSupplier.get());
 	}
 
 	@Override
@@ -196,7 +197,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	 */
 	@Deprecated(since = "7.5.4")
 	public void updateCacheFrontend(CacheFrontend<String, Object> cacheFrontend) {
-		this.cacheFrontendSupplier = () -> cacheFrontend;
+		this.cacheFrontendSupplier.set(() -> cacheFrontend);
 	}
 
 	/**

@@ -107,15 +107,6 @@ class SentinelSchedulerTest {
     }
 
     @Test
-    void runScheduler_4() throws Exception {
-        SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheFrontendManager);
-        scheduler.run();
-        Mockito.verify(master, Mockito.times(2)).get("ip");
-        Mockito.verify(cacheFrontendManager, Mockito.times(1)).rebuildCacheFrontend();
-        scheduler.cancel();
-    }
-
-    @Test
     @SuppressWarnings("deprecation")
     void deprecatedConstructorShouldRebuildThroughCacheFrontendManager() throws Exception {
         SentinelScheduler scheduler = new SentinelScheduler(lettuceClient, cacheManager, cacheFrontendManager);

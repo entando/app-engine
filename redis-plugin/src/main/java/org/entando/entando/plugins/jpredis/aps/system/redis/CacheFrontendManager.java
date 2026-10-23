@@ -8,6 +8,7 @@ import io.lettuce.core.support.caching.CacheFrontend;
 import io.lettuce.core.support.caching.ClientSideCaching;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.entando.entando.plugins.jpredis.aps.system.redis.conditions.RedisActive;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class CacheFrontendManager {
 
     private final RedisClient redisClient;
     private final Object lock = new Object();
-    private volatile CacheFrontend<String, Object> cacheFrontend;
+    private final AtomicReference<CacheFrontend<String, Object>> cacheFrontend = new AtomicReference<>();
 
     @Autowired
     public CacheFrontendManager(RedisClient redisClient) {
@@ -28,15 +29,15 @@ public class CacheFrontendManager {
     }
 
     public CacheFrontend<String, Object> getCacheFrontend() {
-        CacheFrontend<String, Object> current = this.cacheFrontend;
+        CacheFrontend<String, Object> current = this.cacheFrontend.get();
         if (current != null) {
             return current;
         }
         synchronized (this.lock) {
-            if (this.cacheFrontend == null) {
-                this.cacheFrontend = this.buildCacheFrontend();
+            if (this.cacheFrontend.get() == null) {
+                this.cacheFrontend.set(this.buildCacheFrontend());
             }
-            return this.cacheFrontend;
+            return this.cacheFrontend.get();
         }
     }
 
@@ -47,8 +48,7 @@ public class CacheFrontendManager {
     public CacheFrontend<String, Object> rebuildCacheFrontend() {
         synchronized (this.lock) {
             CacheFrontend<String, Object> next = this.buildCacheFrontend();
-            CacheFrontend<String, Object> previous = this.cacheFrontend;
-            this.cacheFrontend = next;
+            CacheFrontend<String, Object> previous = this.cacheFrontend.getAndSet(next);
             if (previous != null) {
                 try {
                     previous.close();
