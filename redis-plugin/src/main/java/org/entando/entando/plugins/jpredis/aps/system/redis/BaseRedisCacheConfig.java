@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.resource.DefaultClientResources;
-import io.lettuce.core.support.caching.CacheFrontend;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,9 +59,9 @@ public class BaseRedisCacheConfig extends CachingConfigurerSupport {
             cacheConfigurations.put(tenant + "_" + ICacheInfoManager.DEFAULT_CACHE_NAME, createCacheConfiguration(4L * 60 * 60));
         }
 
-        CacheFrontend<String, Object> cacheFrontend = cacheFrontendManager.getCacheFrontend();
+        cacheFrontendManager.getCacheFrontend();
         return LettuceCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(redisCacheConfiguration).cacheFrontend(cacheFrontend)
+                .cacheDefaults(redisCacheConfiguration).cacheFrontendSupplier(cacheFrontendManager::getCacheFrontend)
                 .withInitialCacheConfigurations(cacheConfigurations).build();
     }
 

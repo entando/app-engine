@@ -25,10 +25,9 @@ public class SentinelSchedulerConfig {
     }
 
     @Bean
-    public Executor sentinelSchedulerExecutor(RedisClient redisClient, LettuceCacheManager cacheManager,
-            CacheFrontendManager cacheFrontendManager) {
+    public Executor sentinelSchedulerExecutor(RedisClient redisClient, CacheFrontendManager cacheFrontendManager) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        SentinelScheduler sentinelScheduler = new SentinelScheduler(redisClient, cacheManager, cacheFrontendManager);
+        SentinelScheduler sentinelScheduler = new SentinelScheduler(redisClient, cacheFrontendManager);
         executor.scheduleWithFixedDelay(sentinelScheduler, frontEndCacheCheckDelay, frontEndCacheCheckDelay,
                 TimeUnit.SECONDS);
         return executor;

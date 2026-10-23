@@ -17,6 +17,8 @@ import io.lettuce.core.support.caching.CacheFrontend;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.cache.RedisCache;
@@ -32,15 +34,28 @@ public class LettuceCache extends RedisCache {
     
     private static final Logger logger = LoggerFactory.getLogger(LettuceCache.class);
     
-    private CacheFrontend<String, Object> frontendCache;
-    
-	protected LettuceCache(String name, RedisCacheWriter cacheWriter, RedisCacheConfiguration cacheConfig, CacheFrontend<String, Object> cacheFrontend) {
-		super(name, cacheWriter, cacheConfig);
-        this.setFrontendCache(cacheFrontend);
+    private final AtomicReference<Supplier<CacheFrontend<String, Object>>> cacheFrontendSupplier = new AtomicReference<>();
+
+    protected LettuceCache(String name, RedisCacheWriter cacheWriter, RedisCacheConfiguration cacheConfig,
+            Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier) {
+        super(name, cacheWriter, cacheConfig);
+        this.cacheFrontendSupplier.set(cacheFrontendSupplier);
     }
-    
+
+    /**
+     * @deprecated use {@link #LettuceCache(String, RedisCacheWriter, RedisCacheConfiguration, Supplier)} instead
+     */
+    @Deprecated(since = "7.5.4")
+	protected LettuceCache(String name, RedisCacheWriter cacheWriter, RedisCacheConfiguration cacheConfig, CacheFrontend<String, Object> cacheFrontend) {
+        this(name, cacheWriter, cacheConfig, () -> cacheFrontend);
+    }
+
+    /**
+     * @deprecated use {@link #LettuceCache(String, RedisCacheWriter, RedisCacheConfiguration, Supplier)} instead
+     */
+    @Deprecated(since = "7.5.4")
     protected void setFrontendCache(CacheFrontend<String, Object> cacheFrontend) {
-        this.frontendCache = cacheFrontend;
+        this.cacheFrontendSupplier.set(() -> cacheFrontend);
     }
     
     @Override
@@ -61,8 +76,7 @@ public class LettuceCache extends RedisCache {
     }
 
     private Object getFromLocalCache(Object key) {
-        Object value = this.frontendCache.get(super.getName() + "::" + key.toString());
-        return value;
+        return this.cacheFrontendSupplier.get().get().get(super.getName() + "::" + key.toString());
     }
     
     @Override
