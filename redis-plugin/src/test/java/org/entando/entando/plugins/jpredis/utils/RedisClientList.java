@@ -2,9 +2,12 @@ package org.entando.entando.plugins.jpredis.utils;
 
 import io.lettuce.core.KillArgs;
 import io.lettuce.core.api.sync.RedisCommands;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 
@@ -23,28 +26,37 @@ public final class RedisClientList {
         return lines(commands).map(RedisClientList::id).toList();
     }
 
-    public static List<Long> trackingIds(RedisCommands<String, String> commands) {
-        return lines(commands).filter(line -> flags(line).contains("t")).map(RedisClientList::id).toList();
+    public static Set<Long> trackingIds(RedisCommands<String, String> commands) {
+        return lines(commands).filter(line -> flags(line).contains("t")).map(RedisClientList::id)
+                .collect(Collectors.toSet());
     }
 
     /**
-     * Kills the only connection with client tracking enabled and waits until it has been replaced by a new
-     * connection.
+     * Runs the action and returns the id of the only connection with client tracking enabled that it opened.
      */
-    public static void killTrackingConnectionAndAwaitReconnect(RedisCommands<String, String> commands,
-            long timeoutMillis) throws InterruptedException {
-        List<Long> tracking = trackingIds(commands);
-        Assertions.assertEquals(1, tracking.size(), "tracking connections");
-        long killed = tracking.get(0);
+    public static long openedTrackingConnection(RedisCommands<String, String> commands, Runnable action) {
+        Set<Long> before = trackingIds(commands);
+        action.run();
+        Set<Long> opened = new HashSet<>(trackingIds(commands));
+        opened.removeAll(before);
+        Assertions.assertEquals(1, opened.size(), () -> "tracking connections opened, in\n" + commands.clientList());
+        return opened.iterator().next();
+    }
+
+    /**
+     * Kills the given connection and waits until it has been replaced by a new connection.
+     */
+    public static void killAndAwaitReconnect(RedisCommands<String, String> commands, long id, long timeoutMillis)
+            throws InterruptedException {
         int clients = ids(commands).size();
 
-        Assertions.assertEquals(1L, commands.clientKill(KillArgs.Builder.id(killed)));
+        Assertions.assertEquals(1L, commands.clientKill(KillArgs.Builder.id(id)));
 
         long deadline = System.currentTimeMillis() + timeoutMillis;
         List<Long> current = ids(commands);
-        while (current.contains(killed) || current.size() < clients) {
+        while (current.contains(id) || current.size() < clients) {
             if (System.currentTimeMillis() > deadline) {
-                Assertions.fail("Timed out waiting for the reconnection of client " + killed);
+                Assertions.fail("Timed out waiting for the reconnection of client " + id);
             }
             Thread.sleep(50);
             current = ids(commands);

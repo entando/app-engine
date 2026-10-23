@@ -6,6 +6,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.RedisCodec;
 import java.util.List;
+import java.util.Set;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.plugins.jpredis.utils.RedisClientList;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
@@ -28,6 +29,7 @@ class LettuceCacheIntegrationTest {
     private RedisCommands<String, String> admin;
     private LettuceConnectionFactory connectionFactory;
     private CacheFrontendManager cacheFrontendManager;
+    private long frontendConnection;
     private Cache cache;
 
     @BeforeEach
@@ -41,17 +43,22 @@ class LettuceCacheIntegrationTest {
         connectionFactory.afterPropertiesSet();
         connectionFactory.start();
         cacheFrontendManager = new CacheFrontendManager(redisClient);
+        frontendConnection = RedisClientList.openedTrackingConnection(admin, this::createCache);
+        cache.clear();
+    }
+
+    private void createCache() {
         ITenantManager tenantManager = Mockito.mock(ITenantManager.class);
         Mockito.when(tenantManager.getCodes()).thenReturn(List.of());
         LettuceCacheManager cacheManager = (LettuceCacheManager) new BaseRedisCacheConfig().cacheManager(
                 redisClient, connectionFactory, cacheFrontendManager, tenantManager);
         cacheManager.afterPropertiesSet();
         cache = cacheManager.getCache("Entando_Cache");
-        cache.clear();
     }
 
     @AfterEach
     void tearDown() {
+        cacheFrontendManager.close();
         connectionFactory.destroy();
         redisClient.shutdown();
         adminClient.shutdown();
@@ -104,19 +111,20 @@ class LettuceCacheIntegrationTest {
 
     @Test
     void trackingShouldBeRestoredAfterFrontendReconnect() throws Exception {
+        Set<Long> trackingBeforeReconnect = RedisClientList.trackingIds(admin);
+
         reconnectFrontend();
 
-        Assertions.assertTrue(awaitTrackingConnection(3000));
+        Assertions.assertTrue(awaitNewTrackingConnection(trackingBeforeReconnect, 3000));
     }
 
     private void reconnectFrontend() throws InterruptedException {
-        cacheFrontendManager.getCacheFrontend();
-        RedisClientList.killTrackingConnectionAndAwaitReconnect(admin, 3000);
+        RedisClientList.killAndAwaitReconnect(admin, frontendConnection, 3000);
     }
 
-    private boolean awaitTrackingConnection(long timeoutMillis) throws InterruptedException {
+    private boolean awaitNewTrackingConnection(Set<Long> existing, long timeoutMillis) throws InterruptedException {
         long deadline = System.currentTimeMillis() + timeoutMillis;
-        while (RedisClientList.trackingIds(admin).isEmpty()) {
+        while (existing.containsAll(RedisClientList.trackingIds(admin))) {
             if (System.currentTimeMillis() > deadline) {
                 return false;
             }

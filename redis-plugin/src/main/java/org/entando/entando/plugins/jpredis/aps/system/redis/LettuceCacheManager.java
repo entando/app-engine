@@ -108,7 +108,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 
 	/**
 	 * @deprecated use {@link #LettuceCacheManager(RedisCacheWriter, RedisCacheConfiguration, Map, boolean, Supplier)}
-	 * instead
+	 * instead. A fixed frontend fails once {@link CacheFrontendManager} replaces and closes it.
 	 */
 	@Deprecated(since = "7.5.4")
 	public LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
@@ -193,7 +193,8 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	}
 
 	/**
-	 * @deprecated use {@link RedisCacheManagerBuilder#cacheFrontendSupplier(Supplier)} instead
+	 * @deprecated use {@link RedisCacheManagerBuilder#cacheFrontendSupplier(Supplier)} instead.
+	 * A fixed frontend fails once {@link CacheFrontendManager} replaces and closes it.
 	 */
 	@Deprecated(since = "7.5.4")
 	public void updateCacheFrontend(CacheFrontend<String, Object> cacheFrontend) {
@@ -300,7 +301,8 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
         }
 
         /**
-         * @deprecated use {@link #cacheFrontendSupplier(Supplier)} instead
+         * @deprecated use {@link #cacheFrontendSupplier(Supplier)} instead.
+         * A fixed frontend fails once {@link CacheFrontendManager} replaces and closes it.
          */
         @Deprecated(since = "7.5.4")
         public RedisCacheManagerBuilder cacheFrontend(CacheFrontend<String, Object> cacheFrontend) {

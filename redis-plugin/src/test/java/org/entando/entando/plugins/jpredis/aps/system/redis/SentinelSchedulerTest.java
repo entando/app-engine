@@ -17,6 +17,8 @@ import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.util.ApsTenantApplicationUtils;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.sentinel.api.StatefulRedisSentinelConnection;
 import io.lettuce.core.sentinel.api.sync.RedisSentinelCommands;
 import io.lettuce.core.support.caching.CacheFrontend;
@@ -150,6 +152,8 @@ class SentinelSchedulerTest {
             clientSideCachingMockedStatic.when(
                     () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any()))
                     .thenReturn(previous).thenReturn(next);
+            when(lettuceClient.connect(Mockito.any(RedisCodec.class)))
+                    .thenReturn(Mockito.mock(StatefulRedisConnection.class));
             CacheFrontendManager realCacheFrontendManager = new CacheFrontendManager(lettuceClient);
             ITenantManager tenantManager = Mockito.mock(ITenantManager.class);
             when(tenantManager.getCodes()).thenReturn(List.of("tenant1"));

@@ -48,6 +48,18 @@ class LettuceCacheTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
+    void cacheShouldReadThroughFrontendSetByLegacySetter() {
+        CacheFrontend<String, Object> nextFrontend = Mockito.mock(CacheFrontend.class);
+        Mockito.when(nextFrontend.get("CacheName::key")).thenReturn("value");
+
+        lettuceCache.setFrontendCache(nextFrontend);
+
+        Assertions.assertEquals("value", lettuceCache.get("key").get());
+        Mockito.verifyNoInteractions(cacheFrontend);
+    }
+
+    @Test
     void cacheShouldReadThroughCurrentSupplierFrontend() {
         CacheFrontend<String, Object> nextFrontend = Mockito.mock(CacheFrontend.class);
         AtomicReference<CacheFrontend<String, Object>> current = new AtomicReference<>(cacheFrontend);

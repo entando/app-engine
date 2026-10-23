@@ -30,7 +30,9 @@ class SentinelTopologyRefreshManagerIntegrationTest {
     private DefaultClientResources resources;
     private RedisClient redisClient;
     private LettuceConnectionFactory connectionFactory;
+    private StatefulRedisConnection<String, String> master;
     private CacheFrontendManager cacheFrontendManager;
+    private long frontendConnection;
     private SentinelTopologyRefreshManager refreshManager;
     private Cache cache;
 
@@ -43,19 +45,26 @@ class SentinelTopologyRefreshManagerIntegrationTest {
         connectionFactory = config.connectionFactory();
         connectionFactory.afterPropertiesSet();
         connectionFactory.start();
+        master = redisClient.connect();
         cacheFrontendManager = new CacheFrontendManager(redisClient);
+        frontendConnection = RedisClientList.openedTrackingConnection(master.sync(), this::createCache);
+        refreshManager = new SentinelTopologyRefreshManager(redisClient, redisURI, cacheFrontendManager);
+    }
+
+    private void createCache() {
         ITenantManager tenantManager = Mockito.mock(ITenantManager.class);
         Mockito.when(tenantManager.getCodes()).thenReturn(List.of());
         LettuceCacheManager cacheManager = (LettuceCacheManager) new BaseRedisCacheConfig().cacheManager(
                 redisClient, connectionFactory, cacheFrontendManager, tenantManager);
         cacheManager.afterPropertiesSet();
-        refreshManager = new SentinelTopologyRefreshManager(redisClient, redisURI, cacheFrontendManager);
         cache = cacheManager.getCache("Entando_Cache");
     }
 
     @AfterEach
     void tearDown() {
         refreshManager.close();
+        cacheFrontendManager.close();
+        master.close();
         connectionFactory.destroy();
         redisClient.shutdown();
         resources.shutdown();
@@ -86,9 +95,7 @@ class SentinelTopologyRefreshManagerIntegrationTest {
         cache.put("beforeReconnect", "value1");
         Assertions.assertEquals("value1", cache.get("beforeReconnect").get());
 
-        try (StatefulRedisConnection<String, String> master = redisClient.connect()) {
-            RedisClientList.killTrackingConnectionAndAwaitReconnect(master.sync(), TIMEOUT_MILLIS);
-        }
+        RedisClientList.killAndAwaitReconnect(master.sync(), frontendConnection, TIMEOUT_MILLIS);
         cache.put("beforeReconnect", "value2");
 
         awaitTrue(() -> "value2".equals(cache.get("beforeReconnect").get()), "updated value read back", 3000);
