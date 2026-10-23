@@ -3,9 +3,11 @@ package org.entando.entando.plugins.jpredis.aps.system.redis;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.RedisCodec;
 import java.util.List;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
+import org.entando.entando.plugins.jpredis.utils.RedisClientList;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -22,6 +24,8 @@ import org.testcontainers.containers.GenericContainer;
 class LettuceCacheIntegrationTest {
 
     private RedisClient redisClient;
+    private RedisClient adminClient;
+    private RedisCommands<String, String> admin;
     private LettuceConnectionFactory connectionFactory;
     private CacheFrontendManager cacheFrontendManager;
     private Cache cache;
@@ -31,6 +35,8 @@ class LettuceCacheIntegrationTest {
         String host = redis.getHost();
         int port = redis.getMappedPort(6379);
         redisClient = Mockito.spy(RedisClient.create(RedisURI.create(host, port)));
+        adminClient = RedisClient.create(RedisURI.create(host, port));
+        admin = adminClient.connect().sync();
         connectionFactory = new LettuceConnectionFactory(new RedisStandaloneConfiguration(host, port));
         connectionFactory.afterPropertiesSet();
         connectionFactory.start();
@@ -48,6 +54,7 @@ class LettuceCacheIntegrationTest {
     void tearDown() {
         connectionFactory.destroy();
         redisClient.shutdown();
+        adminClient.shutdown();
     }
 
     @Test
@@ -71,6 +78,51 @@ class LettuceCacheIntegrationTest {
         cache.put("key", "value2");
 
         Assertions.assertEquals("value2", awaitValue("key", "value2", 3000));
+    }
+
+    @Test
+    void hitShouldNotBeStaleAfterFrontendReconnect() throws Exception {
+        cache.put("key", "value1");
+        Assertions.assertEquals("value1", cache.get("key").get());
+
+        reconnectFrontend();
+        cache.put("key", "value2");
+
+        Assertions.assertEquals("value2", awaitValue("key", "value2", 3000));
+    }
+
+    @Test
+    void missShouldNotBeStaleAfterFrontendReconnect() throws Exception {
+        cache.put("key", "value1");
+
+        reconnectFrontend();
+        Assertions.assertEquals("value1", cache.get("key").get());
+        cache.put("key", "value2");
+
+        Assertions.assertEquals("value2", awaitValue("key", "value2", 3000));
+    }
+
+    @Test
+    void trackingShouldBeRestoredAfterFrontendReconnect() throws Exception {
+        reconnectFrontend();
+
+        Assertions.assertTrue(awaitTrackingConnection(3000));
+    }
+
+    private void reconnectFrontend() throws InterruptedException {
+        cacheFrontendManager.getCacheFrontend();
+        RedisClientList.killTrackingConnectionAndAwaitReconnect(admin, 3000);
+    }
+
+    private boolean awaitTrackingConnection(long timeoutMillis) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        while (RedisClientList.trackingIds(admin).isEmpty()) {
+            if (System.currentTimeMillis() > deadline) {
+                return false;
+            }
+            Thread.sleep(50);
+        }
+        return true;
     }
 
     private void injectConnectFailure() {

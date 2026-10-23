@@ -2,6 +2,7 @@ package org.entando.entando.plugins.jpredis.aps.system.redis;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.sentinel.api.StatefulRedisSentinelConnection;
 import io.lettuce.core.support.caching.CacheFrontend;
@@ -9,8 +10,11 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
+import org.entando.entando.plugins.jpredis.utils.RedisClientList;
 import org.entando.entando.plugins.jpredis.utils.RedisSentinelTestExtension;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -23,47 +27,71 @@ class SentinelTopologyRefreshManagerIntegrationTest {
     private static final String MASTER_ID = "mymaster";
     private static final long TIMEOUT_MILLIS = 60_000;
 
-    @Test
-    void existingCacheShouldReadThroughNewMasterAfterFailover() throws Exception {
+    private DefaultClientResources resources;
+    private RedisClient redisClient;
+    private LettuceConnectionFactory connectionFactory;
+    private CacheFrontendManager cacheFrontendManager;
+    private SentinelTopologyRefreshManager refreshManager;
+    private Cache cache;
+
+    @BeforeEach
+    void setUp() {
         SentinelConfig config = new SentinelConfig();
-        DefaultClientResources resources = DefaultClientResources.create();
+        resources = DefaultClientResources.create();
         RedisURI redisURI = config.redisURI();
-        RedisClient redisClient = config.getRedisClient(resources, redisURI);
-        LettuceConnectionFactory connectionFactory = config.connectionFactory();
+        redisClient = config.getRedisClient(resources, redisURI);
+        connectionFactory = config.connectionFactory();
         connectionFactory.afterPropertiesSet();
         connectionFactory.start();
-        CacheFrontendManager cacheFrontendManager = new CacheFrontendManager(redisClient);
+        cacheFrontendManager = new CacheFrontendManager(redisClient);
         ITenantManager tenantManager = Mockito.mock(ITenantManager.class);
         Mockito.when(tenantManager.getCodes()).thenReturn(List.of());
         LettuceCacheManager cacheManager = (LettuceCacheManager) new BaseRedisCacheConfig().cacheManager(
                 redisClient, connectionFactory, cacheFrontendManager, tenantManager);
         cacheManager.afterPropertiesSet();
-        SentinelTopologyRefreshManager refreshManager = new SentinelTopologyRefreshManager(redisClient, redisURI,
-                cacheFrontendManager);
-        try {
-            Cache cache = cacheManager.getCache("Entando_Cache");
-            cache.put("beforeFailover", "value1");
-            Assertions.assertEquals("value1", cache.get("beforeFailover").get());
-            CacheFrontend<String, Object> frontendBeforeFailover = cacheFrontendManager.getCacheFrontend();
-            SocketAddress masterBeforeFailover = getMasterAddress(redisClient);
+        refreshManager = new SentinelTopologyRefreshManager(redisClient, redisURI, cacheFrontendManager);
+        cache = cacheManager.getCache("Entando_Cache");
+    }
 
-            try (StatefulRedisSentinelConnection<String, String> connection = redisClient.connectSentinel()) {
-                connection.sync().failover(MASTER_ID);
-            }
+    @AfterEach
+    void tearDown() {
+        refreshManager.close();
+        connectionFactory.destroy();
+        redisClient.shutdown();
+        resources.shutdown();
+    }
 
-            awaitTrue(() -> !masterBeforeFailover.equals(getMasterAddress(redisClient)), "master switch");
-            awaitTrue(() -> cacheFrontendManager.getCacheFrontend() != frontendBeforeFailover, "frontend rebuild");
-            awaitTrue(() -> tryPutAndRead(cache, "afterFailover", "value2"), "write visible on the new master");
+    @Test
+    void existingCacheShouldReadThroughNewMasterAfterFailover() throws Exception {
+        cache.put("beforeFailover", "value1");
+        Assertions.assertEquals("value1", cache.get("beforeFailover").get());
+        CacheFrontend<String, Object> frontendBeforeFailover = cacheFrontendManager.getCacheFrontend();
+        SocketAddress masterBeforeFailover = getMasterAddress(redisClient);
 
-            Cache.ValueWrapper value = Assertions.assertDoesNotThrow(() -> cache.get("afterFailover"));
-            Assertions.assertEquals("value2", value.get());
-            Assertions.assertDoesNotThrow(() -> cache.get("missingKey"));
-        } finally {
-            refreshManager.close();
-            connectionFactory.destroy();
-            redisClient.shutdown();
-            resources.shutdown();
+        try (StatefulRedisSentinelConnection<String, String> connection = redisClient.connectSentinel()) {
+            connection.sync().failover(MASTER_ID);
         }
+
+        awaitTrue(() -> !masterBeforeFailover.equals(getMasterAddress(redisClient)), "master switch");
+        awaitTrue(() -> cacheFrontendManager.getCacheFrontend() != frontendBeforeFailover, "frontend rebuild");
+        awaitTrue(() -> tryPutAndRead(cache, "afterFailover", "value2"), "write visible on the new master");
+
+        Cache.ValueWrapper value = Assertions.assertDoesNotThrow(() -> cache.get("afterFailover"));
+        Assertions.assertEquals("value2", value.get());
+        Assertions.assertDoesNotThrow(() -> cache.get("missingKey"));
+    }
+
+    @Test
+    void existingCacheShouldNotServeStaleValueAfterFrontendReconnect() throws Exception {
+        cache.put("beforeReconnect", "value1");
+        Assertions.assertEquals("value1", cache.get("beforeReconnect").get());
+
+        try (StatefulRedisConnection<String, String> master = redisClient.connect()) {
+            RedisClientList.killTrackingConnectionAndAwaitReconnect(master.sync(), TIMEOUT_MILLIS);
+        }
+        cache.put("beforeReconnect", "value2");
+
+        awaitTrue(() -> "value2".equals(cache.get("beforeReconnect").get()), "updated value read back", 3000);
     }
 
     private static SocketAddress getMasterAddress(RedisClient redisClient) {
@@ -83,7 +111,12 @@ class SentinelTopologyRefreshManagerIntegrationTest {
     }
 
     private static void awaitTrue(BooleanSupplier condition, String description) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
+        awaitTrue(condition, description, TIMEOUT_MILLIS);
+    }
+
+    private static void awaitTrue(BooleanSupplier condition, String description, long timeoutMillis)
+            throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
         while (!condition.getAsBoolean()) {
             if (System.currentTimeMillis() > deadline) {
                 Assertions.fail("Timed out waiting for " + description);
