@@ -156,6 +156,7 @@ public class ControllerServlet extends freemarker.ext.jakarta.servlet.Freemarker
 		TemplateModel template = super.createModel(wrapper, servletContext, request, response);
 		if (template instanceof AllHttpScopesHashModel) {
 			AllHttpScopesHashModel hashModel = ((AllHttpScopesHashModel) template);
+			hashModel.put("RequestParameterValues", new RequestParameterValuesHashModel(request, wrapper));
 			ServletContextHashModel servletContextModel = (ServletContextHashModel) hashModel.get(KEY_APPLICATION);
 			if (null == servletContextModel.getServlet()) {
 				ServletContextHashModel newServletContextModel = new ServletContextHashModel(this, wrapper);

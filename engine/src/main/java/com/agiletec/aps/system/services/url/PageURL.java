@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Rappresenta un URL ad una pagina del sistema. Oggetti di questa classe
@@ -141,7 +142,9 @@ public class PageURL implements Serializable {
 		if (null != paramsMap && !paramsMap.isEmpty()) {
 			for(String key : paramsMap.keySet()) {
 				if (null == parametersToExclude || !parametersToExclude.contains(key)) {
-					this.addParam(key, req.getParameter(key));
+					String[] values = req.getParameterValues(key);
+					String fullString = StringUtils.join(values, PARAMETERS_SEAPARATOR);
+					this.addParam(key, fullString);
 				}
 			}
 		}
@@ -170,5 +173,6 @@ public class PageURL implements Serializable {
 	private Map<String, String> params;
 	
 	private boolean escapeAmp = true;
-	
+	public static final String PARAMETERS_SEAPARATOR = "__ENTANDO_PARAM_SEP__";
+
 }

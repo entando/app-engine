@@ -694,7 +694,7 @@
 				Used only when paramRepeat="true".]]></description>
 			<name>excludeParameters</name>
 			<required>no</required>
-			<rtexprvalue>false</rtexprvalue>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description><![CDATA[Override of the configuration of baseUrl mode.

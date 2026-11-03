@@ -39,7 +39,7 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
         int count = values.length;
         String[] encodedValues = new String[count];
         for (int i = 0; i < count; i++) {
-            encodedValues[i] = validatedParameter(values[i]);
+            encodedValues[i] = validateValue(parameter, values[i]);
         }
         return encodedValues;
     }
@@ -56,6 +56,10 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
 
     private String validatedParameter(String name) {
         String value = super.getParameter(name);
+        return validateValue(name, value);
+    }
+
+    private String validateValue(String name, String value) {
         if (StringUtils.isBlank(value)) {
             return value;
         }
