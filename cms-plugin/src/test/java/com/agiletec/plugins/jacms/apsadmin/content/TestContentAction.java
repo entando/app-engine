@@ -24,7 +24,10 @@ import java.util.Map;
 
 import com.agiletec.aps.system.common.entity.model.EntitySearchFilter;
 import com.agiletec.aps.system.common.entity.model.attribute.BooleanAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.HypertextAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.MonoTextAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.MonoListAttribute;
+import com.agiletec.aps.system.common.entity.model.attribute.TextAttribute;
 import com.agiletec.aps.system.services.group.Group;
 import com.agiletec.aps.system.services.lang.ILangManager;
 import com.agiletec.aps.system.services.page.IPage;
@@ -661,6 +664,98 @@ class TestContentAction extends AbstractBaseTestContentAction {
         }
     }
     
+    private static final String HASHTAG_TEXT = "Il Guardasigilli alla presentazione dello studio "
+            + "'#Introspezioni vol. II - Costruire il futuro in un mondo che cambia'";
+    private static final String HASHTAG_HYPERTEXT = "<p>presentazione dello studio &#39;#Introspezioni vol. II&#39;. "
+            + "L&#39;evento</p>\r\n\r\n<p>Lo studio #Introspezioni, promosso dal ministero</p>";
+    private static final String LINE_COMMENT_OR_TRUE = "x' OR '1'='1' #";
+    private static final String LINE_COMMENT_QUOTE = "x'#";
+    private static final String LINE_COMMENT_UNION = "' UNION SELECT contentid FROM contents #";
+
+    @Test
+    void testAutosaveStoresHashtagValuesAsLiteralText() throws Throwable {
+        String contentTypeCode = "ALL";
+        String contentOnSessionMarker = this.extractSessionMarker(contentTypeCode, ApsAdminSystemConstants.ADD);
+        EntitySearchFilter typeFilter = new EntitySearchFilter(IContentManager.ENTITY_TYPE_CODE_FILTER_KEY, false, contentTypeCode, false);
+        EntitySearchFilter[] typeFilters = {typeFilter};
+        int contentsOfTypeBefore = this.getContentManager().searchId(typeFilters).size();
+        try {
+            String result = this.executeCreateNewVoid(contentTypeCode, HASHTAG_TEXT,
+                    Content.STATUS_DRAFT, Group.FREE_GROUP_NAME, "admin");
+            assertEquals(Action.SUCCESS, result);
+
+            this.initContentAction("/do/jacms/Content/Ajax", "autosave", contentOnSessionMarker);
+            this.setUserOnSession("admin");
+            this.addParameter("descr", HASHTAG_TEXT);
+            this.addParameter("Text:it_Text", HASHTAG_TEXT);
+            this.addParameter("Text:en_Text", LINE_COMMENT_OR_TRUE);
+            this.addParameter("Longtext:it_Longtext", LINE_COMMENT_QUOTE);
+            this.addParameter("Monotext:Monotext", LINE_COMMENT_UNION);
+            this.addParameter("Hypertext:it_Hypertext", HASHTAG_HYPERTEXT);
+            result = this.executeAction();
+            assertEquals(Action.SUCCESS, result);
+            assertTrue(this.getAction().getFieldErrors().isEmpty());
+
+            String contentId = this.getContentOnEdit(contentOnSessionMarker).getId();
+            assertNotNull(contentId);
+            Content stored = this.getContentManager().loadContent(contentId, false);
+            assertEquals(HASHTAG_TEXT, stored.getDescription());
+            assertEquals(HASHTAG_TEXT, ((TextAttribute) stored.getAttribute("Text")).getTextForLang("it"));
+            assertEquals(LINE_COMMENT_OR_TRUE, ((TextAttribute) stored.getAttribute("Text")).getTextForLang("en"));
+            assertEquals(LINE_COMMENT_QUOTE, ((TextAttribute) stored.getAttribute("Longtext")).getTextForLang("it"));
+            assertEquals(LINE_COMMENT_UNION, ((MonoTextAttribute) stored.getAttribute("Monotext")).getText());
+            assertEquals(HASHTAG_HYPERTEXT.replace("\r\n", "\n"), ((HypertextAttribute) stored.getAttribute("Hypertext")).getTextForLang("it"));
+            assertEquals(contentsOfTypeBefore + 1, this.getContentManager().searchId(typeFilters).size());
+        } finally {
+            this.removeTestContent(HASHTAG_TEXT);
+        }
+    }
+
+    @Test
+    void testAutosaveHashtagValueIsSearchedAsLiteralText() throws Throwable {
+        String contentTypeCode = "EVN";
+        String descr = "ESB-1280 hashtag search test";
+        String contentOnSessionMarker = this.extractSessionMarker(contentTypeCode, ApsAdminSystemConstants.ADD);
+        List<String> groups = List.of(Group.FREE_GROUP_NAME);
+        try {
+            String result = this.executeCreateNewVoid(contentTypeCode, descr,
+                    Content.STATUS_DRAFT, Group.FREE_GROUP_NAME, "admin");
+            assertEquals(Action.SUCCESS, result);
+
+            this.initContentAction("/do/jacms/Content/Ajax", "autosave", contentOnSessionMarker);
+            this.setUserOnSession("admin");
+            this.addParameter("descr", descr);
+            this.addParameter("Text:it_Titolo", HASHTAG_TEXT);
+            result = this.executeAction();
+            assertEquals(Action.SUCCESS, result);
+            assertTrue(this.getAction().getFieldErrors().isEmpty());
+            String contentId = this.getContentOnEdit(contentOnSessionMarker).getId();
+            assertNotNull(contentId);
+
+            List<String> exactMatch = this.getContentManager().loadWorkContentsId(
+                    new EntitySearchFilter[]{this.titleFilter(HASHTAG_TEXT, false)}, groups);
+            assertEquals(List.of(contentId), exactMatch);
+
+            List<String> likeMatch = this.getContentManager().loadWorkContentsId(
+                    new EntitySearchFilter[]{this.titleFilter("#Introspezioni", true)}, groups);
+            assertEquals(List.of(contentId), likeMatch);
+
+            for (String payload : new String[]{LINE_COMMENT_OR_TRUE, LINE_COMMENT_QUOTE, LINE_COMMENT_UNION}) {
+                List<String> injected = this.getContentManager().loadWorkContentsId(
+                        new EntitySearchFilter[]{this.titleFilter(payload, false)}, groups);
+                assertTrue(injected.isEmpty(), payload);
+            }
+        } finally {
+            this.removeTestContent(descr);
+        }
+    }
+
+    private EntitySearchFilter titleFilter(String value, boolean like) {
+        EntitySearchFilter filter = new EntitySearchFilter("Titolo", true, value, like);
+        filter.setLangCode("it");
+        return filter;
+    }
+
     private void removeTestContent(String descr) throws Throwable {
         EntitySearchFilter filter1 = new EntitySearchFilter(IContentManager.CONTENT_MODIFY_DATE_FILTER_KEY, false);
         filter1.setOrder(EntitySearchFilter.DESC_ORDER);
