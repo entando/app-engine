@@ -28,6 +28,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
     private static final EntLogging.EntLogger _logger =  EntLogging.EntLogFactory.getSanitizedLogger(KeycloakSecurityConfig.class);
 
     public static final String API_PATH = "/api";
+    private static final String HEALTH_PATH = API_PATH + "/health";
 
     private final KeycloakAuthenticationFilter keycloakAuthenticationFilter;
     private final KeycloakConfiguration configuration;
@@ -51,7 +52,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
     @Bean
     @Order(60)
     public SecurityFilterChain healthSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher(new AntPathRequestMatcher("/api/health"))
+        http.securityMatcher(new AntPathRequestMatcher(HEALTH_PATH))
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(RequestCacheConfigurer::disable)
@@ -72,7 +73,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
 
             http.authorizeHttpRequests(authorize -> {
                 authorize
-                        .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher(HEALTH_PATH)).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()
@@ -111,7 +112,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
 
             http.authorizeHttpRequests(authorize -> {
                 authorize
-                        .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher(HEALTH_PATH)).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()
