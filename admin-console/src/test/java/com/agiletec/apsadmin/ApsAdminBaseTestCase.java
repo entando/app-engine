@@ -74,7 +74,7 @@ public class ApsAdminBaseTestCase {
             refresh = true;
         }
         RequestContext reqCtx = BaseTestCase.createRequestContext(applicationContext, servletContext);
-        request = BaseTestCase.createRequest();
+        request = BaseTestCase.createRequest(servletContext);
         reqCtx.setRequest(request);
         request.setAttribute(RequestContext.REQCTX, reqCtx);
         response = new MockHttpServletResponse();

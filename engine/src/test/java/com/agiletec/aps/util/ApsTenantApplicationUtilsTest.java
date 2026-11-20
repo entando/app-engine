@@ -14,6 +14,7 @@
 package com.agiletec.aps.util;
 
 import java.util.Optional;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.assertj.core.api.Assertions;
@@ -24,6 +25,9 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.web.context.WebApplicationContext;
 
 @ExtendWith(MockitoExtension.class)
 class ApsTenantApplicationUtilsTest {
@@ -37,7 +41,7 @@ class ApsTenantApplicationUtilsTest {
     void shouldExtractCorrectTenantDomainWithEveryInput(){
 
         try(MockedStatic<ApsWebApplicationUtils> apsWebApplicationUtils = Mockito.mockStatic(ApsWebApplicationUtils.class)){
-            apsWebApplicationUtils.when(() -> ApsWebApplicationUtils.getBean(ITenantManager.class,httpServletRequest)).thenReturn(tenantManager);
+            apsWebApplicationUtils.when(() -> ApsWebApplicationUtils.getBean(Mockito.eq(ITenantManager.class), Mockito.<ServletContext>any())).thenReturn(tenantManager);
 
             Mockito.when(httpServletRequest.getHeader("X-ENTANDO-TENANTCODE")).thenReturn("tenant2");
             Mockito.when(httpServletRequest.getServerName()).thenReturn("www.test.com");
@@ -70,6 +74,22 @@ class ApsTenantApplicationUtilsTest {
             res= ApsTenantApplicationUtils.extractCurrentTenantCode(httpServletRequest);
             Assertions.assertThat(res).isNotPresent();
         }
+    }
+
+    @Test
+    void shouldNotCreateSessionWhenExtractingTenantFromDomain() {
+        MockServletContext servletContext = new MockServletContext();
+        WebApplicationContext wac = Mockito.mock(WebApplicationContext.class);
+        Mockito.when(wac.getBean(ITenantManager.class)).thenReturn(tenantManager);
+        servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, wac);
+        MockHttpServletRequest request = new MockHttpServletRequest(servletContext);
+        request.setServerName("www.test.com");
+        Mockito.when(tenantManager.getTenantCodeByDomain("www.test.com")).thenReturn("wwwCode");
+
+        Optional<String> res = ApsTenantApplicationUtils.extractCurrentTenantCode(request);
+
+        Assertions.assertThat(res).contains("wwwCode");
+        Assertions.assertThat(request.getSession(false)).isNull();
     }
 
     @Test
