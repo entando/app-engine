@@ -262,7 +262,8 @@
                         <runOrder>alphabetical</runOrder>
                         <excludes>
                             <exclude>**/*BaseTestCase*</exclude>
-                            <exclude>**/Abstract*</exclude>
+                            <exclude>**/AbstractControllerTest.java</exclude>
+                            <exclude>**/AbstractControllerIntegrationTest.java</exclude>
                         </excludes>
                         <environmentVariables>
                             <ROOT_LOG_LEVEL>WARN</ROOT_LOG_LEVEL>
