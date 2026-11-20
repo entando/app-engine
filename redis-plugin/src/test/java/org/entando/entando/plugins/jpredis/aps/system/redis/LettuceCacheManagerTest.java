@@ -54,6 +54,18 @@ class LettuceCacheManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
+    void builderShouldUseLegacyFixedFrontend() {
+        LettuceCacheManager builtCacheManager = LettuceCacheManager.builder(redisCacheWriter)
+                .withInitialCacheConfigurations(Map.of("test", RedisCacheConfiguration.defaultCacheConfig()))
+                .cacheFrontend(cacheFrontend).build();
+        builtCacheManager.afterPropertiesSet();
+        Mockito.when(cacheFrontend.get("test::testKey")).thenReturn("testValue");
+
+        Assertions.assertEquals("testValue", builtCacheManager.getCache("test").get("testKey").get());
+    }
+
+    @Test
     void existingCacheShouldReadNewFrontend() {
         AtomicReference<CacheFrontend<String, Object>> current = new AtomicReference<>(cacheFrontend);
         LettuceCacheManager supplierCacheManager = new LettuceCacheManager(redisCacheWriter,
