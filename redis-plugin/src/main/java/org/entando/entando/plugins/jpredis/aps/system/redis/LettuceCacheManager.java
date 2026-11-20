@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.transaction.AbstractTransactionSupportingCacheManager;
@@ -58,7 +60,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	private final RedisCacheConfiguration defaultCacheConfig;
 	private final Map<String, RedisCacheConfiguration> initialCacheConfiguration;
 	private final boolean allowInFlightCacheCreation;
-    private CacheFrontend<String, Object> cacheFrontend;
+    private final AtomicReference<Supplier<CacheFrontend<String, Object>>> cacheFrontendSupplier = new AtomicReference<>();
 
 	/**
 	 * Creates new {@link RedisCacheManager} using given {@link RedisCacheWriter} and default
@@ -68,18 +70,18 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	 * @param defaultCacheConfiguration must not be {@literal null}. Maybe just use
 	 *          {@link RedisCacheConfiguration#defaultCacheConfig()}.
 	 * @param allowInFlightCacheCreation allow create unconfigured caches.
-     * @param cacheFrontend Allow to add Client-side caching support
+     * @param cacheFrontendSupplier Allow to add Client-side caching support
 	 * @since 2.0.4
 	 */
 	private LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
-			boolean allowInFlightCacheCreation, CacheFrontend<String, Object> cacheFrontend) {
+			boolean allowInFlightCacheCreation, Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier) {
 		Assert.notNull(cacheWriter, "CacheWriter must not be null!");
 		Assert.notNull(defaultCacheConfiguration, "DefaultCacheConfiguration must not be null!");
 		this.cacheWriter = cacheWriter;
 		this.defaultCacheConfig = defaultCacheConfiguration;
 		this.initialCacheConfiguration = new LinkedHashMap<>();
 		this.allowInFlightCacheCreation = allowInFlightCacheCreation;
-        this.cacheFrontend = cacheFrontend;
+        this.cacheFrontendSupplier.set(cacheFrontendSupplier);
 	}
 
 	/**
@@ -93,14 +95,26 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	 *          Must not be {@literal null}.
 	 * @param allowInFlightCacheCreation if set to {@literal false} this cache manager is limited to the initial cache
 	 *          configurations and will not create new caches at runtime.
-     * @param cacheFrontend Allow to add Client-side caching support
+     * @param cacheFrontendSupplier Allow to add Client-side caching support
 	 * @since 2.0.4
 	 */
 	public LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
-			Map<String, RedisCacheConfiguration> initialCacheConfigurations, boolean allowInFlightCacheCreation, CacheFrontend<String, Object> cacheFrontend) {
-		this(cacheWriter, defaultCacheConfiguration, allowInFlightCacheCreation, cacheFrontend);
+			Map<String, RedisCacheConfiguration> initialCacheConfigurations, boolean allowInFlightCacheCreation,
+			Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier) {
+		this(cacheWriter, defaultCacheConfiguration, allowInFlightCacheCreation, cacheFrontendSupplier);
 		Assert.notNull(initialCacheConfigurations, "InitialCacheConfigurations must not be null!");
 		this.initialCacheConfiguration.putAll(initialCacheConfigurations);
+	}
+
+	/**
+	 * @deprecated use {@link #LettuceCacheManager(RedisCacheWriter, RedisCacheConfiguration, Map, boolean, Supplier)}
+	 * instead
+	 */
+	@Deprecated(since = "7.5.4")
+	public LettuceCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
+			Map<String, RedisCacheConfiguration> initialCacheConfigurations, boolean allowInFlightCacheCreation, CacheFrontend<String, Object> cacheFrontend) {
+		this(cacheWriter, defaultCacheConfiguration, initialCacheConfigurations, allowInFlightCacheCreation,
+				() -> cacheFrontend);
 	}
 
 	/**
@@ -167,7 +181,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 	 * @return never {@literal null}.
 	 */
 	protected RedisCache createRedisCache(String name, @Nullable RedisCacheConfiguration cacheConfig) {
-		return new LettuceCache(name, cacheWriter, cacheConfig != null ? cacheConfig : defaultCacheConfig, this.cacheFrontend);
+		return new LettuceCache(name, cacheWriter, cacheConfig != null ? cacheConfig : defaultCacheConfig, this.cacheFrontendSupplier.get());
 	}
 
 	@Override
@@ -178,8 +192,12 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 		return super.getCache(prefix + name);
 	}
 
+	/**
+	 * @deprecated use {@link RedisCacheManagerBuilder#cacheFrontendSupplier(Supplier)} instead
+	 */
+	@Deprecated(since = "7.5.4")
 	public void updateCacheFrontend(CacheFrontend<String, Object> cacheFrontend) {
-		this.cacheFrontend = cacheFrontend;
+		this.cacheFrontendSupplier.set(() -> cacheFrontend);
 	}
 
 	/**
@@ -197,7 +215,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 		private final Map<String, RedisCacheConfiguration> initialCaches = new LinkedHashMap<>();
 		private boolean enableTransactions;
 		boolean allowInFlightCacheCreation = true;
-        private CacheFrontend<String, Object> cacheFrontend;
+        private Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier;
         
 		private RedisCacheManagerBuilder(RedisCacheWriter cacheWriter) {
 			this.cacheWriter = cacheWriter;
@@ -276,9 +294,17 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 			return this;
 		}
 
-        public RedisCacheManagerBuilder cacheFrontend(CacheFrontend<String, Object> cacheFrontend) {
-            this.cacheFrontend = cacheFrontend;
+        public RedisCacheManagerBuilder cacheFrontendSupplier(Supplier<CacheFrontend<String, Object>> cacheFrontendSupplier) {
+            this.cacheFrontendSupplier = cacheFrontendSupplier;
             return this;
+        }
+
+        /**
+         * @deprecated use {@link #cacheFrontendSupplier(Supplier)} instead
+         */
+        @Deprecated(since = "7.5.4")
+        public RedisCacheManagerBuilder cacheFrontend(CacheFrontend<String, Object> cacheFrontend) {
+            return this.cacheFrontendSupplier(() -> cacheFrontend);
         }
 
 		/**
@@ -303,7 +329,7 @@ public class LettuceCacheManager extends AbstractTransactionSupportingCacheManag
 		 */
 		public LettuceCacheManager build() {
 			LettuceCacheManager cm = new LettuceCacheManager(cacheWriter, 
-                    defaultCacheConfiguration, initialCaches, allowInFlightCacheCreation, cacheFrontend);
+                    defaultCacheConfiguration, initialCaches, allowInFlightCacheCreation, cacheFrontendSupplier);
 			cm.setTransactionAware(enableTransactions);
 			return cm;
 		}
