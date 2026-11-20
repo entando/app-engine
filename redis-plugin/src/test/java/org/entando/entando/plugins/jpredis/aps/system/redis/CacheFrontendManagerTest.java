@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -183,7 +182,8 @@ class CacheFrontendManagerTest {
                 ClientSideCaching.class)) {
             Verification enableCall = () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any());
             CacheFrontend<String, Object> next = Mockito.mock(CacheFrontend.class);
-            clientSideCachingMockedStatic.when(enableCall).thenReturn(Mockito.mock(CacheFrontend.class))
+            CacheFrontend<String, Object> first = Mockito.mock(CacheFrontend.class);
+            clientSideCachingMockedStatic.when(enableCall).thenReturn(first)
                     .thenReturn(next);
 
             overriding.getCacheFrontend();
@@ -202,7 +202,8 @@ class CacheFrontendManagerTest {
         try (MockedStatic<ClientSideCaching> clientSideCachingMockedStatic = Mockito.mockStatic(
                 ClientSideCaching.class)) {
             Verification enableCall = () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any());
-            clientSideCachingMockedStatic.when(enableCall).thenReturn(Mockito.mock(CacheFrontend.class));
+            CacheFrontend<String, Object> first = Mockito.mock(CacheFrontend.class);
+            clientSideCachingMockedStatic.when(enableCall).thenReturn(first);
 
             cacheFrontendManager.getCacheFrontend();
             lastListener().onRedisConnected(null, ADDRESS);
@@ -218,7 +219,8 @@ class CacheFrontendManagerTest {
         try (MockedStatic<ClientSideCaching> clientSideCachingMockedStatic = Mockito.mockStatic(
                 ClientSideCaching.class)) {
             Verification enableCall = () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any());
-            clientSideCachingMockedStatic.when(enableCall).thenReturn(Mockito.mock(CacheFrontend.class));
+            CacheFrontend<String, Object> first = Mockito.mock(CacheFrontend.class);
+            clientSideCachingMockedStatic.when(enableCall).thenReturn(first);
 
             cacheFrontendManager.getCacheFrontend();
             CacheAccessor<String, Object> accessor = firstAccessor(clientSideCachingMockedStatic);
@@ -260,7 +262,8 @@ class CacheFrontendManagerTest {
         try (MockedStatic<ClientSideCaching> clientSideCachingMockedStatic = Mockito.mockStatic(
                 ClientSideCaching.class)) {
             Verification enableCall = () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any());
-            clientSideCachingMockedStatic.when(enableCall).thenReturn(Mockito.mock(CacheFrontend.class));
+            CacheFrontend<String, Object> first = Mockito.mock(CacheFrontend.class);
+            clientSideCachingMockedStatic.when(enableCall).thenReturn(first);
 
             cacheFrontendManager.getCacheFrontend();
             RedisConnectionStateListener listener = lastListener();
@@ -280,7 +283,8 @@ class CacheFrontendManagerTest {
                 ClientSideCaching.class)) {
             Verification enableCall = () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any());
             CacheFrontend<String, Object> next = Mockito.mock(CacheFrontend.class);
-            clientSideCachingMockedStatic.when(enableCall).thenReturn(Mockito.mock(CacheFrontend.class))
+            CacheFrontend<String, Object> first = Mockito.mock(CacheFrontend.class);
+            clientSideCachingMockedStatic.when(enableCall).thenReturn(first)
                     .thenReturn(next);
 
             cacheFrontendManager.getCacheFrontend();
@@ -299,7 +303,8 @@ class CacheFrontendManagerTest {
         try (MockedStatic<ClientSideCaching> clientSideCachingMockedStatic = Mockito.mockStatic(
                 ClientSideCaching.class)) {
             Verification enableCall = () -> ClientSideCaching.enable(Mockito.any(), Mockito.any(), Mockito.any());
-            clientSideCachingMockedStatic.when(enableCall).thenReturn(Mockito.mock(CacheFrontend.class));
+            CacheFrontend<String, Object> first = Mockito.mock(CacheFrontend.class);
+            clientSideCachingMockedStatic.when(enableCall).thenReturn(first);
 
             cacheFrontendManager.getCacheFrontend();
             RedisConnectionStateListener listener = lastListener();

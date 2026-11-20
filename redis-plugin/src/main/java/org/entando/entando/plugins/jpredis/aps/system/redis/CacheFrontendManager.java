@@ -118,11 +118,6 @@ public class CacheFrontendManager {
         return generation;
     }
 
-    private void requestRefresh(Generation generation) {
-        this.refreshTarget.set(generation);
-        this.scheduleRefresh(0);
-    }
-
     private void scheduleRefresh(long delayMillis) {
         if (this.closing || !this.refreshScheduled.compareAndSet(false, true)) {
             return;
@@ -187,7 +182,12 @@ public class CacheFrontendManager {
             this.generation.accessor().disable();
             log.warn("Front-end-cache connection reconnected to '{}': local cache disabled, refresh scheduled",
                     socketAddress);
-            CacheFrontendManager.this.requestRefresh(this.generation);
+            this.requestRefresh();
+        }
+
+        private void requestRefresh() {
+            CacheFrontendManager.this.refreshTarget.set(this.generation);
+            CacheFrontendManager.this.scheduleRefresh(0);
         }
     }
 
