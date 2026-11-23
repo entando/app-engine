@@ -30,6 +30,7 @@ import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStringCommands.SetOption;
+import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.types.Expiration;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -54,6 +55,22 @@ import org.springframework.util.Assert;
  * @since 2.0
  */
 class DefaultLettuceCacheWriter implements RedisCacheWriter, IFCacheWithPipeline {
+
+    // KEYS[1] = key; ARGV[1] = expected value, ARGV[2] = '1' when the key is expected to be absent,
+    // ARGV[3] = new value, ARGV[4] = TTL in ms, '0' for none
+    static final byte[] COMPARE_AND_SET_SCRIPT = String.join("\n",
+            "local cur = redis.call('GET', KEYS[1])",
+            "if ARGV[2] == '1' then",
+            "  if cur then return 0 end",
+            "elseif cur ~= ARGV[1] then",
+            "  return 0",
+            "end",
+            "if ARGV[4] == '0' then",
+            "  redis.call('SET', KEYS[1], ARGV[3])",
+            "else",
+            "  redis.call('SET', KEYS[1], ARGV[3], 'PX', ARGV[4])",
+            "end",
+            "return 1").getBytes(StandardCharsets.UTF_8);
 
 	private final RedisConnectionFactory connectionFactory;
 	private final Duration sleepTime;
@@ -278,6 +295,39 @@ class DefaultLettuceCacheWriter implements RedisCacheWriter, IFCacheWithPipeline
 
     private RedisConnection determineConnection() {
         return (pipelineConnection != null) ? pipelineConnection : connectionFactory.getConnection();
+    }
+
+    /**
+     * Reads the key from Redis on a connection of its own, never the pipeline connection.
+     */
+    byte[] getDirect(String name, byte[] key) {
+        Assert.notNull(name, "Name must not be null!");
+        Assert.notNull(key, "Key must not be null!");
+        try (RedisConnection connection = connectionFactory.getConnection()) {
+            checkAndPotentiallyWaitUntilUnlocked(name, connection);
+            return connection.get(key);
+        }
+    }
+
+    /**
+     * Sets the key to {@code value} only if it still holds exactly {@code expected}, or is still absent when
+     * {@code expected} is null. Runs on a connection of its own, never the pipeline connection.
+     *
+     * @return true if the value was written
+     */
+    boolean compareAndSet(String name, byte[] key, @Nullable byte[] expected, byte[] value, @Nullable Duration ttl) {
+        Assert.notNull(name, "Name must not be null!");
+        Assert.notNull(key, "Key must not be null!");
+        Assert.notNull(value, "Value must not be null!");
+        byte[] expectedArg = (expected == null) ? new byte[0] : expected;
+        byte[] expectAbsentArg = ((expected == null) ? "1" : "0").getBytes(StandardCharsets.UTF_8);
+        byte[] ttlArg = String.valueOf(shouldExpireWithin(ttl) ? ttl.toMillis() : 0).getBytes(StandardCharsets.UTF_8);
+        try (RedisConnection connection = connectionFactory.getConnection()) {
+            checkAndPotentiallyWaitUntilUnlocked(name, connection);
+            Long applied = connection.eval(COMPARE_AND_SET_SCRIPT, ReturnType.INTEGER, 1,
+                    key, expectedArg, expectAbsentArg, value, ttlArg);
+            return applied != null && applied == 1L;
+        }
     }
 
     // ESB-678: Added withStatisticsCollector method for Spring Data Redis compatibility

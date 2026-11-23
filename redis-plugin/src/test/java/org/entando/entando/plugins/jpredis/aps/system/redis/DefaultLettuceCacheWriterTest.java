@@ -13,6 +13,7 @@ import org.springframework.data.redis.cache.CacheStatisticsCollector;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStringCommands.SetOption;
+import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.types.Expiration;
 
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -637,5 +640,75 @@ class DefaultLettuceCacheWriterTest {
         assertArrayEquals(value2, cacheWriter.get("cache", key2));
 
         verify(connection, times(2)).close();
+    }
+
+    @Test
+    void getDirectShouldUseAFreshConnectionWhilePipelineIsOpen() {
+        RedisConnection pipelineConnection = mock(RedisConnection.class);
+        when(connectionFactory.getConnection()).thenReturn(pipelineConnection, connection);
+        when(pipelineConnection.isPipelined()).thenReturn(true);
+        byte[] key = "key".getBytes();
+        byte[] value = "value".getBytes();
+        when(connection.get(key)).thenReturn(value);
+
+        cacheWriter.openPipeline();
+        assertArrayEquals(value, cacheWriter.getDirect("cache", key));
+
+        verify(pipelineConnection, never()).get(any(byte[].class));
+        verify(connection).close();
+        verify(pipelineConnection, never()).close();
+    }
+
+    @Test
+    void compareAndSetShouldUseAFreshConnectionWhilePipelineIsOpen() {
+        RedisConnection pipelineConnection = mock(RedisConnection.class);
+        when(connectionFactory.getConnection()).thenReturn(pipelineConnection, connection);
+        when(pipelineConnection.isPipelined()).thenReturn(true);
+        byte[] key = "key".getBytes();
+        byte[] expected = "old".getBytes();
+        byte[] value = "new".getBytes();
+        when(connection.<Long>eval(aryEq(DefaultLettuceCacheWriter.COMPARE_AND_SET_SCRIPT), eq(ReturnType.INTEGER),
+                eq(1), aryEq(key), aryEq(expected), aryEq(bytes("0")), aryEq(value), aryEq(bytes("0"))))
+                .thenReturn(1L);
+
+        cacheWriter.openPipeline();
+        assertTrue(cacheWriter.compareAndSet("cache", key, expected, value, null));
+
+        verify(pipelineConnection, never()).eval(any(), any(), anyInt(), any());
+        verify(connection).close();
+        verify(pipelineConnection, never()).close();
+    }
+
+    @Test
+    void compareAndSetShouldExpectAbsenceWhenExpectedIsNull() {
+        byte[] key = "key".getBytes();
+        byte[] value = "new".getBytes();
+        when(connection.<Long>eval(aryEq(DefaultLettuceCacheWriter.COMPARE_AND_SET_SCRIPT), eq(ReturnType.INTEGER),
+                eq(1), aryEq(key), aryEq(new byte[0]), aryEq(bytes("1")), aryEq(value), aryEq(bytes("0"))))
+                .thenReturn(0L);
+
+        assertFalse(cacheWriter.compareAndSet("cache", key, null, value, Duration.ZERO));
+        verify(connection).close();
+    }
+
+    @Test
+    void compareAndSetShouldPassTheTtlInMilliseconds() {
+        byte[] key = "key".getBytes();
+        byte[] expected = "old".getBytes();
+        byte[] value = "new".getBytes();
+        when(connection.<Long>eval(aryEq(DefaultLettuceCacheWriter.COMPARE_AND_SET_SCRIPT), eq(ReturnType.INTEGER),
+                eq(1), aryEq(key), aryEq(expected), aryEq(bytes("0")), aryEq(value), aryEq(bytes("300000"))))
+                .thenReturn(1L);
+
+        assertTrue(cacheWriter.compareAndSet("cache", key, expected, value, Duration.ofMinutes(5)));
+    }
+
+    @Test
+    void compareAndSetShouldReportNotAppliedOnNullReply() {
+        assertFalse(cacheWriter.compareAndSet("cache", "key".getBytes(), "old".getBytes(), "new".getBytes(), null));
+    }
+
+    private static byte[] bytes(String value) {
+        return value.getBytes(StandardCharsets.UTF_8);
     }
 }

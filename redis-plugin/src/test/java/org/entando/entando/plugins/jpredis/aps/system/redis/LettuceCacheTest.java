@@ -19,6 +19,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
@@ -28,9 +29,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -85,6 +88,114 @@ class LettuceCacheTest {
         Assertions.assertEquals("value2", cache.get("key").get());
     }
 
+    @Test
+    void updateAtomicallyShouldRetryAfterAFailedCompareAndSet() {
+        DefaultLettuceCacheWriter writer = Mockito.mock(DefaultLettuceCacheWriter.class);
+        LettuceCache cache = cacheOver(writer, Duration.ZERO);
+        byte[] first = serialize(List.of("a"));
+        byte[] second = serialize(List.of("a", "x"));
+        Mockito.when(writer.getDirect(Mockito.eq("CacheName"), Mockito.any())).thenReturn(first, second);
+        Mockito.when(writer.compareAndSet(Mockito.eq("CacheName"), Mockito.any(), Mockito.any(), Mockito.any(),
+                Mockito.any())).thenReturn(false, true);
+
+        List<String> result = cache.updateAtomically("key", (List<String> codes) -> append(codes, "b"));
+
+        Assertions.assertEquals(List.of("a", "x", "b"), result);
+        Mockito.verify(writer).compareAndSet(Mockito.eq("CacheName"), Mockito.any(), AdditionalMatchers.aryEq(first),
+                Mockito.any(), Mockito.any());
+        Mockito.verify(writer).compareAndSet(Mockito.eq("CacheName"), Mockito.any(), AdditionalMatchers.aryEq(second),
+                Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void updateAtomicallyShouldGiveUpAfterMaxAttempts() {
+        DefaultLettuceCacheWriter writer = Mockito.mock(DefaultLettuceCacheWriter.class);
+        LettuceCache cache = cacheOver(writer, Duration.ZERO);
+        Mockito.when(writer.getDirect(Mockito.eq("CacheName"), Mockito.any())).thenReturn(serialize(List.of("a")));
+        Mockito.when(writer.compareAndSet(Mockito.eq("CacheName"), Mockito.any(), Mockito.any(), Mockito.any(),
+                Mockito.any())).thenReturn(false);
+
+        Assertions.assertThrows(IllegalStateException.class,
+                () -> cache.updateAtomically("key", (List<String> codes) -> append(codes, "b")));
+        Mockito.verify(writer, Mockito.times(LettuceCache.MAX_ATTEMPTS)).compareAndSet(Mockito.eq("CacheName"),
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void updateAtomicallyShouldNotWriteWhenUnchanged() {
+        DefaultLettuceCacheWriter writer = Mockito.mock(DefaultLettuceCacheWriter.class);
+        LettuceCache cache = cacheOver(writer, Duration.ZERO);
+        Mockito.when(writer.getDirect(Mockito.eq("CacheName"), Mockito.any())).thenReturn(serialize(List.of("a")));
+
+        List<String> result = cache.updateAtomically("key", (List<String> codes) -> codes);
+
+        Assertions.assertEquals(List.of("a"), result);
+        Mockito.verify(writer, Mockito.never()).compareAndSet(Mockito.any(), Mockito.any(), Mockito.any(),
+                Mockito.any(), Mockito.any());
+        Mockito.verify(writer, Mockito.never()).put(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void updateAtomicallyShouldPassTheConfiguredTtlAndExpectAbsenceForAMissingKey() {
+        DefaultLettuceCacheWriter writer = Mockito.mock(DefaultLettuceCacheWriter.class);
+        LettuceCache cache = cacheOver(writer, Duration.ofMinutes(5));
+        Mockito.when(writer.compareAndSet(Mockito.eq("CacheName"), Mockito.any(), Mockito.isNull(), Mockito.any(),
+                Mockito.eq(Duration.ofMinutes(5)))).thenReturn(true);
+
+        String result = cache.updateAtomically("key", (String current) -> current == null ? "created" : current);
+
+        Assertions.assertEquals("created", result);
+        Mockito.verify(writer).compareAndSet(Mockito.eq("CacheName"),
+                AdditionalMatchers.aryEq("CacheName::key".getBytes(StandardCharsets.UTF_8)), Mockito.isNull(),
+                AdditionalMatchers.aryEq(serialize("created")), Mockito.eq(Duration.ofMinutes(5)));
+    }
+
+    @Test
+    void updateShouldReadTheCodesListFromRedisNotFromTheClientSideCache() {
+        DefaultLettuceCacheWriter writer = Mockito.mock(DefaultLettuceCacheWriter.class);
+        LettuceCache cache = cacheOver(writer, Duration.ZERO);
+        Mockito.lenient().when(cacheFrontend.get("CacheName::" + IPermissionCacheWrapper.PERMISSION_CODES_CACHE_NAME))
+                .thenReturn(new ArrayList<>());
+        Mockito.when(writer.getDirect(Mockito.eq("CacheName"), Mockito.any())).thenReturn(serialize(List.of("perm_a")));
+        CacheManager cacheManager = Mockito.mock(CacheManager.class);
+        Mockito.when(cacheManager.getCache(IRoleManager.ROLE_MANAGER_CACHE_NAME)).thenReturn(cache);
+        PermissionCacheWrapper wrapper = new PermissionCacheWrapper();
+        wrapper.setSpringCacheManager(cacheManager);
+
+        Assertions.assertDoesNotThrow(() -> wrapper.updatePermission(permission("perm_a")));
+        Mockito.verify(cacheFrontend, Mockito.never()).get(Mockito.anyString());
+        Mockito.verify(writer).put(Mockito.eq("CacheName"), Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void updateAtomicallyWithAnotherWriterShouldReadAndPutUnderALocalLock() {
+        LettuceCache cache = cacheOver(cacheWriter, Duration.ZERO);
+        Mockito.when(cacheWriter.get(Mockito.eq("CacheName"), Mockito.any())).thenReturn(serialize(List.of("a")));
+
+        List<String> result = cache.updateAtomically("key", (List<String> codes) -> append(codes, "b"));
+
+        Assertions.assertEquals(List.of("a", "b"), result);
+        Mockito.verify(cacheWriter).put(Mockito.eq("CacheName"),
+                AdditionalMatchers.aryEq("CacheName::key".getBytes(StandardCharsets.UTF_8)),
+                AdditionalMatchers.aryEq(serialize(List.of("a", "b"))), Mockito.any());
+    }
+
+    private LettuceCache cacheOver(RedisCacheWriter writer, Duration ttl) {
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig().entryTtl(ttl)
+                .serializeValuesWith(SerializationPair.fromSerializer(new JdkSerializationRedisSerializer()));
+        return new LettuceCache("CacheName", writer, config, () -> cacheFrontend);
+    }
+
+    private static byte[] serialize(Object value) {
+        return new JdkSerializationRedisSerializer().serialize(value instanceof List<?> list ? new ArrayList<>(list) : value);
+    }
+
+    private static List<String> append(List<String> codes, String code) {
+        List<String> copy = new ArrayList<>(codes);
+        copy.add(code);
+        return copy;
+    }
+
     @Nested
     @ExtendWith(RedisTestExtension.class)
     class TwoNodesOnRealRedis {
@@ -118,6 +229,8 @@ class LettuceCacheTest {
 
             Assertions.assertEquals(Set.of("perm_a", "perm_b"), new HashSet<>(storedCodes(node1)),
                     "a permission added concurrently on another node was lost from the codes list in Redis");
+            Assertions.assertTrue(node1.writer.failedCompareAndSets.get() >= 1,
+                    "node 1 never retried after a conflicting write, so the race was not met");
             assertEventuallyVisible(node2, Set.of("perm_a", "perm_b"));
         }
 
@@ -275,8 +388,30 @@ class LettuceCacheTest {
 
     private static class GatedCacheWriter extends DefaultLettuceCacheWriter {
 
-        GatedCacheWriter(RedisConnectionFactory connectionFactory) {
+        private final Gate gate;
+        private final AtomicInteger failedCompareAndSets = new AtomicInteger();
+
+        GatedCacheWriter(RedisConnectionFactory connectionFactory, Gate gate) {
             super(connectionFactory);
+            this.gate = gate;
+        }
+
+        @Override
+        byte[] getDirect(String name, byte[] key) {
+            byte[] value = super.getDirect(name, key);
+            if (this.gate != null) {
+                this.gate.pauseIfGated(new String(key, StandardCharsets.UTF_8));
+            }
+            return value;
+        }
+
+        @Override
+        boolean compareAndSet(String name, byte[] key, byte[] expected, byte[] value, Duration ttl) {
+            boolean applied = super.compareAndSet(name, key, expected, value, ttl);
+            if (!applied) {
+                this.failedCompareAndSets.incrementAndGet();
+            }
+            return applied;
         }
     }
 
@@ -288,6 +423,7 @@ class LettuceCacheTest {
         private final RedisClient redisClient;
         private final LettuceConnectionFactory connectionFactory;
         private final CacheFrontendManager frontendManager;
+        private final GatedCacheWriter writer;
         private final PermissionCacheWrapper wrapper;
 
         Node(int port, Gate gate) {
@@ -300,7 +436,8 @@ class LettuceCacheTest {
                     : () -> new GatedCacheFrontend(this.frontendManager.getCacheFrontend(), gate);
             RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ZERO)
                     .serializeValuesWith(SerializationPair.fromSerializer(new JdkSerializationRedisSerializer()));
-            LettuceCacheManager cacheManager = LettuceCacheManager.builder(new GatedCacheWriter(this.connectionFactory))
+            this.writer = new GatedCacheWriter(this.connectionFactory, gate);
+            LettuceCacheManager cacheManager = LettuceCacheManager.builder(this.writer)
                     .cacheDefaults(config).cacheFrontendSupplier(frontend).build();
             cacheManager.afterPropertiesSet();
             this.wrapper = new PermissionCacheWrapper();
