@@ -154,7 +154,7 @@ public class RoleManager extends AbstractService implements IRoleManager, Refres
 
 	@Override
     public List<String> getPermissionsCodes() {
-        List<String> permissions = this.getPermissionCacheWrapper().getPermissionsCodes();
+        List<String> permissions = new ArrayList<>(this.getPermissionCacheWrapper().getPermissionsCodes());
         Collections.sort(permissions);
         return permissions;
     }
