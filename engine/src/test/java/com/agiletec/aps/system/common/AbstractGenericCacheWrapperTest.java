@@ -26,10 +26,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import org.entando.entando.aps.system.exception.CacheItemNotFoundException;
 import org.entando.entando.aps.system.services.cache.CustomConcurrentMapCache;
+import org.entando.entando.aps.system.services.cache.IAtomicUpdateCache;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -115,6 +118,97 @@ public class AbstractGenericCacheWrapperTest {
         }
         Assertions.assertEquals(threads * perThread, new HashSet<>(codes()).size(),
                 "codes added concurrently were lost from the codes list");
+    }
+
+    @Test
+    void addWritesTheObjectBeforeTheCode() {
+        cache.put(CODES_KEY, new ArrayList<>());
+        Cache spy = useSpyCache();
+
+        wrapper.add("a", "object-a");
+
+        InOrder inOrder = Mockito.inOrder(spy);
+        inOrder.verify(spy).put(PREFIX + "a", "object-a");
+        inOrder.verify((IAtomicUpdateCache) spy).updateAtomically(Mockito.eq(CODES_KEY), Mockito.any());
+        Assertions.assertEquals(List.of("a"), codes());
+    }
+
+    @Test
+    void addOfAPresentCodeDoesNotDuplicateIt() {
+        cache.put(CODES_KEY, new ArrayList<>(List.of("a")));
+
+        wrapper.add("a", "object-a2");
+        wrapper.add("a", "object-a3");
+
+        Assertions.assertEquals(List.of("a"), codes());
+        Assertions.assertEquals("object-a3", cache.get(PREFIX + "a").get());
+    }
+
+    @Test
+    void deleteRemovesTheCodeBeforeEvictingTheObject() {
+        cache.put(CODES_KEY, new ArrayList<>(List.of("a", "b")));
+        cache.put(PREFIX + "a", "object-a");
+        Cache spy = useSpyCache();
+
+        wrapper.remove("a", "object-a");
+
+        InOrder inOrder = Mockito.inOrder(spy);
+        inOrder.verify((IAtomicUpdateCache) spy).updateAtomically(Mockito.eq(CODES_KEY), Mockito.any());
+        inOrder.verify(spy).evict(PREFIX + "a");
+        Assertions.assertEquals(List.of("b"), codes());
+        Assertions.assertNull(cache.get(PREFIX + "a"));
+    }
+
+    @Test
+    void updateOfAnAbsentCodeThrows() {
+        cache.put(CODES_KEY, new ArrayList<>(List.of("a")));
+
+        Assertions.assertThrows(CacheItemNotFoundException.class, () -> wrapper.update("b", "object-b"));
+        Assertions.assertNull(cache.get(PREFIX + "b"));
+    }
+
+    @Test
+    void updateOfAPresentCodeWritesTheObject() {
+        List<String> seed = new ArrayList<>(List.of("a"));
+        cache.put(CODES_KEY, seed);
+
+        wrapper.update("a", "object-a2");
+
+        Assertions.assertEquals("object-a2", cache.get(PREFIX + "a").get());
+        Assertions.assertSame(seed, codes());
+    }
+
+    @Test
+    void absentCodesListIsLeftAbsent() {
+        wrapper.add("a", "object-a");
+        Assertions.assertEquals("object-a", cache.get(PREFIX + "a").get());
+        Assertions.assertNull(cache.get(CODES_KEY));
+
+        wrapper.remove("a", "object-a");
+        Assertions.assertNull(cache.get(PREFIX + "a"));
+        Assertions.assertNull(cache.get(CODES_KEY));
+
+        Assertions.assertThrows(CacheItemNotFoundException.class, () -> wrapper.update("a", "object-a"));
+    }
+
+    @Test
+    void listObtainedByAReaderIsNotMutated() {
+        cache.put(CODES_KEY, new ArrayList<>(List.of("x")));
+        List<String> read = codes();
+
+        wrapper.add("a", "object-a");
+        wrapper.remove("x", "object-x");
+
+        Assertions.assertEquals(List.of("x"), read);
+        Assertions.assertEquals(List.of("a"), codes());
+    }
+
+    private Cache useSpyCache() {
+        Cache spy = Mockito.spy(cache);
+        CacheManager cacheManager = Mockito.mock(CacheManager.class);
+        Mockito.when(cacheManager.getCache(CACHE_NAME)).thenReturn(spy);
+        wrapper.setSpringCacheManager(cacheManager);
+        return spy;
     }
 
     private List<String> codes() {

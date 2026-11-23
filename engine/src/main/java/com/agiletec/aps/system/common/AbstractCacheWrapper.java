@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
+import org.entando.entando.aps.system.services.cache.IAtomicUpdateCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -26,11 +29,13 @@ import org.springframework.cache.CacheManager;
  */
 public abstract class AbstractCacheWrapper implements ICacheWrapper {
 
-    protected static enum Action {
+    protected enum Action {
         ADD,
         UPDATE,
         DELETE
     }
+
+    private static final Map<String, Object> UPDATE_LOCKS = new ConcurrentHashMap<>();
 
     private CacheManager springCacheManager;
 
@@ -83,6 +88,31 @@ public abstract class AbstractCacheWrapper implements ICacheWrapper {
 
     protected Cache getCache() {
         return this.getSpringCacheManager().getCache(this.getCacheName());
+    }
+
+    /**
+     * Atomically replaces the value stored under {@code key} with the result of {@code updater}, as specified by
+     * {@link IAtomicUpdateCache#updateAtomically}. Caches that do not implement {@link IAtomicUpdateCache} are
+     * updated under a lock per cache and key, atomic within this JVM only.
+     */
+    protected <T> T updateCachedValue(Cache cache, String key, UnaryOperator<T> updater) {
+        if (cache instanceof IAtomicUpdateCache atomicCache) {
+            return atomicCache.updateAtomically(key, updater);
+        }
+        Object lock = UPDATE_LOCKS.computeIfAbsent(cache.getName() + "\u0000" + key, k -> new Object());
+        synchronized (lock) {
+            T current = (T) this.get(cache, key, Object.class);
+            T next = updater.apply(current);
+            if (next == current) {
+                return current;
+            }
+            if (next == null) {
+                cache.evict(key);
+            } else {
+                cache.put(key, next);
+            }
+            return next;
+        }
     }
 
 

@@ -14,6 +14,8 @@
 package org.entando.entando.aps.system.services.cache;
 
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.support.SimpleValueWrapper;
 import org.springframework.core.serializer.support.SerializationDelegate;
@@ -22,7 +24,7 @@ import org.springframework.lang.Nullable;
 /**
  * @author E.Santoboni
  */
-public class CustomConcurrentMapCache extends ConcurrentMapCache {
+public class CustomConcurrentMapCache extends ConcurrentMapCache implements IAtomicUpdateCache {
 
     public CustomConcurrentMapCache(String name) {
         super(name);
@@ -52,5 +54,17 @@ public class CustomConcurrentMapCache extends ConcurrentMapCache {
             return wrapper;
         }
     }
-    
+
+    @Override
+    public <T> T updateAtomically(Object key, UnaryOperator<T> updater) {
+        AtomicReference<T> result = new AtomicReference<>();
+        this.getNativeCache().compute(key, (k, stored) -> {
+            T current = (T) this.fromStoreValue(stored);
+            T next = updater.apply(current);
+            result.set(next);
+            return next == current ? stored : this.toStoreValue(next);
+        });
+        return result.get();
+    }
+
 }
