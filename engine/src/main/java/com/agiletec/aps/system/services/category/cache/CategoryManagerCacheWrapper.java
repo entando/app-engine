@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.entando.entando.ent.exception.EntException;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -126,18 +127,22 @@ public class CategoryManagerCacheWrapper extends AbstractCacheWrapper implements
     @Override
     public void addCategory(Category category) {
         Cache cache = this.getCache();
-        List<String> codes = (List<String>) this.get(cache, CATEGORY_CODES_CACHE_NAME, List.class);
-        if (null != codes && !codes.contains(category.getCode())) {
-            codes.add(category.getCode());
-            cache.put(CATEGORY_CODES_CACHE_NAME, codes);
-        }
-        Category parent = this.getCategory(category.getParentCode());
-        String[] childCodes = parent.getChildrenCodes();
-        childCodes = ArrayUtils.add(childCodes, category.getCode());
-        parent.setChildrenCodes(childCodes);
-        cache.put(CATEGORY_CACHE_NAME_PREFIX + parent.getCode(), parent);
-        this.checkRootModification(parent, cache);
-        cache.put(CATEGORY_CACHE_NAME_PREFIX + category.getCode(), category);
+        String code = category.getCode();
+        cache.put(CATEGORY_CACHE_NAME_PREFIX + code, category);
+        this.<List<String>>updateCachedValue(cache, CATEGORY_CODES_CACHE_NAME, codes -> {
+            if (null == codes || codes.contains(code)) {
+                return codes;
+            }
+            List<String> newCodes = new ArrayList<>(codes);
+            newCodes.add(code);
+            return newCodes;
+        });
+        this.updateParentChildren(cache, category.getParentCode(), children -> {
+            if (ArrayUtils.contains(children, code)) {
+                return children;
+            }
+            return ArrayUtils.add(children, code);
+        });
     }
 
     @Override
@@ -154,22 +159,43 @@ public class CategoryManagerCacheWrapper extends AbstractCacheWrapper implements
         if (null == category) {
             return;
         }
-        Category parent = this.getCategory(category.getParentCode());
-        if (null != parent.getChildrenCodes()) {
-            List<String> childrenCodes = new ArrayList<>(Arrays.asList(parent.getChildrenCodes()));
-            boolean executedRemove = childrenCodes.remove(code);
-            if (executedRemove) {
-                parent.setChildrenCodes(childrenCodes.toArray(new String[childrenCodes.size()]));
-                cache.put(CATEGORY_CACHE_NAME_PREFIX + parent.getCode(), parent);
-                this.checkRootModification(parent, cache);
+        this.updateParentChildren(cache, category.getParentCode(), children -> {
+            if (!ArrayUtils.contains(children, code)) {
+                return children;
             }
-        }
-        List<String> codes = this.getCopyOfListFromCache(cache, CATEGORY_CODES_CACHE_NAME);
-        if (null != codes) {
-            codes.remove(code);
-            cache.put(CATEGORY_CODES_CACHE_NAME, codes);
-        }
+            return ArrayUtils.removeElement(children, code);
+        });
+        this.<List<String>>updateCachedValue(cache, CATEGORY_CODES_CACHE_NAME, codes -> {
+            if (null == codes || !codes.contains(code)) {
+                return codes;
+            }
+            List<String> newCodes = new ArrayList<>(codes);
+            newCodes.remove(code);
+            return newCodes;
+        });
         cache.evict(CATEGORY_CACHE_NAME_PREFIX + code);
+    }
+
+    /**
+     * Atomically replaces the children codes of the stored parent, and of the stored root when the parent is the root.
+     */
+    private void updateParentChildren(Cache cache, String parentCode, UnaryOperator<String[]> childrenUpdater) {
+        UnaryOperator<Category> parentUpdater = parent -> {
+            if (null == parent) {
+                return parent;
+            }
+            String[] children = childrenUpdater.apply(parent.getChildrenCodes());
+            if (children == parent.getChildrenCodes()) {
+                return parent;
+            }
+            Category newParent = parent.clone();
+            newParent.setChildrenCodes(children);
+            return newParent;
+        };
+        Category parent = this.updateCachedValue(cache, CATEGORY_CACHE_NAME_PREFIX + parentCode, parentUpdater);
+        if (null != parent && parent.isRoot()) {
+            this.updateCachedValue(cache, CATEGORY_ROOT_CACHE_NAME, parentUpdater);
+        }
     }
 
     private void checkRootModification(Category category, Cache cache) {
