@@ -43,7 +43,8 @@ public class LettuceCache extends RedisCache {
     }
 
     /**
-     * @deprecated use {@link #LettuceCache(String, RedisCacheWriter, RedisCacheConfiguration, Supplier)} instead
+     * @deprecated use {@link #LettuceCache(String, RedisCacheWriter, RedisCacheConfiguration, Supplier)} instead.
+     * A fixed frontend fails once {@link CacheFrontendManager} replaces and closes it.
      */
     @Deprecated(since = "7.5.4")
 	protected LettuceCache(String name, RedisCacheWriter cacheWriter, RedisCacheConfiguration cacheConfig, CacheFrontend<String, Object> cacheFrontend) {
@@ -51,7 +52,8 @@ public class LettuceCache extends RedisCache {
     }
 
     /**
-     * @deprecated use {@link #LettuceCache(String, RedisCacheWriter, RedisCacheConfiguration, Supplier)} instead
+     * @deprecated use {@link #LettuceCache(String, RedisCacheWriter, RedisCacheConfiguration, Supplier)} instead.
+     * A fixed frontend fails once {@link CacheFrontendManager} replaces and closes it.
      */
     @Deprecated(since = "7.5.4")
     protected void setFrontendCache(CacheFrontend<String, Object> cacheFrontend) {

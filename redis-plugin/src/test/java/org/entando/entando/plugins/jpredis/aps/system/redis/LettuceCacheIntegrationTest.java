@@ -3,9 +3,12 @@ package org.entando.entando.plugins.jpredis.aps.system.redis;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.RedisCodec;
 import java.util.List;
+import java.util.Set;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
+import org.entando.entando.plugins.jpredis.utils.RedisClientList;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -22,8 +25,11 @@ import org.testcontainers.containers.GenericContainer;
 class LettuceCacheIntegrationTest {
 
     private RedisClient redisClient;
+    private RedisClient adminClient;
+    private RedisCommands<String, String> admin;
     private LettuceConnectionFactory connectionFactory;
     private CacheFrontendManager cacheFrontendManager;
+    private long frontendConnection;
     private Cache cache;
 
     @BeforeEach
@@ -31,23 +37,31 @@ class LettuceCacheIntegrationTest {
         String host = redis.getHost();
         int port = redis.getMappedPort(6379);
         redisClient = Mockito.spy(RedisClient.create(RedisURI.create(host, port)));
+        adminClient = RedisClient.create(RedisURI.create(host, port));
+        admin = adminClient.connect().sync();
         connectionFactory = new LettuceConnectionFactory(new RedisStandaloneConfiguration(host, port));
         connectionFactory.afterPropertiesSet();
         connectionFactory.start();
         cacheFrontendManager = new CacheFrontendManager(redisClient);
+        frontendConnection = RedisClientList.openedTrackingConnection(admin, this::createCache);
+        cache.clear();
+    }
+
+    private void createCache() {
         ITenantManager tenantManager = Mockito.mock(ITenantManager.class);
         Mockito.when(tenantManager.getCodes()).thenReturn(List.of());
         LettuceCacheManager cacheManager = (LettuceCacheManager) new BaseRedisCacheConfig().cacheManager(
                 redisClient, connectionFactory, cacheFrontendManager, tenantManager);
         cacheManager.afterPropertiesSet();
         cache = cacheManager.getCache("Entando_Cache");
-        cache.clear();
     }
 
     @AfterEach
     void tearDown() {
+        cacheFrontendManager.close();
         connectionFactory.destroy();
         redisClient.shutdown();
+        adminClient.shutdown();
     }
 
     @Test
@@ -71,6 +85,52 @@ class LettuceCacheIntegrationTest {
         cache.put("key", "value2");
 
         Assertions.assertEquals("value2", awaitValue("key", "value2", 3000));
+    }
+
+    @Test
+    void hitShouldNotBeStaleAfterFrontendReconnect() throws Exception {
+        cache.put("key", "value1");
+        Assertions.assertEquals("value1", cache.get("key").get());
+
+        reconnectFrontend();
+        cache.put("key", "value2");
+
+        Assertions.assertEquals("value2", awaitValue("key", "value2", 3000));
+    }
+
+    @Test
+    void missShouldNotBeStaleAfterFrontendReconnect() throws Exception {
+        cache.put("key", "value1");
+
+        reconnectFrontend();
+        Assertions.assertEquals("value1", cache.get("key").get());
+        cache.put("key", "value2");
+
+        Assertions.assertEquals("value2", awaitValue("key", "value2", 3000));
+    }
+
+    @Test
+    void trackingShouldBeRestoredAfterFrontendReconnect() throws Exception {
+        Set<Long> trackingBeforeReconnect = RedisClientList.trackingIds(admin);
+
+        reconnectFrontend();
+
+        Assertions.assertTrue(awaitNewTrackingConnection(trackingBeforeReconnect, 3000));
+    }
+
+    private void reconnectFrontend() throws InterruptedException {
+        RedisClientList.killAndAwaitReconnect(admin, frontendConnection, 3000);
+    }
+
+    private boolean awaitNewTrackingConnection(Set<Long> existing, long timeoutMillis) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        while (existing.containsAll(RedisClientList.trackingIds(admin))) {
+            if (System.currentTimeMillis() > deadline) {
+                return false;
+            }
+            Thread.sleep(50);
+        }
+        return true;
     }
 
     private void injectConnectFailure() {

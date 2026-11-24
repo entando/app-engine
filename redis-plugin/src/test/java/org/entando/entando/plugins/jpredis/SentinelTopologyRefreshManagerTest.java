@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -98,20 +100,16 @@ class SentinelTopologyRefreshManagerTest {
         Mockito.verify(cacheFrontendManager, Mockito.timeout(1000).times(1)).rebuildCacheFrontend();
     }
 
-    @Test
-    void shouldNotRebuildCacheFrontendIfMasterIsNotChanged() {
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {
+            "redismaster redis3 6379 redis1 6379",
+            "this-is-not-valid",
+            "othermaster redis1 6379 redis2 6379"})
+    void shouldNotRebuildCacheFrontendOnEventThatDoesNotChangeTheMaster(String message) {
         Mockito.when(sentinelCommands.getMasterAddrByName(MASTER_ID)).thenReturn(REDIS_1);
         RedisPubSubAdapter<String, String> listener = createSentinelTopologyRefreshManager();
-        listener.message("+switch-master", "+switch-master", "redismaster redis3 6379 redis1 6379");
-        Mockito.verify(cacheFrontendManager, Mockito.after(500).never()).rebuildCacheFrontend();
-    }
-
-    @Test
-    void shouldIgnoreInvalidMessageFormats() {
-        Mockito.when(sentinelCommands.getMasterAddrByName(MASTER_ID)).thenReturn(REDIS_1);
-        RedisPubSubAdapter<String, String> listener = createSentinelTopologyRefreshManager();
-        listener.message("+switch-master", "+switch-master", "this-is-not-valid");
-        Mockito.verify(cacheFrontendManager, Mockito.after(500).never()).rebuildCacheFrontend();
+        listener.message("+switch-master", "+switch-master", message);
+        Mockito.verify(cacheFrontendManager, Mockito.after(1000).never()).rebuildCacheFrontend();
     }
 
     @Test
@@ -165,14 +163,6 @@ class SentinelTopologyRefreshManagerTest {
         release.countDown();
         Mockito.verify(cacheFrontendManager, Mockito.timeout(2000).times(2)).rebuildCacheFrontend();
         Mockito.verify(sentinelCommands, Mockito.times(3)).getMasterAddrByName(MASTER_ID);
-    }
-
-    @Test
-    void shouldIgnoreSwitchMasterOfAnotherMaster() {
-        Mockito.when(sentinelCommands.getMasterAddrByName(MASTER_ID)).thenReturn(REDIS_1);
-        RedisPubSubAdapter<String, String> listener = createSentinelTopologyRefreshManager();
-        listener.message("+switch-master", "+switch-master", "othermaster redis1 6379 redis2 6379");
-        Mockito.verify(cacheFrontendManager, Mockito.after(1000).never()).rebuildCacheFrontend();
     }
 
     @Test
