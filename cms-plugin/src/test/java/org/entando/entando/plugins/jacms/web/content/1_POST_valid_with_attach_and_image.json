@@ -30,11 +30,11 @@
             "code": "att1",
             "values": {
                 "en": {
-                    "id": "resourceIdPlaceHolder",
+                    "id": "resourceIdPlaceHolder2",
                     "name": "text att en1"
                 },
                 "it": {
-                    "id": "resourceIdPlaceHolder",
+                    "id": "resourceIdPlaceHolder2",
                     "name": "text att it1"
                 }
             }
@@ -69,11 +69,11 @@
                 "code": "att1",
                 "values": {
                     "en": {
-                        "id": "resourceIdPlaceHolder",
+                        "id": "resourceIdPlaceHolder2",
                         "name": "text att en2"
                     },
                     "it": {
-                        "id": "resourceIdPlaceHolder",
+                        "id": "resourceIdPlaceHolder2",
                         "name": "text att it2"
                     }
                 }

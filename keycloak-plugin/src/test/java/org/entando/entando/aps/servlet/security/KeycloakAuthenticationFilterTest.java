@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,6 +89,7 @@ class KeycloakAuthenticationFilterTest {
         Mockito.lenient().when(request.getHeader(HttpHeaders.HOST)).thenReturn("dev.entando.org");
         Mockito.lenient().when(request.getServerName()).thenReturn("dev.entando.org");
         Mockito.lenient().when(session.getServletContext()).thenReturn(svCtx);
+        Mockito.lenient().when(request.getServletContext()).thenReturn(svCtx);
         Mockito.lenient().when(wac.getBean(ITenantManager.class)).thenReturn(tenantManager);
     }
 
@@ -151,7 +153,7 @@ class KeycloakAuthenticationFilterTest {
             wacUtil.when(() -> WebApplicationContextUtils.getWebApplicationContext(svCtx)).thenReturn(wac);
             keycloakAuthenticationFilter.attemptAuthentication(request, response);
             verify(request).setAttribute(eq("user"), any());
-            verify(request, times(1)).getSession();
+            verify(request, never()).getSession();
         }
     }
 

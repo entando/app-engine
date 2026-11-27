@@ -116,6 +116,8 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
 
     private final EntLogger logger = EntLogFactory.getSanitizedLogger(getClass());
 
+    private static final Set<String> CHECKED_RESOURCE_TYPES = Set.of("Image", "Attach");
+
     private ICategoryManager categoryManager;
     private IContentManager contentManager;
     private IContentModelManager contentModelManager;
@@ -297,6 +299,16 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
         }
     }
 
+    private Map<String, String> extractLangMetadata(AbstractResourceAttribute contentAttr, String langCode) {
+        Map<String, String> metadata = new HashMap<>();
+        contentAttr.getMetadatas().forEach((key, valueByLang) -> {
+            if (null != valueByLang && null != valueByLang.get(langCode)) {
+                metadata.put(key, valueByLang.get(langCode));
+            }
+        });
+        return metadata.isEmpty() ? null : metadata;
+    }
+
     private void convertResourceAttributeToDto(AbstractResourceAttribute contentAttr, EntityAttributeDto attr) {
         attr.setValues(
                 attr.getValues().entrySet().stream()
@@ -305,7 +317,7 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
                             AssetDto assetDto = resourcesService.convertResourceToDto((ResourceInterface) e.getValue());
                             if (contentAttr.getMetadatas() != null && ImageAssetDto.class
                                     .isAssignableFrom(assetDto.getClass())) {
-                                ((ImageAssetDto) assetDto).setMetadata(contentAttr.getMetadatas().get(e.getKey()));
+                                ((ImageAssetDto) assetDto).setMetadata(this.extractLangMetadata(contentAttr, e.getKey()));
                             }
                             assetDto.setName(contentAttr.getTextForLang(e.getKey()));
 
@@ -919,28 +931,36 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
 
     @Override
     protected void scanEntity(Content currentEntity, BindingResult bindingResult) {
-        super.scanEntity(currentEntity, bindingResult);
         for (AttributeInterface attr : currentEntity.getAttributeList()) {
             this.scanResourceElement(currentEntity, bindingResult, attr);
         }
+        super.scanEntity(currentEntity, bindingResult);
     }
 
     protected void scanResourceElement(Content currentEntity, BindingResult bindingResult, AttributeInterface attr) {
+        this.scanResourceElement(currentEntity, bindingResult, attr, true);
+    }
+
+    private void scanResourceElement(Content currentEntity, BindingResult bindingResult, AttributeInterface attr,
+            boolean checkDefaultLang) {
         if (attr.isSimple()) {
-            this.scanAbstractResourceAttribute(currentEntity, bindingResult, attr);
+            this.scanAbstractResourceAttribute(currentEntity, bindingResult, attr, checkDefaultLang);
         } else {
+            boolean checkElementsDefaultLang = checkDefaultLang && !(attr instanceof ListAttribute);
             List<AttributeInterface> elements = ((AbstractComplexAttribute) attr).getAttributes();
             for (int i = 0; i < elements.size(); i++) {
                 AttributeInterface element = elements.get(i);
-                this.scanResourceElement(currentEntity, bindingResult, element);
+                this.scanResourceElement(currentEntity, bindingResult, element, checkElementsDefaultLang);
             }
         }
     }
 
-    private boolean scanAbstractResourceAttribute(Content currentEntity, BindingResult bindingResult, AttributeInterface attr) {
+    private boolean scanAbstractResourceAttribute(Content currentEntity, BindingResult bindingResult, AttributeInterface attr,
+            boolean checkDefaultLang) {
         if (AbstractResourceAttribute.class.isAssignableFrom(attr.getClass())) {
             AbstractResourceAttribute resAttr = (AbstractResourceAttribute) attr;
-            for (ResourceInterface res : resAttr.getResources().values()) {
+            for (Entry<String, ResourceInterface> resourceEntry : resAttr.getResources().entrySet()) {
+                ResourceInterface res = resourceEntry.getValue();
                 String idOrCode = res.getId() == null ? res.getCorrelationCode() : res.getId();
                 AssetDto resource;
                 try {
@@ -959,6 +979,20 @@ public class ContentService extends AbstractEntityService<Content, ContentDto>
                     bindingResult.reject(EntityValidator.ERRCODE_ATTRIBUTE_INVALID,
                             "Invalid resource group - " + resourceMainGroup);
                 }
+                if (CHECKED_RESOURCE_TYPES.contains(resAttr.getType())
+                        && !resAttr.getType().equals(resourcesService.convertResourceType(resource.getType()))) {
+                    bindingResult.reject(EntityValidator.ERRCODE_ATTRIBUTE_INVALID,
+                            "Invalid resource type - " + resource.getType());
+                }
+                String langCode = resourceEntry.getKey();
+                if (StringUtils.isBlank(resAttr.getTextForLang(langCode)) && null != resource.getDescription()) {
+                    resAttr.setText(resource.getDescription(), langCode);
+                }
+            }
+            if (checkDefaultLang && null != resAttr.getDefaultLangCode() && !resAttr.getResources().isEmpty()
+                    && null == resAttr.getResource(resAttr.getDefaultLangCode())) {
+                bindingResult.reject(EntityValidator.ERRCODE_ATTRIBUTE_INVALID,
+                        "Resource missing in default language - " + resAttr.getName());
             }
         }
         return false;

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.actionlog.IActionLogManager;
@@ -148,11 +149,12 @@ public class ActivityStreamInterceptor implements HandlerInterceptor {
     }
 
     private String getCurrentUsername(HttpServletRequest request) {
-        UserDetails user = (UserDetails) request.getSession().getAttribute("user");
-        if (null != user) {
-            return user.getUsername();
+        UserDetails user = (UserDetails) request.getAttribute("user");
+        if (null == user) {
+            HttpSession session = request.getSession(false);
+            user = (null != session) ? (UserDetails) session.getAttribute("user") : null;
         }
-        return SystemConstants.GUEST_USER_NAME;
+        return (null != user) ? user.getUsername() : SystemConstants.GUEST_USER_NAME;
     }
 
 }

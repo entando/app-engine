@@ -14,6 +14,7 @@
 package com.agiletec.plugins.jacms.aps.system.services.content.model;
 
 import com.agiletec.aps.system.common.entity.model.IApsEntity;
+import com.agiletec.aps.system.common.entity.model.attribute.AbstractComplexAttribute;
 import com.agiletec.aps.system.common.entity.model.attribute.AttributeInterface;
 import com.agiletec.aps.system.services.category.Category;
 import com.agiletec.aps.system.services.category.ICategoryManager;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.aps.system.services.component.ComponentUsageEntity;
 import org.entando.entando.aps.system.services.component.IComponentDto;
 import org.entando.entando.aps.system.services.entity.model.EntityAttributeDto;
@@ -70,6 +72,15 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Boolean> references;
+
+    private static final String RESOURCE_ID_PREFIX = "id:";
+    private static final String CORRELATION_CODE_PREFIX = "correlationCode:";
+
+    @JsonIgnore
+    private transient Map<String, Map<String, Map<String, String>>> storedMetadatas = new HashMap<>();
+
+    @JsonIgnore
+    private transient String currentRootAttributeName;
 
     public ContentDto() {
         super();
@@ -236,6 +247,7 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
 
     public void fillEntity(IApsEntity prototype, ICategoryManager categoryManager, BindingResult bindingResult) {
         Content content = (Content) prototype;
+        this.storedMetadatas = this.collectStoredMetadatas(prototype.getAttributeList());
         super.fillEntity(prototype, bindingResult);
         if (null != this.getCategories()) {
             content.getCategories().clear();
@@ -262,9 +274,19 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
     @Override
     protected void fillAttribute(AttributeInterface attribute, EntityAttributeDto attributeDto,
             BindingResult bindingResult) {
-        super.fillAttribute(attribute, attributeDto, bindingResult);
-        fillAbstractResourceAttribute(attribute, attributeDto);
-        fillLinkAttribute(attribute, attributeDto);
+        boolean isRoot = null == this.currentRootAttributeName;
+        if (isRoot) {
+            this.currentRootAttributeName = attribute.getName();
+        }
+        try {
+            super.fillAttribute(attribute, attributeDto, bindingResult);
+            fillAbstractResourceAttribute(attribute, attributeDto, bindingResult);
+            fillLinkAttribute(attribute, attributeDto);
+        } finally {
+            if (isRoot) {
+                this.currentRootAttributeName = null;
+            }
+        }
     }
 
     @Override
@@ -290,19 +312,23 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         }
     }
 
-    private void fillAbstractResourceAttribute(AttributeInterface attribute, EntityAttributeDto attributeDto) {
+    private void fillAbstractResourceAttribute(AttributeInterface attribute, EntityAttributeDto attributeDto,
+            BindingResult bindingResult) {
         if (AbstractResourceAttribute.class.isAssignableFrom(attribute.getClass())) {
             AbstractResourceAttribute resourceAttribute = (AbstractResourceAttribute) attribute;
             for (Entry<String, Object> resourceEntry : attributeDto.getValues().entrySet()) {
+                if (null == resourceEntry.getValue()) {
+                    continue;
+                }
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resourceMap = (Map<String, Object>) resourceEntry.getValue();
-                this.setResourceAttribute(resourceAttribute, resourceMap, resourceEntry.getKey());
+                this.setResourceAttribute(resourceAttribute, resourceMap, resourceEntry.getKey(), bindingResult);
             }
         }
     }
 
     private void setResourceAttribute(AbstractResourceAttribute resourceAttribute, Map<String, Object> resource,
-            String langCode) {
+            String langCode, BindingResult bindingResult) {
         String correlationCode = (String) resource.get("correlationCode");
         String resourceId = (String) resource.get("id");
         String name = (String) resource.get("name");
@@ -313,12 +339,90 @@ public class ContentDto extends EntityDto implements IComponentDto, Serializable
         resourceInterface.setId(resourceId);
         resourceInterface.setCorrelationCode(correlationCode);
         resourceAttribute.setResource(resourceInterface, langCode);
-        @SuppressWarnings("unchecked")
-        Map<String, Object> values = (Map<String, Object>) resource.get("metadata");
-        if (values != null) {
-            Map<String, String> metadata = values.entrySet().stream()
-                    .collect(Collectors.toMap(Entry::getKey, e -> (String) e.getValue()));
-            resourceAttribute.setMetadataMap(langCode, metadata);
+        Object metadata = resource.get("metadata");
+        if (null == metadata) {
+            Map<String, String> storedMetadata = this.getStoredMetadata(this.currentRootAttributeName, resourceId, correlationCode, langCode);
+            storedMetadata.forEach((key, value) -> resourceAttribute.setMetadata(key, langCode, value));
+        } else if (metadata instanceof Map) {
+            for (Entry<?, ?> entry : ((Map<?, ?>) metadata).entrySet()) {
+                this.setMetadata(resourceAttribute, String.valueOf(entry.getKey()), entry.getValue(), langCode,
+                        bindingResult);
+            }
+        } else {
+            bindingResult.reject(EntityValidator.ERRCODE_ATTRIBUTE_INVALID,
+                    "Invalid metadata - " + resourceAttribute.getName());
+        }
+    }
+
+    private void setMetadata(AbstractResourceAttribute resourceAttribute, String key, Object value, String langCode,
+            BindingResult bindingResult) {
+        if (null == value || (value instanceof String && StringUtils.isBlank((String) value))) {
+            return;
+        }
+        if (value instanceof String) {
+            resourceAttribute.setMetadata(key, langCode, (String) value);
+        } else {
+            bindingResult.reject(EntityValidator.ERRCODE_ATTRIBUTE_INVALID, "Invalid metadata value - " + key);
+        }
+    }
+
+    private Map<String, String> getStoredMetadata(String rootName, String resourceId, String correlationCode,
+            String langCode) {
+        Map<String, Map<String, String>> metadataByLang = null;
+        if (null == this.storedMetadatas) {
+            return new HashMap<>();
+        } else if (null != resourceId) {
+            metadataByLang = this.storedMetadatas.get(this.storedKey(rootName, RESOURCE_ID_PREFIX + resourceId));
+        } else if (null != correlationCode) {
+            metadataByLang = this.storedMetadatas.get(this.storedKey(rootName, CORRELATION_CODE_PREFIX + correlationCode));
+        }
+        if (null == metadataByLang || null == metadataByLang.get(langCode)) {
+            return new HashMap<>();
+        }
+        return metadataByLang.get(langCode);
+    }
+
+    private Map<String, Map<String, Map<String, String>>> collectStoredMetadatas(List<AttributeInterface> attributes) {
+        Map<String, Map<String, Map<String, String>>> collected = new HashMap<>();
+        for (AttributeInterface attribute : attributes) {
+            this.collectStoredMetadatas(attribute.getName(), attribute, collected);
+        }
+        return collected;
+    }
+
+    private String storedKey(String rootName, String resourceKey) {
+        return rootName + "/" + resourceKey;
+    }
+
+    private void collectStoredMetadatas(String rootName, AttributeInterface attribute,
+            Map<String, Map<String, Map<String, String>>> collected) {
+        if (attribute instanceof AbstractComplexAttribute) {
+            for (AttributeInterface element : ((AbstractComplexAttribute) attribute).getAttributes()) {
+                this.collectStoredMetadatas(rootName, element, collected);
+            }
+        } else if (attribute instanceof AbstractResourceAttribute) {
+            AbstractResourceAttribute resourceAttribute = (AbstractResourceAttribute) attribute;
+            for (Entry<String, ResourceInterface> resourceEntry : resourceAttribute.getResources().entrySet()) {
+                String langCode = resourceEntry.getKey();
+                ResourceInterface resource = resourceEntry.getValue();
+                Map<String, String> metadata = new HashMap<>();
+                resourceAttribute.getMetadatas().forEach((key, valueByLang) -> {
+                    if (null != valueByLang && null != valueByLang.get(langCode)) {
+                        metadata.put(key, valueByLang.get(langCode));
+                    }
+                });
+                if (null == resource || metadata.isEmpty()) {
+                    continue;
+                }
+                if (null != resource.getId()) {
+                    collected.computeIfAbsent(this.storedKey(rootName, RESOURCE_ID_PREFIX + resource.getId()), k -> new HashMap<>())
+                            .putIfAbsent(langCode, metadata);
+                }
+                if (null != resource.getCorrelationCode()) {
+                    collected.computeIfAbsent(this.storedKey(rootName, CORRELATION_CODE_PREFIX + resource.getCorrelationCode()),
+                            k -> new HashMap<>()).putIfAbsent(langCode, metadata);
+                }
+            }
         }
     }
 

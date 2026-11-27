@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>app-engine</artifactId>
-        <version>7.5.3</version>
+        <version>7.5.4</version>
     </parent>
     <artifactId>entando-plugin-jpredis</artifactId>
     <groupId>org.entando.entando.plugins</groupId>
@@ -206,7 +206,7 @@
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

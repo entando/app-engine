@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -27,6 +28,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
     private static final EntLogging.EntLogger _logger =  EntLogging.EntLogFactory.getSanitizedLogger(KeycloakSecurityConfig.class);
 
     public static final String API_PATH = "/api";
+    private static final String HEALTH_PATH = API_PATH + "/health";
 
     private final KeycloakAuthenticationFilter keycloakAuthenticationFilter;
     private final KeycloakConfiguration configuration;
@@ -48,6 +50,21 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
     }
 
     @Bean
+    @Order(60)
+    public SecurityFilterChain healthSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher(new AntPathRequestMatcher(HEALTH_PATH))
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .requestCache(RequestCacheConfigurer::disable)
+                .headers(headers -> headers.frameOptions(iframeDisabled
+                        ? HeadersConfigurer.FrameOptionsConfig::disable
+                        : HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                .anonymous(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        return http.build();
+    }
+
+    @Bean
     @Order(70)
     public SecurityFilterChain keycloakSecurityFilterChain(HttpSecurity http) throws Exception {
         _logger.debug("KeycloakSecurityConfig.keycloakSecurityFilterChain() called, Keycloak enabled: " + configuration.isEnabled());
@@ -56,7 +73,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
 
             http.authorizeHttpRequests(authorize -> {
                 authorize
-                        .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher(HEALTH_PATH)).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()
@@ -95,7 +112,7 @@ public class KeycloakSecurityConfig extends AuthorizationServerConfiguration {
 
             http.authorizeHttpRequests(authorize -> {
                 authorize
-                        .requestMatchers(new AntPathRequestMatcher("/api/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher(HEALTH_PATH)).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/swagger-ui/**")).permitAll()

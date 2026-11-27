@@ -112,4 +112,24 @@ class TestExtendedResourceFinderAction extends AbstractBaseTestContentAction {
         assertEquals("CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), default quality", imageAttribute.getResourceDescriptionForLang("it"));
     }
 
+    @Test
+    void testJoinAttachResourceToImageAttribute() throws Throwable {
+        this.executeEdit("ART102", "admin");
+        String contentOnSessionMarker = super.extractSessionMarker("ART102", ApsAdminSystemConstants.EDIT);
+
+        HttpSession session = this.getRequest().getSession();
+        session.setAttribute(ResourceAttributeActionHelper.ATTRIBUTE_NAME_SESSION_PARAM, "Foto");
+        session.setAttribute(ResourceAttributeActionHelper.RESOURCE_TYPE_CODE_SESSION_PARAM, "Image");
+        session.setAttribute(ResourceAttributeActionHelper.RESOURCE_LANG_CODE_SESSION_PARAM, "it");
+
+        this.initContentAction("/do/jacms/Content/Resource", "joinResource", contentOnSessionMarker);
+        this.addParameter("resourceTypeCode", "Image");
+        this.addParameter("resourceId", "7");
+        this.executeAction();
+
+        ExtendedResourceFinderAction attributeAction = (ExtendedResourceFinderAction) this.getAction();
+        ImageAttribute imageAttribute = (ImageAttribute) attributeAction.getContent().getAttribute("Foto");
+        assertNull(imageAttribute.getResource("it"));
+    }
+
 }

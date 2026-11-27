@@ -43,7 +43,7 @@ public final class ApsTenantApplicationUtils {
 		} else {
 			logger.debug("the custom header:'{}' is empty or blank, skip it", UrlUtils.ENTANDO_TENANT_CODE_CUSTOM_HEADER);
 			String domain = getDomainFromRequest(request);
-			ITenantManager tenantManager = ApsWebApplicationUtils.getBean(ITenantManager.class, request);
+			ITenantManager tenantManager = ApsWebApplicationUtils.getBean(ITenantManager.class, request.getServletContext());
 			String tenantCodeFromDomain = tenantManager.getTenantCodeByDomain(domain);
 			logger.debug("the tenantCodeFromDomain is:'{}', return it", tenantCodeFromDomain);
 			return Optional.ofNullable(tenantCodeFromDomain);

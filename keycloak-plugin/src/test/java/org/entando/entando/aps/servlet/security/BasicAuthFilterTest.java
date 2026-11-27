@@ -95,6 +95,7 @@ class BasicAuthFilterTest {
         Mockito.lenient().when(request.getHeader(HttpHeaders.HOST)).thenReturn("localhost");
         Mockito.lenient().when(request.getServerName()).thenReturn("localhost");
         Mockito.lenient().when(session.getServletContext()).thenReturn(servletContext);
+        Mockito.lenient().when(request.getServletContext()).thenReturn(servletContext);
         Mockito.lenient().when(webApplicationContext.getBean(ITenantManager.class)).thenReturn(tenantManager);
     }
 
