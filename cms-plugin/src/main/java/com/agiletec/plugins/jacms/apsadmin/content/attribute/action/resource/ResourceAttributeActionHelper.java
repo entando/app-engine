@@ -31,6 +31,7 @@ import com.agiletec.plugins.jacms.aps.system.services.resource.model.ResourceInt
 import com.agiletec.plugins.jacms.apsadmin.content.ContentActionConstants;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.ent.util.EntLogging.EntLogFactory;
@@ -50,6 +51,8 @@ public class ResourceAttributeActionHelper {
     public static final String RESOURCE_LANG_CODE_SESSION_PARAM = "resourceLangCode";
     public static final String LIST_ELEMENT_INDEX_SESSION_PARAM = "listElementIndex";
     public static final String INCLUDED_ELEMENT_NAME_SESSION_PARAM = "includedElementName";
+
+    private static final Set<String> CHECKED_RESOURCE_TYPES = Set.of("Image", "Attach");
 
     public static void initSessionParams(IResourceAttributeAction action, HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -127,6 +130,11 @@ public class ResourceAttributeActionHelper {
     }
 
     private static void joinSingleResource(AttributeInterface attribute, ResourceInterface resource, Map<String, List<String>> metadataMapping, HttpSession session) {
+        String attributeType = attribute.getType();
+        if (CHECKED_RESOURCE_TYPES.contains(attributeType) && !attributeType.equals(resource.getType())) {
+            throw new IllegalArgumentException("Invalid resource type '" + resource.getType()
+                    + "' for attribute '" + attribute.getName() + "' of type '" + attributeType + "'");
+        }
         String langCode = (String) session.getAttribute(RESOURCE_LANG_CODE_SESSION_PARAM);
         ((ResourceAttributeInterface) attribute).setResource(resource, langCode);
         AbstractResourceAttribute resourceAttribute = (AbstractResourceAttribute) attribute;
