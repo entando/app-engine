@@ -91,6 +91,19 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
      */
     private final transient Map<String, KeycloakImportConfig> config = new ConcurrentHashMap<>();
 
+    private final transient ConcurrentHashMap<String, Object> groupLocks = new ConcurrentHashMap<>();
+    private final transient ConcurrentHashMap<String, Object> roleLocks = new ConcurrentHashMap<>();
+
+    private Object getGroupLock(String groupName) {
+        String key = this.getTenantCode() + ":" + groupName;
+        return groupLocks.computeIfAbsent(key, k -> new Object());
+    }
+
+    private Object getRoleLock(String roleName) {
+        String key = this.getTenantCode() + ":" + roleName;
+        return roleLocks.computeIfAbsent(key, k -> new Object());
+    }
+
     @Override
     public void init() throws Exception {
        initTenantAware();
@@ -467,43 +480,54 @@ public class KeycloakAuthorizationManager extends AbstractService implements Ref
     }
 
     private Group findOrCreateGroup(String groupName) {
+        synchronized (getGroupLock(groupName)) {
             Group group = groupManager.getGroup(groupName);
+            if (group != null) {
+                return group;
+            }
 
-        if (group != null) {
-            return group;
-        }
+            Group newGroup = new Group();
+            newGroup.setName(groupName);
+            newGroup.setDescription(groupName);
 
-        Group newGroup = new Group();
-        newGroup.setName(groupName);
-        newGroup.setDescription(groupName);
-
-        try {
-            groupManager.addGroup(newGroup);
-            return newGroup;
-        } catch (Exception e) {
-            log.debug("Error persisting group {} ( It might have been already added by another process).",
-                    groupName);
-            return groupManager.getGroup(groupName);
+            try {
+                groupManager.addGroup(newGroup);
+                return newGroup;
+            } catch (Exception e) {
+                Group existing = groupManager.getGroup(groupName);
+                if (existing != null) {
+                    log.debug("Group '{}' created concurrently by another process, reusing it", groupName);
+                    return existing;
+                }
+                log.error("Unable to create or fetch group '{}'", groupName, e);
+                return null;
+            }
         }
     }
 
     private Role findOrCreateRole(final String roleName) {
-        Role newRole = roleManager.getRole(roleName);
+        synchronized (getRoleLock(roleName)) {
+            Role role = roleManager.getRole(roleName);
+            if (role != null) {
+                return role;
+            }
 
-        if (newRole != null) {
-            return newRole;
-        }
+            Role newRole = new Role();
+            newRole.setName(roleName);
+            newRole.setDescription(roleName);
 
-        newRole = new Role();
-        newRole.setName(roleName);
-        newRole.setDescription(roleName);
-        try {
-            roleManager.addRole(newRole);
-            return newRole;
-        } catch (Exception e) {
-            log.debug("Error persisting role {} (It might have been already added by another process).",
-                    roleName);
-            return roleManager.getRole(roleName);
+            try {
+                roleManager.addRole(newRole);
+                return newRole;
+            } catch (Exception e) {
+                Role existing = roleManager.getRole(roleName);
+                if (existing != null) {
+                    log.debug("Role '{}' created concurrently by another process, reusing it", roleName);
+                    return existing;
+                }
+                log.error("Unable to create or fetch role '{}'", roleName, e);
+                return null;
+            }
         }
     }
 

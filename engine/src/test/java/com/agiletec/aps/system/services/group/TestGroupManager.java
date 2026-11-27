@@ -70,6 +70,23 @@ class TestGroupManager extends BaseTestCase {
     }
 
     @Test
+    void testAddDuplicateGroupThrowsDuplicateGroupException() throws Throwable {
+        String groupCode = "grp_dup_test";
+        Group group = new Group();
+        group.setName(groupCode);
+        group.setDescription("descr_gruppo_duplicate");
+        try {
+            groupManager.addGroup(group);
+            EntException ex = org.junit.jupiter.api.Assertions.assertThrows(EntException.class, () -> {
+                groupManager.addGroup(group);
+            });
+            assertTrue(ex.getCause() instanceof DuplicateGroupException);
+        } finally {
+            groupManager.removeGroup(group);
+        }
+    }
+
+    @Test
     void testUpdateGroup() throws Throwable {
         int initSize = groupManager.getGroups().size();
         Group group = new Group();

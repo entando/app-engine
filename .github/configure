@@ -62,7 +62,9 @@ elif [ "${GITHUB_EVENT_NAME:-}" = "push" ]; then
     _configure_direct_push
   fi
 else
+  set -x
   . .github/github-tools/base.configure "$GH_PR_TITLE" "$GH_PR_NUMBER"
+  set +x
 fi
 
 configure.complete
