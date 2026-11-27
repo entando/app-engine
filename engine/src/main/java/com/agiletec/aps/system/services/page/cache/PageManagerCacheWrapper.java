@@ -387,19 +387,25 @@ public class PageManagerCacheWrapper extends AbstractCacheWrapper implements IPa
     }
     
     private void addCodeFromCachedList(Cache cache, String listKey, String codeToAdd) {
-        List<String> codes = this.getCopyOfListFromCache(cache, listKey);
-        if (null != codes && !codes.contains(codeToAdd)) {
-            codes.add(codeToAdd);
-            cache.put(listKey, codes);
-        }
+        this.<List<String>>updateCachedValue(cache, listKey, codes -> {
+            if (null == codes || codes.contains(codeToAdd)) {
+                return codes;
+            }
+            List<String> newCodes = new ArrayList<>(codes);
+            newCodes.add(codeToAdd);
+            return newCodes;
+        });
     }
     
     private void removeCodeFromCachedList(Cache cache, String listKey, String codeToRemove) {
-        List<String> codes = this.getCopyOfListFromCache(cache, listKey);
-        if (null != codes) {
-            codes.remove(codeToRemove);
-            cache.put(listKey, codes);
-        }
+        this.<List<String>>updateCachedValue(cache, listKey, codes -> {
+            if (null == codes || !codes.contains(codeToRemove)) {
+                return codes;
+            }
+            List<String> newCodes = new ArrayList<>(codes);
+            newCodes.remove(codeToRemove);
+            return newCodes;
+        });
     }
     
     @Override

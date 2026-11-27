@@ -120,23 +120,34 @@ public abstract class AbstractGenericCacheWrapper<O> extends AbstractCacheWrappe
             return;
         }
         Cache cache = this.getCache();
-        List<String> codes = this.getCopyOfListFromCache(cache, this.getCodesCacheKey());
+        String codesKey = this.getCodesCacheKey();
         if (Action.ADD.equals(operation)) {
-            if (!codes.contains(key)) {
-                codes.add(key);
-                cache.put(this.getCodesCacheKey(), codes);
-            }
             cache.put(this.getCacheKeyPrefix() + key, object);
+            this.<List<String>>updateCachedValue(cache, codesKey,
+                    codes -> (codes == null || codes.contains(key)) ? codes : copyWith(codes, key));
         } else if (Action.UPDATE.equals(operation)) {
-            if (!codes.contains(key)) {
+            List<String> codes = this.<List<String>>updateCachedValue(cache, codesKey, current -> current);
+            if (codes == null || !codes.contains(key)) {
                 throw new CacheItemNotFoundException(key, cache.getName());
             }
             cache.put(this.getCacheKeyPrefix() + key, object);
         } else if (Action.DELETE.equals(operation)) {
-            codes.remove(key);
+            this.<List<String>>updateCachedValue(cache, codesKey,
+                    codes -> (codes == null || !codes.contains(key)) ? codes : copyWithout(codes, key));
             cache.evict(this.getCacheKeyPrefix() + key);
-            cache.put(this.getCodesCacheKey(), codes);
         }
+    }
+
+    private static List<String> copyWith(List<String> codes, String key) {
+        List<String> copy = new ArrayList<>(codes);
+        copy.add(key);
+        return copy;
+    }
+
+    private static List<String> copyWithout(List<String> codes, String key) {
+        List<String> copy = new ArrayList<>(codes);
+        copy.remove(key);
+        return copy;
     }
 
     protected abstract String getCodesCacheKey();

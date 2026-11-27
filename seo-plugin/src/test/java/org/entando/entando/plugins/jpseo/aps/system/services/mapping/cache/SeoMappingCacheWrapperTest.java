@@ -1,5 +1,7 @@
 package org.entando.entando.plugins.jpseo.aps.system.services.mapping.cache;
 
+import com.agiletec.aps.system.common.AbstractGenericCacheWrapperTest;
+import com.agiletec.aps.system.common.AbstractGenericCacheWrapperTest.GatedStore;
 import com.agiletec.aps.system.services.page.IPageManager;
 import com.agiletec.aps.system.services.page.Page;
 import com.agiletec.aps.system.services.page.PageMetadata;
@@ -7,6 +9,7 @@ import com.agiletec.aps.util.ApsProperties;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.entando.entando.aps.system.services.cache.CustomConcurrentMapCache;
 import org.entando.entando.plugins.jpseo.aps.system.services.mapping.ISeoMappingDAO;
 import org.entando.entando.plugins.jpseo.aps.system.services.page.PageMetatag;
 import org.entando.entando.plugins.jpseo.aps.system.services.page.SeoPageMetadata;
@@ -89,6 +92,42 @@ class SeoMappingCacheWrapperTest {
         Assertions.assertEquals(2, newMapping.size());
         Assertions.assertEquals(PAGE_CODE, newMapping.get("new_code_en"));
         Assertions.assertEquals(PAGE_CODE, newMapping.get("new_code_it"));
+    }
+
+    @Test
+    void concurrentUpdatesOfDifferentPagesKeepBothReferences() throws Exception {
+        GatedStore store = new GatedStore(ISeoMappingCacheWrapper.DRAFT_PAGES_MAPPING);
+        Cache gatedCache = new CustomConcurrentMapCache(ISeoMappingCacheWrapper.SEO_MAPPER_CACHE_NAME, store, true);
+        Mockito.when(cacheManager.getCache(ISeoMappingCacheWrapper.SEO_MAPPER_CACHE_NAME)).thenReturn(gatedCache);
+        gatedCache.put(ISeoMappingCacheWrapper.DRAFT_PAGES_MAPPING, new HashMap<>(Map.of("old_code_x", "page_x")));
+
+        AbstractGenericCacheWrapperTest.race(store,
+                () -> seoMappingCacheWrapper.updateDraftPageReferences(List.of("code_a"), "page_a"),
+                () -> seoMappingCacheWrapper.updateDraftPageReferences(List.of("code_b"), "page_b"));
+
+        Assertions.assertEquals(Map.of("old_code_x", "page_x", "code_a", "page_a", "code_b", "page_b"),
+                gatedCache.get(ISeoMappingCacheWrapper.DRAFT_PAGES_MAPPING).get(),
+                "a reference updated concurrently was lost from the draft pages mapping");
+    }
+
+    @Test
+    void updateDraftPageReferencesDoesNotMutateTheStoredMapping() {
+        Map<String, String> stored = new HashMap<>(Map.of("old_code", PAGE_CODE));
+        Mockito.when(cache.get(ISeoMappingCacheWrapper.DRAFT_PAGES_MAPPING)).thenReturn(new SimpleValueWrapper(stored));
+
+        seoMappingCacheWrapper.updateDraftPageReferences(List.of("new_code"), PAGE_CODE);
+
+        Assertions.assertEquals(Map.of("old_code", PAGE_CODE), stored);
+    }
+
+    @Test
+    void updateDraftPageReferencesWithNoChangeDoesNotWrite() {
+        Map<String, String> stored = new HashMap<>(Map.of("code", PAGE_CODE));
+        Mockito.when(cache.get(ISeoMappingCacheWrapper.DRAFT_PAGES_MAPPING)).thenReturn(new SimpleValueWrapper(stored));
+
+        seoMappingCacheWrapper.updateDraftPageReferences(List.of("code"), PAGE_CODE);
+
+        Mockito.verify(cache, Mockito.never()).put(Mockito.any(), Mockito.any());
     }
 
     private Map<String, String> testCreateDraftPagesMapping(PageMetadata pageMetadata) throws Exception {
