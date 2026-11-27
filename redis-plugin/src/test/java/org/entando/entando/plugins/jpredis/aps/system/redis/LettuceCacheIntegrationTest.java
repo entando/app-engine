@@ -2,11 +2,14 @@ package org.entando.entando.plugins.jpredis.aps.system.redis;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
+import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.support.caching.CacheFrontend;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.entando.entando.aps.system.services.tenants.ITenantManager;
 import org.entando.entando.plugins.jpredis.utils.RedisClientList;
 import org.entando.entando.plugins.jpredis.utils.RedisTestExtension;
@@ -48,12 +51,16 @@ class LettuceCacheIntegrationTest {
     }
 
     private void createCache() {
+        cache = buildCache(cacheFrontendManager);
+    }
+
+    private Cache buildCache(CacheFrontendManager frontendManager) {
         ITenantManager tenantManager = Mockito.mock(ITenantManager.class);
         Mockito.when(tenantManager.getCodes()).thenReturn(List.of());
         LettuceCacheManager cacheManager = (LettuceCacheManager) new BaseRedisCacheConfig().cacheManager(
-                redisClient, connectionFactory, cacheFrontendManager, tenantManager);
+                redisClient, connectionFactory, frontendManager, tenantManager);
         cacheManager.afterPropertiesSet();
-        cache = cacheManager.getCache("Entando_Cache");
+        return cacheManager.getCache("Entando_Cache");
     }
 
     @AfterEach
@@ -116,6 +123,43 @@ class LettuceCacheIntegrationTest {
         reconnectFrontend();
 
         Assertions.assertTrue(awaitNewTrackingConnection(trackingBeforeReconnect, 3000));
+    }
+
+    @Test
+    void readShouldSucceedWhenFrontendIsReplacedBetweenLookupAndRead() {
+        AtomicBoolean replaceOnNextLookup = new AtomicBoolean();
+        CacheFrontendManager replacingManager = new CacheFrontendManager(redisClient) {
+            @Override
+            public CacheFrontend<String, Object> getCacheFrontend() {
+                CacheFrontend<String, Object> taken = super.getCacheFrontend();
+                if (replaceOnNextLookup.compareAndSet(true, false)) {
+                    this.rebuildCacheFrontend();
+                }
+                return taken;
+            }
+        };
+        try {
+            Cache replacingCache = buildCache(replacingManager);
+            replacingCache.put("key", "value");
+            replaceOnNextLookup.set(true);
+
+            Cache.ValueWrapper value = Assertions.assertDoesNotThrow(() -> replacingCache.get("key"));
+
+            Assertions.assertFalse(replaceOnNextLookup.get());
+            Assertions.assertEquals("value", value.get());
+        } finally {
+            replacingManager.close();
+        }
+    }
+
+    @Test
+    void readOnClosedFrontendStillPublishedShouldFail() {
+        cache.put("key", "value");
+        cacheFrontendManager.getCacheFrontend().close();
+
+        RedisException thrown = Assertions.assertThrows(RedisException.class, () -> cache.get("key"));
+
+        Assertions.assertEquals("Connection is closed", thrown.getMessage());
     }
 
     private void reconnectFrontend() throws InterruptedException {

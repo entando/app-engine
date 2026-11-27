@@ -13,6 +13,8 @@
  */
 package org.entando.entando.plugins.jpredis.aps.system.redis;
 
+import io.lettuce.core.RedisCommandInterruptedException;
+import io.lettuce.core.RedisException;
 import io.lettuce.core.support.caching.CacheFrontend;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +80,23 @@ public class LettuceCache extends RedisCache {
     }
 
     private Object getFromLocalCache(Object key) {
-        return this.cacheFrontendSupplier.get().get().get(super.getName() + "::" + key.toString());
+        String cacheKey = super.getName() + "::" + key.toString();
+        CacheFrontend<String, Object> frontend = this.cacheFrontendSupplier.get().get();
+        try {
+            return frontend.get(cacheKey);
+        } catch (RedisException e) {
+            CacheFrontend<String, Object> current = this.cacheFrontendSupplier.get().get();
+            if (e instanceof RedisCommandInterruptedException || current == frontend) {
+                throw e;
+            }
+            logger.debug("Read of '{}' repeated on the front-end cache that replaced a closed one", cacheKey, e);
+            try {
+                return current.get(cacheKey);
+            } catch (RuntimeException retryFailure) {
+                retryFailure.addSuppressed(e);
+                throw retryFailure;
+            }
+        }
     }
     
     @Override
